@@ -1,0 +1,3 @@
+threads.h is an optional file that can be used by vendors to convert C11 style threads into
+pthreads. This file can included in the build path in environments that do not provide a
+threads.h file.

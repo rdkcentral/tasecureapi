@@ -1,0 +1,164 @@
+# Comcast Security API v3+
+
+## Summary
+
+This library is the reference implementation of the Comcast Security API v3+. SoC vendors are
+responsible for implementing this layer, including both the REE client interface and TA client
+interface, as well as the backing implementation in TEE.
+
+In this reference implementation, the functionality is implemented using OpenSSL.
+
+## Directories
+
+### 'client'
+
+This directory contains the client facing SecAPI headers, as well as the unit test suite for the
+SecAPI.
+
+This folder should be copied over from the reference implementation to the SoC vendor
+implementation as-is, without any changes. Comcast will update the reference implementation and
+unit tests over time and will expect SoC vendors to keep this folder up to date. Some unit tests,
+like sa_key_import_soc.cpp, may need to be modified by the vendor, especially if the vendor library
+does not support a particular feature. The vendor must declare to Comcast which unit tests have been
+modified.
+
+### 'clientimpl'
+
+This directory contains the reference implementation of the SecAPI client library that dispatches
+client calls to the SecAPI TA. It is responsible for the serialization of parameters and transport
+to the TA.
+
+Client implementation library is required to be ported to both the host (REE) environment for use
+by client applications, as well as the TEE environment for use by TA clients.
+
+Only the files in the 'internal' directory need to be modified.
+
+clientimpl code performs the marshaling of calls from API calls into the TA. Some TEEs require
+communication through shared memory, others may be able to use standard memory between the processor
+and the TEE. To use shared memory, define the compile time flag USE_SHARED_MEMORY. Vendors must
+implement the client-side functions: ta_open_session, ta_close_session, ta_invoke_command,
+ta_alloc_shared_memory, and ta_free_shared_memory which are defined in ta.h. Example implementations
+are in ta_client.c. Vendors must also implement code to call the TA-side functions:
+ta_open_session_handler, ta_close_session_handler, and ta_invoke_command_handler which also defined
+in ta.h. ta.h also defines the macros, controlled by the compile time USE_SHARED_MEMORY flag, that
+determine whether shared memory or standard memory is used by the client-side library.
+
+Vendors must implement code identified by ```TODO SoC Vendor```.
+
+### 'taimpl'
+
+This directory contains the reference implementation of the SecAPI TA. TA is responsible for
+servicing client requests.
+
+Only the files in the include/internal, include/porting, src/internal, and src/porting directories
+need to be modified. All other code in the src and include directories is platform independent and
+should not be modified.
+
+Vendors must implement code identified by ```TODO SoC Vendor```.
+
+## Building
+
+Generate make files using `cmake`
+Add -DCMAKE_INSTALL_PREFIX=<directory> to install to a non-standard install directory.
+
+The build assumes that the following packages have already been installed:
+YAJL - include -DYAJL_ROOT=<directory> if not found
+OPENSSL - include -DOPENSSL_ROOT_DIR=<directory> if not found
+
+SOC and root key tests are also disabled by default. To enable these tests, add -DENABLE_SOC_KEY_TESTS=1. The TEST_KEY
+key defined in sa_key_common.cpp must match the root key defined on the test device for these tests to pass.
+
+```
+cmake -S . -B cmake-build
+```
+
+Build reference implementation and unit tests
+
+```
+cmake --build cmake-build
+```
+
+Run unit test suite
+
+```
+cmake --build cmake-build --target test
+```
+or
+```
+cd cmake-build
+ctest -V
+```
+
+To test for memory leaks
+
+```
+cd cmake-build
+ctest -T memcheck
+```
+
+### Install
+
+To install SecApi 3 (libsaclient), run a cmake install
+
+```
+cmake --install cmake-build
+```
+
+This copies the include files, the library, libsaclient.(so/dll/dylib) containing the SecAPI code (the
+extension .so/.dll/.dylib created depends on which platform you are building on), and the test application,
+saclienttest and taimpltest, to their appropriate locations on the system.
+
+### Build artifacts
+
+#### saclient
+
+This is a client library that client applications link against. It exposes the public, platform
+independent SecAPI header files, and links with the platform specific client implementation library
+(saclientimpl).  Comcast is responsible for maintaining the public headers exposed by the SecAPI,
+while the SoC vendors are responsible for implementing the client library.
+
+#### saclienttest
+
+This is a SecAPI unit test suite that uses the SecAPI public interfaces to test the functionality
+of the implementation.  It links against saclient. Comcast is responsible for implementing these
+tests.
+
+#### saclientimpl
+
+This is a library that implements the SecAPI client interfaces. This library is implemented by the
+SoC vendor and it conforms to the interfaces specified in saclient.
+
+#### taimpl
+
+This component is the SecAPI TA that is responsible for processing client requests. The TA is
+intended to run in a TEE.
+
+## Versioning
+
+SecAPI version is specified using 4 numbers. The first 3 contain the major, minor, and point release
+of the SecAPI specification document that this release has implemented. This version triplet is
+specified in the src/client/include/sa.h file under the SA_SPECIFICATION_VERSION macro. Comcast is
+responsible for updating the version number in this file.  Please see https://semver.org/
+for reference.
+
+An additional number is added for specifying an implementation revision for a particular spec
+version. SoC vendors are responsible for updating this number with every revision of their
+implementation. The full 4 number version can be retrieved using the sa_get_version() call.
+
+## Porting guidance
+
+### Suggested procedure for porting the SecAPI
+
+1. Copy the reference implementation repo.
+1. Replace the name of the project in ./CMakeLists.txt.
+1. Modify files in src/clientimpl/src/internal, src/taimpl/include/internal,
+   src/taimpl/include/porting, src/taimpl/src/internal, and src/taimpl/src/porting folders with
+   platform specific implementation for a given platform.
+1. Keep all folder except the ones mentioned in 3) up to date with reference implementation
+   regularly.
+
+### Secure Heap
+
+SoC vendors are expected to provide memory allocation and de-allocation functions for secure heap if
+available on the target platform (memory_secure_alloc, memory_secure_realloc, memory_secure_free).
+The secure heap shall be used for storing unencrypted key material while in use.
