@@ -49,12 +49,12 @@ namespace {
         std::vector<uint8_t> dh_public_key(dh_public_key_length);
         status = sa_key_get_public(dh_public_key.data(), &dh_public_key_length, *dh_key);
         ASSERT_EQ(status, SA_STATUS_OK);
+        EVP_PKEY* temp = dh_import_public(dh_public_key.data(), dh_public_key.size(), dhp.data(), dhp.size(),
+                dhg.data(), dhg.size());
+        ASSERT_NE(temp, nullptr);
+        auto public_evp_pkey = std::shared_ptr<EVP_PKEY>(temp, EVP_PKEY_free);
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(dh_generate(other_dh, other_public_key, dhp, dhg));
         auto shared_secret = create_uninitialized_sa_key();
@@ -78,11 +78,7 @@ namespace {
 
         std::vector<uint8_t> clear_key(SYM_128_KEY_SIZE);
         std::vector<uint8_t> clear_shared_secret;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-        ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_dh, dh_public_key, dhp, dhg));
-#else
-        ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_dh, dh_public_key));
-#endif
+        ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_dh, public_evp_pkey, dhp, dhg));
         ASSERT_TRUE(concat_kdf(clear_key, clear_shared_secret, info, SA_DIGEST_ALGORITHM_SHA256));
         ASSERT_TRUE(key_check_sym(*key, clear_key));
     }
@@ -105,11 +101,7 @@ namespace {
         sa_status status = sa_key_generate(dh_key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(dh_generate(other_dh, other_public_key, dhp3072, dhg3072));
         status = sa_key_exchange(nullptr, &rights, SA_KEY_EXCHANGE_ALGORITHM_DH, *dh_key,
@@ -135,11 +127,7 @@ namespace {
         sa_status status = sa_key_generate(dh_key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(dh_generate(other_dh, other_public_key, dhp3072, dhg3072));
         auto key = create_uninitialized_sa_key();
@@ -191,11 +179,7 @@ namespace {
         sa_status status = sa_key_generate(dh_key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(dh_generate(other_dh, other_public_key, dhp3072, dhg3072));
         auto key = create_uninitialized_sa_key();
@@ -215,11 +199,7 @@ namespace {
         if (*rsa_key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "key type not supported";
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(dh_generate(other_dh, other_public_key, sample_dh_p_3072(), sample_dh_g_3072()));
         auto key = create_uninitialized_sa_key();
@@ -246,11 +226,7 @@ namespace {
         sa_status status = sa_key_generate(dh_key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(dh_generate(other_dh, other_public_key, sample_dh_p_3072(), sample_dh_g_3072()));
         auto key = create_uninitialized_sa_key();

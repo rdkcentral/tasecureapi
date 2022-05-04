@@ -43,12 +43,12 @@ extern "C" {
 typedef struct symmetric_context_s symmetric_context_t;
 
 /**
-* Generate a symmetric key.
-* @param[out] stored_key_generated the generated AES key.
-* @param[in] rights the key rights.
-* @param[in] parameters the AES key parameters
+ * Generate a symmetric key.
+ * @param[out] stored_key_generated the generated AES key.
+ * @param[in] rights the key rights.
+ * @param[in] parameters the AES key parameters
  * @return the status of the operation.
-*/
+ */
 bool symmetric_generate_key(
         stored_key_t** stored_key_generated,
         const sa_rights* rights,

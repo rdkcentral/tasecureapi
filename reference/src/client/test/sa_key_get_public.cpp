@@ -28,37 +28,13 @@ namespace {
         auto key_type = std::get<0>(GetParam());
         auto key_length = std::get<1>(GetParam());
 
-        auto key = create_uninitialized_sa_key();
-        ASSERT_NE(key, nullptr);
-
         sa_rights rights;
         rights_set_allow_all(&rights);
 
         sa_status status;
         std::vector<uint8_t> clear_key;
         sa_elliptic_curve curve;
-        switch (key_type) {
-            case SA_KEY_TYPE_EC: {
-                curve = static_cast<sa_elliptic_curve>(key_length);
-                key_length = ec_get_key_size(curve);
-                clear_key = random_ec(key_length);
-                key = create_sa_key_ec(&rights, curve, clear_key);
-                break;
-            }
-            case SA_KEY_TYPE_RSA: {
-                clear_key = get_rsa_private_key(key_length);
-                key = create_sa_key_rsa(&rights, clear_key);
-                break;
-            }
-            case SA_KEY_TYPE_DH: {
-                std::tuple<std::vector<uint8_t>, std::vector<uint8_t>> dh_parameters = get_dh_parameters(key_length);
-                key = create_sa_key_dh(&rights, dh_parameters);
-                break;
-            }
-            default:
-                FAIL();
-        }
-
+        auto key = create_sa_key(key_type, key_length, clear_key, curve);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "key type not supported";

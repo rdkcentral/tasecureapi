@@ -57,9 +57,13 @@ namespace {
 
         auto header = key_header(*key);
         ASSERT_NE(nullptr, header.get());
+
+        sa_type_parameters type_parameters;
+        memset(&type_parameters, 0, sizeof(sa_type_parameters));
+        type_parameters.curve = curve;
         ASSERT_TRUE(memcmp(&key_rights, &header->rights, sizeof(sa_rights)) == 0);
         ASSERT_EQ(key_size, header->size);
-        ASSERT_EQ(curve, header->param);
+        ASSERT_EQ(memcmp(&type_parameters, &header->type_parameters, sizeof(sa_type_parameters)), 0);
         ASSERT_EQ(clear_key_type, header->type);
 
         // Test exporting and re-importing key
@@ -77,7 +81,7 @@ namespace {
         ASSERT_NE(nullptr, exported_key_header.get());
         ASSERT_TRUE(memcmp(&key_rights, &header->rights, sizeof(sa_rights)) == 0);
         ASSERT_EQ(key_size, exported_key_header->size);
-        ASSERT_EQ(curve, exported_key_header->param);
+        ASSERT_EQ(memcmp(&type_parameters, &exported_key_header->type_parameters, sizeof(sa_type_parameters)), 0);
         ASSERT_EQ(clear_key_type, exported_key_header->type);
 
         ASSERT_TRUE(key_check(clear_key_type, *exported_key, clear_key));
@@ -379,11 +383,13 @@ namespace {
         } else {
             ASSERT_EQ(status, SA_STATUS_OK);
 
+            sa_type_parameters type_parameters;
+            memset(&type_parameters, 0, sizeof(sa_type_parameters));
             auto header = key_header(*key);
             ASSERT_NE(nullptr, header.get());
             ASSERT_TRUE(memcmp(&key_rights, &header->rights, sizeof(sa_rights)) == 0);
             ASSERT_EQ(clear_key.size(), header->size);
-            ASSERT_EQ(0, header->param);
+            ASSERT_EQ(memcmp(&type_parameters, &header->type_parameters, sizeof(sa_type_parameters)), 0);
             ASSERT_EQ(SA_KEY_TYPE_SYMMETRIC, header->type);
 
             // 0 entitled TAs implicitly adds the all TA IDs allowed value. 1 or more means the REE TA ID is disallowed

@@ -412,6 +412,26 @@ typedef struct {
     sa_uuid allowed_tas[MAX_NUM_ALLOWED_TA_IDS];
 } sa_rights;
 
+#define DH_MAX_MOD_SIZE 512
+
+/**
+ * Type parameters for the sa_header.
+ */
+typedef union {
+    sa_elliptic_curve curve;
+
+    struct {
+        /** Prime. */
+        uint8_t p[DH_MAX_MOD_SIZE];
+        /** Prime length in bytes. */
+        size_t p_length;
+        /** Generator. */
+        uint8_t g[DH_MAX_MOD_SIZE];
+        /** Generator length in bytes. */
+        size_t g_length;
+    } dh_parameters;
+} sa_type_parameters;
+
 /**
  * Exported key container header.
  */
@@ -422,8 +442,8 @@ typedef struct {
     sa_rights rights;
     /** Key type. One of sa_key_type type values. */
     uint8_t type;
-    /** Additional key type parameter. One of sa_elliptic_curve values for SA_KEY_TYPE_EC. */
-    uint8_t param;
+    /** Additional key type parameter. */
+    sa_type_parameters type_parameters;
     /**
      * Key length in bytes. Modulus length for SA_KEY_TYPE_RSA and SA_KEY_TYPE_DH, private key
      * length for SA_KEY_TYPE_EC, symmetric key length for SA_KEY_TYPE_SYMMETRIC.

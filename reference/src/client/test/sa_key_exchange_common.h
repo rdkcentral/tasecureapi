@@ -47,27 +47,15 @@ protected:
             const std::vector<uint8_t>& kd,
             const std::vector<uint8_t>& shared_secret);
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
     static bool setup_key_exchange(
             std::shared_ptr<sa_key>& kd,
             std::vector<uint8_t>& clear_kd,
             std::shared_ptr<sa_key>& dh_key,
-            std::vector<uint8_t>& dh_public_key,
+            std::shared_ptr<EVP_PKEY>& dh_public_key,
             std::shared_ptr<EVP_PKEY>& other_dh,
             std::vector<uint8_t>& other_public_key,
             const std::vector<uint8_t>& dhp,
             const std::vector<uint8_t>& dhg);
-#else
-    static bool setup_key_exchange(
-            std::shared_ptr<sa_key>& kd,
-            std::vector<uint8_t>& clear_kd,
-            std::shared_ptr<sa_key>& dh_key,
-            std::vector<uint8_t>& dh_public_key,
-            std::shared_ptr<DH>& other_dh,
-            std::vector<uint8_t>& other_public_key,
-            const std::vector<uint8_t>& dhp,
-            const std::vector<uint8_t>& dhg);
-#endif
 };
 
 #endif // SA_KEY_EXCHANGE_COMMON_H

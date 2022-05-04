@@ -702,7 +702,8 @@ static sa_status decrypt_key_and_verify_mac(
             break;
         }
 
-        uint8_t type_parameters = 0;
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
         if (key_type == SA_KEY_TYPE_RSA) {
             size_t rsa_key_size = rsa_validate_pkcs8(key, payload->encrypted_key_length);
             if (rsa_key_size == 0) {
@@ -723,7 +724,7 @@ static sa_status decrypt_key_and_verify_mac(
                 break;
             }
 
-            type_parameters = curve;
+            type_parameters.curve = curve;
         } else if (key_type == SA_KEY_TYPE_SYMMETRIC) {
             if (payload->encrypted_key_length != key_size) {
                 ERROR("Invalid key size");
@@ -736,7 +737,7 @@ static sa_status decrypt_key_and_verify_mac(
             break;
         }
 
-        if (!stored_key_create(stored_key, &rights, NULL, key_type, type_parameters, key_size,
+        if (!stored_key_create(stored_key, &rights, NULL, key_type, &type_parameters, key_size,
                     key, payload->encrypted_key_length)) {
             ERROR("stored_key_create failed");
             status = SA_STATUS_INTERNAL_ERROR;

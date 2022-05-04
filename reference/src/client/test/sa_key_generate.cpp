@@ -28,15 +28,15 @@ namespace {
         auto key_type = std::get<0>(GetParam());
         auto key_length = std::get<1>(GetParam());
 
-        size_t curve;
+        sa_elliptic_curve curve;
         std::tuple<std::vector<uint8_t>, std::vector<uint8_t>> dh_parameters;
-        void* parameters = nullptr;
+        void* parameters;
         sa_generate_parameters_symmetric parameters_symmetric;
         sa_generate_parameters_ec parameters_ec;
         sa_generate_parameters_dh parameters_dh;
         switch (key_type) {
             case SA_KEY_TYPE_EC: {
-                curve = key_length;
+                curve = static_cast<sa_elliptic_curve>(key_length);
                 key_length = ec_get_key_size(static_cast<sa_elliptic_curve>(curve));
                 parameters_ec.curve = static_cast<sa_elliptic_curve>(curve);
                 parameters = &parameters_ec;
@@ -45,7 +45,6 @@ namespace {
             case SA_KEY_TYPE_SYMMETRIC: {
                 parameters_symmetric.key_length = key_length;
                 parameters = &parameters_symmetric;
-                curve = 0;
                 break;
             }
             case SA_KEY_TYPE_DH: {
@@ -55,7 +54,6 @@ namespace {
                 parameters_dh.g = std::get<1>(dh_parameters).data();
                 parameters_dh.g_length = std::get<1>(dh_parameters).size();
                 parameters = &parameters_dh;
-                curve = 0;
                 break;
             }
             default:
@@ -74,11 +72,24 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
+        sa_type_parameters type_parameters;
+        memset(&type_parameters, 0, sizeof(sa_type_parameters));
+        if (key_type == SA_KEY_TYPE_DH) {
+            memcpy(type_parameters.dh_parameters.p, std::get<0>(dh_parameters).data(),
+                    std::get<0>(dh_parameters).size());
+            type_parameters.dh_parameters.p_length = std::get<0>(dh_parameters).size();
+            memcpy(type_parameters.dh_parameters.g, std::get<1>(dh_parameters).data(),
+                    std::get<1>(dh_parameters).size());
+            type_parameters.dh_parameters.g_length = std::get<1>(dh_parameters).size();
+        } else if (key_type == SA_KEY_TYPE_EC) {
+            type_parameters.curve = curve;
+        }
+
         auto header = key_header(*key);
         ASSERT_NE(nullptr, header.get());
         ASSERT_TRUE(memcmp(&rights, &header->rights, sizeof(sa_rights)) == 0);
         ASSERT_EQ(key_length, header->size);
-        ASSERT_EQ(curve, header->param);
+        ASSERT_EQ(memcmp(&type_parameters, &header->type_parameters, sizeof(sa_type_parameters)), 0);
         ASSERT_EQ(key_type, header->type);
     }
 

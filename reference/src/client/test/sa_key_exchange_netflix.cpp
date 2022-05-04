@@ -34,12 +34,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key, dhp, dhg));
 
@@ -64,12 +60,7 @@ namespace {
         // Calculate the test side of the netflix key exchange.
         std::vector<uint8_t> clear_key(SYM_128_KEY_SIZE);
         std::vector<uint8_t> clear_shared_secret;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
         ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_dh, dh_public_key, dhp, dhg));
-#else
-        ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_dh, dh_public_key));
-#endif
-
         std::vector<uint8_t> clear_kenc;
         std::vector<uint8_t> clear_khmac;
         std::vector<uint8_t> clear_kwrap;
@@ -88,12 +79,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -123,12 +110,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -159,12 +142,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -195,12 +174,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -224,12 +199,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -260,12 +231,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -296,12 +263,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -332,12 +295,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -368,12 +327,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -404,12 +359,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -453,12 +404,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -497,12 +444,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -534,12 +477,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -588,12 +527,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_3072(), sample_dh_g_3072()));
@@ -632,12 +567,8 @@ namespace {
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
         std::shared_ptr<sa_key> dh_key;
-        std::vector<uint8_t> dh_public_key;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
+        std::shared_ptr<EVP_PKEY> dh_public_key;
         std::shared_ptr<EVP_PKEY> other_dh;
-#else
-        std::shared_ptr<DH> other_dh;
-#endif
         std::vector<uint8_t> other_public_key;
         ASSERT_TRUE(setup_key_exchange(kd, clear_kd, dh_key, dh_public_key, other_dh, other_public_key,
                 sample_dh_p_2048(), sample_dh_g_2048()));

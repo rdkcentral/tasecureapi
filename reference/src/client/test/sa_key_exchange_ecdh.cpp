@@ -39,14 +39,7 @@ namespace {
             GTEST_SKIP() << "Curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
-
-        size_t ec_public_key_length;
-        status = sa_key_get_public(nullptr, &ec_public_key_length, *ec_key);
-        ASSERT_EQ(status, SA_STATUS_OK);
-
-        std::vector<uint8_t> ec_public_key(ec_public_key_length);
-        status = sa_key_get_public(ec_public_key.data(), &ec_public_key_length, *ec_key);
-        ASSERT_EQ(status, SA_STATUS_OK);
+        std::shared_ptr<EVP_PKEY> ec_public_key(get_public_key(*ec_key), EVP_PKEY_free);
 
         std::shared_ptr<EVP_PKEY> other_ec;
         std::vector<uint8_t> other_public_key;

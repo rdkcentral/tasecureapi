@@ -67,7 +67,7 @@ bool stored_key_create(
         const sa_rights* rights,
         const sa_rights* parent_rights,
         sa_key_type key_type,
-        uint8_t type_parameters,
+        const sa_type_parameters* type_parameters,
         size_t size,
         const void* in,
         size_t in_length);

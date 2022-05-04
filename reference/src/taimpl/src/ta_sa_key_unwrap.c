@@ -638,7 +638,7 @@ static sa_status ta_sa_key_unwrap_ec(
             break;
         }
 
-        if (!key_type_supports_ec(header->type, header->param, header->size)) {
+        if (!key_type_supports_ec(header->type, header->type_parameters.curve, header->size)) {
             ERROR("key_type_supports_ec failed");
             status = SA_STATUS_BAD_KEY_TYPE;
             break;

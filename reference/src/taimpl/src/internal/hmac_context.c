@@ -124,11 +124,6 @@ hmac_context_t* hmac_context_create(
             break;
         }
 
-        if (EVP_DigestInit_ex(openssl_context, md, NULL) != 1) {
-            ERROR("EVP_DigestInit_ex failed");
-            break;
-        }
-
         if (EVP_DigestSignInit(openssl_context, NULL, md, NULL, openssl_key) != 1) {
             ERROR("EVP_DigestSignInit failed");
             break;

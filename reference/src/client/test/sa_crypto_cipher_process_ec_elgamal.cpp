@@ -20,7 +20,6 @@
 #include "sa.h"
 #include "sa_crypto_cipher_common.h"
 #include "gtest/gtest.h"
-#include <openssl/evp.h>
 
 using namespace client_test_helpers;
 
@@ -36,7 +35,7 @@ namespace {
 
         ASSERT_NE(evp_pkey, nullptr);
 
-        auto ec_group = ec_group_from_curve(curve);
+        auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
         ASSERT_NE(ec_group, nullptr);
 
         // pick valid random x coordinate
@@ -46,18 +45,7 @@ namespace {
         }
 
         auto in = std::vector<uint8_t>(4 * key_size);
-
-        int public_key_length = i2d_PublicKey(evp_pkey.get(), nullptr);
-        ASSERT_GT(public_key_length, 0);
-
-        std::vector<uint8_t> public_bytes(public_key_length);
-        unsigned char* buffer = public_bytes.data();
-        ASSERT_EQ(i2d_PublicKey(evp_pkey.get(), &buffer), public_key_length);
-
-        auto ec_point = std::shared_ptr<EC_POINT>(EC_POINT_new(ec_group.get()), EC_POINT_free);
-        ASSERT_EQ(EC_POINT_oct2point(ec_group.get(), ec_point.get(), public_bytes.data(), public_bytes.size(), nullptr),
-                1);
-        ASSERT_TRUE(encrypt_ec_elgamal_openssl(in, clear, curve, ec_point));
+        ASSERT_TRUE(encrypt_ec_elgamal_openssl(in, clear, curve, evp_pkey));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -100,7 +88,7 @@ namespace {
 
         ASSERT_NE(evp_pkey, nullptr);
 
-        auto ec_group = ec_group_from_curve(curve);
+        auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
         ASSERT_NE(ec_group, nullptr);
 
         // pick valid random x coordinate
@@ -110,17 +98,7 @@ namespace {
         }
 
         auto in = std::vector<uint8_t>(4 * key_size);
-        int public_key_length = i2d_PublicKey(evp_pkey.get(), nullptr);
-        ASSERT_GT(public_key_length, 0);
-
-        std::vector<uint8_t> public_bytes(public_key_length);
-        unsigned char* buffer = public_bytes.data();
-        ASSERT_EQ(i2d_PublicKey(evp_pkey.get(), &buffer), public_key_length);
-
-        auto ec_point = std::shared_ptr<EC_POINT>(EC_POINT_new(ec_group.get()), EC_POINT_free);
-        ASSERT_EQ(EC_POINT_oct2point(ec_group.get(), ec_point.get(), public_bytes.data(), public_bytes.size(), nullptr),
-                1);
-        ASSERT_TRUE(encrypt_ec_elgamal_openssl(in, clear, curve, ec_point));
+        ASSERT_TRUE(encrypt_ec_elgamal_openssl(in, clear, curve, evp_pkey));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -163,7 +141,7 @@ namespace {
 
         ASSERT_NE(evp_pkey, nullptr);
 
-        auto ec_group = ec_group_from_curve(curve);
+        auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
         ASSERT_NE(ec_group, nullptr);
 
         // pick valid random x coordinate
@@ -173,17 +151,7 @@ namespace {
         }
 
         auto in = std::vector<uint8_t>(4 * key_size);
-        int public_key_length = i2d_PublicKey(evp_pkey.get(), nullptr);
-        ASSERT_GT(public_key_length, 0);
-
-        std::vector<uint8_t> public_bytes(public_key_length);
-        unsigned char* buffer = public_bytes.data();
-        ASSERT_EQ(i2d_PublicKey(evp_pkey.get(), &buffer), public_key_length);
-
-        auto ec_point = std::shared_ptr<EC_POINT>(EC_POINT_new(ec_group.get()), EC_POINT_free);
-        ASSERT_EQ(EC_POINT_oct2point(ec_group.get(), ec_point.get(), public_bytes.data(), public_bytes.size(), nullptr),
-                1);
-        ASSERT_TRUE(encrypt_ec_elgamal_openssl(in, clear, curve, ec_point));
+        ASSERT_TRUE(encrypt_ec_elgamal_openssl(in, clear, curve, evp_pkey));
 
         sa_rights rights;
         rights_set_allow_all(&rights);

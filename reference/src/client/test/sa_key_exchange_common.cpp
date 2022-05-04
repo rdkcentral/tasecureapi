@@ -52,27 +52,15 @@ bool SaKeyExchangeNetflixTest::netflix_compute_secret(
     return true;
 }
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
 bool SaKeyExchangeNetflixTest::setup_key_exchange(
         std::shared_ptr<sa_key>& kd,
         std::vector<uint8_t>& clear_kd,
         std::shared_ptr<sa_key>& dh_key,
-        std::vector<uint8_t>& dh_public_key,
+        std::shared_ptr<EVP_PKEY>& dh_public_key,
         std::shared_ptr<EVP_PKEY>& other_dh,
         std::vector<uint8_t>& other_public_key,
         const std::vector<uint8_t>& dhp,
         const std::vector<uint8_t>& dhg) {
-#else
-bool SaKeyExchangeNetflixTest::setup_key_exchange(
-        std::shared_ptr<sa_key>& kd,
-        std::vector<uint8_t>& clear_kd,
-        std::shared_ptr<sa_key>& dh_key,
-        std::vector<uint8_t>& dh_public_key,
-        std::shared_ptr<DH>& other_dh,
-        std::vector<uint8_t>& other_public_key,
-        const std::vector<uint8_t>& dhp,
-        const std::vector<uint8_t>& dhg) {
-#endif
     sa_rights rights;
     rights_set_allow_all(&rights);
 
@@ -94,11 +82,20 @@ bool SaKeyExchangeNetflixTest::setup_key_exchange(
         return false;
     }
 
-    dh_public_key.resize(dh_public_key_length);
-    if (sa_key_get_public(dh_public_key.data(), &dh_public_key_length, *dh_key) != SA_STATUS_OK) {
+    std::vector<uint8_t> dh_public_key_bytes(dh_public_key_length);
+    if (sa_key_get_public(dh_public_key_bytes.data(), &dh_public_key_length, *dh_key) != SA_STATUS_OK) {
         ERROR("sa_key_get_public failed");
         return false;
     }
+
+    EVP_PKEY* temp = dh_import_public(dh_public_key_bytes.data(), dh_public_key_bytes.size(), dhp.data(), dhp.size(),
+            dhg.data(), dhg.size());
+    if (temp == nullptr) {
+        ERROR("dh_import_public failed");
+        return false;
+    }
+
+    dh_public_key = std::shared_ptr<EVP_PKEY>(temp, EVP_PKEY_free);
 
     // Generate the other DH key.
     if (!dh_generate(other_dh, other_public_key, dhp, dhg)) {

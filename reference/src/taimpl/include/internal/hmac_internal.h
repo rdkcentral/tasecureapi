@@ -53,7 +53,7 @@ extern "C" {
  * @param[in] key key.
  * @param[in] key_length the key length.
  * @return status of the operation.
-*/
+ */
 bool hmac_internal(
         void* mac,
         size_t* mac_length,

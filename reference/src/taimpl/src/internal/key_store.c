@@ -112,7 +112,7 @@ static bool validate_header_format(const sa_header* hdr) {
     }
 
     // check type
-    if (!key_type_supports_any(hdr->type, hdr->param, hdr->size)) {
+    if (!key_type_supports_any(hdr->type, hdr->type_parameters.curve, hdr->size)) {
         ERROR("key_type_supports_any failed");
         return false;
     }
@@ -231,8 +231,8 @@ static stored_key_t* unwrap(
             break;
         }
 
-        if (!stored_key_create(&stored_key, &header->rights, NULL, header->type, header->param, header->size, cleartext,
-                    cipher_parameters->ciphertext_length - pad_value)) {
+        if (!stored_key_create(&stored_key, &header->rights, NULL, header->type, &header->type_parameters,
+                    header->size, cleartext, cipher_parameters->ciphertext_length - pad_value)) {
             ERROR("stored_key_create failed");
             break;
         }
@@ -667,7 +667,7 @@ sa_status key_store_get_header(
         memcpy(header->magic, MAGIC, sizeof(MAGIC));
         memcpy(&header->rights, &wrapped_key->header.rights, sizeof(sa_rights));
         header->type = wrapped_key->header.type;
-        header->param = wrapped_key->header.param;
+        memcpy(&header->type_parameters, &wrapped_key->header.type_parameters, sizeof(sa_type_parameters));
         header->size = wrapped_key->header.size;
 
         status = SA_STATUS_OK;

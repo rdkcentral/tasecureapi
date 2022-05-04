@@ -587,8 +587,10 @@ bool otp_root_key_ladder(
             break;
         }
 
-        status = stored_key_create(stored_key_derived, rights, NULL, SA_KEY_TYPE_SYMMETRIC, 0, derived_length,
-                derived, derived_length);
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
+        status = stored_key_create(stored_key_derived, rights, NULL, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
+                derived_length, derived, derived_length);
         if (!status) {
             ERROR("stored_key_create failed");
             break;
