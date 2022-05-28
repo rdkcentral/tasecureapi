@@ -31,22 +31,6 @@ extern "C" {
 #define EVP_PKEY_SYM ((int) 0x83655100)
 #define EVP_PKEY_SYM_NAME "SecApi 3 Symmetric"
 
-// These do not follow the convention of all upper case to make the DECLARE_CIPHER macro work properly.
-#define BLOCK_SIZE_aes_cbc 16
-#define BLOCK_SIZE_aes_ecb 16
-#define BLOCK_SIZE_aes_ctr 1
-#define BLOCK_SIZE_aes_gcm 1
-#define BLOCK_SIZE_chacha20_chacha20 1
-#define BLOCK_SIZE_chacha20_poly1305 1
-#define IV_LEN_aes_cbc 16
-#define IV_LEN_aes_ecb 0
-#define IV_LEN_aes_ctr 16
-#define IV_LEN_aes_gcm 12
-#define IV_LEN_chacha20_chacha20 16
-#define IV_LEN_chacha20_poly1305 12
-#define NID_chacha20_256_chacha20 NID_chacha20
-#define NID_chacha20_256_poly1305 NID_chacha20_poly1305
-
 extern mtx_t engine_mutex;
 
 #define MAX_KEY_DATA_LEN 512

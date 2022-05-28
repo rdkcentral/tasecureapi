@@ -69,7 +69,7 @@ int sa_set_pkey_data(
         EVP_PKEY** evp_pkey,
         const pkey_data* data) {
 
-    bool result = false;
+    int result = 0;
     int type = EVP_PKEY_id(*evp_pkey);
     void* temp_key = NULL;
     switch (type) {
@@ -162,7 +162,7 @@ int sa_set_pkey_data(
 
                 // Assigned to evp_pkey;
                 new_data = NULL;
-                result = true;
+                result = 1;
             } while (false);
 
             if (new_data != NULL)
@@ -170,6 +170,7 @@ int sa_set_pkey_data(
         } else {
             pkey_data* new_data = temp_key;
             new_data->type = EVP_PKEY_SECAPI3;
+            result = 1;
         }
     }
 

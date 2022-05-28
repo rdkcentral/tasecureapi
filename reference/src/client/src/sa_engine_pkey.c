@@ -27,27 +27,9 @@
 #endif
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000
-int EVP_PKEY_CTX_md(
-        EVP_PKEY_CTX* evp_pkey_ctx,
-        int optype,
-        int command,
-        const char* message_digest) {
-    if (message_digest == NULL) {
-        ERROR("Invalid message digest");
-        return 0;
-    }
-
-    const EVP_MD* evp_md = EVP_get_digestbyname(message_digest);
-    if (evp_md == NULL) {
-        ERROR("Invalid message digest");
-        return 0;
-    }
-
-    return EVP_PKEY_CTX_ctrl(evp_pkey_ctx, -1, optype, command, 0, (void*) evp_md);
-}
+#define EVP_PKEY_get0_engine(evp_pkey) evp_pkey->engine
 #endif
 
-#define MAX_SIGNATURE_LENGTH 512
 #define RSA_DEFAULT_PADDING_MODE RSA_PKCS1_PADDING
 #define RSA_DEFAULT_PSS_SALT_LENGTH RSA_PSS_SALTLEN_AUTO
 
@@ -58,8 +40,6 @@ typedef struct {
     const EVP_MD* evp_md;
     // Mac key signing
     sa_crypto_mac_context mac_context;
-    // key_gen
-    sa_key key;
 } pkey_app_data;
 
 static int pkey_nids[] = {
@@ -131,7 +111,6 @@ static int pkey_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     app_data->evp_md_ctx = NULL;
     app_data->evp_md = NULL;
     app_data->mac_context = 0;
-    app_data->key = 0;
     EVP_PKEY_CTX_set_app_data(evp_pkey_ctx, app_data);
     return 1;
 }
@@ -158,7 +137,6 @@ static int pkey_copy(
     new_app_data->evp_md_ctx = app_data->evp_md_ctx;
     new_app_data->evp_md = app_data->evp_md;
     new_app_data->mac_context = app_data->mac_context;
-    new_app_data->key = app_data->key;
     EVP_PKEY_CTX_set_app_data(dst_evp_pkey_ctx, new_app_data);
     return 1;
 }
@@ -169,6 +147,7 @@ static void pkey_cleanup(EVP_PKEY_CTX* evp_pkey_ctx) {
         OPENSSL_free(app_data);
 }
 
+// RSA and EC signing and verification
 static int pkey_signverify_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     EVP_PKEY* evp_pkey = EVP_PKEY_CTX_get0_pkey(evp_pkey_ctx);
     if (evp_pkey == NULL) {
@@ -185,6 +164,7 @@ static int pkey_signverify_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     return 1;
 }
 
+// RSA and EC signing
 static int pkey_sign(
         EVP_PKEY_CTX* evp_pkey_ctx,
         unsigned char* signature,
@@ -326,6 +306,7 @@ static int pkey_sign(
     return 1;
 }
 
+// RSA and EC verification
 static int pkey_verify(
         EVP_PKEY_CTX* evp_pkey_ctx,
         const unsigned char* signature,
@@ -424,6 +405,7 @@ static int pkey_verify(
 }
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
+// ED25519 and ED448 signing
 static int pkey_digestsign(
         EVP_MD_CTX* evp_md_ctx,
         unsigned char* signature,
@@ -487,6 +469,7 @@ static int pkey_digestsign(
     return 1;
 }
 
+// ED25519 and ED448 verification
 static int pkey_digestverify(
         EVP_MD_CTX* evp_md_ctx,
         const unsigned char* signature,
@@ -656,6 +639,7 @@ static int pkey_mac_update(
     return 1;
 }
 
+// HMAC and CMAC signing
 static int pkey_signctx_init(
         EVP_PKEY_CTX* evp_pkey_ctx,
         EVP_MD_CTX* evp_md_ctx) {
@@ -693,6 +677,7 @@ static int pkey_signctx_init(
     return 1;
 }
 
+// HMAC and CMAC signing
 static int pkey_signctx(
         EVP_PKEY_CTX* evp_pkey_ctx,
         unsigned char* signature,
@@ -724,6 +709,7 @@ static int pkey_signctx(
     return 1;
 }
 
+// RSA encrypt/decrypt
 static int pkey_encryptdecrypt_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     EVP_PKEY* evp_pkey = EVP_PKEY_CTX_get0_pkey(evp_pkey_ctx);
     if (evp_pkey == NULL) {
@@ -740,6 +726,7 @@ static int pkey_encryptdecrypt_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     return 1;
 }
 
+// RSA encrypt
 static int pkey_encrypt(
         EVP_PKEY_CTX* evp_pkey_ctx,
         unsigned char* out,
@@ -820,6 +807,7 @@ static int pkey_encrypt(
     return result;
 }
 
+// RSA decrypt
 static int pkey_decrypt(
         EVP_PKEY_CTX* evp_pkey_ctx,
         unsigned char* out, // NOLINT
@@ -887,6 +875,7 @@ static int pkey_decrypt(
     return 1;
 }
 
+// DH and ECDH derive
 static int pkey_pderive_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     EVP_PKEY* evp_pkey = EVP_PKEY_CTX_get0_pkey(evp_pkey_ctx);
     if (evp_pkey == NULL) {
@@ -907,6 +896,7 @@ static int pkey_pderive_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     return 1;
 }
 
+// DH and ECDH derive
 static int pkey_pderive(
         EVP_PKEY_CTX* evp_pkey_ctx,
         unsigned char* shared_secret_key,
@@ -1074,12 +1064,10 @@ static int pkey_ctrl(
                 else
                     app_data->evp_md = EVP_md_null();
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-                if (EVP_DigestInit_ex(app_data->evp_md_ctx, app_data->evp_md, EVP_PKEY_get0_engine(evp_pkey)) != 1)
-#else
-                if (EVP_DigestInit_ex(app_data->evp_md_ctx, app_data->evp_md, evp_pkey->engine) != 1)
-#endif
+                if (EVP_DigestInit_ex(app_data->evp_md_ctx, app_data->evp_md, EVP_PKEY_get0_engine(evp_pkey)) != 1) {
+                    ERROR("EVP_DigestInit_ex failed");
                     return 0;
+                }
             } else {
                 app_data->evp_md = p2;
             }

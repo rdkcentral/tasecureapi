@@ -16,6 +16,8 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+
 #include "sa_engine_internal.h"
 #include "sa_log.h"
 #include <openssl/evp.h>
@@ -24,7 +26,6 @@
 #endif
 
 static int pkey_asn1_nids[] = {EVP_PKEY_SYM};
-
 static int pkey_asn1_nids_num = (sizeof(pkey_asn1_nids) / sizeof(pkey_asn1_nids[0]));
 static EVP_PKEY_ASN1_METHOD* sym_pkey_asn1_method = NULL;
 
@@ -79,7 +80,6 @@ static int pkey_asn1_ctrl(
     return 0;
 }
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
 static int pkey_asn1_set_priv_key(
         EVP_PKEY* evp_pkey,
         const unsigned char* private_key,
@@ -120,7 +120,6 @@ static int pkey_asn1_set_priv_key(
 
     return result;
 }
-#endif
 
 static EVP_PKEY_ASN1_METHOD* get_pkey_asn1_method(
         int nid,
@@ -130,9 +129,7 @@ static EVP_PKEY_ASN1_METHOD* get_pkey_asn1_method(
         EVP_PKEY_asn1_set_public(evp_pkey_asn1_method, NULL, NULL, NULL, NULL, pkey_asn1_size, pkey_asn1_bits);
         EVP_PKEY_asn1_set_free(evp_pkey_asn1_method, pkey_asn1_free);
         EVP_PKEY_asn1_set_ctrl(evp_pkey_asn1_method, pkey_asn1_ctrl);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
         EVP_PKEY_asn1_set_set_priv_key(evp_pkey_asn1_method, pkey_asn1_set_priv_key);
-#endif
         if (EVP_PKEY_asn1_add0(evp_pkey_asn1_method) != 1) {
             ERROR("EVP_PKEY_asn1_add0 failed");
             EVP_PKEY_asn1_free(evp_pkey_asn1_method);
@@ -174,3 +171,5 @@ int sa_get_engine_pkey_asn1_meths(
     mtx_unlock(&engine_mutex);
     return *method == NULL ? 0 : 1;
 }
+
+#endif

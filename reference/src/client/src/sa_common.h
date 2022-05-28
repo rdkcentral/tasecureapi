@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@ extern "C" {
 #define CHACHA20_NONCE_LENGTH 12
 #define CHACHA20_COUNTER_LENGTH 4
 #define CHACHA20_TAG_LENGTH 16
+#define MAX_SIGNATURE_LENGTH 512
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000
 #define RSA_PSS_SALTLEN_DIGEST -1

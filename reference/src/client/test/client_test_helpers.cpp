@@ -2559,7 +2559,7 @@ namespace client_test_helpers {
         }
 
         if (SA_USAGE_BIT_TEST(header->rights.usage_flags, SA_USAGE_FLAG_SIGN)) {
-            std::vector<uint8_t> signature(512);
+            std::vector<uint8_t> signature(MAX_SIGNATURE_LENGTH);
             sa_sign_parameters_rsa_pss params = {SA_DIGEST_ALGORITHM_SHA256, false, 32};
             size_t signature_length = signature.size();
             status = sa_crypto_sign(signature.data(), &signature_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, key,
@@ -2577,7 +2577,7 @@ namespace client_test_helpers {
                 return false;
             }
         } else {
-            std::vector<uint8_t> signature(512);
+            std::vector<uint8_t> signature(MAX_SIGNATURE_LENGTH);
             sa_sign_parameters_rsa_pss params = {SA_DIGEST_ALGORITHM_SHA256, false, 32};
             size_t signature_length = signature.size();
             status = sa_crypto_sign(signature.data(), &signature_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, key,
@@ -3223,7 +3223,7 @@ namespace client_test_helpers {
 
         bool status = false;
         EVP_MD_CTX* context = nullptr;
-        uint8_t local_signature[512];
+        uint8_t local_signature[MAX_SIGNATURE_LENGTH];
         size_t local_signature_length;
         do {
             const EVP_MD* openssl_digest;

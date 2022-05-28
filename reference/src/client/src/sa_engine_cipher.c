@@ -25,6 +25,22 @@
 #include <memory.h>
 #endif
 
+// These do not follow the convention of all upper case to make the DECLARE_CIPHER macro work properly.
+#define BLOCK_SIZE_aes_cbc 16
+#define BLOCK_SIZE_aes_ecb 16
+#define BLOCK_SIZE_aes_ctr 1
+#define BLOCK_SIZE_aes_gcm 1
+#define BLOCK_SIZE_chacha20_chacha20 1
+#define BLOCK_SIZE_chacha20_poly1305 1
+#define IV_LEN_aes_cbc 16
+#define IV_LEN_aes_ecb 0
+#define IV_LEN_aes_ctr 16
+#define IV_LEN_aes_gcm 12
+#define IV_LEN_chacha20_chacha20 16
+#define IV_LEN_chacha20_poly1305 12
+#define NID_chacha20_256_chacha20 NID_chacha20
+#define NID_chacha20_256_poly1305 NID_chacha20_poly1305
+
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
 
 #define DECLARE_CIPHER(algorithm, keysize, mode, cipher_flags) \
@@ -194,7 +210,7 @@ static int cipher_do_cipher(
         EVP_CIPHER_CTX* cipher_ctx,
         unsigned char* out, // NOLINT
         const unsigned char* in,
-        size_t inl) {
+        size_t in_length) {
 
     int result = -1;
     do {
@@ -209,7 +225,7 @@ static int cipher_do_cipher(
             size_t aad_length;
             if (out == NULL) {
                 aad = (void*) in;
-                aad_length = inl;
+                aad_length = in_length;
             } else {
                 aad_length = 0;
             }
@@ -276,10 +292,10 @@ static int cipher_do_cipher(
 
         if (out != NULL) {
             sa_status status = SA_STATUS_OK;
-            size_t bytes_to_process = inl;
+            size_t bytes_to_process = in_length;
             if (in != NULL) {
-                sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, .context.clear = {out, inl, 0}};
-                sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, .context.clear = {(void*) in, inl, 0}};
+                sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, .context.clear = {out, in_length, 0}};
+                sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, .context.clear = {(void*) in, in_length, 0}};
 
                 status = sa_crypto_cipher_process(&out_buffer, app_data->cipher_context, &in_buffer,
                         &bytes_to_process);

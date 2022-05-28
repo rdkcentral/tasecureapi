@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
  *
  * *Examples:*
  * *Signing (RSA, EC, ED25519, ED448)*
- * sa_key key;
+ * sa_key key = // Load key into SecApi 3;
  * ENGINE* engine = sa_get_engine();
  * EVP_PKEY* evp_pkey = ENGINE_load_private_key(engine, (char*)&key, NULL, NULL);
  * EVP_MD_CTX* evp_md_ctx = EVP_MD_CTX_new();
@@ -41,10 +41,12 @@
  * EVP_PKEY_CTX_set_rsa_pss_saltlen(evp_pkey_ctx, 16);
  * EVP_DigestSignUpdate(evp_md_ctx, data, data_length);
  * EVP_DigestSignFinal(evp_md_ctx, signature, &signature_length);
+ * EVP_MD_CTX_free(evp_md_ctx);
+ * EVP_PKEY_free(evp_pkey);
  * sa_engine_free(engine);
  *
  * *Signing Predigested Content (RSA, EC, ED25519, ED448)*
- * sa_key key;
+ * sa_key key = // Load key into SecApi 3;
  * ENGINE* engine = sa_get_engine();
  * EVP_PKEY* evp_pkey = ENGINE_load_private_key(engine, (char*)&key, NULL, NULL);
  * EVP_MD_CTX* evp_md_ctx = EVP_MD_CTX_new();
@@ -54,6 +56,8 @@
  * EVP_PKEY_CTX_set_rsa_pss_saltlen(evp_pkey_ctx, 16);
  * EVP_PKEY_CTX_set_signature_md(evp_pkey_ctx, evp_md);
  * EVP_PKEY_sign(evp_pkey_ctx, signature, &signature_length, digest, digest_length);
+ * EVP_MD_CTX_free(evp_md_ctx);
+ * EVP_PKEY_free(evp_pkey);
  * sa_engine_free(engine);
  *
  * *Decryption (RSA)*
@@ -63,6 +67,8 @@
  * EVP_PKEY_decrypt_init(evp_pkey_ctx);
  * EVP_PKEY_CTX_set_rsa_padding(evp_pkey_ctx, RSA_PKCS1_PADDING);
  * EVP_PKEY_decrypt(evp_pkey_ctx, decrypted_data, &decrypted_data_length, encrypted_data, encrypted_data_length);
+ * EVP_PKEY_CTX_free(evp_pkey_ctx);
+ * EVP_PKEY_free(evp_pkey);
  * sa_engine_free(engine);
  *
  * *Derivation (DH, EC, X25519, X448)*
@@ -72,26 +78,33 @@
  * EVP_PKEY_derive_init(evp_pkey_ctx);
  * EVP_PKEY_derive_set_peer(evp_pkey_ctx, other_public_key);
  * EVP_PKEY_derive(evp_pkey_ctx, shared_secret, &shared_secret_length);
+ * EVP_PKEY_CTX_free(evp_pkey_ctx);
+ * EVP_PKEY_free(evp_pkey);
  * sa_engine_free(engine);
  *
- * *MAC (HMAC, CMAC)*
- * sa_key key;
+ * *MAC (HMAC, CMAC with a symmetric key) - Only OpenSSL 1.1.1 and higher*
+ * sa_key key = // Load key into SecApi 3;
  * ENGINE* engine = sa_get_engine();
- * EVP_PKEY* evp_pkey = ENGINE_load_private_key(engine, (char*)&key, NULL, NULL); // Actually a symmetric key.
+ * EVP_PKEY* evp_pkey = ENGINE_load_private_key(engine, (char*)&key, NULL, NULL);
  * EVP_MD_CTX* evp_md_ctx = EVP_MD_CTX_new();
  * EVP_PKEY_CTX* evp_pkey_ctx;
  * EVP_DigestSignInit(evp_md_ctx, &evp_pkey_ctx, EVP_sha256(), engine, evp_pkey); // HMAC
  * EVP_DigestSignInit(evp_md_ctx, &evp_pkey_ctx, NULL, engine, evp_pkey); // CMAC
  * EVP_DigestSignUpdate(evp_md_ctx, data, data_length);
  * EVP_DigestSignFinal(evp_md_ctx, mac, &mac_length);
+ * EVP_MD_CTX_free(evp_md_ctx);
+ * EVP_PKEY_free(evp_pkey);
  * sa_engine_free(engine);
  *
  * *Encryption/Decryption (AES, CHACHA20)*
+ * sa_key key = // Load key into SecApi 3;
  * ENGINE* engine = sa_get_engine();
- * EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
- * EVP_EncryptInit_ex(cipher_ctx, EVP_aes_128_cbc(), engine, (const unsigned char*)key, iv);
- * EVP_EncryptUpdate(cipher_ctx, encrypted_data, &length, data, data_length);
- * EVP_EncryptFinal(cipher_ctx, encrypted_data + total_length, &length);
+ * EVP_CIPHER_CTX* evp_cipher_ctx = EVP_CIPHER_CTX_new();
+ * EVP_CipherInit_ex(evp_cipher_ctx, EVP_aes_128_cbc(), engine, (const unsigned char*)key, iv, 1); // 1 = enc, 0 = dec
+ * EVP_CipherUpdate(evp_cipher_ctx, encrypted_data, &length, data, data_length);
+ * EVP_CipherFinal(evp_cipher_ctx, encrypted_data + total_length, &length);
+ * EVP_CIPHER_CTX_free(evp_cipher_ctx);
+ * sa_engine_free(engine);
  */
 
 #ifndef SA_ENGINE_H
