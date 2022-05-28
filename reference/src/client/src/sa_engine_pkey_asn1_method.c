@@ -16,6 +16,8 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
+#include <openssl/opensslv.h>
+
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
 
 #include "sa_engine_internal.h"

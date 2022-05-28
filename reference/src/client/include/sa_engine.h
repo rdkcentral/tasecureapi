@@ -45,7 +45,7 @@
  * EVP_PKEY_free(evp_pkey);
  * sa_engine_free(engine);
  *
- * *Signing Predigested Content (RSA, EC, ED25519, ED448)*
+ * *Signing Predigested Content (RSA, EC)*
  * sa_key key = // Load key into SecApi 3;
  * ENGINE* engine = sa_get_engine();
  * EVP_PKEY* evp_pkey = ENGINE_load_private_key(engine, (char*)&key, NULL, NULL);
@@ -78,6 +78,7 @@
  * EVP_PKEY_derive_init(evp_pkey_ctx);
  * EVP_PKEY_derive_set_peer(evp_pkey_ctx, other_public_key);
  * EVP_PKEY_derive(evp_pkey_ctx, shared_secret, &shared_secret_length);
+ * sa_key shared_secret_key = *((sa_key*)shared_secret);
  * EVP_PKEY_CTX_free(evp_pkey_ctx);
  * EVP_PKEY_free(evp_pkey);
  * sa_engine_free(engine);
