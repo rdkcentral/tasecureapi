@@ -101,7 +101,7 @@
  * sa_key key = // Load key into SecApi 3;
  * ENGINE* engine = sa_get_engine();
  * EVP_CIPHER_CTX* evp_cipher_ctx = EVP_CIPHER_CTX_new();
- * EVP_CipherInit_ex(evp_cipher_ctx, EVP_aes_128_cbc(), engine, (const unsigned char*)key, iv, 1); // 1 = enc, 0 = dec
+ * EVP_CipherInit_ex(evp_cipher_ctx, EVP_aes_128_cbc(), engine, (const unsigned char*)&key, iv, 1); // 1 = enc, 0 = dec
  * EVP_CipherUpdate(evp_cipher_ctx, encrypted_data, &length, data, data_length);
  * EVP_CipherFinal(evp_cipher_ctx, encrypted_data + total_length, &length);
  * EVP_CIPHER_CTX_free(evp_cipher_ctx);
