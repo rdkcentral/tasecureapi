@@ -277,6 +277,7 @@ static sa_status content_key_rights_to_usage_flags(
     SA_USAGE_BIT_SET(*usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
 
     bool cgmsa_required = false;
+    bool analog_allowed = false;
     for (size_t i = 0; i < content_key_rights_count; ++i) {
         switch (content_key_rights_bytes[i]) {
             case TYPEJ_RIGHT_NOT_SET:
@@ -299,16 +300,22 @@ static sa_status content_key_rights_to_usage_flags(
                 break;
 
             case TYPEJ_RIGHT_ANALOG_OUTPUT_ALLOWED:
-                if (!cgmsa_required) {
+                analog_allowed = true;
+                if (cgmsa_required)
+                    SA_USAGE_BIT_CLEAR(*usage_flags, SA_USAGE_FLAG_ALLOWED_ANALOG_UNPROTECTED);
+                else
                     SA_USAGE_BIT_SET(*usage_flags, SA_USAGE_FLAG_ALLOWED_ANALOG_UNPROTECTED);
-                }
+
                 SA_USAGE_BIT_SET(*usage_flags, SA_USAGE_FLAG_ALLOWED_ANALOG_CGMSA);
                 break;
 
             case TYPEJ_RIGHT_CGMSA_REQUIRED:
                 cgmsa_required = true;
-                SA_USAGE_BIT_CLEAR(*usage_flags, SA_USAGE_FLAG_ALLOWED_ANALOG_UNPROTECTED);
-                SA_USAGE_BIT_SET(*usage_flags, SA_USAGE_FLAG_ALLOWED_ANALOG_CGMSA);
+                if (analog_allowed) {
+                    SA_USAGE_BIT_CLEAR(*usage_flags, SA_USAGE_FLAG_ALLOWED_ANALOG_UNPROTECTED);
+                    SA_USAGE_BIT_SET(*usage_flags, SA_USAGE_FLAG_ALLOWED_ANALOG_CGMSA);
+                }
+
                 break;
 
             default:
