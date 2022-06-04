@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -162,7 +162,7 @@ static sa_status ta_sa_key_derive_ansi_x963(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (parameters->key_length > SYM_MAX_SIZE) {
+    if (parameters->key_length > SYM_MAX_KEY_SIZE) {
         ERROR("Bad key_length");
         return SA_STATUS_BAD_PARAMETER;
     }
@@ -370,7 +370,7 @@ static sa_status ta_sa_key_derive_concat(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (parameters->key_length > SYM_MAX_SIZE) {
+    if (parameters->key_length > SYM_MAX_KEY_SIZE) {
         ERROR("Bad key_length");
         return SA_STATUS_BAD_PARAMETER;
     }
@@ -475,7 +475,7 @@ static sa_status ta_sa_key_derive_hkdf(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (parameters->key_length > SYM_MAX_SIZE) {
+    if (parameters->key_length > SYM_MAX_KEY_SIZE) {
         ERROR("Bad key_length");
         return SA_STATUS_BAD_PARAMETER;
     }

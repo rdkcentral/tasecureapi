@@ -17,7 +17,7 @@
  */
 
 #include "client_test_helpers.h"
-#include "sa_common.h"
+#include "sa_public_key.h"
 #include <cstring>
 
 #include <openssl/cmac.h>
@@ -2947,37 +2947,6 @@ namespace client_test_helpers {
 
         return true;
     }
-
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    const char* ec_get_name(sa_elliptic_curve curve) {
-        switch (curve) {
-            case SA_ELLIPTIC_CURVE_NIST_P256:
-                return "P-256";
-
-            case SA_ELLIPTIC_CURVE_NIST_P384:
-                return "P-384";
-
-            case SA_ELLIPTIC_CURVE_NIST_P521:
-                return "P-521";
-
-            case SA_ELLIPTIC_CURVE_ED25519:
-                return "ED25519";
-
-            case SA_ELLIPTIC_CURVE_X25519:
-                return "X25519";
-
-            case SA_ELLIPTIC_CURVE_ED448:
-                return "ED448";
-
-            case SA_ELLIPTIC_CURVE_X448:
-                return "X448";
-
-            default:
-                ERROR("Unknown EC curve encountered");
-                return nullptr;
-        }
-    }
-#endif
 
     std::shared_ptr<EVP_PKEY> ec_import_private(
             sa_elliptic_curve curve,

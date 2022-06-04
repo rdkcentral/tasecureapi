@@ -16,9 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "log.h"
 #include "sa_engine_internal.h"
-#include "sa_log.h"
-
 
 #if OPENSSL_VERSION_NUMBER < 0x30000000
 #include <memory.h>

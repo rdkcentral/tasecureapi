@@ -16,9 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "common.h"
+#include "log.h"
 #include "sa.h"
 #include "sa_engine_internal.h"
-#include "sa_log.h"
 #include <openssl/engine.h>
 #include <openssl/evp.h>
 

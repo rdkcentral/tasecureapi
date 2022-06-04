@@ -19,15 +19,19 @@
 #ifndef SA_KEY_COMMON_H
 #define SA_KEY_COMMON_H
 
+#include "common.h"
 #include "sa_types.h"
 #include "gtest/gtest.h"
 #include <memory>
 #include <openssl/dh.h>
 #include <openssl/ec.h>
+#include <openssl/x509.h>
 #include <vector>
 
 class SaKeyBase {
 protected:
+    static bool get_root_key(std::vector<uint8_t>& key);
+
     static bool dh_generate(
             std::shared_ptr<EVP_PKEY>& evp_pkey,
             std::vector<uint8_t>& public_key,
@@ -109,7 +113,7 @@ protected:
             std::vector<uint8_t>& clear_key);
 
 private:
-    const static std::vector<uint8_t> TEST_KEY;
+    static std::vector<uint8_t> root_key;
 };
 
 using SaKeyType = std::tuple<sa_key_type, size_t>;

@@ -93,6 +93,7 @@ target_include_directories(saclientimpl
         PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../client/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../client/src>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/internal>
         ${OPENSSL_INCLUDE_DIR}
@@ -105,6 +106,7 @@ target_link_libraries(saclientimpl
         ${CMAKE_THREAD_LIBS_INIT}
         ${YAJL_LIBRARY}
         taimpl
+        util
         )
 
 if (COVERAGE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
