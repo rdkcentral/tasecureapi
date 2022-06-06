@@ -596,6 +596,14 @@ static bool get_key_type_and_size(
         *key_type = SA_KEY_TYPE_RSA;
         *key_size = RSA_4096_BYTE_LENGTH;
         *curve = UINT32_MAX;
+    } else if (memcmp(key_type_string, "ECC-P192", key_type_string_length) == 0) {
+        *key_type = SA_KEY_TYPE_EC;
+        *key_size = EC_P192_KEY_SIZE;
+        *curve = SA_ELLIPTIC_CURVE_NIST_P192;
+    } else if (memcmp(key_type_string, "ECC-P224", key_type_string_length) == 0) {
+        *key_type = SA_KEY_TYPE_EC;
+        *key_size = EC_P224_KEY_SIZE;
+        *curve = SA_ELLIPTIC_CURVE_NIST_P224;
     } else if (memcmp(key_type_string, "ECC-P256", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_P256_KEY_SIZE;

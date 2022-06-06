@@ -48,12 +48,19 @@ EVP_PKEY* rsa_import_public(
 }
 
 bool is_pcurve(sa_elliptic_curve curve) {
-    return curve == SA_ELLIPTIC_CURVE_NIST_P256 || curve == SA_ELLIPTIC_CURVE_NIST_P384 ||
+    return curve == SA_ELLIPTIC_CURVE_NIST_P192 || curve == SA_ELLIPTIC_CURVE_NIST_P224 ||
+           curve == SA_ELLIPTIC_CURVE_NIST_P256 || curve == SA_ELLIPTIC_CURVE_NIST_P384 ||
            curve == SA_ELLIPTIC_CURVE_NIST_P521;
 }
 
 size_t ec_get_key_size(sa_elliptic_curve curve) {
     switch (curve) {
+        case SA_ELLIPTIC_CURVE_NIST_P192:
+            return EC_P192_KEY_SIZE;
+
+        case SA_ELLIPTIC_CURVE_NIST_P224:
+            return EC_P224_KEY_SIZE;
+
         case SA_ELLIPTIC_CURVE_NIST_P256:
             return EC_P256_KEY_SIZE;
 
@@ -80,6 +87,12 @@ size_t ec_get_key_size(sa_elliptic_curve curve) {
 
 int ec_get_type(sa_elliptic_curve curve) {
     switch (curve) {
+        case SA_ELLIPTIC_CURVE_NIST_P192:
+            return NID_X9_62_prime192v1;
+
+        case SA_ELLIPTIC_CURVE_NIST_P224:
+            return NID_secp224r1;
+
         case SA_ELLIPTIC_CURVE_NIST_P256:
             return NID_X9_62_prime256v1;
 
@@ -112,6 +125,12 @@ int ec_get_type(sa_elliptic_curve curve) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 const char* ec_get_name(sa_elliptic_curve curve) {
     switch (curve) {
+        case SA_ELLIPTIC_CURVE_NIST_P192:
+            return "P-192";
+
+        case SA_ELLIPTIC_CURVE_NIST_P224:
+            return "P-224";
+
         case SA_ELLIPTIC_CURVE_NIST_P256:
             return "P-256";
 

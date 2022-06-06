@@ -239,7 +239,9 @@ typedef enum {
     SA_ELLIPTIC_CURVE_ED448 = 5,
     /** Supported only with SA_KEY_EXCHANGE_ALGORITHM_ECDH */
     /** This curve is for future support and is not currently required. **/
-    SA_ELLIPTIC_CURVE_X448 = 6
+    SA_ELLIPTIC_CURVE_X448 = 6,
+    SA_ELLIPTIC_CURVE_NIST_P192 = 7,
+    SA_ELLIPTIC_CURVE_NIST_P224 = 8
 } sa_elliptic_curve;
 
 /**

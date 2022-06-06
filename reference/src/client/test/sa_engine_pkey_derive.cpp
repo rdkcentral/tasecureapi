@@ -96,19 +96,22 @@ TEST_P(SaEnginePkeyDeriveTest, deriveTest) {
     ASSERT_TRUE(key_check_sym(*derived_key, clear_derived_key));
 }
 
+// clang-format off
 INSTANTIATE_TEST_SUITE_P(
         SaEnginePkeyDeriveDhTests,
         SaEnginePkeyDeriveTest,
         ::testing::Combine(
                 ::testing::Values(SA_KEY_TYPE_DH),
-                ::testing::Values(DH_768_BYTE_LENGTH, DH_1024_BYTE_LENGTH, DH_1536_BYTE_LENGTH, DH_2048_BYTE_LENGTH, DH_3072_BYTE_LENGTH, DH_4096_BYTE_LENGTH)));
+                ::testing::Values(DH_768_BYTE_LENGTH, DH_1024_BYTE_LENGTH, DH_1536_BYTE_LENGTH, DH_2048_BYTE_LENGTH,
+DH_3072_BYTE_LENGTH, DH_4096_BYTE_LENGTH)));
 
 INSTANTIATE_TEST_SUITE_P(
         SaEnginePkeyDeriveEcTests,
         SaEnginePkeyDeriveTest,
         ::testing::Combine(
                 ::testing::Values(SA_KEY_TYPE_EC),
-                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521)));
+                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224, SA_ELLIPTIC_CURVE_NIST_P256,
+                    SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521)));
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
 INSTANTIATE_TEST_SUITE_P(
@@ -118,3 +121,4 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_KEY_TYPE_EC),
                 ::testing::Values(SA_ELLIPTIC_CURVE_X25519, SA_ELLIPTIC_CURVE_X448)));
 #endif
+// clang-format on

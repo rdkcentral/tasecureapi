@@ -137,6 +137,8 @@ INSTANTIATE_TEST_SUITE_P(
         SaKeyExchangeEcdhTests,
         SaKeyExchangeEcdhTest,
         ::testing::Values(
+                SA_ELLIPTIC_CURVE_NIST_P192,
+                SA_ELLIPTIC_CURVE_NIST_P224,
                 SA_ELLIPTIC_CURVE_NIST_P256,
                 SA_ELLIPTIC_CURVE_NIST_P384,
                 SA_ELLIPTIC_CURVE_NIST_P521,

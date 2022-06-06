@@ -2043,7 +2043,7 @@ namespace client_test_helpers {
         std::vector<uint8_t> in(128);
 
         clear.assign(clear.size(), 0);
-        memcpy(clear.data() + 8, clear_key.data(), clear_key.size());
+        memcpy(clear.data() + 4, clear_key.data(), clear_key.size());
 
         size_t public_key_length = key_size * 2;
         std::vector<uint8_t> public_key(public_key_length);
@@ -2074,7 +2074,7 @@ namespace client_test_helpers {
             return false;
         }
 
-        sa_unwrap_parameters_ec_elgamal params = {8, clear_key.size()};
+        sa_unwrap_parameters_ec_elgamal params = {4, clear_key.size()};
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_EC_ELGAMAL, &params, key, in.data(), in.size());
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
@@ -2672,9 +2672,7 @@ namespace client_test_helpers {
         }
 
         if (SA_USAGE_BIT_TEST(header->rights.usage_flags, SA_USAGE_FLAG_SIGN)) {
-            if (header->type_parameters.curve == SA_ELLIPTIC_CURVE_NIST_P256 ||
-                    header->type_parameters.curve == SA_ELLIPTIC_CURVE_NIST_P384 ||
-                    header->type_parameters.curve == SA_ELLIPTIC_CURVE_NIST_P521) {
+            if (is_pcurve(static_cast<sa_elliptic_curve>(header->type_parameters.curve))) {
                 auto data = random(255);
                 std::vector<uint8_t> signature(256);
                 size_t signature_length = signature.size();
@@ -2728,9 +2726,7 @@ namespace client_test_helpers {
         }
 
         if (SA_USAGE_BIT_TEST(header->rights.usage_flags, SA_USAGE_FLAG_DECRYPT) &&
-                (header->type_parameters.curve == SA_ELLIPTIC_CURVE_NIST_P256 ||
-                        header->type_parameters.curve == SA_ELLIPTIC_CURVE_NIST_P384 ||
-                        header->type_parameters.curve == SA_ELLIPTIC_CURVE_NIST_P521)) {
+                is_pcurve(static_cast<sa_elliptic_curve>(header->type_parameters.curve))) {
             if (!key_check_ec_elgamal_decrypt(key)) {
                 ERROR("key_check_ec_elgamal_decrypt failed");
                 return false;
@@ -2743,9 +2739,7 @@ namespace client_test_helpers {
         }
 
         if (SA_USAGE_BIT_TEST(key_header(key)->rights.usage_flags, SA_USAGE_FLAG_UNWRAP) &&
-                (header->type_parameters.curve == SA_ELLIPTIC_CURVE_NIST_P256 ||
-                        header->type_parameters.curve == SA_ELLIPTIC_CURVE_NIST_P384 ||
-                        header->type_parameters.curve == SA_ELLIPTIC_CURVE_NIST_P521)) {
+                is_pcurve(static_cast<sa_elliptic_curve>(header->type_parameters.curve))) {
             if (!key_check_ec_elgamal_unwrap(key)) {
                 ERROR("key_check_ec_elgamal_unwrap failed");
                 return false;

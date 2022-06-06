@@ -24,8 +24,10 @@ INSTANTIATE_TEST_SUITE_P(
         SaCryptoSign,
         ::testing::Combine(
                 ::testing::Values(SA_SIGNATURE_ALGORITHM_ECDSA),
-                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521),
-                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384, SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224, SA_ELLIPTIC_CURVE_NIST_P256,
+                        SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                        SA_DIGEST_ALGORITHM_SHA512),
                 ::testing::Values(0),
                 ::testing::Values(true, false)));
 

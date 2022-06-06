@@ -33,12 +33,19 @@
 #define MAX_EC_SIGNATURE 256
 
 static inline bool is_pcurve(sa_elliptic_curve curve) {
-    return curve == SA_ELLIPTIC_CURVE_NIST_P256 || curve == SA_ELLIPTIC_CURVE_NIST_P384 ||
+    return curve == SA_ELLIPTIC_CURVE_NIST_P192 || curve == SA_ELLIPTIC_CURVE_NIST_P224 ||
+           curve == SA_ELLIPTIC_CURVE_NIST_P256 || curve == SA_ELLIPTIC_CURVE_NIST_P384 ||
            curve == SA_ELLIPTIC_CURVE_NIST_P521;
 }
 
 static int ec_get_type(sa_elliptic_curve curve) {
     switch (curve) {
+        case SA_ELLIPTIC_CURVE_NIST_P192:
+            return NID_X9_62_prime192v1;
+
+        case SA_ELLIPTIC_CURVE_NIST_P224:
+            return NID_secp224r1;
+
         case SA_ELLIPTIC_CURVE_NIST_P256:
             return NID_X9_62_prime256v1;
 
@@ -67,6 +74,75 @@ static int ec_get_type(sa_elliptic_curve curve) {
             return 0;
     }
 }
+
+size_t ec_key_size_from_curve(sa_elliptic_curve curve) {
+    switch (curve) {
+        case SA_ELLIPTIC_CURVE_NIST_P192:
+            return EC_P192_KEY_SIZE;
+
+        case SA_ELLIPTIC_CURVE_NIST_P224:
+            return EC_P224_KEY_SIZE;
+
+        case SA_ELLIPTIC_CURVE_NIST_P256:
+            return EC_P256_KEY_SIZE;
+
+        case SA_ELLIPTIC_CURVE_NIST_P384:
+            return EC_P384_KEY_SIZE;
+
+        case SA_ELLIPTIC_CURVE_NIST_P521:
+            return EC_P521_KEY_SIZE;
+
+        case SA_ELLIPTIC_CURVE_ED25519:
+        case SA_ELLIPTIC_CURVE_X25519:
+            return EC_25519_KEY_SIZE;
+
+        case SA_ELLIPTIC_CURVE_ED448:
+            return EC_ED448_KEY_SIZE;
+
+        case SA_ELLIPTIC_CURVE_X448:
+            return EC_X448_KEY_SIZE;
+
+        default:
+            return 0;
+    }
+}
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+static const char* ec_get_name(sa_elliptic_curve curve) {
+    switch (curve) {
+        case SA_ELLIPTIC_CURVE_NIST_P192:
+            return "P-192";
+
+        case SA_ELLIPTIC_CURVE_NIST_P224:
+            return "P-224";
+
+        case SA_ELLIPTIC_CURVE_NIST_P256:
+            return "P-256";
+
+        case SA_ELLIPTIC_CURVE_NIST_P384:
+            return "P-384";
+
+        case SA_ELLIPTIC_CURVE_NIST_P521:
+            return "P-521";
+
+        case SA_ELLIPTIC_CURVE_ED25519:
+            return "ED25519";
+
+        case SA_ELLIPTIC_CURVE_X25519:
+            return "X25519";
+
+        case SA_ELLIPTIC_CURVE_ED448:
+            return "ED448";
+
+        case SA_ELLIPTIC_CURVE_X448:
+            return "X448";
+
+        default:
+            ERROR("Unknown EC curve encountered");
+            return 0;
+    }
+}
+#endif
 
 static EC_GROUP* ec_group_from_curve(sa_elliptic_curve curve) {
     EC_GROUP* ec_group = NULL;
@@ -132,37 +208,6 @@ static size_t export_point(
     memcpy(*out, &buffer[raw ? 1 : 0], out_length);
     return out_length;
 }
-
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-static const char* ec_get_name(sa_elliptic_curve curve) {
-    switch (curve) {
-        case SA_ELLIPTIC_CURVE_NIST_P256:
-            return "P-256";
-
-        case SA_ELLIPTIC_CURVE_NIST_P384:
-            return "P-384";
-
-        case SA_ELLIPTIC_CURVE_NIST_P521:
-            return "P-521";
-
-        case SA_ELLIPTIC_CURVE_ED25519:
-            return "ED25519";
-
-        case SA_ELLIPTIC_CURVE_X25519:
-            return "X25519";
-
-        case SA_ELLIPTIC_CURVE_ED448:
-            return "ED448";
-
-        case SA_ELLIPTIC_CURVE_X448:
-            return "X448";
-
-        default:
-            ERROR("Unknown EC curve encountered");
-            return 0;
-    }
-}
-#endif
 
 static EC_POINT* calculate_point(
         EC_GROUP* ec_group,
@@ -472,32 +517,6 @@ sa_status ec_validate_private(
     return status;
 }
 
-size_t ec_key_size_from_curve(sa_elliptic_curve curve) {
-    switch (curve) {
-        case SA_ELLIPTIC_CURVE_NIST_P256:
-            return EC_P256_KEY_SIZE;
-
-        case SA_ELLIPTIC_CURVE_NIST_P384:
-            return EC_P384_KEY_SIZE;
-
-        case SA_ELLIPTIC_CURVE_NIST_P521:
-            return EC_P521_KEY_SIZE;
-
-        case SA_ELLIPTIC_CURVE_ED25519:
-        case SA_ELLIPTIC_CURVE_X25519:
-            return EC_25519_KEY_SIZE;
-
-        case SA_ELLIPTIC_CURVE_ED448:
-            return EC_ED448_KEY_SIZE;
-
-        case SA_ELLIPTIC_CURVE_X448:
-            return EC_X448_KEY_SIZE;
-
-        default:
-            return 0;
-    }
-}
-
 sa_status ec_get_public(
         void* out,
         size_t* out_length,
@@ -624,9 +643,7 @@ sa_status ec_verify_cipher(
         return SA_STATUS_INTERNAL_ERROR;
     }
 
-    if (header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P256 &&
-            header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P384 &&
-            header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P521) {
+    if (!is_pcurve(header->type_parameters.curve)) {
         ERROR("ED & X curves cannot be used for ECDSA");
         return SA_STATUS_OPERATION_NOT_ALLOWED;
     }
@@ -680,9 +697,7 @@ sa_status ec_decrypt_elgamal(
             break;
         }
 
-        if (header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P256 &&
-                header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P384 &&
-                header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P521) {
+        if (!is_pcurve(header->type_parameters.curve)) {
             ERROR("ED & X curves cannot be used for El Gamal");
             status = SA_STATUS_OPERATION_NOT_ALLOWED;
         }
@@ -1074,9 +1089,7 @@ sa_status ec_sign_ecdsa(
             break;
         }
 
-        if (header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P256 &&
-                header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P384 &&
-                header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P521) {
+        if (!is_pcurve(header->type_parameters.curve)) {
             ERROR("ED & X curves cannot be used for ECDSA");
             status = SA_STATUS_OPERATION_NOT_ALLOWED;
             break;

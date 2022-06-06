@@ -390,12 +390,14 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_ELLIPTIC_CURVE_ED25519, SA_ELLIPTIC_CURVE_ED448)));
 #endif
 
+// clang-format off
 INSTANTIATE_TEST_SUITE_P(
         SaEnginePkeyRsaPkcs1Tests,
         SaEnginePkeySignTest,
         ::testing::Combine(
                 ::testing::Values(SA_KEY_TYPE_RSA),
-                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH, RSA_4096_BYTE_LENGTH),
+                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH,
+                    RSA_4096_BYTE_LENGTH),
                 ::testing::Values(NID_sha1, NID_sha256, NID_sha384, NID_sha512),
                 ::testing::Values(RSA_PKCS1_PADDING),
                 ::testing::Values(0)));
@@ -405,7 +407,8 @@ INSTANTIATE_TEST_SUITE_P(
         SaEnginePkeySignTest,
         ::testing::Combine(
                 ::testing::Values(SA_KEY_TYPE_RSA),
-                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH, RSA_4096_BYTE_LENGTH),
+                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH,
+                    RSA_4096_BYTE_LENGTH),
                 ::testing::Values(NID_sha1, NID_sha256, NID_sha384, NID_sha512),
                 ::testing::Values(RSA_PKCS1_PSS_PADDING),
                 ::testing::Values(0, 16)));
@@ -415,7 +418,9 @@ INSTANTIATE_TEST_SUITE_P(
         SaEnginePkeySignTest,
         ::testing::Combine(
                 ::testing::Values(SA_KEY_TYPE_EC),
-                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521),
+                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224, SA_ELLIPTIC_CURVE_NIST_P256,
+                    SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521),
                 ::testing::Values(NID_sha1, NID_sha256, NID_sha384, NID_sha512),
                 ::testing::Values(0),
                 ::testing::Values(0)));
+// clang-format on
