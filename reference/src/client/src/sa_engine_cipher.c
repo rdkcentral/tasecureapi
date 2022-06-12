@@ -410,7 +410,12 @@ DECLARE_CIPHER(chacha20, 256, chacha20, EVP_CIPH_ALWAYS_CALL_INIT)
 DECLARE_CIPHER(chacha20, 256, poly1305, EVP_CIPH_ALWAYS_CALL_INIT | EVP_CIPH_FLAG_CUSTOM_CIPHER)
 #endif
 
-int sa_get_engine_ciphers(ENGINE* e, const EVP_CIPHER** cipher, const int** nids, int nid) {
+int sa_get_engine_ciphers(
+        ENGINE* engine,
+        const EVP_CIPHER** cipher,
+        const int** nids,
+        int nid) {
+
     if (!cipher) {
         if (nids == NULL)
             return 0;

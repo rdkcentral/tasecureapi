@@ -103,7 +103,7 @@ size_t ec_get_key_size(sa_elliptic_curve curve);
 int ec_get_type(sa_elliptic_curve curve);
 
 /**
- * Imports an RSA public key.
+ * Imports an EC public key.
  *
  * @param[in] curve the EC curve.
  * @param[in] in the RSA public key bytes.

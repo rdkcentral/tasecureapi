@@ -55,7 +55,7 @@ typedef struct {
  * @return 1 if successful and 0 if not.
  */
 int sa_get_engine_ciphers(
-        ENGINE* e,
+        ENGINE* engine,
         const EVP_CIPHER** cipher,
         const int** nids,
         int nid);

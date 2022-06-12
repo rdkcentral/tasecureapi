@@ -100,7 +100,7 @@ int sa_set_pkey_data(
         case EVP_PKEY_DH:
             temp_key = EVP_PKEY_get1_DH(*evp_pkey);
             if (temp_key == NULL) {
-                ERROR("EVP_PKEY_get1_RSA failed");
+                ERROR("EVP_PKEY_get1_DH failed");
                 break;
             }
 

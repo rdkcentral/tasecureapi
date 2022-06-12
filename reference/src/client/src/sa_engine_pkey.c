@@ -325,7 +325,7 @@ static int pkey_verify(
     }
 
     if (in == NULL) {
-        ERROR("NULL data");
+        ERROR("NULL in");
         return 0;
     }
 
@@ -424,7 +424,7 @@ static int pkey_digestsign(
     }
 
     if (in == NULL) {
-        ERROR("NULL data");
+        ERROR("NULL in");
         return 0;
     }
 
@@ -448,7 +448,7 @@ static int pkey_digestsign(
 
     const pkey_data* data = sa_get_pkey_data(evp_pkey);
     if (data == NULL) {
-        ERROR("EVP_PKEY_get0 failed");
+        ERROR("sa_get_pkey_data failed");
         return 0;
     }
 
@@ -488,7 +488,7 @@ static int pkey_digestverify(
     }
 
     if (in == NULL) {
-        ERROR("NULL data");
+        ERROR("NULL in");
         return 0;
     }
 
@@ -517,7 +517,7 @@ static int pkey_digestverify(
 
         const pkey_data* data = sa_get_pkey_data(evp_pkey);
         if (data == NULL) {
-            ERROR("EVP_PKEY_get0 failed");
+            ERROR("sa_get_pkey_data failed");
             return 0;
         }
 
@@ -567,7 +567,7 @@ static int pkey_mac_init(EVP_PKEY_CTX* evp_pkey_ctx) {
 
     const pkey_data* data = sa_get_pkey_data(evp_pkey);
     if (data == NULL) {
-        ERROR("EVP_PKEY_get0 failed");
+        ERROR("sa_get_pkey_data failed");
         return 0;
     }
 
@@ -659,7 +659,7 @@ static int pkey_signctx_init(
     app_data->evp_md_ctx = evp_md_ctx;
     const pkey_data* data = sa_get_pkey_data(evp_pkey);
     if (data == NULL) {
-        ERROR("EVP_PKEY_get0 failed");
+        ERROR("sa_get_pkey_data failed");
         return 0;
     }
 
@@ -768,13 +768,13 @@ static int pkey_encrypt(
 
         const pkey_data* data = sa_get_pkey_data(evp_pkey);
         if (data == NULL) {
-            ERROR("EVP_PKEY_get0 failed");
+            ERROR("sa_get_pkey_data failed");
             return 0;
         }
 
         encrypt_pkey = get_public_key(data->private_key);
         if (encrypt_pkey == NULL) {
-            ERROR("NULL encrypt_key");
+            ERROR("get_public_key failed");
             break;
         }
 
@@ -844,7 +844,7 @@ static int pkey_decrypt(
 
     const pkey_data* data = sa_get_pkey_data(evp_pkey);
     if (data == NULL) {
-        ERROR("EVP_PKEY_get0 failed");
+        ERROR("sa_get_pkey_data failed");
         return 0;
     }
 
@@ -924,7 +924,7 @@ static int pkey_pderive(
 
     EVP_PKEY* peer_key = EVP_PKEY_CTX_get0_peerkey(evp_pkey_ctx);
     if (peer_key == NULL) {
-        ERROR("EVP_PKEY_CTX_get0_peerkey EVP_PKEY_CTX_get0_peerkey failed");
+        ERROR("EVP_PKEY_CTX_get0_peerkey failed");
         return 0;
     }
 
@@ -1040,7 +1040,7 @@ static int pkey_ctrl(
     int type = EVP_PKEY_base_id(evp_pkey);
     const pkey_data* data = sa_get_pkey_data(evp_pkey);
     if (data == NULL) {
-        ERROR("EVP_PKEY_get0 failed");
+        ERROR("sa_get_pkey_data failed");
         return 0;
     }
 
@@ -1215,7 +1215,7 @@ EVP_PKEY* sa_load_engine_private_pkey(
         if (data.header.type != SA_KEY_TYPE_SYMMETRIC) {
             evp_pkey = get_public_key(data.private_key);
             if (evp_pkey == NULL) {
-                ERROR("EVP_PKEY_new_raw_private_key failed");
+                ERROR("get_public_key failed");
                 break;
             }
         }

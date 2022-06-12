@@ -335,7 +335,7 @@ EVP_PKEY* dh_import_public(
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
         if (DH_set0_pqg(dh, p_bn, NULL, g_bn) != 1) {
-            ERROR("EVP_PKEY_fromdata failed");
+            ERROR("DH_set0_pqg failed");
             break;
         }
 
@@ -430,7 +430,7 @@ EVP_PKEY* get_public_key(sa_key key) {
                         header.type_parameters.dh_parameters.p, header.type_parameters.dh_parameters.p_length,
                         header.type_parameters.dh_parameters.g, header.type_parameters.dh_parameters.g_length);
                 if (evp_pkey == NULL) {
-                    ERROR("ec_import_public failed");
+                    ERROR("dh_import_public failed");
                     continue; // NOLINT
                 }
 
