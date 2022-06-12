@@ -19,10 +19,11 @@
 #include "rsa.h" // NOLINT
 #include "digest_internal.h"
 #include "log.h"
+#include "porting/memory.h"
 #include "stored_key_internal.h"
+#include <memory.h>
 #include <openssl/pem.h>
 
-#if OPENSSL_VERSION_NUMBER >= 0X10100000
 static EVP_PKEY* rsa_import_pkcs8(
         const void* in,
         size_t in_length) {
@@ -61,59 +62,6 @@ size_t rsa_validate_pkcs8(
     return key_size;
 }
 
-#else
-static RSA* rsa_import_pkcs8(
-        const void* in,
-        size_t in_length) {
-
-    const unsigned char* in_bytes = (const unsigned char*) in;
-    EVP_PKEY* evp_pkey = NULL;
-    RSA* rsa_key = NULL;
-    do {
-        if (in == NULL) {
-            ERROR("NULL pkcs8");
-            break;
-        }
-
-        evp_pkey = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &in_bytes, (long) in_length);
-        if (evp_pkey == NULL) {
-            ERROR("d2i_PrivateKey failed");
-            break;
-        }
-
-        rsa_key = EVP_PKEY_get1_RSA(evp_pkey);
-        if (rsa_key == NULL) {
-            ERROR("EVP_PKEY_get1_RSA failed");
-            break;
-        }
-    } while (false);
-
-    EVP_PKEY_free(evp_pkey);
-
-    return rsa_key;
-}
-
-size_t rsa_validate_pkcs8(
-        const void* in,
-        size_t in_length) {
-
-    if (in == NULL) {
-        ERROR("NULL in");
-        return 0;
-    }
-
-    RSA* rsa_key = rsa_import_pkcs8(in, in_length);
-    if (rsa_key == NULL) {
-        ERROR("rsa_import_pkcs8 failed");
-        return 0;
-    }
-
-    size_t key_size = RSA_size(rsa_key);
-    RSA_free(rsa_key);
-    return key_size;
-}
-#endif
-
 bool rsa_get_public(
         void* out,
         size_t* out_length,
@@ -130,11 +78,7 @@ bool rsa_get_public(
     }
 
     bool status = false;
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
     EVP_PKEY* evp_pkey = NULL;
-#else
-    RSA* rsa = NULL;
-#endif
     do {
         const void* key = stored_key_get_key(stored_key);
         if (key == NULL) {
@@ -143,7 +87,6 @@ bool rsa_get_public(
         }
 
         size_t key_length = stored_key_get_length(stored_key);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
         evp_pkey = rsa_import_pkcs8(key, key_length);
         int required_length = i2d_PublicKey(evp_pkey, NULL);
         if (required_length <= 0) {
@@ -170,42 +113,10 @@ bool rsa_get_public(
         }
 
         *out_length = written;
-#else
-        rsa = rsa_import_pkcs8(key, key_length);
-        int required_length = i2d_RSAPublicKey(rsa, NULL);
-        if (required_length <= 0) {
-            ERROR("i2d_RSAPublicKey failed");
-            break;
-        }
-
-        if (out == NULL) {
-            *out_length = required_length;
-            status = true;
-            break;
-        }
-
-        if (*out_length < (size_t) required_length) {
-            ERROR("Bad out_length");
-            break;
-        }
-
-        unsigned char* buf = (uint8_t*) out;
-        int written = i2d_RSAPublicKey(rsa, &buf);
-        if (written <= 0) {
-            ERROR("i2d_RSAPublicKey failed");
-            break;
-        }
-
-        *out_length = written;
-#endif
         status = true;
     } while (false);
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
     EVP_PKEY_free(evp_pkey);
-#else
-    RSA_free(rsa);
-#endif
     return status;
 }
 
@@ -245,12 +156,8 @@ bool rsa_decrypt_pkcs1v15(
     }
 
     bool status = false;
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
     EVP_PKEY* evp_pkey = NULL;
     EVP_PKEY_CTX* evp_pkey_ctx = NULL;
-#else
-    RSA* rsa_key = NULL;
-#endif
     do {
         const void* key = stored_key_get_key(stored_key);
         if (key == NULL) {
@@ -259,7 +166,6 @@ bool rsa_decrypt_pkcs1v15(
         }
 
         size_t key_length = stored_key_get_length(stored_key);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
         evp_pkey = rsa_import_pkcs8(key, key_length);
         if (evp_pkey == NULL) {
             ERROR("rsa_import_pkcs8 failed");
@@ -298,40 +204,11 @@ bool rsa_decrypt_pkcs1v15(
             break;
         }
 
-#else
-        rsa_key = rsa_import_pkcs8(key, key_length);
-        if (rsa_key == NULL) {
-            ERROR("rsa_import_pkcs8 failed");
-            break;
-        }
-
-        if (*out_length < (size_t) RSA_size(rsa_key)) {
-            ERROR("Bad out_length");
-            break;
-        }
-
-        if (in_length != (size_t) RSA_size(rsa_key)) {
-            ERROR("Bad in_length");
-            break;
-        }
-
-        int rsa_length = RSA_private_decrypt((int) in_length, in, out, rsa_key, RSA_PKCS1_PADDING);
-        if (rsa_length < 0) {
-            ERROR("RSA_private_decrypt failed");
-            break;
-        }
-
-        *out_length = rsa_length;
-#endif
         status = true;
     } while (false);
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
     EVP_PKEY_free(evp_pkey);
     EVP_PKEY_CTX_free(evp_pkey_ctx);
-#else
-    RSA_free(rsa_key);
-#endif
     return status;
 }
 
@@ -339,6 +216,10 @@ bool rsa_decrypt_oaep(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key,
+        sa_digest_algorithm digest_algorithm,
+        sa_digest_algorithm mgf1_digest_algorithm,
+        const void* label,
+        size_t label_length,
         const void* in,
         size_t in_length) {
 
@@ -363,12 +244,8 @@ bool rsa_decrypt_oaep(
     }
 
     bool status = false;
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
     EVP_PKEY* evp_pkey = NULL;
     EVP_PKEY_CTX* evp_pkey_ctx = NULL;
-#else
-    RSA* rsa_key = NULL;
-#endif
     do {
         const void* key = stored_key_get_key(stored_key);
         if (key == NULL) {
@@ -377,7 +254,6 @@ bool rsa_decrypt_oaep(
         }
 
         size_t key_length = stored_key_get_length(stored_key);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
         evp_pkey = rsa_import_pkcs8(key, key_length);
         if (evp_pkey == NULL) {
             ERROR("rsa_import_pkcs8 failed");
@@ -411,45 +287,42 @@ bool rsa_decrypt_oaep(
             break;
         }
 
+        if (EVP_PKEY_CTX_set_rsa_oaep_md(evp_pkey_ctx, digest_mechanism(digest_algorithm)) != 1) {
+            ERROR("EVP_PKEY_CTX_set_rsa_oaep_md failed");
+            break;
+        }
+
+        if (EVP_PKEY_CTX_set_rsa_mgf1_md(evp_pkey_ctx, digest_mechanism(mgf1_digest_algorithm)) != 1) {
+            ERROR("EVP_PKEY_CTX_set_rsa_mgf1_md failed");
+            break;
+        }
+
+        if (label != NULL && label_length > 0) {
+            uint8_t* new_label = memory_secure_alloc(label_length);
+            if (new_label == NULL) {
+                ERROR("memory_secure_alloc failed");
+                status = SA_STATUS_INTERNAL_ERROR;
+                break;
+            }
+
+            memcpy(new_label, label, label_length);
+            if (EVP_PKEY_CTX_set0_rsa_oaep_label(evp_pkey_ctx, new_label, (int) label_length) != 1) {
+                memory_secure_free(new_label);
+                ERROR("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
+                break;
+            }
+        }
+
         if (EVP_PKEY_decrypt(evp_pkey_ctx, out, out_length, in, in_length) != 1) {
             ERROR("EVP_PKEY_decrypt failed");
             break;
         }
 
-#else
-        rsa_key = rsa_import_pkcs8(key, key_length);
-        if (rsa_key == NULL) {
-            ERROR("rsa_import_pkcs8 failed");
-            break;
-        }
-
-        if (*out_length < (size_t) RSA_size(rsa_key)) {
-            ERROR("Bad out_length");
-            break;
-        }
-
-        if (in_length != (size_t) RSA_size(rsa_key)) {
-            ERROR("Bad in_length");
-            break;
-        }
-
-        int rsa_length = RSA_private_decrypt((int) in_length, in, out, rsa_key, RSA_PKCS1_OAEP_PADDING);
-        if (rsa_length < 0) {
-            ERROR("RSA_private_decrypt failed");
-            break;
-        }
-
-        *out_length = rsa_length;
-#endif
         status = true;
     } while (false);
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
     EVP_PKEY_free(evp_pkey);
     EVP_PKEY_CTX_free(evp_pkey_ctx);
-#else
-    RSA_free(rsa_key);
-#endif
     return status;
 }
 
@@ -481,9 +354,6 @@ bool rsa_sign_pkcs1v15(
     EVP_MD_CTX* evp_md_ctx = NULL;
     EVP_PKEY* evp_pkey = NULL;
     EVP_PKEY_CTX* evp_pkey_ctx = NULL;
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-    RSA* rsa_key = NULL;
-#endif
     do {
         const void* key = stored_key_get_key(stored_key);
         if (key == NULL) {
@@ -492,7 +362,6 @@ bool rsa_sign_pkcs1v15(
         }
 
         size_t key_length = stored_key_get_length(stored_key);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
         evp_pkey = rsa_import_pkcs8(key, key_length);
         if (evp_pkey == NULL) {
             ERROR("rsa_import_pkcs8 failed");
@@ -505,29 +374,6 @@ bool rsa_sign_pkcs1v15(
             break;
         }
 
-#else
-        rsa_key = rsa_import_pkcs8(key, key_length);
-        if (rsa_key == NULL) {
-            ERROR("rsa_import_pkcs8 failed");
-            break;
-        }
-
-        if (*out_length < (size_t) RSA_size(rsa_key)) {
-            ERROR("Bad out_length");
-            break;
-        }
-
-        evp_pkey = EVP_PKEY_new();
-        if (evp_pkey == NULL) {
-            ERROR("EVP_PKEY_new failed");
-            break;
-        }
-
-        if (EVP_PKEY_set1_RSA(evp_pkey, rsa_key) != 1) {
-            ERROR("EVP_PKEY_set1_RSA failed");
-            break;
-        }
-#endif
         const EVP_MD* evp_md = digest_mechanism(digest_algorithm);
         if (precomputed_digest) {
             evp_pkey_ctx = EVP_PKEY_CTX_new(evp_pkey, NULL);
@@ -588,9 +434,6 @@ bool rsa_sign_pkcs1v15(
         status = true;
     } while (false);
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-    RSA_free(rsa_key);
-#endif
     EVP_MD_CTX_destroy(evp_md_ctx);
     EVP_PKEY_free(evp_pkey);
     EVP_PKEY_CTX_free(evp_pkey_ctx);
@@ -627,9 +470,6 @@ bool rsa_sign_pss(
     EVP_MD_CTX* evp_md_ctx = NULL;
     EVP_PKEY* evp_pkey = NULL;
     EVP_PKEY_CTX* evp_pkey_ctx = NULL;
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-    RSA* rsa_key = NULL;
-#endif
     do {
         const void* key = stored_key_get_key(stored_key);
         if (key == NULL) {
@@ -638,7 +478,6 @@ bool rsa_sign_pss(
         }
 
         size_t key_length = stored_key_get_length(stored_key);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
         evp_pkey = rsa_import_pkcs8(key, key_length);
         if (evp_pkey == NULL) {
             ERROR("rsa_import_pkcs8 failed");
@@ -651,29 +490,6 @@ bool rsa_sign_pss(
             break;
         }
 
-#else
-        rsa_key = rsa_import_pkcs8(key, key_length);
-        if (rsa_key == NULL) {
-            ERROR("rsa_import_pkcs8 failed");
-            break;
-        }
-
-        if (*out_length < (size_t) RSA_size(rsa_key)) {
-            ERROR("Bad out_length");
-            break;
-        }
-
-        evp_pkey = EVP_PKEY_new();
-        if (evp_pkey == NULL) {
-            ERROR("EVP_PKEY_new failed");
-            break;
-        }
-
-        if (EVP_PKEY_set1_RSA(evp_pkey, rsa_key) != 1) {
-            ERROR("EVP_PKEY_set1_RSA failed");
-            break;
-        }
-#endif
         const EVP_MD* evp_md = digest_mechanism(digest_algorithm);
         if (precomputed_digest) {
             evp_pkey_ctx = EVP_PKEY_CTX_new(evp_pkey, NULL);
@@ -744,9 +560,6 @@ bool rsa_sign_pss(
         status = true;
     } while (false);
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-    RSA_free(rsa_key);
-#endif
     EVP_MD_CTX_destroy(evp_md_ctx);
     EVP_PKEY_free(evp_pkey);
     EVP_PKEY_CTX_free(evp_pkey_ctx);

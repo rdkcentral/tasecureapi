@@ -25,9 +25,9 @@
 #include "rights.h"
 #include "sa_types.h"
 #include "unwrap.h"
+#include <memory.h>
 #include <openssl/evp.h>
 #include <stored_key_internal.h>
-#include <string.h>
 
 #define AES_ECB_NONE "aesEcbNone"
 #define AES_ECB_PKCS5 "aesEcbPkcs5"

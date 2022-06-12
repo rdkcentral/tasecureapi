@@ -285,7 +285,7 @@ bool hmac_context_compute(
 
 bool hmac_context_done(
         hmac_context_t* context) {
-    if (context) {
+    if (context != NULL) {
         return context->done;
     }
 

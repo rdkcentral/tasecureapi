@@ -44,7 +44,8 @@ namespace {
         size_t bytes_to_process = clear.size();
         sa_status status = sa_crypto_cipher_process(nullptr, *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OK);
-        size_t required_length = get_required_length(parameters.cipher_algorithm, key_size, clear.size(), true);
+        size_t required_length = get_required_length(parameters.cipher_algorithm, key_size, clear.size(), true,
+                parameters.oaep_digest_algorithm, parameters.oaep_mgf1_digest_algorithm);
         ASSERT_EQ(bytes_to_process, required_length);
 
         // encrypt using SecApi
@@ -66,6 +67,9 @@ namespace {
         sa_key_type key_type = std::get<1>(GetParam());
         size_t key_size = std::get<2>(GetParam());
         sa_buffer_type buffer_type = std::get<3>(GetParam());
+        parameters.oaep_digest_algorithm = std::get<4>(GetParam());
+        parameters.oaep_mgf1_digest_algorithm = std::get<5>(GetParam());
+        parameters.oaep_label_length = std::get<6>(GetParam());
 
         auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, key_type, key_size, parameters);
         ASSERT_NE(cipher, nullptr);
@@ -92,7 +96,8 @@ namespace {
         size_t bytes_to_process = checked_length;
         sa_status status = sa_crypto_cipher_process(nullptr, *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OK);
-        size_t required_length = get_required_length(parameters.cipher_algorithm, key_size, clear.size(), false);
+        size_t required_length = get_required_length(parameters.cipher_algorithm, key_size, clear.size(), false,
+                parameters.oaep_digest_algorithm, parameters.oaep_mgf1_digest_algorithm);
         ASSERT_EQ(bytes_to_process, required_length);
 
         // decrypt using SecApi

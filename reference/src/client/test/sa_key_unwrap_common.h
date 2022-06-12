@@ -44,7 +44,10 @@ protected:
             std::shared_ptr<void>& wrapping_parameters,
             size_t wrapping_key_size,
             const std::vector<uint8_t>& clear_key,
-            sa_cipher_algorithm wrapping_algorithm);
+            sa_cipher_algorithm wrapping_algorithm,
+            sa_digest_algorithm oaep_digest_algorithm,
+            sa_digest_algorithm oaep_mgf1_digest_algorithm,
+            size_t oaep_label_length);
 
 private:
     static bool wrap_key_aes_cbc(
@@ -81,6 +84,22 @@ private:
             size_t wrapping_key_size,
             const std::vector<uint8_t>& clear_key);
 
+    static bool wrap_key_chacha20(
+            std::shared_ptr<sa_key>& wrapping_key,
+            std::vector<uint8_t>& clear_wrapping_key,
+            std::vector<uint8_t>& wrapped_key,
+            std::shared_ptr<void>& wrapping_parameters,
+            size_t wrapping_key_size,
+            const std::vector<uint8_t>& clear_key);
+
+    static bool wrap_key_chacha20_poly1305(
+            std::shared_ptr<sa_key>& wrapping_key,
+            std::vector<uint8_t>& clear_wrapping_key,
+            std::vector<uint8_t>& wrapped_key,
+            std::shared_ptr<void>& wrapping_parameters,
+            size_t wrapping_key_size,
+            const std::vector<uint8_t>& clear_key);
+
     static bool wrap_key_rsa(
             std::shared_ptr<sa_key>& wrapping_key,
             std::vector<uint8_t>& clear_wrapping_key,
@@ -88,7 +107,10 @@ private:
             std::shared_ptr<void>& wrapping_parameters,
             size_t wrapping_key_size,
             const std::vector<uint8_t>& clear_key,
-            sa_cipher_algorithm wrapping_algorithm);
+            sa_cipher_algorithm wrapping_algorithm,
+            sa_digest_algorithm digest_algorithm,
+            sa_digest_algorithm mgf1_digest_algorithm,
+            size_t label_length);
 
     static bool wrap_key_el_gamal(
             std::shared_ptr<sa_key>& wrapping_key,
@@ -100,7 +122,8 @@ private:
             sa_elliptic_curve curve);
 };
 
-using SaKeyUnwrapNominalTestType = std::tuple<size_t, sa_key_type, sa_cipher_algorithm, size_t>;
+using SaKeyUnwrapNominalTestType = std::tuple<std::tuple<size_t, sa_key_type>,
+        std::tuple<sa_cipher_algorithm, size_t, sa_digest_algorithm, sa_digest_algorithm, size_t>>;
 
 class SaKeyUnwrapTest : public ::testing::TestWithParam<SaKeyUnwrapNominalTestType>, public SaKeyUnwrapBase {};
 
@@ -111,6 +134,10 @@ class SaKeyUnwrapAesEcbTest : public ::testing::TestWithParam<sa_cipher_algorith
 class SaKeyUnwrapAesCtrTest : public ::testing::Test, public SaKeyUnwrapBase {};
 
 class SaKeyUnwrapAesGcmTest : public ::testing::Test, public SaKeyUnwrapBase {};
+
+class SaKeyUnwrapChacha20Test : public ::testing::Test, public SaKeyUnwrapBase {};
+
+class SaKeyUnwrapChacha20Poly1305Test : public ::testing::Test, public SaKeyUnwrapBase {};
 
 class SaKeyUnwrapRsaTest : public ::testing::TestWithParam<sa_cipher_algorithm>, public SaKeyUnwrapBase {};
 

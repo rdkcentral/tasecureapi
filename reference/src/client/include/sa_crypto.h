@@ -56,8 +56,9 @@ sa_status sa_crypto_random(
  * @param[in] key Cipher key.
  * @param[in] parameters Algorithm specific parameters. Use sa_cipher_parameters_aes_cbc with
  * SA_CIPHER_ALGORITHM_AES_CBC and SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, sa_cipher_parameters_aes_ctr
- * with SA_CIPHER_ALGORITHM_AES_CTR, and sa_cipher_parameters_aes_gcm with
- * SA_CIPHER_ALGORITHM_AES_GCM.
+ * with SA_CIPHER_ALGORITHM_AES_CTR, sa_cipher_parameters_aes_gcm with SA_CIPHER_ALGORITHM_AES_GCM,
+ * sa_cipher_parameters_chacha20 with SA_CIPHER_ALGORITHM_CHACHA20, sa_cipher_parameters_chacha20_poly1305 with
+ * SA_CIPHER_ALGORITHM_CHACHA20, and sa_cipher_parameters_rsa_oaep with SA_CIPHER_ALGORITHM_RSA_OAEP.
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - No available cipher slots.

@@ -29,7 +29,10 @@ bool SaKeyUnwrapBase::wrap_key(
         std::shared_ptr<void>& wrapping_parameters,
         size_t wrapping_key_size,
         const std::vector<uint8_t>& clear_key,
-        sa_cipher_algorithm wrapping_algorithm) {
+        sa_cipher_algorithm wrapping_algorithm,
+        sa_digest_algorithm oaep_digest_algorithm,
+        sa_digest_algorithm oaep_mgf1_digest_algorithm,
+        size_t oaep_label_length) {
 
     switch (wrapping_algorithm) {
         case SA_CIPHER_ALGORITHM_AES_CBC:
@@ -50,10 +53,19 @@ bool SaKeyUnwrapBase::wrap_key(
             return wrap_key_aes_gcm(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
                     wrapping_key_size, clear_key);
 
+        case SA_CIPHER_ALGORITHM_CHACHA20:
+            return wrap_key_chacha20(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
+                    wrapping_key_size, clear_key);
+
+        case SA_CIPHER_ALGORITHM_CHACHA20_POLY1305:
+            return wrap_key_chacha20_poly1305(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
+                    wrapping_key_size, clear_key);
+
         case SA_CIPHER_ALGORITHM_RSA_PKCS1V15:
         case SA_CIPHER_ALGORITHM_RSA_OAEP:
             return wrap_key_rsa(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                    wrapping_key_size, clear_key, wrapping_algorithm);
+                    wrapping_key_size, clear_key, wrapping_algorithm, oaep_digest_algorithm,
+                    oaep_mgf1_digest_algorithm, oaep_label_length);
 
         case SA_CIPHER_ALGORITHM_EC_ELGAMAL:
             sa_elliptic_curve curve;
@@ -209,6 +221,85 @@ bool SaKeyUnwrapBase::wrap_key_aes_gcm(
     return wrapping_key != nullptr;
 }
 
+bool SaKeyUnwrapBase::wrap_key_chacha20(
+        std::shared_ptr<sa_key>& wrapping_key,
+        std::vector<uint8_t>& clear_wrapping_key,
+        std::vector<uint8_t>& wrapped_key,
+        std::shared_ptr<void>& wrapping_parameters,
+        size_t wrapping_key_size,
+        const std::vector<uint8_t>& clear_key) {
+
+    sa_rights rights;
+    rights_set_allow_all(&rights);
+
+    clear_wrapping_key = random(wrapping_key_size);
+    std::vector<uint8_t> counter = {0, 0, 0, 0};
+    auto nonce = random(CHACHA20_NONCE_LENGTH);
+    if (!encrypt_chacha20_openssl(wrapped_key, clear_key, counter, nonce, clear_wrapping_key))
+        return false;
+
+    auto* unwrap_parameters_chacha20 = new sa_unwrap_parameters_chacha20;
+    unwrap_parameters_chacha20->counter = new uint8_t[counter.size()];
+    unwrap_parameters_chacha20->counter_length = counter.size();
+    memcpy(const_cast<void*>(unwrap_parameters_chacha20->counter), counter.data(), counter.size());
+    unwrap_parameters_chacha20->nonce = new uint8_t[nonce.size()];
+    unwrap_parameters_chacha20->nonce_length = nonce.size();
+    memcpy(const_cast<void*>(unwrap_parameters_chacha20->nonce), nonce.data(), nonce.size());
+    auto deleter = [](sa_unwrap_parameters_chacha20* p) {
+        if (p != nullptr) {
+            delete[] const_cast<uint8_t*>(static_cast<const uint8_t*>(p->counter));
+            delete[] const_cast<uint8_t*>(static_cast<const uint8_t*>(p->nonce));
+            delete p;
+        }
+    };
+    wrapping_parameters = std::shared_ptr<sa_unwrap_parameters_chacha20>(unwrap_parameters_chacha20, deleter);
+
+    wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+    return wrapping_key != nullptr;
+}
+
+bool SaKeyUnwrapBase::wrap_key_chacha20_poly1305(
+        std::shared_ptr<sa_key>& wrapping_key,
+        std::vector<uint8_t>& clear_wrapping_key,
+        std::vector<uint8_t>& wrapped_key,
+        std::shared_ptr<void>& wrapping_parameters,
+        size_t wrapping_key_size,
+        const std::vector<uint8_t>& clear_key) {
+
+    sa_rights rights;
+    rights_set_allow_all(&rights);
+    clear_wrapping_key = random(wrapping_key_size);
+    auto nonce = random(CHACHA20_NONCE_LENGTH);
+    auto aad = random(1024);
+    std::vector<uint8_t> tag(AES_BLOCK_SIZE);
+    if (!encrypt_chacha20_poly1305_openssl(wrapped_key, clear_key, nonce, aad, tag, clear_wrapping_key))
+        return false;
+
+    auto* unwrap_parameters_chacha20_poly1305 = new sa_unwrap_parameters_chacha20_poly1305;
+    unwrap_parameters_chacha20_poly1305->nonce = new uint8_t[nonce.size()];
+    unwrap_parameters_chacha20_poly1305->nonce_length = nonce.size();
+    memcpy(const_cast<void*>(unwrap_parameters_chacha20_poly1305->nonce), nonce.data(), nonce.size());
+    unwrap_parameters_chacha20_poly1305->aad = new uint8_t[aad.size()];
+    unwrap_parameters_chacha20_poly1305->aad_length = aad.size();
+    memcpy(const_cast<void*>(unwrap_parameters_chacha20_poly1305->aad), aad.data(), aad.size());
+    unwrap_parameters_chacha20_poly1305->tag = new uint8_t[tag.size()];
+    unwrap_parameters_chacha20_poly1305->tag_length = tag.size();
+    memcpy(const_cast<void*>(unwrap_parameters_chacha20_poly1305->tag), tag.data(), tag.size());
+    auto deleter = [](sa_unwrap_parameters_chacha20_poly1305* p) {
+        if (p != nullptr) {
+            delete[] const_cast<uint8_t*>(static_cast<const uint8_t*>(p->nonce));
+            delete[] const_cast<uint8_t*>(static_cast<const uint8_t*>(p->aad));
+            delete[] const_cast<uint8_t*>(static_cast<const uint8_t*>(p->tag));
+            delete p;
+        }
+    };
+    wrapping_parameters =
+            std::shared_ptr<sa_unwrap_parameters_chacha20_poly1305>(unwrap_parameters_chacha20_poly1305, deleter);
+
+    wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+    return wrapping_key != nullptr;
+}
+
 bool SaKeyUnwrapBase::wrap_key_rsa(
         std::shared_ptr<sa_key>& wrapping_key,
         std::vector<uint8_t>& clear_wrapping_key,
@@ -216,7 +307,10 @@ bool SaKeyUnwrapBase::wrap_key_rsa(
         std::shared_ptr<void>& wrapping_parameters,
         size_t wrapping_key_size,
         const std::vector<uint8_t>& clear_key,
-        sa_cipher_algorithm wrapping_algorithm) {
+        sa_cipher_algorithm wrapping_algorithm,
+        sa_digest_algorithm digest_algorithm,
+        sa_digest_algorithm mgf1_digest_algorithm,
+        size_t label_length) {
 
     sa_rights rights;
     rights_set_allow_all(&rights);
@@ -225,14 +319,29 @@ bool SaKeyUnwrapBase::wrap_key_rsa(
     auto rsa = rsa_import_pkcs8(clear_wrapping_key);
 
     if (wrapping_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15) {
+        wrapping_parameters = std::shared_ptr<void>();
         if (!encrypt_rsa_pkcs1v15_openssl(wrapped_key, clear_key, rsa))
             return false;
     } else {
-        if (!encrypt_rsa_oaep_openssl(wrapped_key, clear_key, rsa))
+        auto label = label_length != 0 ? random(label_length) : std::vector<uint8_t>(0);
+
+        auto* unwrap_parameters_rsa_oaep = new sa_unwrap_parameters_rsa_oaep;
+        unwrap_parameters_rsa_oaep->digest_algorithm = digest_algorithm;
+        unwrap_parameters_rsa_oaep->mgf1_digest_algorithm = mgf1_digest_algorithm;
+        unwrap_parameters_rsa_oaep->label = new uint8_t[label.size()];
+        memcpy(unwrap_parameters_rsa_oaep->label, label.data(), label.size());
+        unwrap_parameters_rsa_oaep->label_length = label.size();
+        auto deleter = [](sa_unwrap_parameters_rsa_oaep* p) {
+            if (p != nullptr) {
+                delete[] const_cast<uint8_t*>(static_cast<const uint8_t*>(p->label));
+                delete p;
+            }
+        };
+
+        wrapping_parameters = std::shared_ptr<sa_unwrap_parameters_rsa_oaep>(unwrap_parameters_rsa_oaep, deleter);
+        if (!encrypt_rsa_oaep_openssl(wrapped_key, clear_key, rsa, digest_algorithm, mgf1_digest_algorithm, label))
             return false;
     }
-
-    wrapping_parameters = std::shared_ptr<void>();
 
     wrapping_key = create_sa_key_rsa(&rights, clear_wrapping_key);
     return wrapping_key != nullptr;
@@ -288,235 +397,408 @@ bool SaKeyUnwrapBase::wrap_key_el_gamal(
 
 // clang-format off
 INSTANTIATE_TEST_SUITE_P(
-        SaKeyUnwrapAesCbcTests,
+        SaKeyUnwrapAesAesCbcTests,
         SaKeyUnwrapTest,
-        ::testing::Values(
-            // AES_128 keys
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_128_KEY_SIZE),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_256_KEY_SIZE),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            // AES_256 keys
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_128_KEY_SIZE),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_256_KEY_SIZE),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            // RSA_1024 keys
-            std::make_tuple(RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            // RSA_2048 keys
-            std::make_tuple(RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            // RSA_3072 keys
-            std::make_tuple(RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            // RSA_4096 keys
-            std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            // ECC keys
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE)));
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_KEY_TYPE_SYMMETRIC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CBC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
 
 INSTANTIATE_TEST_SUITE_P(
-        SaKeyUnwrapAesEcbTests,
+        SaKeyUnwrapRsaAesCbcTests,
         SaKeyUnwrapTest,
-        ::testing::Values(
-            // AES_128 keys
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_128_KEY_SIZE),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_256_KEY_SIZE),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            // AES_256 keys
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_128_KEY_SIZE),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_256_KEY_SIZE),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            // RSA_1024 keys
-            std::make_tuple(RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            // RSA_2048 keys
-            std::make_tuple(RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            // RSA_3072 keys
-            std::make_tuple(RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            // RSA_4096 keys
-            std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            // ECC keys
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE)));
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH,
+                    RSA_4096_BYTE_LENGTH),
+                ::testing::Values(SA_KEY_TYPE_RSA)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CBC_PKCS7),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
 
 INSTANTIATE_TEST_SUITE_P(
-        SaKeyUnwrapAesCtrTests,
+        SaKeyUnwrapEcAesCbcTests,
         SaKeyUnwrapTest,
-        ::testing::Values(
-            // AES_128 keys
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            // AES_256 keys
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            // RSA_1024 keys
-            std::make_tuple(RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            // RSA_2048 keys
-            std::make_tuple(RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            // RSA_3072 keys
-            std::make_tuple(RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            // RSA_4096 keys
-            std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            // ECC keys
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE)));
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_ED25519,
+                    SA_ELLIPTIC_CURVE_X25519),
+                ::testing::Values(SA_KEY_TYPE_EC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CBC),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
 
 INSTANTIATE_TEST_SUITE_P(
-        SaKeyUnwrapAesGcmTests,
+        SaKeyUnwrapEcAesCbcPkcs7Tests,
         SaKeyUnwrapTest,
-        ::testing::Values(
-            // AES_128 keys
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            // AES_256 keys
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            // RSA_1024 keys
-            std::make_tuple(RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            // RSA_2048 keys
-            std::make_tuple(RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            // RSA_3072 keys
-            std::make_tuple(RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            // RSA_4096 keys
-            std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            // ECC keys
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
-            std::make_tuple(SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE)));
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224,
+                    SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521,
+                    SA_ELLIPTIC_CURVE_ED25519, SA_ELLIPTIC_CURVE_X25519, SA_ELLIPTIC_CURVE_ED448,
+                    SA_ELLIPTIC_CURVE_X448),
+                ::testing::Values(SA_KEY_TYPE_EC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CBC_PKCS7),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
 
 INSTANTIATE_TEST_SUITE_P(
-        SaKeyUnwrapRsaTests,
+        SaKeyUnwrapAesAesEcbTests,
         SaKeyUnwrapTest,
-        ::testing::Values(
-            // AES_128 keys
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_PKCS1V15, RSA_1024_BYTE_LENGTH),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_PKCS1V15, RSA_2048_BYTE_LENGTH),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_PKCS1V15, RSA_3072_BYTE_LENGTH),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_PKCS1V15, RSA_4096_BYTE_LENGTH),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_OAEP, RSA_1024_BYTE_LENGTH),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_OAEP, RSA_2048_BYTE_LENGTH),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_OAEP, RSA_3072_BYTE_LENGTH),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_OAEP, RSA_4096_BYTE_LENGTH),
-            // AES_256 keys
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_PKCS1V15, RSA_1024_BYTE_LENGTH),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_PKCS1V15, RSA_2048_BYTE_LENGTH),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_PKCS1V15, RSA_3072_BYTE_LENGTH),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_PKCS1V15, RSA_4096_BYTE_LENGTH),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_OAEP, RSA_1024_BYTE_LENGTH),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_OAEP, RSA_2048_BYTE_LENGTH),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_OAEP, RSA_3072_BYTE_LENGTH),
-            std::make_tuple(SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_RSA_OAEP, RSA_4096_BYTE_LENGTH)));
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_KEY_TYPE_SYMMETRIC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_ECB, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapRsaAesEcbTests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH,
+                    RSA_4096_BYTE_LENGTH),
+                ::testing::Values(SA_KEY_TYPE_RSA)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_ECB_PKCS7),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapEcAesEcbTests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_ED25519,
+                    SA_ELLIPTIC_CURVE_X25519),
+                ::testing::Values(SA_KEY_TYPE_EC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_ECB),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapEcAesEcbPkcs7Tests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224,
+                    SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521,
+                    SA_ELLIPTIC_CURVE_ED25519, SA_ELLIPTIC_CURVE_X25519, SA_ELLIPTIC_CURVE_ED448,
+                    SA_ELLIPTIC_CURVE_X448),
+                ::testing::Values(SA_KEY_TYPE_EC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_ECB_PKCS7),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapAesAesCtrTests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_KEY_TYPE_SYMMETRIC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CTR),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapRsaAesCtrTests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH,
+                    RSA_4096_BYTE_LENGTH),
+                ::testing::Values(SA_KEY_TYPE_RSA)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CTR),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapEcAesCtrTests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224,
+                    SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521,
+                    SA_ELLIPTIC_CURVE_ED25519, SA_ELLIPTIC_CURVE_X25519, SA_ELLIPTIC_CURVE_ED448,
+                    SA_ELLIPTIC_CURVE_X448),
+                ::testing::Values(SA_KEY_TYPE_EC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CTR),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapAesAesGcmTests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_KEY_TYPE_SYMMETRIC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_GCM),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapRsaAesGcmTests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH,
+                    RSA_4096_BYTE_LENGTH),
+                ::testing::Values(SA_KEY_TYPE_RSA)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_GCM),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapEcAesGcmTests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224,
+                    SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521,
+                    SA_ELLIPTIC_CURVE_ED25519, SA_ELLIPTIC_CURVE_X25519, SA_ELLIPTIC_CURVE_ED448,
+                    SA_ELLIPTIC_CURVE_X448),
+                ::testing::Values(SA_KEY_TYPE_EC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_GCM),
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapAesChacha20Tests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_KEY_TYPE_SYMMETRIC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20),
+                ::testing::Values(SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapRsaChacha20Tests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH,
+                    RSA_4096_BYTE_LENGTH),
+                ::testing::Values(SA_KEY_TYPE_RSA)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20),
+                ::testing::Values(SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapEcChacha20Tests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224,
+                    SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521,
+                    SA_ELLIPTIC_CURVE_ED25519, SA_ELLIPTIC_CURVE_X25519, SA_ELLIPTIC_CURVE_ED448,
+                    SA_ELLIPTIC_CURVE_X448),
+                ::testing::Values(SA_KEY_TYPE_EC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20),
+                ::testing::Values(SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapAesChacha20Poly1305Tests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_KEY_TYPE_SYMMETRIC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20_POLY1305),
+                ::testing::Values(SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapRsaChacha20Poly1305Tests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH,
+                    RSA_4096_BYTE_LENGTH),
+                ::testing::Values(SA_KEY_TYPE_RSA)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20_POLY1305),
+                ::testing::Values(SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapEcChacha20Poly1305Tests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224,
+                    SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521,
+                    SA_ELLIPTIC_CURVE_ED25519, SA_ELLIPTIC_CURVE_X25519, SA_ELLIPTIC_CURVE_ED448,
+                    SA_ELLIPTIC_CURVE_X448),
+                ::testing::Values(SA_KEY_TYPE_EC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20_POLY1305),
+                ::testing::Values(SYM_256_KEY_SIZE),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+#endif
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapAesRsaPkcs1v15Tests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_KEY_TYPE_SYMMETRIC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_RSA_PKCS1V15),
+                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH,
+                    RSA_4096_BYTE_LENGTH),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapAesRsaOaep1024Tests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_KEY_TYPE_SYMMETRIC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_RSA_OAEP),
+                ::testing::Values(RSA_1024_BYTE_LENGTH),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(0, 16))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapAesRsaOaep2048Tests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_KEY_TYPE_SYMMETRIC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_RSA_OAEP),
+                ::testing::Values(RSA_2048_BYTE_LENGTH),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(0, 16))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapAesRsaOaep3072Tests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_KEY_TYPE_SYMMETRIC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_RSA_OAEP),
+                ::testing::Values(RSA_3072_BYTE_LENGTH),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(0, 16))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyUnwrapAesRsaOaep4096Tests,
+        SaKeyUnwrapTest,
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                ::testing::Values(SA_KEY_TYPE_SYMMETRIC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_RSA_OAEP),
+                ::testing::Values(RSA_4096_BYTE_LENGTH),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(0, 16))));
 
 INSTANTIATE_TEST_SUITE_P(
         SaKeyUnwrapEcTests,
         SaKeyUnwrapTest,
-        ::testing::Values(
-            // AES_128 keys
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_EC_ELGAMAL,
-                ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P192)),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_EC_ELGAMAL,
-                ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P224)),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_EC_ELGAMAL,
-                ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P256)),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_EC_ELGAMAL,
-                ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P384)),
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_EC_ELGAMAL,
-            ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P521))));
+        ::testing::Combine(
+            ::testing::Combine(
+                ::testing::Values(SYM_128_KEY_SIZE),
+                ::testing::Values(SA_KEY_TYPE_SYMMETRIC)),
+            ::testing::Combine(
+                ::testing::Values(SA_CIPHER_ALGORITHM_EC_ELGAMAL),
+                ::testing::Values(ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P192),
+                    ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P224),
+                    ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P256),
+                    ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P384),
+                    ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P521)),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0))));
 
 INSTANTIATE_TEST_SUITE_P(
         SaKeyUnwrapAesCbcTests,

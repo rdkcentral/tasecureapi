@@ -33,6 +33,9 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
     auto key_type = std::get<0>(GetParam());
     auto key_length = std::get<1>(GetParam());
     auto padding = std::get<2>(GetParam());
+    auto oaep_digest_algorithm = std::get<3>(GetParam());
+    auto oaep_mgf1_digest_algorithm = std::get<4>(GetParam());
+    auto oaep_label = std::get<5>(GetParam());
 
     std::vector<uint8_t> clear_key;
     sa_elliptic_curve curve;
@@ -48,11 +51,29 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
     std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
 
     auto data = random(32);
+    auto label = random(oaep_label);
     std::vector<uint8_t> encrypted_data;
     std::shared_ptr<EVP_PKEY_CTX> encrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
     ASSERT_NE(encrypt_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_encrypt_init(encrypt_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(encrypt_pkey_ctx.get(), padding), 1);
+    if (padding == RSA_PKCS1_OAEP_PADDING) {
+        ASSERT_EQ(EVP_PKEY_CTX_set_rsa_oaep_md(encrypt_pkey_ctx.get(), digest_mechanism(oaep_digest_algorithm)), 1);
+        ASSERT_EQ(EVP_PKEY_CTX_set_rsa_mgf1_md(encrypt_pkey_ctx.get(), digest_mechanism(oaep_mgf1_digest_algorithm)),
+                1);
+        if (oaep_label > 0) {
+            void* new_label = malloc(label.size());
+            ASSERT_NE(new_label, nullptr);
+            memcpy(new_label, label.data(), label.size());
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+            ASSERT_EQ(EVP_PKEY_CTX_ctrl(encrypt_pkey_ctx.get(), EVP_PKEY_RSA, EVP_PKEY_OP_ENCRYPT,
+                    EVP_PKEY_CTRL_RSA_OAEP_LABEL, label.size(), new_label), 1);
+#else
+            ASSERT_EQ(EVP_PKEY_CTX_set0_rsa_oaep_label(encrypt_pkey_ctx.get(), new_label, label.size()), 1);
+#endif
+        }
+    }
+
     size_t encrypted_data_length = 0;
     ASSERT_EQ(EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), nullptr, &encrypted_data_length, data.data(), data.size()), 1);
     encrypted_data.resize(encrypted_data_length);
@@ -66,6 +87,23 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
     ASSERT_NE(decrypt_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_decrypt_init(decrypt_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(decrypt_pkey_ctx.get(), padding), 1);
+    if (padding == RSA_PKCS1_OAEP_PADDING) {
+        ASSERT_EQ(EVP_PKEY_CTX_set_rsa_oaep_md(decrypt_pkey_ctx.get(), digest_mechanism(oaep_digest_algorithm)), 1);
+        ASSERT_EQ(EVP_PKEY_CTX_set_rsa_mgf1_md(decrypt_pkey_ctx.get(), digest_mechanism(oaep_mgf1_digest_algorithm)),
+                1);
+        if (oaep_label > 0) {
+            void* new_label = malloc(label.size());
+            ASSERT_NE(new_label, nullptr);
+            memcpy(new_label, label.data(), label.size());
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+            ASSERT_EQ(EVP_PKEY_CTX_ctrl(decrypt_pkey_ctx.get(), EVP_PKEY_RSA, EVP_PKEY_OP_DECRYPT,
+                              EVP_PKEY_CTRL_RSA_OAEP_LABEL, label.size(), new_label), 1);
+#else
+            ASSERT_EQ(EVP_PKEY_CTX_set0_rsa_oaep_label(decrypt_pkey_ctx.get(), new_label, label.size()), 1);
+#endif
+        }
+    }
+
     size_t decrypted_data_length = 0;
     result = EVP_PKEY_decrypt(decrypt_pkey_ctx.get(), nullptr, &decrypted_data_length, encrypted_data.data(),
             encrypted_data.size());
@@ -128,11 +166,65 @@ TEST_F(SaEnginePkeyEncryptTest, defaultPaddingTest) {
 
 // clang-format off
 INSTANTIATE_TEST_SUITE_P(
-        SaEnginePkeyEncryptTests,
+        SaEnginePkeyPkcs1EncryptTests,
         SaEnginePkeyEncryptTest,
         ::testing::Combine(
                 ::testing::Values(SA_KEY_TYPE_RSA),
                 ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH,
                     RSA_4096_BYTE_LENGTH),
-                ::testing::Values(RSA_PKCS1_PADDING, RSA_PKCS1_OAEP_PADDING)));
+                ::testing::Values(RSA_PKCS1_PADDING),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+                ::testing::Values(0)));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaEnginePkeyRsa1024OaepEncryptTests,
+        SaEnginePkeyEncryptTest,
+        ::testing::Combine(
+                ::testing::Values(SA_KEY_TYPE_RSA),
+                ::testing::Values(RSA_1024_BYTE_LENGTH),
+                ::testing::Values(RSA_PKCS1_OAEP_PADDING),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(0, 16)));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaEnginePkeyRsa2048OaepEncryptTests,
+        SaEnginePkeyEncryptTest,
+        ::testing::Combine(
+                ::testing::Values(SA_KEY_TYPE_RSA),
+                ::testing::Values(RSA_2048_BYTE_LENGTH),
+                ::testing::Values(RSA_PKCS1_OAEP_PADDING),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(0, 16)));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaEnginePkeyRsa3072OaepEncryptTests,
+        SaEnginePkeyEncryptTest,
+        ::testing::Combine(
+                ::testing::Values(SA_KEY_TYPE_RSA),
+                ::testing::Values(RSA_3072_BYTE_LENGTH),
+                ::testing::Values(RSA_PKCS1_OAEP_PADDING),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(0, 16)));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaEnginePkeyRsa4096OaepEncryptTests,
+        SaEnginePkeyEncryptTest,
+        ::testing::Combine(
+                ::testing::Values(SA_KEY_TYPE_RSA),
+                ::testing::Values(RSA_4096_BYTE_LENGTH),
+                ::testing::Values(RSA_PKCS1_OAEP_PADDING),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(0, 16)));
 // clang-format on

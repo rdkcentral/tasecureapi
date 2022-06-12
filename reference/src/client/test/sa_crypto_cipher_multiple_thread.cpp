@@ -60,7 +60,8 @@ void* SaCryptoCipherMultipleThread::process_multiple_threads(void* args) {
             return reinterpret_cast<void*>(1);
         }
 
-        if (bytes_to_process != get_required_length(parameters.cipher_algorithm, key_size, clear.size(), true)) {
+        if (get_required_length(parameters.cipher_algorithm, key_size, clear.size(), true,
+                    parameters.oaep_digest_algorithm, parameters.oaep_mgf1_digest_algorithm) != bytes_to_process) {
             ERROR("bytes_to_process failed");
             return reinterpret_cast<void*>(1);
         }

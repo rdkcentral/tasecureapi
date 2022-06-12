@@ -26,7 +26,7 @@
 #include <openssl/core_names.h>
 #include <openssl/evp.h>
 #endif
-#include <string.h>
+#include <memory.h>
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
 static void swap_native_binary(
@@ -218,7 +218,7 @@ static DH* dh_load(
         bn_g = NULL;
 
         // set private if passed in
-        if (private) {
+        if (private != NULL) {
             bn_private = BN_bin2bn(private, (int) p_length, NULL);
             if (bn_private == NULL) {
                 ERROR("BN_bin2bn failed");

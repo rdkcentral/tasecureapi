@@ -462,11 +462,246 @@ static sa_status ta_sa_key_unwrap_aes_gcm(
     return status;
 }
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+static sa_status ta_sa_key_unwrap_chacha20(
+        sa_key* key,
+        const sa_rights* rights,
+        sa_key_type key_type,
+        void* type_parameters,
+        sa_unwrap_parameters_chacha20* algorithm_parameters,
+        sa_key wrapping_key,
+        const void* in,
+        size_t in_length,
+        client_t* client,
+        const sa_uuid* caller_uuid) {
+
+    if (key == NULL) {
+        ERROR("NULL key");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    *key = INVALID_HANDLE;
+
+    if (client == NULL) {
+        ERROR("NULL client");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (caller_uuid == NULL) {
+        ERROR("NULL caller_uuid");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (rights == NULL) {
+        ERROR("NULL rights");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (algorithm_parameters == NULL) {
+        ERROR("NULL algorithm_parameters");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (algorithm_parameters->counter == NULL) {
+        ERROR("NULL counter");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (algorithm_parameters->counter_length != CHACHA20_COUNTER_LENGTH) {
+        ERROR("Bad counter_length");
+        return SA_STATUS_BAD_PARAMETER;
+    }
+
+    if (algorithm_parameters->nonce == NULL) {
+        ERROR("NULL nonce");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (algorithm_parameters->nonce_length != CHACHA20_NONCE_LENGTH) {
+        ERROR("Bad nonce_length");
+        return SA_STATUS_BAD_PARAMETER;
+    }
+
+    if (in == NULL) {
+        ERROR("NULL in");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    sa_status status;
+    stored_key_t* stored_key_unwrapped = NULL;
+    stored_key_t* stored_key_wrapping = NULL;
+    do {
+        key_store_t* key_store = client_get_key_store(client);
+        status = key_store_unwrap(&stored_key_wrapping, key_store, wrapping_key, caller_uuid);
+        if (status != SA_STATUS_OK) {
+            ERROR("key_store_unwrap failed");
+            break;
+        }
+
+        const sa_header* header = stored_key_get_header(stored_key_wrapping);
+        if (header == NULL) {
+            ERROR("stored_key_get_header failed");
+            status = SA_STATUS_NULL_PARAMETER;
+            break;
+        }
+
+        if (!rights_allowed_unwrap(&header->rights)) {
+            ERROR("rights_allowed_unwrap failed");
+            status = SA_STATUS_OPERATION_NOT_ALLOWED;
+            break;
+        }
+
+        if (!key_type_supports_chacha20(header->type, header->size)) {
+            ERROR("key_type_supports_chacha20 failed");
+            status = SA_STATUS_BAD_KEY_TYPE;
+            break;
+        }
+
+        status = unwrap_chacha20(&stored_key_unwrapped, in, in_length, rights, key_type, type_parameters,
+                algorithm_parameters, stored_key_wrapping);
+        if (status != SA_STATUS_OK) {
+            ERROR("unwrap_aes_ctr failed");
+            break;
+        }
+
+        status = key_store_import_stored_key(key, key_store, stored_key_unwrapped, caller_uuid);
+        if (status != SA_STATUS_OK) {
+            ERROR("key_store_import_stored_key failed");
+            break;
+        }
+    } while (false);
+
+    stored_key_free(stored_key_wrapping);
+    stored_key_free(stored_key_unwrapped);
+
+    return status;
+}
+
+static sa_status ta_sa_key_unwrap_chacha20_poly1305(
+        sa_key* key,
+        const sa_rights* rights,
+        sa_key_type key_type,
+        void* type_parameters,
+        sa_unwrap_parameters_chacha20_poly1305* algorithm_parameters,
+        sa_key wrapping_key,
+        const void* in,
+        size_t in_length,
+        client_t* client,
+        const sa_uuid* caller_uuid) {
+
+    if (key == NULL) {
+        ERROR("NULL key");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+    *key = INVALID_HANDLE;
+
+    if (client == NULL) {
+        ERROR("NULL client");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (caller_uuid == NULL) {
+        ERROR("NULL caller_uuid");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (rights == NULL) {
+        ERROR("NULL rights");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (algorithm_parameters == NULL) {
+        ERROR("NULL algorithm_parameters");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (algorithm_parameters->nonce == NULL) {
+        ERROR("NULL nonce");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (algorithm_parameters->nonce_length != CHACHA20_NONCE_LENGTH) {
+        ERROR("Bad nonce_length");
+        return SA_STATUS_BAD_PARAMETER;
+    }
+
+    if (algorithm_parameters->aad == NULL && algorithm_parameters->aad_length > 0) {
+        ERROR("NULL aad");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (algorithm_parameters->tag == NULL) {
+        ERROR("NULL tag");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (algorithm_parameters->tag_length != CHACHA20_TAG_LENGTH) {
+        ERROR("Bad tag_length");
+        return SA_STATUS_BAD_PARAMETER;
+    }
+
+    if (in == NULL) {
+        ERROR("NULL in");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    sa_status status;
+    stored_key_t* stored_key_unwrapped = NULL;
+    stored_key_t* stored_key_wrapping = NULL;
+    do {
+        key_store_t* key_store = client_get_key_store(client);
+        status = key_store_unwrap(&stored_key_wrapping, key_store, wrapping_key, caller_uuid);
+        if (status != SA_STATUS_OK) {
+            ERROR("key_store_unwrap failed");
+            break;
+        }
+
+        const sa_header* header = stored_key_get_header(stored_key_wrapping);
+        if (header == NULL) {
+            ERROR("stored_key_get_header failed");
+            status = SA_STATUS_NULL_PARAMETER;
+            break;
+        }
+
+        if (!rights_allowed_unwrap(&header->rights)) {
+            ERROR("rights_allowed_unwrap failed");
+            status = SA_STATUS_OPERATION_NOT_ALLOWED;
+            break;
+        }
+
+        if (!key_type_supports_chacha20(header->type, header->size)) {
+            ERROR("key_type_supports_chacha20 failed");
+            status = SA_STATUS_BAD_KEY_TYPE;
+            break;
+        }
+
+        status = unwrap_chacha20_poly1305(&stored_key_unwrapped, in, in_length, rights, key_type, type_parameters,
+                algorithm_parameters, stored_key_wrapping);
+        if (status != SA_STATUS_OK) {
+            ERROR("unwrap_aes_gcm failed");
+            break;
+        }
+
+        status = key_store_import_stored_key(key, key_store, stored_key_unwrapped, caller_uuid);
+        if (status != SA_STATUS_OK) {
+            ERROR("key_store_import_stored_key failed");
+            break;
+        }
+    } while (false);
+
+    stored_key_free(stored_key_wrapping);
+    stored_key_free(stored_key_unwrapped);
+
+    return status;
+}
+#endif
+
 static sa_status ta_sa_key_unwrap_rsa(
         sa_key* key,
         const sa_rights* rights,
         sa_key_type key_type,
         sa_cipher_algorithm cipher_algorithm,
+        void* algorithm_parameters,
         sa_key wrapping_key,
         const void* in,
         size_t in_length,
@@ -547,7 +782,7 @@ static sa_status ta_sa_key_unwrap_rsa(
         }
 
         status = unwrap_rsa(&stored_key_unwrapped, in, in_length, rights, key_type, cipher_algorithm,
-                stored_key_wrapping);
+                algorithm_parameters, stored_key_wrapping);
         if (status != SA_STATUS_OK) {
             ERROR("unwrap_rsa failed");
             break;
@@ -739,10 +974,28 @@ sa_status ta_sa_key_unwrap(
                 ERROR("ta_sa_key_unwrap_aes_gcm failed");
                 break;
             }
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+        } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20) {
+            status = ta_sa_key_unwrap_chacha20(key, rights, key_type, type_parameters,
+                    (sa_unwrap_parameters_chacha20*) algorithm_parameters, wrapping_key, in,
+                    in_length, client, caller_uuid);
+            if (status != SA_STATUS_OK) {
+                ERROR("ta_sa_key_unwrap_aes_ctr failed");
+                break;
+            }
+        } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
+            status = ta_sa_key_unwrap_chacha20_poly1305(key, rights, key_type, type_parameters,
+                    (sa_unwrap_parameters_chacha20_poly1305*) algorithm_parameters, wrapping_key, in,
+                    in_length, client, caller_uuid);
+            if (status != SA_STATUS_OK) {
+                ERROR("ta_sa_key_unwrap_aes_gcm failed");
+                break;
+            }
+#endif
         } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15 ||
                    cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
-            status = ta_sa_key_unwrap_rsa(key, rights, key_type, cipher_algorithm, wrapping_key, in, in_length, client,
-                    caller_uuid);
+            status = ta_sa_key_unwrap_rsa(key, rights, key_type, cipher_algorithm, algorithm_parameters, wrapping_key,
+                    in, in_length, client, caller_uuid);
             if (status != SA_STATUS_OK) {
                 ERROR("ta_sa_key_unwrap_rsa failed");
                 break;

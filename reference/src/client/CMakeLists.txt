@@ -235,6 +235,8 @@ add_executable(saclienttest
         test/sa_key_unwrap_aes_ctr.cpp
         test/sa_key_unwrap_aes_ecb.cpp
         test/sa_key_unwrap_aes_gcm.cpp
+        test/sa_key_unwrap_chacha20.cpp
+        test/sa_key_unwrap_chacha20_poly1305.cpp
         test/sa_key_unwrap_ec.cpp
         test/sa_key_unwrap_rsa.cpp
         test/sa_crypto_cipher_multiple_thread.cpp

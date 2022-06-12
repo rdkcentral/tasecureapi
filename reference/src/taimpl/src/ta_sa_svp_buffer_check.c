@@ -82,7 +82,7 @@ sa_status ta_sa_svp_buffer_check(
         status = SA_STATUS_OK;
     } while (false);
 
-    if (svp)
+    if (svp != NULL)
         svp_store_release_exclusive(svp_store, svp_buffer, svp, caller_uuid);
 
     client_store_release(client_store, client_slot, client, caller_uuid);

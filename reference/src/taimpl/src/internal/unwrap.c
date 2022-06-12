@@ -25,6 +25,7 @@
 #include "porting/otp_internal.h"
 #include "rsa.h"
 #include "stored_key_internal.h"
+#include <memory.h>
 #include <openssl/evp.h>
 
 static sa_status import_key(
@@ -384,7 +385,6 @@ sa_status unwrap_aes_ctr(
     }
 
     EVP_CIPHER_CTX_free(context);
-
     return status;
 }
 
@@ -473,6 +473,270 @@ sa_status unwrap_aes_gcm(
     return status;
 }
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+sa_status unwrap_chacha20(
+        stored_key_t** stored_key_unwrapped,
+        const void* in,
+        size_t in_length,
+        const sa_rights* rights,
+        sa_key_type key_type,
+        void* type_parameters,
+        const sa_unwrap_parameters_chacha20* parameters,
+        const stored_key_t* stored_key_wrapping) {
+
+    if (stored_key_unwrapped == NULL) {
+        ERROR("NULL stored_key_unwrapped");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (in == NULL) {
+        ERROR("NULL in");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (rights == NULL) {
+        ERROR("NULL rights");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (parameters == NULL) {
+        ERROR("NULL parameters");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (stored_key_wrapping == NULL) {
+        ERROR("NULL stored_key_wrapping");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    const void* key = stored_key_get_key(stored_key_wrapping);
+    if (key == NULL) {
+        ERROR("stored_key_get_key failed");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    sa_status status;
+    EVP_CIPHER_CTX* context = NULL;
+    uint8_t* unwrapped_key = NULL;
+    do {
+        unwrapped_key = memory_secure_alloc(in_length);
+        if (unwrapped_key == NULL) {
+            ERROR("memory_secure_alloc failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        context = EVP_CIPHER_CTX_new();
+        if (context == NULL) {
+            ERROR("EVP_CIPHER_CTX_new failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        const EVP_CIPHER* cipher = EVP_chacha20();
+        if (cipher == NULL) {
+            ERROR("EVP_chacha20 failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        uint8_t iv[CHACHA20_COUNTER_LENGTH + CHACHA20_NONCE_LENGTH];
+        memcpy(iv, parameters->counter, parameters->counter_length);
+        memcpy(iv + CHACHA20_COUNTER_LENGTH, parameters->nonce, parameters->nonce_length);
+        if (EVP_DecryptInit_ex(context, cipher, NULL, key, iv) != 1) {
+            ERROR("EVP_DecryptInit_ex failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        // turn off padding
+        if (EVP_CIPHER_CTX_set_padding(context, 0) != 1) {
+            ERROR("EVP_CIPHER_CTX_set_padding failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        int out_length = (int) in_length;
+        if (EVP_DecryptUpdate(context, unwrapped_key, &out_length, in, (int) in_length) != 1) {
+            ERROR("EVP_DecryptUpdate failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        const sa_header* header = stored_key_get_header(stored_key_wrapping);
+        if (header == NULL) {
+            ERROR("stored_key_get_header failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, type_parameters, unwrapped_key,
+                in_length);
+        if (status != SA_STATUS_OK) {
+            ERROR("import_key failed");
+            break;
+        }
+    } while (false);
+
+    if (unwrapped_key != NULL) {
+        memory_memset_unoptimizable(unwrapped_key, 0, in_length);
+        memory_secure_free(unwrapped_key);
+    }
+
+    EVP_CIPHER_CTX_free(context);
+    return status;
+}
+
+sa_status unwrap_chacha20_poly1305(
+        stored_key_t** stored_key_unwrapped,
+        const void* in,
+        size_t in_length,
+        const sa_rights* rights,
+        sa_key_type key_type,
+        void* type_parameters,
+        const sa_unwrap_parameters_chacha20_poly1305* parameters,
+        const stored_key_t* stored_key_wrapping) {
+
+    if (stored_key_unwrapped == NULL) {
+        ERROR("NULL stored_key_unwrapped");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (in == NULL) {
+        ERROR("NULL in");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (rights == NULL) {
+        ERROR("NULL rights");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (parameters == NULL) {
+        ERROR("NULL parameters");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (stored_key_wrapping == NULL) {
+        ERROR("NULL stored_key_wrapping");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    const void* key = stored_key_get_key(stored_key_wrapping);
+    if (key == NULL) {
+        ERROR("stored_key_get_key failed");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    sa_status status;
+    EVP_CIPHER_CTX* context = NULL;
+    uint8_t* unwrapped_key = NULL;
+    do {
+        unwrapped_key = memory_secure_alloc(in_length);
+        if (unwrapped_key == NULL) {
+            ERROR("memory_secure_alloc failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        context = EVP_CIPHER_CTX_new();
+        if (context == NULL) {
+            ERROR("EVP_CIPHER_CTX_new failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        const EVP_CIPHER* cipher = EVP_chacha20_poly1305();
+        if (cipher == NULL) {
+            ERROR("EVP_chacha20 failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        if (EVP_DecryptInit_ex(context, cipher, NULL, NULL, NULL) != 1) {
+            ERROR("EVP_DecryptInit_ex failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        // set nonce length
+        if (EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_IVLEN, (int) parameters->nonce_length, NULL) != 1) {
+            ERROR("EVP_CIPHER_CTX_counterl failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        // init key and nonce
+        if (EVP_DecryptInit_ex(context, cipher, NULL, key, parameters->nonce) != 1) {
+            ERROR("EVP_EncryptInit_ex failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        // turn off padding
+        if (EVP_CIPHER_CTX_set_padding(context, 0) != 1) {
+            ERROR("EVP_CIPHER_CTX_set_padding failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        // set aad
+        if (parameters->aad != NULL) {
+            int out_length = 0;
+            if (EVP_DecryptUpdate(context, NULL, &out_length, parameters->aad, (int) parameters->aad_length) != 1) {
+                ERROR("EVP_EncryptUpdate failed");
+                status = SA_STATUS_INTERNAL_ERROR;
+                break;
+            }
+        }
+
+        int out_length = (int) in_length;
+        if (EVP_DecryptUpdate(context, unwrapped_key, &out_length, in, (int) in_length) != 1) {
+            ERROR("EVP_DecryptUpdate failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        // check tag
+        if (EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_TAG, (int) parameters->tag_length,
+                    (void*) parameters->tag) != 1) {
+            ERROR("EVP_CIPHER_CTX_ctrl failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        int length = 0;
+        if (EVP_DecryptFinal_ex(context, NULL, &length) != 1) {
+            ERROR("EVP_DecryptFinal_ex failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        const sa_header* header = stored_key_get_header(stored_key_wrapping);
+        if (header == NULL) {
+            ERROR("stored_key_get_header failed");
+            status = SA_STATUS_INTERNAL_ERROR;
+            break;
+        }
+
+        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, type_parameters, unwrapped_key,
+                in_length);
+        if (status != SA_STATUS_OK) {
+            ERROR("import_key failed");
+            break;
+        }
+    } while (false);
+
+    if (unwrapped_key != NULL) {
+        memory_memset_unoptimizable(unwrapped_key, 0, in_length);
+        memory_secure_free(unwrapped_key);
+    }
+
+    EVP_CIPHER_CTX_free(context);
+    return status;
+}
+#endif
+
 sa_status unwrap_rsa(
         stored_key_t** stored_key_unwrapped,
         const void* in,
@@ -480,6 +744,7 @@ sa_status unwrap_rsa(
         const sa_rights* rights,
         sa_key_type key_type,
         sa_cipher_algorithm cipher_algorithm,
+        void* parameters,
         const stored_key_t* stored_key_wrapping) {
 
     if (stored_key_unwrapped == NULL) {
@@ -520,7 +785,21 @@ sa_status unwrap_rsa(
 
         size_t unwrapped_key_length = in_length;
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
-            if (!rsa_decrypt_oaep(unwrapped_key, &unwrapped_key_length, stored_key_wrapping, in, in_length)) {
+            if (parameters == NULL) {
+                ERROR("NULL parameters");
+                status = SA_STATUS_BAD_PARAMETER;
+                break;
+            }
+
+            sa_unwrap_parameters_rsa_oaep* oaep_parameters = (sa_unwrap_parameters_rsa_oaep*) parameters;
+            if (oaep_parameters->label == NULL && oaep_parameters->label_length != 0) {
+                ERROR("Invalid label_length");
+                return SA_STATUS_BAD_PARAMETER;
+            }
+
+            if (!rsa_decrypt_oaep(unwrapped_key, &unwrapped_key_length, stored_key_wrapping,
+                        oaep_parameters->digest_algorithm, oaep_parameters->mgf1_digest_algorithm,
+                        oaep_parameters->label, oaep_parameters->label_length, in, in_length)) {
                 ERROR("rsa_decrypt_oaep failed");
                 status = SA_STATUS_INTERNAL_ERROR;
                 break;

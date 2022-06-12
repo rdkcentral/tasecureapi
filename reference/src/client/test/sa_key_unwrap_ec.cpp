@@ -33,7 +33,8 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                key_size, clear_key, SA_CIPHER_ALGORITHM_EC_ELGAMAL));
+                key_size, clear_key, SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_DIGEST_ALGORITHM_SHA1,
+                SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -53,7 +54,8 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                key_size, clear_key, SA_CIPHER_ALGORITHM_EC_ELGAMAL));
+                key_size, clear_key, SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_DIGEST_ALGORITHM_SHA1,
+                SA_DIGEST_ALGORITHM_SHA1, 0));
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
@@ -72,7 +74,8 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                key_size, clear_key, SA_CIPHER_ALGORITHM_EC_ELGAMAL));
+                key_size, clear_key, SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_DIGEST_ALGORITHM_SHA1,
+                SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -94,7 +97,8 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                key_size, clear_key, SA_CIPHER_ALGORITHM_EC_ELGAMAL));
+                key_size, clear_key, SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_DIGEST_ALGORITHM_SHA1,
+                SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -116,7 +120,8 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                key_size, clear_key, SA_CIPHER_ALGORITHM_EC_ELGAMAL));
+                key_size, clear_key, SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_DIGEST_ALGORITHM_SHA1,
+                SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -138,7 +143,8 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                key_size, clear_key, SA_CIPHER_ALGORITHM_EC_ELGAMAL));
+                key_size, clear_key, SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_DIGEST_ALGORITHM_SHA1,
+                SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);

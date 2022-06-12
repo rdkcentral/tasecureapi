@@ -87,7 +87,7 @@ sa_status ta_sa_crypto_cipher_update_iv(
         }
     } while (false);
 
-    if (cipher)
+    if (cipher != NULL)
         cipher_store_release_exclusive(cipher_store, context, cipher, caller_uuid);
 
     client_store_release(client_store, client_slot, client, caller_uuid);

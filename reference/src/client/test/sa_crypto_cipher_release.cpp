@@ -41,6 +41,9 @@ namespace {
         parameters.cipher_algorithm = std::get<0>(GetParam());
         sa_key_type key_type = std::get<1>(GetParam());
         size_t key_size = std::get<2>(GetParam());
+        parameters.oaep_digest_algorithm = std::get<4>(GetParam());
+        parameters.oaep_mgf1_digest_algorithm = std::get<5>(GetParam());
+        parameters.oaep_label_length = std::get<6>(GetParam());
 
         auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, key_type, key_size, parameters);
         ASSERT_NE(cipher, nullptr);

@@ -34,6 +34,9 @@ typedef struct { // NOLINT
     std::shared_ptr<void> parameters;
     std::shared_ptr<void> end_parameters;
     sa_elliptic_curve curve;
+    sa_digest_algorithm oaep_digest_algorithm;
+    sa_digest_algorithm oaep_mgf1_digest_algorithm;
+    size_t oaep_label_length;
 } cipher_parameters;
 
 #define UNSUPPORTED_CIPHER (sa_crypto_cipher_context)(INVALID_HANDLE - 1)
@@ -75,19 +78,23 @@ protected:
             sa_cipher_algorithm cipher_algorithm,
             size_t key_length,
             size_t bytes_to_process,
-            bool apply_pad);
+            bool apply_pad,
+            sa_digest_algorithm digest_algorithm,
+            sa_digest_algorithm mgf1_digest_algorithm);
 
     static bool ec_is_valid_x_coordinate(
             std::shared_ptr<EC_GROUP>& ec_group,
             const std::vector<uint8_t>& coordinate);
 };
 
-using SaCryptoCipherTestType = std::tuple<sa_cipher_algorithm, sa_key_type, size_t, sa_buffer_type>;
+using SaCryptoCipherDecryptTestType = std::tuple<sa_cipher_algorithm, sa_key_type, size_t, sa_buffer_type, sa_digest_algorithm, sa_digest_algorithm, size_t>;
 
-class SaCryptoCipherDecryptTest : public ::testing::TestWithParam<SaCryptoCipherTestType>, public SaCipherCryptoBase {
+class SaCryptoCipherDecryptTest : public ::testing::TestWithParam<SaCryptoCipherDecryptTestType>, public SaCipherCryptoBase {
 protected:
     void SetUp() override;
 };
+
+using SaCryptoCipherTestType = std::tuple<sa_cipher_algorithm, sa_key_type, size_t, sa_buffer_type>;
 
 class SaCryptoCipherEncryptTest : public ::testing::TestWithParam<SaCryptoCipherTestType>, public SaCipherCryptoBase {
 protected:

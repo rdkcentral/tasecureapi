@@ -19,8 +19,8 @@
 #include "cipher_store.h" // NOLINT
 #include "log.h"
 #include "porting/memory.h"
-#include "stored_key_internal.h"
 #include "symmetric.h"
+#include <memory.h>
 #include <threads.h>
 
 struct cipher_s {
@@ -28,6 +28,10 @@ struct cipher_s {
     sa_cipher_mode cipher_mode;
     symmetric_context_t* symmetric_context;
     stored_key_t* stored_key;
+    sa_digest_algorithm oaep_digest_algorithm;
+    sa_digest_algorithm oaep_mgf1_digest_algorithm;
+    void* oaep_label;
+    size_t oaep_label_length;
     mtx_t mutex;
 };
 
@@ -97,6 +101,76 @@ const sa_rights* cipher_get_key_rights(const cipher_t* cipher) {
     return &header->rights;
 }
 
+sa_status cipher_set_oaep_parameters(
+        cipher_t* cipher,
+        sa_digest_algorithm digest_algorithm,
+        sa_digest_algorithm mgf1_digest_algorithm,
+        void* label,
+        size_t label_length) {
+
+    if (cipher == NULL) {
+        ERROR("NULL cipher");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    cipher->oaep_digest_algorithm = digest_algorithm;
+    cipher->oaep_mgf1_digest_algorithm = mgf1_digest_algorithm;
+
+    if (label != NULL) {
+        cipher->oaep_label = memory_secure_alloc(label_length);
+        if (cipher->oaep_label == NULL) {
+            ERROR("memory_secure_alloc failed");
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+
+        memcpy(cipher->oaep_label, label, label_length);
+    } else {
+        cipher->oaep_label = NULL;
+    }
+
+    cipher->oaep_label_length = label_length;
+    return SA_STATUS_OK;
+}
+
+sa_status cipher_get_oaep_parameters(
+        const cipher_t* cipher,
+        sa_digest_algorithm* digest_algorithm,
+        sa_digest_algorithm* mgf1_digest_algorithm,
+        const void** label,
+        size_t* label_length) {
+
+    if (cipher == NULL) {
+        ERROR("NULL cipher");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (digest_algorithm == NULL) {
+        ERROR("NULL digest_algorithm");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (mgf1_digest_algorithm == NULL) {
+        ERROR("NULL mgf1_digest_algorithm");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (label == NULL) {
+        ERROR("NULL label");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (label_length == NULL) {
+        ERROR("NULL label_length");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    *digest_algorithm = cipher->oaep_digest_algorithm;
+    *mgf1_digest_algorithm = cipher->oaep_mgf1_digest_algorithm;
+    *label = cipher->oaep_label;
+    *label_length = cipher->oaep_label_length;
+    return SA_STATUS_OK;
+}
+
 static cipher_t* cipher_alloc() {
     bool status = false;
     cipher_t* cipher = NULL;
@@ -134,6 +208,8 @@ static void cipher_free(void* object) {
 
     symmetric_context_free(cipher->symmetric_context);
     stored_key_free(cipher->stored_key);
+    if (cipher->oaep_label != NULL)
+        memory_secure_free(cipher->oaep_label);
 
     mtx_destroy(&cipher->mutex);
 

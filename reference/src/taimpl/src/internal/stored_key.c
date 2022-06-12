@@ -22,7 +22,7 @@
 #include "porting/memory.h"
 #include "rights.h"
 #include "stored_key_internal.h"
-#include <string.h>
+#include <memory.h>
 
 struct stored_key_s {
     sa_header header;

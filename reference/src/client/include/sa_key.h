@@ -144,7 +144,9 @@ sa_status sa_key_import(
  * @param[in] algorithm_parameters Additional algorithm specific parameters. Use
  * sa_unwrap_parameters_aes_cbc with SA_CIPHER_ALGORITHM_AES_CBC and
  * SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, sa_unwrap_parameters_aes_ctr with SA_CIPHER_ALGORITHM_AES_CTR,
- * sa_unwrap_parameters_aes_gcm with SA_CIPHER_ALGORITHM_AES_GCM, sa_unwrap_parameters_ec_elgamal
+ * sa_unwrap_parameters_aes_gcm with SA_CIPHER_ALGORITHM_AES_GCM, sa_unwrap_parameters_chacha20 with
+ * SA_CIPHER_ALGORITHM_CHACHA20, sa_unwrap_parameters_chacha20_poly1305 with SA_CIPHER_ALGORITHM_CHACHA20,
+ * sa_unwrap_parameters_rsa_oaep with SA_CIPHER_ALGORITHM_RSA_OAEP, sa_unwrap_parameters_ec_elgamal
  * with SA_CIPHER_ALGORITHM_EC_ELGAMAL.
  * @param[in] wrapping_key Wrapping key.
  * @param[in] in Wrapped key ciphertext.

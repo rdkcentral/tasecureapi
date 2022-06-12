@@ -26,8 +26,8 @@
 #include "rights.h"
 #include "rsa.h"
 #include "sa_types.h"
+#include <memory.h>
 #include <stored_key_internal.h>
-#include <string.h>
 
 #define AES_128_GCM "A128GCM"
 #define MAX_AAD_SIZE 1300
@@ -841,15 +841,15 @@ sa_status soc_kc_unwrap(
     } while (false);
 
     soc_kc_unpacked_free(unpacked);
-    if (json_header_value)
+    if (json_header_value != NULL)
         json_value_free(json_header_value);
-    if (header_fields)
+    if (header_fields != NULL)
         memory_internal_free(header_fields);
-    if (json_payload_value)
+    if (json_payload_value != NULL)
         json_value_free(json_payload_value);
-    if (payload_fields)
+    if (payload_fields != NULL)
         memory_internal_free(payload_fields);
-    if (payload.encrypted_key)
+    if (payload.encrypted_key != NULL)
         memory_internal_free(payload.encrypted_key);
     return status;
 }

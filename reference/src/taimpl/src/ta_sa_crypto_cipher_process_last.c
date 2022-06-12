@@ -25,7 +25,7 @@
 #include "rights.h"
 #include "symmetric.h"
 #include "ta_sa.h"
-#include <string.h>
+#include <memory.h>
 
 static size_t get_required_length(
         cipher_t* cipher,
@@ -580,13 +580,13 @@ sa_status ta_sa_crypto_cipher_process_last(
         }
     } while (false);
 
-    if (in_svp)
+    if (in_svp != NULL)
         svp_store_release_exclusive(client_get_svp_store(client), in->context.svp.buffer, in_svp, caller_uuid);
 
-    if (out_svp)
+    if (out_svp != NULL)
         svp_store_release_exclusive(client_get_svp_store(client), out->context.svp.buffer, out_svp, caller_uuid);
 
-    if (cipher)
+    if (cipher != NULL)
         cipher_store_release_exclusive(cipher_store, context, cipher, caller_uuid);
 
     client_store_release(client_store, client_slot, client, caller_uuid);

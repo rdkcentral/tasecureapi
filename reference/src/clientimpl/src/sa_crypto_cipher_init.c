@@ -66,7 +66,6 @@ sa_status sa_crypto_cipher_init(
             case SA_CIPHER_ALGORITHM_AES_ECB:
             case SA_CIPHER_ALGORITHM_AES_ECB_PKCS7:
             case SA_CIPHER_ALGORITHM_EC_ELGAMAL:
-            case SA_CIPHER_ALGORITHM_RSA_OAEP:
             case SA_CIPHER_ALGORITHM_RSA_PKCS1V15:
                 param1_size = 0;
                 param1_type = TA_PARAM_NULL;
@@ -265,6 +264,51 @@ sa_status sa_crypto_cipher_init(
                 }
                 break;
 
+            case SA_CIPHER_ALGORITHM_RSA_OAEP:
+                if (parameters == NULL) {
+                    ERROR("NULL algorithm_parameters");
+                    status = SA_STATUS_NULL_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                sa_cipher_parameters_rsa_oaep* parameters_rsa_oaep = (sa_cipher_parameters_rsa_oaep*) parameters;
+                if (parameters_rsa_oaep->label == NULL && parameters_rsa_oaep->label_length != 0) {
+                    ERROR("NULL label");
+                    status = SA_STATUS_NULL_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                CREATE_COMMAND(sa_cipher_parameters_rsa_oaep_s, param1);
+                if (param1 == NULL) {
+                    ERROR("CREATE_COMMAND failed");
+                    status = SA_STATUS_INTERNAL_ERROR;
+                    continue; // NOLINT
+                }
+
+                sa_cipher_parameters_rsa_oaep_s* parameters_rsa_oaep_s = (sa_cipher_parameters_rsa_oaep_s*) param1;
+                parameters_rsa_oaep_s->digest_algorithm = parameters_rsa_oaep->digest_algorithm;
+                parameters_rsa_oaep_s->mgf1_digest_algorithm = parameters_rsa_oaep->mgf1_digest_algorithm;
+
+                param1_size = sizeof(sa_cipher_parameters_rsa_oaep_s);
+                param1_type = TA_PARAM_IN;
+                if (parameters_rsa_oaep->label != NULL) {
+                    CREATE_PARAM(param2, (void*) parameters_rsa_oaep->label,
+                            parameters_rsa_oaep_s->label_length);
+                    if (param2 == NULL) {
+                        ERROR("CREATE_PARAM failed");
+                        status = SA_STATUS_INTERNAL_ERROR;
+                        continue; // NOLINT
+                    }
+
+                    param2_size = parameters_rsa_oaep->label_length;
+                    param2_type = TA_PARAM_IN;
+                } else {
+                    param2_size = 0;
+                    param2_type = TA_PARAM_NULL;
+                }
+
+                break;
+
             default:
                 status = SA_STATUS_BAD_PARAMETER;
                 continue; // NOLINT
@@ -287,7 +331,12 @@ sa_status sa_crypto_cipher_init(
     } while (false);
 
     RELEASE_COMMAND(cipher_init);
-    RELEASE_PARAM(param1);
+    if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
+        RELEASE_COMMAND(param1);
+    } else {
+        RELEASE_PARAM(param1);
+    }
+
     RELEASE_PARAM(param2);
     return status;
 }

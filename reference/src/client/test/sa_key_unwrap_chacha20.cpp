@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <openssl/opensslv.h>
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
 #include "client_test_helpers.h"
 #include "sa.h"
 #include "sa_key_unwrap_common.h"
@@ -24,51 +26,51 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaKeyUnwrapAesGcmTest, failsNullKey) {
+    TEST_F(SaKeyUnwrapChacha20Test, failsNullKey) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_GCM, SA_DIGEST_ALGORITHM_SHA1,
+                SYM_256_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_CHACHA20, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
 
         sa_status status = sa_key_unwrap(nullptr, &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, wrapping_parameters.get(), *wrapping_key,
+                SA_CIPHER_ALGORITHM_CHACHA20, wrapping_parameters.get(), *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyUnwrapAesGcmTest, failsNullRights) {
+    TEST_F(SaKeyUnwrapChacha20Test, failsNullRights) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_GCM, SA_DIGEST_ALGORITHM_SHA1,
+                SYM_256_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_CHACHA20, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0));
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), nullptr, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, wrapping_parameters.get(), *wrapping_key,
+                SA_CIPHER_ALGORITHM_CHACHA20, wrapping_parameters.get(), *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyUnwrapAesGcmTest, failsNullIn) {
+    TEST_F(SaKeyUnwrapChacha20Test, failsNullIn) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_GCM, SA_DIGEST_ALGORITHM_SHA1,
+                SYM_256_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_CHACHA20, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
@@ -77,19 +79,19 @@ namespace {
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, wrapping_parameters.get(), *wrapping_key,
+                SA_CIPHER_ALGORITHM_CHACHA20, wrapping_parameters.get(), *wrapping_key,
                 nullptr, 0);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyUnwrapAesGcmTest, failsNullAlgorithmParameters) {
+    TEST_F(SaKeyUnwrapChacha20Test, failsNullAlgorithmParameters) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_GCM, SA_DIGEST_ALGORITHM_SHA1,
+                SYM_256_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_CHACHA20, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
@@ -98,156 +100,117 @@ namespace {
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, nullptr, *wrapping_key, wrapped_key.data(),
-                wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
-    }
-
-    TEST_F(SaKeyUnwrapAesGcmTest, failsNullIv) {
-        std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
-
-        sa_rights rights;
-        rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
-        ASSERT_NE(wrapping_key, nullptr);
-
-        std::vector<uint8_t> aad = random(1024);
-        std::vector<uint8_t> tag = random(AES_BLOCK_SIZE);
-        sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
-                .iv = nullptr,
-                .iv_length = GCM_IV_LENGTH,
-                .aad = aad.data(),
-                .aad_length = aad.size(),
-                .tag = tag.data(),
-                .tag_length = tag.size()};
-
-        auto unwrapped_key = create_uninitialized_sa_key();
-        ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
+                SA_CIPHER_ALGORITHM_CHACHA20, nullptr, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyUnwrapAesGcmTest, failsInvalidIv) {
+    TEST_F(SaKeyUnwrapChacha20Test, failsNullCounter) {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
         rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
-        std::vector<uint8_t> iv = random(GCM_IV_LENGTH + 1);
-        std::vector<uint8_t> aad = random(1024);
-        std::vector<uint8_t> tag = random(AES_BLOCK_SIZE);
-        sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
-                .iv = iv.data(),
-                .iv_length = iv.size(),
-                .aad = aad.data(),
-                .aad_length = aad.size(),
-                .tag = tag.data(),
-                .tag_length = tag.size()};
+        std::vector<uint8_t> nonce = random(CHACHA20_NONCE_LENGTH);
+        sa_unwrap_parameters_chacha20 unwrap_parameters_chacha20 = {
+                .counter = nullptr,
+                .counter_length = 0,
+                .nonce = nonce.data(),
+                .nonce_length = nonce.size()};
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
+                SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
+                wrapped_key.data(), wrapped_key.size());
+        ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
+    }
+
+    TEST_F(SaKeyUnwrapChacha20Test, failsNullNonce) {
+        std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
+
+        sa_rights rights;
+        rights_set_allow_all(&rights);
+        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
+        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        ASSERT_NE(wrapping_key, nullptr);
+
+        std::vector<uint8_t> counter = {0, 0, 0, 0};
+        sa_unwrap_parameters_chacha20 unwrap_parameters_chacha20 = {
+                .counter = counter.data(),
+                .counter_length = counter.size(),
+                .nonce = nullptr,
+                .nonce_length = 0};
+
+        auto unwrapped_key = create_uninitialized_sa_key();
+        ASSERT_NE(unwrapped_key, nullptr);
+        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+                SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
+                wrapped_key.data(), wrapped_key.size());
+        ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
+    }
+
+    TEST_F(SaKeyUnwrapChacha20Test, failsInvalidCounter) {
+        std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
+
+        sa_rights rights;
+        rights_set_allow_all(&rights);
+        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
+        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        ASSERT_NE(wrapping_key, nullptr);
+
+        std::vector<uint8_t> counter = {0, 0, 0, 0, 0};
+        std::vector<uint8_t> nonce = random(CHACHA20_NONCE_LENGTH);
+        sa_unwrap_parameters_chacha20 unwrap_parameters_chacha20 = {
+                .counter = counter.data(),
+                .counter_length = counter.size(),
+                .nonce = nonce.data(),
+                .nonce_length = nonce.size()};
+
+        auto unwrapped_key = create_uninitialized_sa_key();
+        ASSERT_NE(unwrapped_key, nullptr);
+        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+                SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
     }
 
-    TEST_F(SaKeyUnwrapAesGcmTest, failsNullAad) {
+    TEST_F(SaKeyUnwrapChacha20Test, failsInvalidNonce) {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
         rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
-        std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
-        std::vector<uint8_t> tag = random(AES_BLOCK_SIZE);
-        sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
-                .iv = iv.data(),
-                .iv_length = iv.size(),
-                .aad = nullptr,
-                .aad_length = 1,
-                .tag = tag.data(),
-                .tag_length = tag.size()};
+        std::vector<uint8_t> counter = {0, 0, 0, 0};
+        std::vector<uint8_t> nonce = random(CHACHA20_NONCE_LENGTH - 1);
+        sa_unwrap_parameters_chacha20 unwrap_parameters_chacha20 = {
+                .counter = counter.data(),
+                .counter_length = counter.size(),
+                .nonce = nonce.data(),
+                .nonce_length = nonce.size()};
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
-                wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
-    }
-
-    TEST_F(SaKeyUnwrapAesGcmTest, failsNullTag) {
-        std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
-
-        sa_rights rights;
-        rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
-        ASSERT_NE(wrapping_key, nullptr);
-
-        std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
-        std::vector<uint8_t> aad = random(1024);
-        sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
-                .iv = iv.data(),
-                .iv_length = iv.size(),
-                .aad = aad.data(),
-                .aad_length = aad.size(),
-                .tag = nullptr,
-                .tag_length = 0};
-
-        auto unwrapped_key = create_uninitialized_sa_key();
-        ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
-                wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
-    }
-
-    TEST_F(SaKeyUnwrapAesGcmTest, failsInvalidTag) {
-        std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
-
-        sa_rights rights;
-        rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
-        ASSERT_NE(wrapping_key, nullptr);
-
-        std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
-        std::vector<uint8_t> aad = random(1024);
-        std::vector<uint8_t> tag = random(AES_BLOCK_SIZE + 1);
-        sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
-                .iv = iv.data(),
-                .iv_length = iv.size(),
-                .aad = aad.data(),
-                .aad_length = aad.size(),
-                .tag = tag.data(),
-                .tag_length = tag.size()};
-
-        auto unwrapped_key = create_uninitialized_sa_key();
-        ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
+                SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
     }
 
-    TEST_F(SaKeyUnwrapAesGcmTest, failsUnknownWrappingKey) {
+    TEST_F(SaKeyUnwrapChacha20Test, failsUnknownWrappingKey) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_GCM, SA_DIGEST_ALGORITHM_SHA1,
+                SYM_256_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_CHACHA20, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
@@ -256,159 +219,146 @@ namespace {
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, wrapping_parameters.get(), INVALID_HANDLE,
+                SA_CIPHER_ALGORITHM_CHACHA20, wrapping_parameters.get(), INVALID_HANDLE,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
     }
 
-    TEST_F(SaKeyUnwrapAesGcmTest, failsWrappingKeyDisallowsUnwrap) {
+    TEST_F(SaKeyUnwrapChacha20Test, failsWrappingKeyDisallowsUnwrap) {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights wrapping_key_rights;
         rights_set_allow_all(&wrapping_key_rights);
         SA_USAGE_BIT_CLEAR(wrapping_key_rights.usage_flags, SA_USAGE_FLAG_UNWRAP);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
-        std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
-        std::vector<uint8_t> aad = random(1024);
-        std::vector<uint8_t> tag = random(AES_BLOCK_SIZE);
-        sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
-                .iv = iv.data(),
-                .iv_length = iv.size(),
-                .aad = aad.data(),
-                .aad_length = aad.size(),
-                .tag = tag.data(),
-                .tag_length = tag.size()};
+        std::vector<uint8_t> counter = {0, 0, 0, 0};
+        std::vector<uint8_t> nonce = random(CHACHA20_NONCE_LENGTH);
+        sa_unwrap_parameters_chacha20 unwrap_parameters_chacha20 = {
+                .counter = counter.data(),
+                .counter_length = counter.size(),
+                .nonce = nonce.data(),
+                .nonce_length = nonce.size()};
 
         sa_rights rights;
         rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
+                SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
-    TEST_F(SaKeyUnwrapAesGcmTest, failsWrappingKeyOutsideValidTimeBefore) {
+    TEST_F(SaKeyUnwrapChacha20Test, failsWrappingKeyOutsideValidTimeBefore) {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights wrapping_key_rights;
         rights_set_allow_all(&wrapping_key_rights);
         wrapping_key_rights.not_before = time(nullptr) + 60;
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
-        std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
-        std::vector<uint8_t> aad = random(1024);
-        std::vector<uint8_t> tag = random(AES_BLOCK_SIZE);
-        sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
-                .iv = iv.data(),
-                .iv_length = iv.size(),
-                .aad = aad.data(),
-                .aad_length = aad.size(),
-                .tag = tag.data(),
-                .tag_length = tag.size()};
+        std::vector<uint8_t> counter = {0, 0, 0, 0};
+        std::vector<uint8_t> nonce = random(CHACHA20_NONCE_LENGTH);
+        sa_unwrap_parameters_chacha20 unwrap_parameters_chacha20 = {
+                .counter = counter.data(),
+                .counter_length = counter.size(),
+                .nonce = nonce.data(),
+                .nonce_length = nonce.size()};
 
         sa_rights rights;
         rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
+                SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
-    TEST_F(SaKeyUnwrapAesGcmTest, failsWrappingKeyOutsideValidTimeAfter) {
+    TEST_F(SaKeyUnwrapChacha20Test, failsWrappingKeyOutsideValidTimeAfter) {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights wrapping_key_rights;
         rights_set_allow_all(&wrapping_key_rights);
         wrapping_key_rights.not_on_or_after = time(nullptr) - 60;
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
-        std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
-        std::vector<uint8_t> aad = random(1024);
-        std::vector<uint8_t> tag = random(AES_BLOCK_SIZE);
-        sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
-                .iv = iv.data(),
-                .iv_length = iv.size(),
-                .aad = aad.data(),
-                .aad_length = aad.size(),
-                .tag = tag.data(),
-                .tag_length = tag.size()};
+        std::vector<uint8_t> counter = {0, 0, 0, 0};
+        std::vector<uint8_t> nonce = random(CHACHA20_NONCE_LENGTH);
+        sa_unwrap_parameters_chacha20 unwrap_parameters_chacha20 = {
+                .counter = counter.data(),
+                .counter_length = counter.size(),
+                .nonce = nonce.data(),
+                .nonce_length = nonce.size()};
 
         sa_rights rights;
         rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
+                SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
-    TEST_F(SaKeyUnwrapAesGcmTest, failsWrappingKeyNotAes) {
-        auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
+    TEST_F(SaKeyUnwrapChacha20Test, failsWrappingKeyNotAes) {
+        std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
+        auto curve = SA_ELLIPTIC_CURVE_NIST_P384;
         auto key_size = ec_get_key_size(curve);
-        std::vector<uint8_t> wrapped_key = random_ec(AES_BLOCK_SIZE);
 
         sa_rights rights;
         rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(key_size);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_ec(&rights, curve, clear_wrapping_key);
+        std::vector<uint8_t> clear_wrapping_key = random_ec(key_size);
+        std::shared_ptr<sa_key> wrapping_key = create_sa_key_ec(&rights, curve,
+                clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
-        std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
-        std::vector<uint8_t> aad = random(1024);
-        std::vector<uint8_t> tag = random(AES_BLOCK_SIZE);
-        sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
-                .iv = iv.data(),
-                .iv_length = iv.size(),
-                .aad = aad.data(),
-                .aad_length = aad.size(),
-                .tag = tag.data(),
-                .tag_length = tag.size()};
+        std::vector<uint8_t> counter = {0, 0, 0, 0};
+        std::vector<uint8_t> nonce = random(CHACHA20_NONCE_LENGTH);
+        sa_unwrap_parameters_chacha20 unwrap_parameters_chacha20 = {
+                .counter = counter.data(),
+                .counter_length = counter.size(),
+                .nonce = nonce.data(),
+                .nonce_length = nonce.size()};
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
+                SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
     }
 
-    TEST_F(SaKeyUnwrapAesGcmTest, failsWrappingKeyNotValidAesSize) {
+    TEST_F(SaKeyUnwrapChacha20Test, failsWrappingKeyNotValidAesSize) {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
         rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE + 1);
+        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE + 1);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
-        std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
-        std::vector<uint8_t> aad = random(1024);
-        std::vector<uint8_t> tag = random(AES_BLOCK_SIZE);
-        sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
-                .iv = iv.data(),
-                .iv_length = iv.size(),
-                .aad = aad.data(),
-                .aad_length = aad.size(),
-                .tag = tag.data(),
-                .tag_length = tag.size()};
+        std::vector<uint8_t> counter = {0, 0, 0, 0};
+        std::vector<uint8_t> nonce = random(CHACHA20_NONCE_LENGTH);
+        sa_unwrap_parameters_chacha20 unwrap_parameters_chacha20 = {
+                .counter = counter.data(),
+                .counter_length = counter.size(),
+                .nonce = nonce.data(),
+                .nonce_length = nonce.size()};
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
+                SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
     }
 } // namespace
+#endif

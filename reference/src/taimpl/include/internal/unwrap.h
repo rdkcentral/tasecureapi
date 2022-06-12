@@ -26,6 +26,7 @@
 #define UNWRAP_H
 
 #include "stored_key.h"
+#include <openssl/opensslv.h>
 
 #ifdef __cplusplus
 
@@ -134,6 +135,54 @@ sa_status unwrap_aes_gcm(
         const sa_unwrap_parameters_aes_gcm* parameters,
         const stored_key_t* stored_key_wrapping);
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+/**
+ * Unwrap data using CHACHA20 mode.
+ *
+ * @param[out] stored_key_unwrapped the stored unwrapped key.
+ * @param[in] in ciphertext.
+ * @param[in] in_length ciphertext length.
+ * @param[in] rights the key rights.
+ * @param[in] key_type the key type.
+ * @param[in] type_parameters the key type parameters.
+ * @param[in] parameters the unwrap parameters.
+ * @param[in] stored_key_wrapping the unwrapping key.
+ * @return status of the operation.
+ */
+sa_status unwrap_chacha20(
+        stored_key_t** stored_key_unwrapped,
+        const void* in,
+        size_t in_length,
+        const sa_rights* rights,
+        sa_key_type key_type,
+        void* type_parameters,
+        const sa_unwrap_parameters_chacha20* parameters,
+        const stored_key_t* stored_key_wrapping);
+
+/**
+ * Unwrap data using CHACHA20 mode.
+ *
+ * @param[out] stored_key_unwrapped the stored unwrapped key.
+ * @param[in] in ciphertext.
+ * @param[in] in_length ciphertext length.
+ * @param[in] rights the key rights.
+ * @param[in] key_type the key type.
+ * @param[in] type_parameters the key type parameters.
+ * @param[in] parameters the unwrap parameters.
+ * @param[in] stored_key_wrapping the unwrapping key.
+ * @return status of the operation.
+ */
+sa_status unwrap_chacha20_poly1305(
+        stored_key_t** stored_key_unwrapped,
+        const void* in,
+        size_t in_length,
+        const sa_rights* rights,
+        sa_key_type key_type,
+        void* type_parameters,
+        const sa_unwrap_parameters_chacha20_poly1305* parameters,
+        const stored_key_t* stored_key_wrapping);
+#endif
+
 /**
  * Unwrap data using RSA.
  *
@@ -142,7 +191,8 @@ sa_status unwrap_aes_gcm(
  * @param[in] in_length ciphertext length.
  * @param[in] rights the key rights.
  * @param[in] key_type the key type.
- * @param[in] cipher_algorithm the unwrap parameters.
+ * @param[in] cipher_algorithm the unwrap algorithm.
+ * @param[in] parameters the unwrap parameters.
  * @param[in] stored_key_wrapping the unwrapping key.
  * @return status of the operation.
  */
@@ -153,6 +203,7 @@ sa_status unwrap_rsa(
         const sa_rights* rights,
         sa_key_type key_type,
         sa_cipher_algorithm cipher_algorithm,
+        void* parameters,
         const stored_key_t* stored_key_wrapping);
 
 /**

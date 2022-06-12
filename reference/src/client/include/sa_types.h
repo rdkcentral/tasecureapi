@@ -616,6 +616,20 @@ typedef struct {
 } sa_cipher_parameters_chacha20_poly1305;
 
 /**
+ * Cipher parameters for SA_CIPHER_ALGORITHM_RSA_OAEP.
+ */
+typedef struct {
+    /** Digest algorithm. */
+    sa_digest_algorithm digest_algorithm;
+    /** MGF1 digest algorithm. */
+    sa_digest_algorithm mgf1_digest_algorithm;
+    /** Label. May be NULL */
+    void* label;
+    /** Label length. 0 if label is NULL. */
+    size_t label_length;
+} sa_cipher_parameters_rsa_oaep;
+
+/**
  * MAC parameters for SA_MAC_ALGORITHM_HMAC.
  */
 typedef struct {
@@ -683,6 +697,52 @@ typedef struct {
     /** Authentication tag length in bytes. */
     size_t tag_length;
 } sa_unwrap_parameters_aes_gcm;
+
+/**
+ * Unwrap parameters for SA_CIPHER_ALGORITHM_CHACHA20.
+ */
+typedef struct {
+    /** Counter value in little-endian format. */
+    const void* counter;
+    /** Length of the counter in bytes. Must be equal to 4. */
+    size_t counter_length;
+    /** Nonce value. */
+    const void* nonce;
+    /** Length of the nonce in bytes. Must be equal to 12. */
+    size_t nonce_length;
+} sa_unwrap_parameters_chacha20;
+
+/**
+ * Unwrap parameters for SA_CIPHER_ALGORITHM_CHACHA20_POLY1305.
+ */
+typedef struct {
+    /** Nonce value. */
+    const void* nonce;
+    /** Length of the nonce in bytes. Must be equal to 12. */
+    size_t nonce_length;
+    /** Additional authenticated data. */
+    const void* aad;
+    /** Length of additional authenticated data. */
+    size_t aad_length;
+    /** Authentication tag. */
+    const void* tag;
+    /** Authentication tag length in bytes. */
+    size_t tag_length;
+} sa_unwrap_parameters_chacha20_poly1305;
+
+/**
+ * Unwrap parameters for SA_CIPHER_ALGORITHM_RSA_OAEP.
+ */
+typedef struct {
+    /** Digest algorithm. */
+    sa_digest_algorithm digest_algorithm;
+    /** MGF1 digest algorithm. */
+    sa_digest_algorithm mgf1_digest_algorithm;
+    /** Label. May be NULL */
+    void* label;
+    /** Label length. 0 if label is NULL. */
+    size_t label_length;
+} sa_unwrap_parameters_rsa_oaep;
 
 /**
  * Unwrap parameters for SA_CIPHER_ALGORITHM_EC_ELGAMAL.

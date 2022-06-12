@@ -318,6 +318,9 @@ static sa_status ta_invoke_key_unwrap(
     sa_unwrap_parameters_aes_cbc parameters_aes_cbc;
     sa_unwrap_parameters_aes_ctr parameters_aes_ctr;
     sa_unwrap_parameters_aes_gcm parameters_aes_gcm;
+    sa_unwrap_parameters_chacha20 parameters_chacha20;
+    sa_unwrap_parameters_chacha20_poly1305 parameters_chacha20_poly1305;
+    sa_unwrap_parameters_rsa_oaep parameters_rsa_oaep;
     switch (key_unwrap->cipher_algorithm) {
         case SA_CIPHER_ALGORITHM_AES_CBC:
         case SA_CIPHER_ALGORITHM_AES_CBC_PKCS7:
@@ -380,6 +383,52 @@ static sa_status ta_invoke_key_unwrap(
             algorithm_parameters = &parameters_aes_gcm;
             break;
 
+        case SA_CIPHER_ALGORITHM_CHACHA20:
+            if (params[2].mem_ref == NULL) {
+                ERROR("NULL params[2].mem_ref");
+                return SA_STATUS_NULL_PARAMETER;
+            }
+
+            if (params[2].mem_ref_size != sizeof(sa_unwrap_parameters_chacha20_s)) {
+                ERROR("params[2].mem_ref is bad size");
+                return SA_STATUS_BAD_PARAMETER;
+            }
+
+            sa_unwrap_parameters_chacha20_s* params_chacha20 = (sa_unwrap_parameters_chacha20_s*) params[2].mem_ref;
+            parameters_chacha20.counter = &params_chacha20->counter;
+            parameters_chacha20.counter_length = params_chacha20->counter_length;
+            parameters_chacha20.nonce = &params_chacha20->nonce;
+            parameters_chacha20.nonce_length = params_chacha20->nonce_length;
+            algorithm_parameters = &parameters_chacha20;
+            break;
+
+        case SA_CIPHER_ALGORITHM_CHACHA20_POLY1305:
+            if (params[2].mem_ref == NULL) {
+                ERROR("NULL params[2].mem_ref");
+                return SA_STATUS_NULL_PARAMETER;
+            }
+
+            if (params[2].mem_ref_size != sizeof(sa_unwrap_parameters_chacha20_poly1305_s)) {
+                ERROR("params[2].mem_ref is bad size");
+                return SA_STATUS_BAD_PARAMETER;
+            }
+
+            if (params[3].mem_ref == NULL) {
+                ERROR("NULL params[3].mem_ref");
+                return SA_STATUS_NULL_PARAMETER;
+            }
+
+            sa_unwrap_parameters_chacha20_poly1305_s* params_chacha20_poly1305 =
+                    (sa_unwrap_parameters_chacha20_poly1305_s*) params[2].mem_ref;
+            parameters_chacha20_poly1305.nonce = &params_chacha20_poly1305->nonce;
+            parameters_chacha20_poly1305.nonce_length = params_chacha20_poly1305->nonce_length;
+            parameters_chacha20_poly1305.aad = params[3].mem_ref;
+            parameters_chacha20_poly1305.aad_length = params[3].mem_ref_size;
+            parameters_chacha20_poly1305.tag = &params_chacha20_poly1305->tag;
+            parameters_chacha20_poly1305.tag_length = params_chacha20_poly1305->tag_length;
+            algorithm_parameters = &parameters_chacha20_poly1305;
+            break;
+
         case SA_CIPHER_ALGORITHM_EC_ELGAMAL:
             if (params[2].mem_ref == NULL) {
                 ERROR("NULL params[2].mem_ref");
@@ -392,6 +441,26 @@ static sa_status ta_invoke_key_unwrap(
             }
 
             algorithm_parameters = params[2].mem_ref;
+            break;
+
+        case SA_CIPHER_ALGORITHM_RSA_OAEP:
+            if (params[2].mem_ref == NULL) {
+                ERROR("NULL params[2].mem_ref");
+                return SA_STATUS_NULL_PARAMETER;
+            }
+
+            if (params[2].mem_ref_size != sizeof(sa_unwrap_parameters_rsa_oaep_s)) {
+                ERROR("params[2].mem_ref is bad size");
+                return SA_STATUS_BAD_PARAMETER;
+            }
+
+            sa_unwrap_parameters_rsa_oaep_s* params_rsa_oaep =
+                    (sa_unwrap_parameters_rsa_oaep_s*) params[2].mem_ref;
+            parameters_rsa_oaep.digest_algorithm = params_rsa_oaep->digest_algorithm;
+            parameters_rsa_oaep.mgf1_digest_algorithm = params_rsa_oaep->mgf1_digest_algorithm;
+            parameters_rsa_oaep.label = params[3].mem_ref;
+            parameters_rsa_oaep.label_length = params[3].mem_ref_size;
+            algorithm_parameters = &parameters_rsa_oaep;
             break;
 
         default:
@@ -699,6 +768,7 @@ static sa_status ta_invoke_crypto_cipher_init(
     sa_cipher_parameters_aes_gcm parameters_aes_gcm;
     sa_cipher_parameters_chacha20 parameters_chacha20;
     sa_cipher_parameters_chacha20_poly1305 parameters_chacha20_poly1305;
+    sa_cipher_parameters_rsa_oaep parameters_rsa_oaep;
     void* parameters;
     switch (crypto_cipher_init->cipher_algorithm) {
         case SA_CIPHER_ALGORITHM_AES_CBC:
@@ -736,6 +806,26 @@ static sa_status ta_invoke_crypto_cipher_init(
             parameters_chacha20_poly1305.aad = params[2].mem_ref;
             parameters_chacha20_poly1305.aad_length = params[2].mem_ref_size;
             parameters = &parameters_chacha20_poly1305;
+            break;
+
+        case SA_CIPHER_ALGORITHM_RSA_OAEP:
+            if (params[1].mem_ref == NULL) {
+                ERROR("NULL params[2].mem_ref");
+                return SA_STATUS_NULL_PARAMETER;
+            }
+
+            if (params[1].mem_ref_size != sizeof(sa_cipher_parameters_rsa_oaep_s)) {
+                ERROR("params[1].mem_ref is bad size");
+                return SA_STATUS_BAD_PARAMETER;
+            }
+
+            sa_cipher_parameters_rsa_oaep_s* params_rsa_oaep =
+                    (sa_cipher_parameters_rsa_oaep_s*) params[1].mem_ref;
+            parameters_rsa_oaep.digest_algorithm = params_rsa_oaep->digest_algorithm;
+            parameters_rsa_oaep.mgf1_digest_algorithm = params_rsa_oaep->mgf1_digest_algorithm;
+            parameters_rsa_oaep.label = params[2].mem_ref;
+            parameters_rsa_oaep.label_length = params[2].mem_ref_size;
+            parameters = &parameters_rsa_oaep;
             break;
 
         default:

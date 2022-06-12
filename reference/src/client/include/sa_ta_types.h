@@ -33,7 +33,8 @@ extern "C" {
 
 #define AES_BLOCK_SIZE 16
 #define GCM_IV_LENGTH 12
-
+#define CHACHA20_COUNTER_LENGTH 4
+#define CHACHA20_NONCE_LENGTH 12
 #define API_VERSION 1
 
 /**
@@ -161,8 +162,9 @@ typedef struct {
 // sa_key_unwrap
 // param[0] INOUT - sa_key_unwrap_s
 // param[1] IN - in + in_length
-// param[2] IN - sa_unwrap_parameters_aes_iv_s or sa_unwrap_parameters_aes_gcm_s or sa_unwrap_parameters_ec_elgamal_s
-// param[3] IN - aad + aad_length
+// param[2] IN - sa_unwrap_parameters_aes_iv_s or sa_unwrap_parameters_aes_gcm_s or sa_unwrap_parameters_ec_elgamal_s or
+// sa_unwrap_parameters_chacha20_s or sa_unwrap_parameters_chacha20_poly1305_s or sa_unwrap_parameters_rsa_oaep_s
+// param[3] IN - aad + aad_length or label + label_length
 typedef struct {
     uint8_t api_version;
     sa_key key;
@@ -183,6 +185,25 @@ typedef struct {
     uint8_t tag[AES_BLOCK_SIZE];
     uint8_t tag_length;
 } sa_unwrap_parameters_aes_gcm_s;
+
+typedef struct {
+    uint8_t counter[CHACHA20_COUNTER_LENGTH];
+    size_t counter_length;
+    uint8_t nonce[CHACHA20_NONCE_LENGTH];
+    size_t nonce_length;
+} sa_unwrap_parameters_chacha20_s;
+
+typedef struct {
+    uint8_t nonce[CHACHA20_NONCE_LENGTH];
+    size_t nonce_length;
+    uint8_t tag[AES_BLOCK_SIZE];
+    uint8_t tag_length;
+} sa_unwrap_parameters_chacha20_poly1305_s;
+
+typedef struct {
+    sa_digest_algorithm digest_algorithm;
+    sa_digest_algorithm mgf1_digest_algorithm;
+} sa_unwrap_parameters_rsa_oaep_s;
 
 typedef sa_unwrap_parameters_ec_elgamal sa_unwrap_parameters_ec_elgamal_s;
 
@@ -295,8 +316,8 @@ typedef struct {
 
 // sa_crypto_cipher_init
 // param[0] INOUT - sa_crypto_cipher_init_s
-// param[1] IN - iv + iv_length or nonce + nonce_length
-// param[2] IN - aad + aad_length or counter + counter_length
+// param[1] IN - iv + iv_length or nonce + nonce_length or sa_cipher_parameters_rsa_oaep_s
+// param[2] IN - aad + aad_length or counter + counter_length or label + label_length
 typedef struct {
     uint8_t api_version;
     sa_crypto_cipher_context context;
@@ -304,6 +325,11 @@ typedef struct {
     uint32_t cipher_mode;
     sa_key key;
 } sa_crypto_cipher_init_s;
+
+typedef struct {
+    sa_digest_algorithm digest_algorithm;
+    sa_digest_algorithm mgf1_digest_algorithm;
+} sa_cipher_parameters_rsa_oaep_s;
 
 // sa_crypto_cipher_update_iv_s
 // param[0] IN - sa_crypto_cipher_context

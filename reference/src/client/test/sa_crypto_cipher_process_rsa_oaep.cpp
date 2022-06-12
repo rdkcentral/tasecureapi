@@ -34,7 +34,7 @@ namespace {
         auto clear = random(65);
         auto in = std::vector<uint8_t>(EVP_PKEY_bits(rsa.get()) / 8);
         size_t in_length = in.size();
-        ASSERT_TRUE(encrypt_rsa_oaep_openssl(in, clear, rsa));
+        ASSERT_TRUE(encrypt_rsa_oaep_openssl(in, clear, rsa, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, {}));
         in.resize(in_length - 1);
 
         sa_rights rights;
@@ -46,8 +46,9 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
+        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA256, NULL, 0};
         sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_RSA_OAEP, SA_CIPHER_MODE_DECRYPT,
-                *key, nullptr);
+                *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -73,7 +74,7 @@ namespace {
         auto clear = random(65);
         auto in = std::vector<uint8_t>(EVP_PKEY_bits(rsa.get()) / 8);
         size_t in_length = in.size();
-        ASSERT_TRUE(encrypt_rsa_oaep_openssl(in, clear, rsa));
+        ASSERT_TRUE(encrypt_rsa_oaep_openssl(in, clear, rsa, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, {}));
         in.resize(in_length);
 
         sa_rights rights;
@@ -85,8 +86,9 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
+        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
         sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_RSA_OAEP, SA_CIPHER_MODE_DECRYPT,
-                *key, nullptr);
+                *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -120,8 +122,9 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
+        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA256, NULL, 0};
         sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_RSA_OAEP, SA_CIPHER_MODE_DECRYPT,
-                *key, nullptr);
+                *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -147,7 +150,7 @@ namespace {
         auto clear = random(65);
         auto in = std::vector<uint8_t>(EVP_PKEY_bits(rsa.get()) / 8);
         size_t in_length = in.size();
-        ASSERT_TRUE(encrypt_rsa_oaep_openssl(in, clear, rsa));
+        ASSERT_TRUE(encrypt_rsa_oaep_openssl(in, clear, rsa, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, {}));
         in.resize(in_length);
 
         sa_rights rights;
@@ -159,8 +162,9 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
+        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA256, NULL, 0};
         sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_RSA_OAEP, SA_CIPHER_MODE_DECRYPT,
-                *key, nullptr);
+                *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 

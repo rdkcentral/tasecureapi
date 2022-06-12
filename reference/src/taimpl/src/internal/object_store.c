@@ -21,7 +21,7 @@
 #include "porting/memory.h"
 #include "slots.h"
 #include <inttypes.h>
-#include <string.h>
+#include <memory.h>
 #include <threads.h>
 #include <unistd.h>
 
@@ -239,7 +239,7 @@ static sa_status store_remove(
     }
 
     // free the resource
-    if (object_to_free) {
+    if (object_to_free != NULL) {
         store->object_free(object_to_free);
     }
 

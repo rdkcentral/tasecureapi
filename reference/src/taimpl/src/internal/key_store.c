@@ -26,7 +26,7 @@
 #include "porting/rand.h"
 #include "rights.h"
 #include "stored_key_internal.h"
-#include <string.h>
+#include <memory.h>
 #include <time.h>
 
 /**
