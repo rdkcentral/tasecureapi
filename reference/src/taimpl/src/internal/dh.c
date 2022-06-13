@@ -20,16 +20,13 @@
 #include "log.h"
 #include "porting/memory.h"
 #include "stored_key_internal.h"
+#include <openssl/dh.h>
 #include <openssl/opensslv.h>
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
 #include <openssl/core_names.h>
 #include <openssl/evp.h>
-#else
-#include <openssl/dh.h>
 #endif
 #include <string.h>
-
-#define DH_MAX_MOD_SIZE 512
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
 static void swap_native_binary(
@@ -92,13 +89,42 @@ static EVP_PKEY* dh_load(
         const void* private,
         const void* public,
         const void* p,
+        size_t p_length,
         const void* g,
-        size_t length) {
+        size_t g_length) {
 
     bool status = false;
     EVP_PKEY* evp_pkey = NULL;
     EVP_PKEY_CTX* evp_pkey_ctx = NULL;
+    uint8_t* key_p = NULL;
+    uint8_t* key_g = NULL;
     do {
+        key_p = memory_secure_alloc(p_length);
+        if (key_p == NULL) {
+            ERROR("memory_secure_alloc failed");
+            break;
+        }
+        memory_memset_unoptimizable(key_p, 0, p_length);
+
+        key_g = memory_secure_alloc(g_length);
+        if (key_g == NULL) {
+            ERROR("memory_secure_alloc failed");
+            break;
+        }
+        memory_memset_unoptimizable(key_g, 0, g_length);
+
+        memcpy(key_p, p, p_length);
+        swap_native_binary(key_p, p_length);
+        memcpy(key_g, g, g_length);
+        swap_native_binary(key_g, g_length);
+
+        OSSL_PARAM params[] = {
+                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_PRIV_KEY, (unsigned char*) private, p_length),
+                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_PUB_KEY, (unsigned char*) public, p_length),
+                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_P, key_p, p_length),
+                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_G, key_g, g_length),
+                OSSL_PARAM_construct_end()};
+
         evp_pkey_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);
         if (evp_pkey_ctx == NULL) {
             ERROR("EVP_PKEY_CTX_new_id failed");
@@ -110,13 +136,6 @@ static EVP_PKEY* dh_load(
             break;
         }
 
-        OSSL_PARAM params[] = {
-                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_PRIV_KEY, (unsigned char*) private, length),
-                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_PUB_KEY, (unsigned char*) public, length),
-                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_P, (unsigned char*) p, length),
-                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_G, (unsigned char*) g, length),
-                OSSL_PARAM_construct_end()};
-
         if (EVP_PKEY_fromdata(evp_pkey_ctx, &evp_pkey, EVP_PKEY_KEYPAIR, params) != 1) {
             ERROR("EVP_PKEY_fromdata failed");
             break;
@@ -124,6 +143,12 @@ static EVP_PKEY* dh_load(
 
         status = true;
     } while (false);
+
+    if (key_p != NULL)
+        memory_secure_free(key_p);
+
+    if (key_g != NULL)
+        memory_secure_free(key_g);
 
     EVP_PKEY_CTX_free(evp_pkey_ctx);
     if (!status)
@@ -135,8 +160,9 @@ static EVP_PKEY* dh_load(
 static DH* dh_load(
         const void* private,
         const void* p,
+        size_t p_length,
         const void* g,
-        size_t length) {
+        size_t g_length) {
 
     if (p == NULL) {
         ERROR("NULL p");
@@ -148,7 +174,7 @@ static DH* dh_load(
         return NULL;
     }
 
-    if (length > DH_MAX_MOD_SIZE || length == 0) {
+    if (p_length > DH_MAX_MOD_SIZE || p_length == 0 || g_length > DH_MAX_MOD_SIZE || g_length == 0) {
         ERROR("Bad length");
         return NULL;
     }
@@ -166,13 +192,13 @@ static DH* dh_load(
         }
 
         // set params
-        bn_p = BN_bin2bn(p, (int) length, NULL);
+        bn_p = BN_bin2bn(p, (int) p_length, NULL);
         if (bn_p == NULL) {
             ERROR("BN_bin2bn failed");
             break;
         }
 
-        bn_g = BN_bin2bn(g, (int) length, NULL);
+        bn_g = BN_bin2bn(g, (int) g_length, NULL);
         if (bn_g == NULL) {
             ERROR("BN_bin2bn failed");
             break;
@@ -193,7 +219,7 @@ static DH* dh_load(
 
         // set private if passed in
         if (private) {
-            bn_private = BN_bin2bn(private, (int) length, NULL);
+            bn_private = BN_bin2bn(private, (int) p_length, NULL);
             if (bn_private == NULL) {
                 ERROR("BN_bin2bn failed");
                 break;
@@ -315,7 +341,7 @@ bool dh_generate(
 
     bool status = false;
     uint8_t* key = NULL;
-    size_t key_length = p_length * 4;
+    size_t key_length = p_length * 2;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
     EVP_PKEY* evp_pkey = NULL;
     EVP_PKEY* evp_pkey_parameters = NULL;
@@ -323,6 +349,8 @@ bool dh_generate(
     EVP_PKEY_CTX* evp_pkey_parameters_ctx = NULL;
     BIGNUM* bn_private = NULL;
     BIGNUM* bn_public = NULL;
+    uint8_t* key_p = NULL;
+    uint8_t* key_g = NULL;
     do {
         key = memory_secure_alloc(key_length);
         if (key == NULL) {
@@ -333,12 +361,30 @@ bool dh_generate(
 
         uint8_t* private = key;
         uint8_t* public = private + p_length;
-        uint8_t* key_p = public + p_length;
-        uint8_t* key_g = key_p + p_length;
+
+        key_p = memory_secure_alloc(p_length);
+        if (key_p == NULL) {
+            ERROR("memory_secure_alloc failed");
+            break;
+        }
+        memory_memset_unoptimizable(key_p, 0, p_length);
+
+        key_g = memory_secure_alloc(g_length);
+        if (key_g == NULL) {
+            ERROR("memory_secure_alloc failed");
+            break;
+        }
+        memory_memset_unoptimizable(key_g, 0, g_length);
+
         memcpy(key_p, p, p_length);
         swap_native_binary(key_p, p_length);
-        memcpy(key_g + p_length - g_length, g, g_length);
-        swap_native_binary(key_g, p_length);
+        memcpy(key_g, g, g_length);
+        swap_native_binary(key_g, g_length);
+
+        OSSL_PARAM params[] = {
+                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_P, key_p, p_length),
+                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_G, key_g, g_length),
+                OSSL_PARAM_construct_end()};
 
         evp_pkey_parameters_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);
         if (evp_pkey_parameters_ctx == NULL) {
@@ -350,11 +396,6 @@ bool dh_generate(
             ERROR("EVP_PKEY_fromdata_init failed");
             break;
         }
-
-        OSSL_PARAM params[] = {
-                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_P, (unsigned char*) key_p, p_length),
-                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_G, (unsigned char*) key_g, p_length),
-                OSSL_PARAM_construct_end()};
 
         if (EVP_PKEY_fromdata(evp_pkey_parameters_ctx, &evp_pkey_parameters, EVP_PKEY_KEY_PARAMETERS, params) != 1) {
             ERROR("EVP_PKEY_fromdata failed");
@@ -397,7 +438,14 @@ bool dh_generate(
             break;
         }
 
-        status = stored_key_create(stored_key, rights, NULL, SA_KEY_TYPE_DH, 0, p_length, key, key_length);
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(type_parameters));
+        memcpy(type_parameters.dh_parameters.p, p, p_length);
+        type_parameters.dh_parameters.p_length = p_length;
+        memcpy(type_parameters.dh_parameters.g, g, g_length);
+        type_parameters.dh_parameters.g_length = g_length;
+        status = stored_key_create(stored_key, rights, NULL, SA_KEY_TYPE_DH, &type_parameters, p_length, key,
+                key_length);
         if (!status) {
             ERROR("stored_key_create failed");
             break;
@@ -415,6 +463,11 @@ bool dh_generate(
     EVP_PKEY_CTX_free(evp_pkey_ctx);
     BN_free(bn_private);
     BN_free(bn_public);
+    if (key_p != NULL)
+        memory_secure_free(key_p);
+
+    if (key_g != NULL)
+        memory_secure_free(key_g);
 #else
     DH* dh = NULL;
     do {
@@ -427,13 +480,8 @@ bool dh_generate(
 
         uint8_t* private = key;
         uint8_t* public = private + p_length;
-        uint8_t* key_p = public + p_length;
-        uint8_t* key_g = key_p + p_length;
 
-        memcpy(key_p, p, p_length);
-        memcpy(key_g + p_length - g_length, g, g_length);
-
-        dh = dh_load(NULL, key_p, key_g, p_length);
+        dh = dh_load(NULL, p, p_length, g, g_length);
         if (dh == NULL) {
             ERROR("dh_load failed");
             break;
@@ -464,7 +512,14 @@ bool dh_generate(
             break;
         }
 
-        status = stored_key_create(stored_key, rights, NULL, SA_KEY_TYPE_DH, 0, p_length, key, key_length);
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(type_parameters));
+        memcpy(type_parameters.dh_parameters.p, p, p_length);
+        type_parameters.dh_parameters.p_length = p_length;
+        memcpy(type_parameters.dh_parameters.g, g, g_length);
+        type_parameters.dh_parameters.g_length = g_length;
+        status = stored_key_create(stored_key, rights, NULL, SA_KEY_TYPE_DH, &type_parameters, p_length, key,
+                key_length);
         if (!status) {
             ERROR("stored_key_create failed");
             break;
@@ -516,6 +571,8 @@ bool dh_compute(
     EVP_PKEY* evp_pkey = NULL;
     EVP_PKEY_CTX* other_evp_pkey_ctx = NULL;
     EVP_PKEY_CTX* evp_pkey_ctx = NULL;
+    uint8_t* key_p = NULL;
+    uint8_t* key_g = NULL;
 #else
     BIGNUM* bn_other_public = NULL;
 #endif
@@ -534,7 +591,7 @@ bool dh_compute(
 
         size_t modulus_size = header->size;
         size_t key_length = stored_key_get_length(stored_key_private);
-        if (key_length != (modulus_size * 4)) {
+        if (key_length != (modulus_size * 2)) {
             ERROR("Bad dh priv key");
             break;
         }
@@ -550,11 +607,33 @@ bool dh_compute(
             break;
         }
 
-        const uint8_t* public = private + modulus_size;
-        const uint8_t* p = public + modulus_size;
-        const uint8_t* g = p + modulus_size;
+        shared_secret_bytes = memory_secure_alloc(DH_MAX_MOD_SIZE);
+        if (shared_secret_bytes == NULL) {
+            ERROR("memory_secure_alloc failed");
+            break;
+        }
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
+
+        key_p = memory_secure_alloc(header->type_parameters.dh_parameters.p_length);
+        if (key_p == NULL) {
+            ERROR("memory_secure_alloc failed");
+            break;
+        }
+        memory_memset_unoptimizable(key_p, 0, header->type_parameters.dh_parameters.p_length);
+
+        key_g = memory_secure_alloc(header->type_parameters.dh_parameters.g_length);
+        if (key_g == NULL) {
+            ERROR("memory_secure_alloc failed");
+            break;
+        }
+        memory_memset_unoptimizable(key_g, 0, header->type_parameters.dh_parameters.g_length);
+
+        memcpy(key_p, header->type_parameters.dh_parameters.p, header->type_parameters.dh_parameters.p_length);
+        swap_native_binary(key_p, header->type_parameters.dh_parameters.p_length);
+        memcpy(key_g, header->type_parameters.dh_parameters.g, header->type_parameters.dh_parameters.g_length);
+        swap_native_binary(key_g, header->type_parameters.dh_parameters.g_length);
+
         other_evp_pkey_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);
         if (other_evp_pkey_ctx == NULL) {
             ERROR("EVP_PKEY_CTX_new_id failed");
@@ -570,8 +649,8 @@ bool dh_compute(
         swap_native_binary(temp, other_public_length);
         OSSL_PARAM other_params[] = {
                 OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_PUB_KEY, (unsigned char*) temp, other_public_length),
-                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_P, (unsigned char*) p, modulus_size),
-                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_G, (unsigned char*) g, modulus_size),
+                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_P, key_p, header->type_parameters.dh_parameters.p_length),
+                OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_G, key_g, header->type_parameters.dh_parameters.g_length),
                 OSSL_PARAM_construct_end()};
 
         if (EVP_PKEY_fromdata(other_evp_pkey_ctx, &other_evp_pkey, EVP_PKEY_PUBLIC_KEY, other_params) != 1) {
@@ -579,7 +658,10 @@ bool dh_compute(
             break;
         }
 
-        evp_pkey = dh_load(private, public, p, g, modulus_size);
+        const uint8_t* public = private + modulus_size;
+        evp_pkey = dh_load(private, public,
+                header->type_parameters.dh_parameters.p, header->type_parameters.dh_parameters.p_length,
+                header->type_parameters.dh_parameters.g, header->type_parameters.dh_parameters.g_length);
         if (evp_pkey == NULL) {
             ERROR("dh_load failed");
             break;
@@ -596,19 +678,25 @@ bool dh_compute(
             break;
         }
 
+        if (EVP_PKEY_CTX_set_dh_pad(evp_pkey_ctx, 1) != 1) {
+            ERROR("EVP_PKEY_CTX_set_dh_pad failed");
+            return false;
+        }
+
         if (EVP_PKEY_derive_set_peer(evp_pkey_ctx, other_evp_pkey) != 1) {
             ERROR("EVP_PKEY_derive_set_peer failed");
             break;
         }
 
-        memset(temp, 0, DH_MAX_MOD_SIZE);
         size_t written = DH_MAX_MOD_SIZE;
-        if (EVP_PKEY_derive(evp_pkey_ctx, temp, &written) != 1) {
+        if (EVP_PKEY_derive(evp_pkey_ctx, shared_secret_bytes, &written) != 1) {
             ERROR("EVP_PKEY_derive failed");
             break;
         }
 #else
-        DH* dh = dh_load(private, p, g, modulus_size);
+        DH* dh = dh_load(private,
+                header->type_parameters.dh_parameters.p, header->type_parameters.dh_parameters.p_length,
+                header->type_parameters.dh_parameters.g, header->type_parameters.dh_parameters.g_length);
         if (dh == NULL) {
             ERROR("dh_load failed");
             break;
@@ -620,23 +708,18 @@ bool dh_compute(
             break;
         }
 
-        int written = DH_compute_key(temp, bn_other_public, dh);
+        int written = DH_compute_key_padded(shared_secret_bytes, bn_other_public, dh);
         DH_free(dh);
         if (written <= 0) {
             ERROR("DH_compute_key failed");
             break;
         }
 #endif
-        shared_secret_bytes = memory_secure_alloc(DH_MAX_MOD_SIZE);
-        if (shared_secret_bytes == NULL) {
-            ERROR("memory_secure_alloc failed");
-            break;
-        }
 
-        memory_memset_unoptimizable(shared_secret_bytes, 0, DH_MAX_MOD_SIZE);
-        memcpy(shared_secret_bytes + modulus_size - written, temp, written);
-        status = stored_key_create(shared_secret, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, 0, modulus_size,
-                shared_secret_bytes, modulus_size);
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
+        status = stored_key_create(shared_secret, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
+                modulus_size, shared_secret_bytes, modulus_size);
         if (!status) {
             ERROR("stored_key_create failed");
             break;
@@ -658,6 +741,11 @@ bool dh_compute(
     EVP_PKEY_CTX_free(evp_pkey_ctx);
     EVP_PKEY_free(evp_pkey);
     EVP_PKEY_free(other_evp_pkey);
+    if (key_p != NULL)
+        memory_secure_free(key_p);
+
+    if (key_g != NULL)
+        memory_secure_free(key_g);
 #else
     BN_free(bn_other_public);
 #endif

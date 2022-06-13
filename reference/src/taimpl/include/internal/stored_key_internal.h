@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,7 +67,7 @@ bool stored_key_create(
         const sa_rights* rights,
         const sa_rights* parent_rights,
         sa_key_type key_type,
-        uint8_t type_parameters,
+        const sa_type_parameters* type_parameters,
         size_t size,
         const void* in,
         size_t in_length);

@@ -251,34 +251,9 @@ bool SaKeyUnwrapBase::wrap_key_el_gamal(
 
     clear_wrapping_key = random_ec(wrapping_key_size);
 
-    auto ec_group = ec_group_from_curve(curve);
+    auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
     if (ec_group == nullptr) {
         ERROR("ec_group_from_curve failed");
-        return false;
-    }
-
-    auto evp_pkey = ec_import_private(curve, clear_wrapping_key);
-    if (evp_pkey == nullptr) {
-        ERROR("ec_import_private failed");
-        return false;
-    }
-
-    int public_key_length = i2d_PublicKey(evp_pkey.get(), nullptr);
-    if (public_key_length <= 0) {
-        ERROR("i2d_PublicKey failed");
-        return false;
-    }
-
-    std::vector<uint8_t> public_bytes(public_key_length);
-    unsigned char* buffer = public_bytes.data();
-    if (i2d_PublicKey(evp_pkey.get(), &buffer) != public_key_length) {
-        ERROR("i2d_PublicKey failed");
-        return false;
-    }
-
-    auto ec_point = std::shared_ptr<EC_POINT>(EC_POINT_new(ec_group.get()), EC_POINT_free);
-    if (EC_POINT_oct2point(ec_group.get(), ec_point.get(), public_bytes.data(), public_bytes.size(), nullptr) != 1) {
-        ERROR("EC_POINT_oct2point failed");
         return false;
     }
 
@@ -288,7 +263,13 @@ bool SaKeyUnwrapBase::wrap_key_el_gamal(
     auto temp = random(wrapping_key_size);
     std::copy(clear_key.begin(), clear_key.end(), temp.begin() + offset);
 
-    if (!encrypt_ec_elgamal_openssl(wrapped_key, temp, curve, ec_point))
+    auto evp_pkey = ec_import_private(curve, clear_wrapping_key);
+    if (evp_pkey == nullptr) {
+        ERROR("ec_import_private failed");
+        return false;
+    }
+
+    if (!encrypt_ec_elgamal_openssl(wrapped_key, temp, curve, evp_pkey))
         return false;
 
     auto* unwrap_parameters_ec_elgamal = new sa_unwrap_parameters_ec_elgamal;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ bool stored_key_import(
         stored_key_t** stored_key,
         const sa_rights* rights,
         sa_key_type key_type,
-        uint8_t type_parameters,
+        const sa_type_parameters* type_parameters,
         size_t size,
         const void* in,
         size_t in_length) {
@@ -94,7 +94,7 @@ bool stored_key_create(
         const sa_rights* rights,
         const sa_rights* parent_rights,
         sa_key_type key_type,
-        uint8_t type_parameters,
+        const sa_type_parameters* type_parameters,
         size_t size,
         const void* in,
         size_t in_length) {
@@ -115,7 +115,7 @@ bool stored_key_create(
         return false;
     }
 
-    if (!key_type_supports_any(key_type, type_parameters, size)) {
+    if (!key_type_supports_any(key_type, type_parameters->curve, size)) {
         ERROR("key_type_supports_any failed");
         return false;
     }
@@ -146,12 +146,12 @@ bool stored_key_create(
         memcpy(new_stored_key->key, in, in_length);
         new_stored_key->key_length = in_length;
 
-        // fill key_header
+        // fill key_header - implementations don't need to store sa_header as is, it can be optimized for space.
         static const char MAGIC[NUM_MAGIC] = {'s', 'a', 'k', '0'};
         memcpy(new_stored_key->header.magic, MAGIC, sizeof(MAGIC));
         memcpy(&new_stored_key->header.rights, rights, sizeof(sa_rights));
         new_stored_key->header.type = key_type;
-        new_stored_key->header.param = type_parameters;
+        memcpy(&new_stored_key->header.type_parameters, type_parameters, sizeof(sa_type_parameters));
         new_stored_key->header.size = size;
 
         restrict_child_rights(&new_stored_key->header.rights, parent_rights);

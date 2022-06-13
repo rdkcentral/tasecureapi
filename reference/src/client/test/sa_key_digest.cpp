@@ -26,7 +26,7 @@ using namespace client_test_helpers;
 namespace {
     TEST_P(SaKeyDigestTest, nominal) {
         sa_key_type key_type = std::get<0>(GetParam());
-        size_t key_size = std::get<1>(GetParam());
+        size_t key_length = std::get<1>(GetParam());
         sa_digest_algorithm digest_algorithm = std::get<2>(GetParam());
         size_t length = digest_length(digest_algorithm);
 
@@ -35,29 +35,8 @@ namespace {
 
         sa_status status;
         std::vector<uint8_t> clear_key;
-        std::shared_ptr<sa_key> key;
         sa_elliptic_curve curve;
-        switch (key_type) {
-            case SA_KEY_TYPE_SYMMETRIC:
-                clear_key = random(key_size);
-                key = create_sa_key_symmetric(&rights, clear_key);
-                break;
-
-            case SA_KEY_TYPE_EC:
-                curve = static_cast<sa_elliptic_curve>(key_size);
-                clear_key = random_ec(ec_get_key_size(curve));
-                key = create_sa_key_ec(&rights, curve, clear_key);
-                break;
-
-            case SA_KEY_TYPE_RSA:
-                clear_key = get_rsa_private_key(key_size);
-                key = create_sa_key_rsa(&rights, clear_key);
-                break;
-
-            default:
-                FAIL();
-        }
-
+        auto key = create_sa_key(key_type, key_length, clear_key, curve);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "key type not supported";

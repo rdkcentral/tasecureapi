@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ extern "C" {
  * @param[in] key key.
  * @param[in] key_length the key length.
  * @return status of the operation.
-*/
+ */
 bool hmac_internal(
         void* mac,
         size_t* mac_length,

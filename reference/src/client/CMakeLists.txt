@@ -19,10 +19,10 @@ cmake_minimum_required(VERSION 3.16)
 
 project(saclient)
 
-if (DEFINED ENABLE_CLANG_TIDY_TESTS)
-    find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
+find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
+
+if (DEFINED ENABLE_CLANG_TIDY)
     if (CLANG_TIDY_COMMAND)
-        set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_COMMAND}; )
         set(CMAKE_C_CLANG_TIDY ${CLANG_TIDY_COMMAND}; )
         message("clang-tidy found--enabling")
     else ()
@@ -32,15 +32,42 @@ else ()
     message("clang-tidy disabled")
 endif ()
 
+if (DEFINED ENABLE_CLANG_TIDY_TESTS)
+    if (CLANG_TIDY_COMMAND)
+        set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_COMMAND}; )
+        message("clang-tidy found--enabling for tests")
+    endif ()
+else ()
+    message("clang-tidy disabled for tests")
+endif ()
+
+find_package(OpenSSL REQUIRED)
+
 add_library(saclient SHARED
         include/sa.h
         include/sa_crypto.h
+        include/sa_engine.h
         include/sa_key.h
         include/sa_svp.h
         include/sa_ta_types.h
         include/sa_types.h
         include/sa_cenc.h
+
+        src/sa_common.h
+        src/sa_common.c
+        src/sa_engine.c
+        src/sa_engine_cipher.c
+        src/sa_engine_digest.c
+        src/sa_engine_internal.h
+        src/sa_engine_pkey.c
+        src/sa_engine_pkey_asn1_method.c
+        src/sa_engine_pkey_data.c
+        src/sa_log.c
+        src/sa_log.h
         )
+
+target_compile_options(saclient PRIVATE -Werror -Wall -Wextra -Wno-type-limits -Wno-unused-parameter
+        -Wno-deprecated-declarations)
 
 set_target_properties(saclient PROPERTIES
         LINKER_LANGUAGE C
@@ -50,8 +77,10 @@ set_target_properties(saclient PROPERTIES
 
 target_include_directories(saclient
         PUBLIC
-        $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        PRIVATE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+        ${OPENSSL_INCLUDE_DIR}
         )
 
 if (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
@@ -61,6 +90,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
             -Wl,-all_load
             saclientimpl
             -Wl,-noall_load
+            ${OPENSSL_CRYPTO_LIBRARY}
             )
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # using GCC
@@ -69,6 +99,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
             -Wl,--whole-archive
             saclientimpl
             -Wl,--no-whole-archive
+            ${OPENSSL_CRYPTO_LIBRARY}
             )
 endif ()
 
@@ -144,6 +175,14 @@ add_executable(saclienttest
         test/sa_crypto_sign_ec_eddsa.cpp
         test/sa_crypto_sign_rsa_pkcs1v15.cpp
         test/sa_crypto_sign_rsa_pss.cpp
+        test/sa_engine_cipher.cpp
+        test/sa_engine_common.cpp
+        test/sa_engine_common.h
+        test/sa_engine_pkcs7.cpp
+        test/sa_engine_pkey_decrypt.cpp
+        test/sa_engine_pkey_derive.cpp
+        test/sa_engine_pkey_mac.cpp
+        test/sa_engine_pkey_sign.cpp
         test/sa_get_device_id.cpp
         test/sa_get_name.cpp
         test/sa_get_ta_uuid.cpp
@@ -212,19 +251,19 @@ add_executable(saclienttest
         test/sa_svp_common.h
         )
 
-find_package(OpenSSL REQUIRED)
-
-target_compile_options(saclienttest PRIVATE -Werror -Wall -Wextra -Wno-type-limits -Wno-unused-parameter)
+target_compile_options(saclienttest PRIVATE -Werror -Wall -Wextra -Wno-type-limits -Wno-unused-parameter
+        -Wno-deprecated-declarations)
 
 target_include_directories(saclienttest
         PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
         ${OPENSSL_INCLUDE_DIR}
         )
 
 target_link_libraries(saclienttest
         PRIVATE
-        gtest
+        gtest_main
         gmock_main
         saclient
         ${OPENSSL_CRYPTO_LIBRARY}
@@ -239,7 +278,7 @@ endif ()
 
 target_clangformat_setup(saclienttest)
 
-add_test(saclienttest saclienttest)
+gtest_discover_tests(saclienttest)
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
 install(TARGETS saclient saclienttest EXPORT sa-client-config

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +57,9 @@ int memory_memcmp_constant(const void* in1, const void* in2, size_t length) {
 
 void* memory_memset_unoptimizable(void* destination, uint8_t value, size_t size) {
     volatile uint8_t* pointer = (uint8_t*) destination;
+    if (size == 0)
+        return destination;
+
     while (size--)
         *pointer++ = value;
     return destination;

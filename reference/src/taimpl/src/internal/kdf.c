@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -141,7 +141,9 @@ bool kdf_hkdf_hmac(
             break;
         }
 
-        status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, 0,
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
+        status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
                 parameters->key_length, derived, parameters->key_length);
         if (!status) {
             ERROR("stored_key_create failed");
@@ -263,7 +265,9 @@ bool kdf_concat_kdf(
             break;
         }
 
-        status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, 0,
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
+        status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
                 parameters->key_length, derived, parameters->key_length);
         if (!status) {
             ERROR("stored_key_create failed");
@@ -380,7 +384,9 @@ bool kdf_ansi_x963(
             break;
         }
 
-        status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, 0,
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
+        status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
                 parameters->key_length, derived, parameters->key_length);
         if (!status) {
             ERROR("stored_key_create failed");
@@ -486,7 +492,9 @@ bool kdf_ctr_cmac(
             break;
         }
 
-        status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, 0,
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
+        status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
                 parameters->key_length, derived, parameters->key_length);
         if (!status) {
             ERROR("stored_key_create failed");

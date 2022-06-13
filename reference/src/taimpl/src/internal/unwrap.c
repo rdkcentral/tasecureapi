@@ -32,7 +32,7 @@ static sa_status import_key(
         const sa_rights* rights,
         const sa_rights* wrapping_key_rights,
         sa_key_type key_type,
-        void* type_parameters,
+        void* parameters,
         const void* in,
         size_t in_length) {
 
@@ -51,8 +51,8 @@ static sa_status import_key(
         return SA_STATUS_BAD_PARAMETER;
     }
 
-    if (key_type == SA_KEY_TYPE_EC && !type_parameters) {
-        ERROR("NULL type_parameters");
+    if (key_type == SA_KEY_TYPE_EC && parameters == NULL) {
+        ERROR("NULL parameters");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -63,38 +63,30 @@ static sa_status import_key(
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
     do {
-        if (key_type == SA_KEY_TYPE_SYMMETRIC) {
-            if (!stored_key_create(stored_key_unwrapped, rights, wrapping_key_rights, key_type, 0, in_length, in,
-                        in_length)) {
-                ERROR("stored_key_create failed");
-                break;
-            }
-        } else if (key_type == SA_KEY_TYPE_EC) {
-            sa_unwrap_type_parameters_ec* ec_parameters = (sa_unwrap_type_parameters_ec*) type_parameters;
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
+        size_t key_size = in_length;
+        if (key_type == SA_KEY_TYPE_EC) {
+            sa_unwrap_type_parameters_ec* ec_parameters = (sa_unwrap_type_parameters_ec*) parameters;
             status = ec_validate_private(ec_parameters->curve, in, in_length);
             if (status != SA_STATUS_OK) {
                 ERROR("ec_validate_private failed");
                 break;
             }
 
-            if (!stored_key_create(stored_key_unwrapped, rights, wrapping_key_rights, key_type,
-                        ec_parameters->curve, in_length, in, in_length)) {
-                ERROR("stored_key_create failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-                break;
-            }
-        } else { // key_type == SA_KEY_TYPE_RSA
-            size_t key_size = rsa_validate_pkcs8(in, in_length);
+            type_parameters.curve = ec_parameters->curve;
+        } else if (key_type == SA_KEY_TYPE_RSA) { // key_type == SA_KEY_TYPE_RSA
+            key_size = rsa_validate_pkcs8(in, in_length);
             if (key_size == 0) {
                 ERROR("rsa_validate_pkcs8 failed");
                 break;
             }
+        }
 
-            if (!stored_key_create(stored_key_unwrapped, rights, wrapping_key_rights, key_type, 0, key_size, in,
-                        in_length)) {
-                ERROR("stored_key_create failed");
-                break;
-            }
+        if (!stored_key_create(stored_key_unwrapped, rights, wrapping_key_rights, key_type, &type_parameters,
+                    key_size, in, in_length)) {
+            ERROR("stored_key_create failed");
+            break;
         }
 
         status = SA_STATUS_OK;
@@ -109,7 +101,7 @@ sa_status unwrap_aes_ecb(
         size_t in_length,
         const sa_rights* rights,
         sa_key_type key_type,
-        void* type_parameters,
+        void* parameters,
         sa_cipher_algorithm cipher_algorithm,
         const stored_key_t* stored_key_wrapping) {
 
@@ -172,7 +164,7 @@ sa_status unwrap_aes_ecb(
             break;
         }
 
-        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, type_parameters, unwrapped_key,
+        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, parameters, unwrapped_key,
                 in_length - pad_value);
         if (status != SA_STATUS_OK) {
             ERROR("import_key failed");
@@ -194,7 +186,7 @@ sa_status unwrap_aes_cbc(
         size_t in_length,
         const sa_rights* rights,
         sa_key_type key_type,
-        void* type_parameters,
+        void* parameters,
         sa_cipher_algorithm cipher_algorithm,
         const void* iv,
         const stored_key_t* stored_key_wrapping) {
@@ -263,7 +255,7 @@ sa_status unwrap_aes_cbc(
             break;
         }
 
-        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, type_parameters, unwrapped_key,
+        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, parameters, unwrapped_key,
                 in_length - pad_value);
         if (status != SA_STATUS_OK) {
             ERROR("import_key failed");
@@ -285,7 +277,7 @@ sa_status unwrap_aes_ctr(
         size_t in_length,
         const sa_rights* rights,
         sa_key_type key_type,
-        void* type_parameters,
+        void* parameters,
         const void* ctr,
         const stored_key_t* stored_key_wrapping) {
 
@@ -378,7 +370,7 @@ sa_status unwrap_aes_ctr(
             break;
         }
 
-        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, type_parameters, unwrapped_key,
+        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, parameters, unwrapped_key,
                 in_length);
         if (status != SA_STATUS_OK) {
             ERROR("import_key failed");
@@ -402,8 +394,8 @@ sa_status unwrap_aes_gcm(
         size_t in_length,
         const sa_rights* rights,
         sa_key_type key_type,
-        void* type_parameters,
-        const sa_unwrap_parameters_aes_gcm* parameters,
+        void* parameters,
+        const sa_unwrap_parameters_aes_gcm* algorithm_parameters,
         const stored_key_t* stored_key_wrapping) {
 
     if (stored_key_unwrapped == NULL) {
@@ -421,8 +413,8 @@ sa_status unwrap_aes_gcm(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (parameters == NULL) {
-        ERROR("NULL parameters");
+    if (algorithm_parameters == NULL) {
+        ERROR("NULL algorithm_parameters");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -448,9 +440,11 @@ sa_status unwrap_aes_gcm(
             break;
         }
 
-        if (!unwrap_aes_gcm_internal(unwrapped_key, in, in_length, parameters->iv, parameters->iv_length,
-                    parameters->aad, parameters->aad_length, parameters->tag, parameters->tag_length, key,
-                    key_length)) {
+        if (!unwrap_aes_gcm_internal(unwrapped_key, in, in_length,
+                    algorithm_parameters->iv, algorithm_parameters->iv_length,
+                    algorithm_parameters->aad, algorithm_parameters->aad_length,
+                    algorithm_parameters->tag, algorithm_parameters->tag_length,
+                    key, key_length)) {
             ERROR("unwrap_aes_gcm_internal failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
@@ -463,7 +457,7 @@ sa_status unwrap_aes_gcm(
             break;
         }
 
-        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, type_parameters, unwrapped_key,
+        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, parameters, unwrapped_key,
                 in_length);
         if (status != SA_STATUS_OK) {
             ERROR("import_key failed");
@@ -568,7 +562,7 @@ sa_status unwrap_ec(
         size_t in_length,
         const sa_rights* rights,
         sa_key_type key_type,
-        sa_unwrap_parameters_ec_elgamal* parameters,
+        sa_unwrap_parameters_ec_elgamal* algorithm_parameters,
         const stored_key_t* stored_key_wrapping) {
 
     if (stored_key_unwrapped == NULL) {
@@ -608,20 +602,20 @@ sa_status unwrap_ec(
             break;
         }
 
-        unwrapped_key_length = ec_key_size_from_curve(header->param);
+        unwrapped_key_length = ec_key_size_from_curve(header->type_parameters.curve);
         if (unwrapped_key_length == 0) {
             ERROR("Unexpected ec curve encountered");
             status = SA_STATUS_OPERATION_NOT_SUPPORTED;
             break;
         }
 
-        if (parameters->key_length < SYM_128_KEY_SIZE) {
+        if (algorithm_parameters->key_length < SYM_128_KEY_SIZE) {
             ERROR("Bad key_length");
             status = SA_STATUS_BAD_PARAMETER;
             break;
         }
 
-        if ((parameters->offset + parameters->key_length) > unwrapped_key_length) {
+        if ((algorithm_parameters->offset + algorithm_parameters->key_length) > unwrapped_key_length) {
             ERROR("Bad offset and key_length combination");
             status = SA_STATUS_BAD_PARAMETER;
             break;
@@ -654,7 +648,7 @@ sa_status unwrap_ec(
         }
 
         status = import_key(stored_key_unwrapped, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, 0,
-                unwrapped_key + parameters->offset, parameters->key_length);
+                unwrapped_key + algorithm_parameters->offset, algorithm_parameters->key_length);
         if (status != SA_STATUS_OK) {
             ERROR("import_key failed");
             break;

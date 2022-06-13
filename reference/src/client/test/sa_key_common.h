@@ -28,7 +28,6 @@
 
 class SaKeyBase {
 protected:
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
     static bool dh_generate(
             std::shared_ptr<EVP_PKEY>& evp_pkey,
             std::vector<uint8_t>& public_key,
@@ -38,21 +37,9 @@ protected:
     static bool dh_compute_secret(
             std::vector<uint8_t>& shared_secret,
             const std::shared_ptr<EVP_PKEY>& evp_pkey,
-            const std::vector<uint8_t>& other_pub_key,
+            const std::shared_ptr<EVP_PKEY>& other_evp_pkey,
             const std::vector<uint8_t>& p,
             const std::vector<uint8_t>& g);
-#else
-    static bool dh_generate(
-            std::shared_ptr<DH>& dh,
-            std::vector<uint8_t>& public_key,
-            const std::vector<uint8_t>& p,
-            const std::vector<uint8_t>& g);
-
-    static bool dh_compute_secret(
-            std::vector<uint8_t>& shared_secret,
-            const std::shared_ptr<DH>& dh,
-            const std::vector<uint8_t>& other_pub_key);
-#endif
 
     static sa_status ec_generate_key(
             sa_elliptic_curve curve,
@@ -63,7 +50,7 @@ protected:
             sa_elliptic_curve curve,
             std::vector<uint8_t>& shared_secret,
             const std::shared_ptr<EVP_PKEY>& private_key,
-            const std::vector<uint8_t>& other_public_key);
+            const std::shared_ptr<EVP_PKEY>& other_public_key);
 
     static bool execute_dh(
             std::shared_ptr<sa_key>& shared_secret,
@@ -123,10 +110,6 @@ protected:
 
 private:
     const static std::vector<uint8_t> TEST_KEY;
-
-    static std::shared_ptr<EC_POINT> ec_point_import_xy(
-            sa_elliptic_curve curve,
-            std::vector<uint8_t> in);
 };
 
 using SaKeyType = std::tuple<sa_key_type, size_t>;

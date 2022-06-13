@@ -28,8 +28,6 @@ extern "C" {
 #include <stdio.h>
 #endif
 
-#define ERROR(...) client_log_entry(__FILE__, __LINE__, __func__, __VA_ARGS__)
-
 /**
  * Returns a session for the thread. On first call, the client opens a session with the SecApi TA. Client session is
  * released automatically on thread exit.
@@ -37,22 +35,6 @@ extern "C" {
  * @return client session context.
  */
 void* client_session();
-
-/**
- * Create a log entry.
- *
- * @param[in] file source file.
- * @param[in] line source line number.
- * @param[in] function function name.
- * @param[in] format format string.
- * @param[in] ... data.
- */
-void client_log_entry(
-        const char* file,
-        int line,
-        const char* function,
-        const char* format,
-        ...);
 
 #ifdef __cplusplus
 }

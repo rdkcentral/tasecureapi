@@ -743,7 +743,7 @@ static sa_status ta_sa_crypto_cipher_init_ec(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (!key_type_supports_ec(header->type, header->param, header->size)) {
+    if (!key_type_supports_ec(header->type, header->type_parameters.curve, header->size)) {
         ERROR("key_type_supports_ec failed");
         return SA_STATUS_BAD_KEY_TYPE;
     }

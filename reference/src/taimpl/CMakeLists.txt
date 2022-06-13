@@ -223,7 +223,7 @@ target_compile_options(taimpltest PRIVATE -Werror -Wall -Wextra -Wno-unused-para
 
 target_link_libraries(taimpltest
         PRIVATE
-        gtest
+        gtest_main
         gmock_main
         taimpl
         ${OPENSSL_CRYPTO_LIBRARY}
@@ -231,4 +231,4 @@ target_link_libraries(taimpltest
 
 target_clangformat_setup(taimpltest)
 
-add_test(taimpltest taimpltest)
+gtest_discover_tests(taimpltest)

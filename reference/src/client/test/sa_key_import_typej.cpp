@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,11 +59,13 @@ namespace {
                 &parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
 
+        sa_type_parameters type_parameters;
+        memset(&type_parameters, 0, sizeof(sa_type_parameters));
         auto header = key_header(*key);
         ASSERT_NE(nullptr, header.get());
         ASSERT_TRUE(memcmp(&key_rights, &header->rights, sizeof(sa_rights)) == 0);
         ASSERT_EQ(clear_key.size(), header->size);
-        ASSERT_EQ(0, header->param);
+        ASSERT_EQ(memcmp(&type_parameters, &header->type_parameters, sizeof(sa_type_parameters)), 0);
         ASSERT_EQ(SA_KEY_TYPE_SYMMETRIC, header->type);
 
         ASSERT_TRUE(key_check_sym(*key, clear_key));
@@ -113,11 +115,13 @@ namespace {
                 &parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
 
+        sa_type_parameters type_parameters;
+        memset(&type_parameters, 0, sizeof(sa_type_parameters));
         auto header = key_header(*key);
         ASSERT_NE(nullptr, header.get());
         ASSERT_TRUE(memcmp(&key_rights, &header->rights, sizeof(sa_rights)) == 0);
         ASSERT_EQ(clear_key.size(), header->size);
-        ASSERT_EQ(0, header->param);
+        ASSERT_EQ(memcmp(&type_parameters, &header->type_parameters, sizeof(sa_type_parameters)), 0);
         ASSERT_EQ(SA_KEY_TYPE_SYMMETRIC, header->type);
 
         if (std::get<2>(GetParam()) != NO_ALLOWED_OUTPUTS_MASK) {
@@ -142,7 +146,7 @@ namespace {
             ASSERT_NE(nullptr, exported_key_header.get());
             ASSERT_TRUE(memcmp(&key_rights, &exported_key_header->rights, sizeof(sa_rights)) == 0);
             ASSERT_EQ(clear_key.size(), exported_key_header->size);
-            ASSERT_EQ(0, exported_key_header->param);
+            ASSERT_EQ(memcmp(&type_parameters, &header->type_parameters, sizeof(sa_type_parameters)), 0);
             ASSERT_EQ(SA_KEY_TYPE_SYMMETRIC, exported_key_header->type);
 
             if (std::get<2>(GetParam()) != NO_ALLOWED_OUTPUTS_MASK) {
@@ -196,11 +200,13 @@ namespace {
                 &parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
 
+        sa_type_parameters type_parameters;
+        memset(&type_parameters, 0, sizeof(sa_type_parameters));
         auto header = key_header(*key);
         ASSERT_NE(nullptr, header.get());
         ASSERT_TRUE(memcmp(&key_rights, &header->rights, sizeof(sa_rights)) == 0);
         ASSERT_EQ(clear_key.size(), header->size);
-        ASSERT_EQ(0, header->param);
+        ASSERT_EQ(memcmp(&type_parameters, &header->type_parameters, sizeof(sa_type_parameters)), 0);
         ASSERT_EQ(SA_KEY_TYPE_SYMMETRIC, header->type);
 
         if (std::get<2>(GetParam()) != NO_ALLOWED_OUTPUTS_MASK) {
@@ -221,11 +227,12 @@ namespace {
             status = sa_key_import(exported_key.get(), SA_KEY_FORMAT_EXPORTED, exported_key_data->data(),
                     exported_key_data->size(), nullptr);
             ASSERT_EQ(status, SA_STATUS_OK);
+
             auto exported_key_header = key_header(*exported_key);
             ASSERT_NE(nullptr, exported_key_header.get());
             ASSERT_TRUE(memcmp(&key_rights, &exported_key_header->rights, sizeof(sa_rights)) == 0);
             ASSERT_EQ(clear_key.size(), exported_key_header->size);
-            ASSERT_EQ(0, exported_key_header->param);
+            ASSERT_EQ(memcmp(&type_parameters, &exported_key_header->type_parameters, sizeof(sa_type_parameters)), 0);
             ASSERT_EQ(SA_KEY_TYPE_SYMMETRIC, exported_key_header->type);
 
             if (std::get<2>(GetParam()) != NO_ALLOWED_OUTPUTS_MASK) {
@@ -342,11 +349,13 @@ namespace {
         } else {
             ASSERT_EQ(status, SA_STATUS_OK);
 
+            sa_type_parameters type_parameters;
+            memset(&type_parameters, 0, sizeof(sa_type_parameters));
             auto header = key_header(*key);
             ASSERT_NE(nullptr, header.get());
             ASSERT_TRUE(memcmp(&key_rights, &header->rights, sizeof(sa_rights)) == 0);
             ASSERT_EQ(clear_key.size(), header->size);
-            ASSERT_EQ(0, header->param);
+            ASSERT_EQ(memcmp(&type_parameters, &header->type_parameters, sizeof(sa_type_parameters)), 0);
             ASSERT_EQ(SA_KEY_TYPE_SYMMETRIC, header->type);
 
             // 0 entitled TAs implicitly adds the all TA IDs allowed value. 1 or more means the REE TA ID is disallowed

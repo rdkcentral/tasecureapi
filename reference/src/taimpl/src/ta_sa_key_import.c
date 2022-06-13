@@ -22,6 +22,7 @@
 #include "key_store.h"
 #include "key_type.h"
 #include "log.h"
+#include "porting/memory.h"
 #include "rights.h"
 #include "rsa.h"
 #include "soc_key_container.h"
@@ -76,7 +77,10 @@ static sa_status ta_sa_key_import_symmetric_bytes(
     sa_status status;
     stored_key_t* stored_key = NULL;
     do {
-        if (!stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_SYMMETRIC, 0, in_length, in, in_length)) {
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
+        if (!stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters, in_length, in,
+                    in_length)) {
             ERROR("stored_key_import failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
@@ -155,7 +159,10 @@ static sa_status ta_sa_key_import_ec_private_bytes(
             break;
         }
 
-        if (!stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_EC, parameters->curve, in_length, in,
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
+        type_parameters.curve = parameters->curve;
+        if (!stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_EC, &type_parameters, in_length, in,
                     in_length)) {
             ERROR("stored_key_import failed");
             status = SA_STATUS_INTERNAL_ERROR;
@@ -230,7 +237,10 @@ static sa_status ta_sa_key_import_rsa_private_key_info(
             return SA_STATUS_BAD_PARAMETER;
         }
 
-        if (!stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_RSA, 0, key_size, in, in_length)) {
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
+        if (!stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_RSA, &type_parameters, key_size, in,
+                    in_length)) {
             ERROR("stored_key_import failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;

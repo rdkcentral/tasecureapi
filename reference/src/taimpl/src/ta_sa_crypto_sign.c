@@ -71,20 +71,21 @@ static sa_status ta_sa_crypto_sign_ecdsa(
             break;
         }
 
-        if (header->param != SA_ELLIPTIC_CURVE_NIST_P256 && header->param != SA_ELLIPTIC_CURVE_NIST_P384 &&
-                header->param != SA_ELLIPTIC_CURVE_NIST_P521) {
+        if (header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P256 &&
+                header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P384 &&
+                header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P521) {
             ERROR("Bad curve for ECDSA");
             status = SA_STATUS_BAD_PARAMETER;
             break;
         }
 
-        if (!key_type_supports_ec(header->type, header->param, header->size)) {
+        if (!key_type_supports_ec(header->type, header->type_parameters.curve, header->size)) {
             ERROR("key_type_supports_ec failed");
             status = SA_STATUS_BAD_KEY_TYPE;
             break;
         }
 
-        size_t key_size = ec_key_size_from_curve(header->param) * 2;
+        size_t key_size = ec_key_size_from_curve(header->type_parameters.curve) * 2;
         if (key_size == 0) {
             ERROR("Unexpected ec curve encountered");
             status = SA_STATUS_OPERATION_NOT_SUPPORTED;
@@ -147,19 +148,20 @@ static sa_status ta_sa_crypto_sign_eddsa(
             break;
         }
 
-        if (header->param != SA_ELLIPTIC_CURVE_ED25519 && header->param != SA_ELLIPTIC_CURVE_ED448) {
+        if (header->type_parameters.curve != SA_ELLIPTIC_CURVE_ED25519 &&
+                header->type_parameters.curve != SA_ELLIPTIC_CURVE_ED448) {
             ERROR("Bad curve for EDDSA");
             status = SA_STATUS_BAD_PARAMETER;
             break;
         }
 
-        if (!key_type_supports_ec(header->type, header->param, header->size)) {
+        if (!key_type_supports_ec(header->type, header->type_parameters.curve, header->size)) {
             ERROR("key_type_supports_ec failed");
             status = SA_STATUS_BAD_KEY_TYPE;
             break;
         }
 
-        size_t key_size = ec_key_size_from_curve(header->param) * 2;
+        size_t key_size = ec_key_size_from_curve(header->type_parameters.curve) * 2;
         if (key_size == 0) {
             ERROR("Unexpected ec curve encountered");
             status = SA_STATUS_OPERATION_NOT_SUPPORTED;

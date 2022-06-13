@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "sa_common.h"
 #include <cstring>
 #include <openssl/cmac.h>
 #include <openssl/ec.h>
@@ -40,121 +41,13 @@ const std::vector<uint8_t> SaKeyBase::TEST_KEY = {
         0xe7, 0x9b, 0x03, 0x18, 0x85, 0x1b, 0x9d, 0xbd,
         0xd7, 0x17, 0x18, 0xf9, 0xec, 0x72, 0xf0, 0x3d};
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-static int ec_get_type(sa_elliptic_curve curve) {
-    switch (curve) {
-        case SA_ELLIPTIC_CURVE_NIST_P256:
-            return NID_X9_62_prime256v1;
-
-        case SA_ELLIPTIC_CURVE_NIST_P384:
-            return NID_secp384r1;
-
-        case SA_ELLIPTIC_CURVE_NIST_P521:
-            return NID_secp521r1;
-
-        case SA_ELLIPTIC_CURVE_ED25519:
-            return NID_ED25519;
-
-        case SA_ELLIPTIC_CURVE_X25519:
-            return NID_X25519;
-
-        case SA_ELLIPTIC_CURVE_ED448:
-            return NID_ED448;
-
-        case SA_ELLIPTIC_CURVE_X448:
-            return NID_X448;
-
-        default:
-            ERROR("Unknown EC curve encountered");
-            return 0;
-    }
-}
-#endif
-
-static inline bool is_pcurve(sa_elliptic_curve curve) {
-    return curve == SA_ELLIPTIC_CURVE_NIST_P256 || curve == SA_ELLIPTIC_CURVE_NIST_P384 ||
-           curve == SA_ELLIPTIC_CURVE_NIST_P521;
-}
-
-std::shared_ptr<EC_POINT> SaKeyBase::ec_point_import_xy(
-        sa_elliptic_curve curve,
-        std::vector<uint8_t> in) {
-
-    auto key_size = ec_get_key_size(curve);
-    if (key_size == 0) {
-        ERROR("Bad curve");
-        return nullptr;
-    }
-
-    if (in.size() != key_size * 2) {
-        ERROR("Bad in_length");
-        return nullptr;
-    }
-
-    bool status = false;
-    std::shared_ptr<EC_GROUP> group;
-    BIGNUM* x = nullptr;
-    BIGNUM* y = nullptr;
-    EC_POINT* ec_point = nullptr;
-
-    do {
-        group = ec_group_from_curve(curve);
-        if (group == nullptr) {
-            ERROR("EC_GROUP_new_by_curve_name failed");
-            break;
-        }
-
-        x = BN_bin2bn(in.data(), static_cast<int>(key_size), nullptr);
-        if (x == nullptr) {
-            ERROR("BN_bin2bn failed");
-            break;
-        }
-
-        y = BN_bin2bn(in.data() + key_size, static_cast<int>(key_size), nullptr);
-        if (y == nullptr) {
-            ERROR("BN_bin2bn failed");
-            break;
-        }
-
-        ec_point = EC_POINT_new(group.get());
-        if (ec_point == nullptr) {
-            ERROR("EC_POINT_new failed");
-            break;
-        }
-
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-        if (EC_POINT_set_affine_coordinates(group.get(), ec_point, x, y, nullptr) == 0) {
-            ERROR("EC_POINT_set_affine_coordinates failed");
-            break;
-        }
-#else
-        if (EC_POINT_set_affine_coordinates_GFp(group.get(), ec_point, x, y, nullptr) == 0) {
-            ERROR("EC_POINT_set_affine_coordinates_GFp failed");
-            break;
-        }
-#endif
-
-        status = true;
-    } while (false);
-
-    BN_free(x);
-    BN_free(y);
-
-    if (!status) {
-        EC_POINT_free(ec_point);
-        ec_point = nullptr;
-    }
-
-    return {ec_point, EC_POINT_free};
-}
-
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
 bool SaKeyBase::dh_generate(
         std::shared_ptr<EVP_PKEY>& evp_pkey,
         std::vector<uint8_t>& public_key,
         const std::vector<uint8_t>& p,
         const std::vector<uint8_t>& g) {
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
     auto evp_pkey_parameters_ctx = std::shared_ptr<EVP_PKEY_CTX>(
             EVP_PKEY_CTX_new_id(EVP_PKEY_DH, nullptr), EVP_PKEY_CTX_free);
     if (evp_pkey_parameters_ctx == nullptr) {
@@ -247,23 +140,9 @@ bool SaKeyBase::dh_generate(
     public_key.resize(public_key_size);
     size_t written = BN_bn2bin(public_bn, public_key.data());
     BN_free(public_bn);
-    if (written <= 0) {
-        ERROR("BN_bn2bin failed");
-        return false;
-    }
-
-    public_key.resize(written);
-
-    return true;
-}
 #else
-bool SaKeyBase::dh_generate(
-        std::shared_ptr<DH>& dh,
-        std::vector<uint8_t>& public_key,
-        const std::vector<uint8_t>& p,
-        const std::vector<uint8_t>& g) {
 
-    dh = std::shared_ptr<DH>(DH_new(), DH_free);
+    auto dh = std::shared_ptr<DH>(DH_new(), DH_free);
     if (dh == nullptr) {
         ERROR("DH_new failed");
         return false;
@@ -278,25 +157,38 @@ bool SaKeyBase::dh_generate(
         return false;
     }
 
-    dh->length = static_cast<long>(p.size()) * 8;
+    dh->length = static_cast<long>(p.size()) * 8; // NOLINT
 #else
     BIGNUM* bnp = BN_bin2bn(p.data(), static_cast<int>(p.size()), nullptr);
     BIGNUM* bng = BN_bin2bn(g.data(), static_cast<int>(g.size()), nullptr);
     DH_set0_pqg(dh.get(), bnp, nullptr, bng);
 #endif
-
     if (DH_generate_key(dh.get()) == 0) {
         ERROR("DH_generate_key failed");
         return false;
     }
 
-    public_key.resize(p.size());
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-    size_t written = BN_bn2bin(dh->pub_key, public_key.data());
-#else
-    const BIGNUM* public_bn = nullptr;
-    DH_get0_key(dh.get(), &public_bn, nullptr);
+    evp_pkey = std::shared_ptr<EVP_PKEY>(EVP_PKEY_new(), EVP_PKEY_free);
+    if (EVP_PKEY_set1_DH(evp_pkey.get(), dh.get()) != 1) {
+        ERROR("EVP_PKEY_generate failed");
+        return false;
+    }
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+    const BIGNUM* public_bn = DH_get0_pub_key(dh.get());
+    if (public_bn == nullptr) {
+        ERROR("DH_get0_pub_key failed");
+        return false;
+    }
+
+    size_t public_key_size = BN_num_bytes(public_bn);
+    public_key.resize(public_key_size);
     size_t written = BN_bn2bin(public_bn, public_key.data());
+#else
+    size_t public_key_size = BN_num_bytes(dh->pub_key);
+    public_key.resize(public_key_size);
+    size_t written = BN_bn2bin(dh->pub_key, public_key.data());
+#endif
 #endif
     if (written <= 0) {
         ERROR("BN_bn2bin failed");
@@ -307,106 +199,16 @@ bool SaKeyBase::dh_generate(
 
     return true;
 }
-#endif
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
 bool SaKeyBase::dh_compute_secret(
         std::vector<uint8_t>& shared_secret,
         const std::shared_ptr<EVP_PKEY>& evp_pkey,
-        const std::vector<uint8_t>& other_pub_key,
+        const std::shared_ptr<EVP_PKEY>& other_evp_pkey,
         const std::vector<uint8_t>& p,
         const std::vector<uint8_t>& g) {
 
-    size_t modulus_size = p.size();
-    std::vector<uint8_t> other_public_bytes = other_pub_key;
-    while (other_public_bytes.size() < modulus_size)
-        other_public_bytes.insert(other_public_bytes.begin(), 0);
-
-    auto other_evp_pkey_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new_id(EVP_PKEY_DH, nullptr),
-            EVP_PKEY_CTX_free);
-    if (other_evp_pkey_ctx == nullptr) {
-        ERROR("EVP_PKEY_CTX_new_id failed");
-        return false;
-    }
-
-    if (EVP_PKEY_fromdata_init(other_evp_pkey_ctx.get()) != 1) {
-        ERROR("EVP_PKEY_fromdata_init failed");
-        return false;
-    }
-
-    auto other_public_bn = std::shared_ptr<BIGNUM>(BN_new(), BN_free);
-    if (other_public_bn == nullptr) {
-        ERROR("BN_new failed");
-        return false;
-    }
-
-    if (BN_bin2bn(other_public_bytes.data(), static_cast<int>(other_public_bytes.size()), other_public_bn.get()) ==
-            nullptr) {
-        ERROR("BN_bin2bn failed");
-        return false;
-    }
-
-    std::vector<uint8_t> other_public_native(other_pub_key.size());
-    if (BN_bn2nativepad(other_public_bn.get(), other_public_native.data(),
-                static_cast<int>(other_public_native.size())) != static_cast<int>(other_public_native.size())) {
-        ERROR("BN_bn2nativepad failed");
-        return false;
-    }
-
-    auto p_bn = std::shared_ptr<BIGNUM>(BN_new(), BN_free);
-    if (p_bn == nullptr) {
-        ERROR("BN_new failed");
-        return false;
-    }
-
-    if (BN_bin2bn(p.data(), static_cast<int>(p.size()), p_bn.get()) == nullptr) {
-        ERROR("BN_bin2bn failed");
-        return false;
-    }
-
-    std::vector<uint8_t> p_native(p.size());
-    if (BN_bn2nativepad(p_bn.get(), p_native.data(), static_cast<int>(p_native.size())) !=
-            static_cast<int>(p_native.size())) {
-        ERROR("BN_bn2nativepad failed");
-        return false;
-    }
-
-    auto g_bn = std::shared_ptr<BIGNUM>(BN_new(), BN_free);
-    if (g_bn == nullptr) {
-        ERROR("BN_new failed");
-        return false;
-    }
-
-    if (BN_bin2bn(g.data(), static_cast<int>(g.size()), g_bn.get()) == nullptr) {
-        ERROR("BN_bin2bn failed");
-        return false;
-    }
-
-    std::vector<uint8_t> g_native(g.size());
-    if (BN_bn2nativepad(g_bn.get(), g_native.data(), static_cast<int>(g_native.size())) !=
-            static_cast<int>(g_native.size())) {
-        ERROR("BN_bn2nativepad failed");
-        return false;
-    }
-
-    OSSL_PARAM other_params[] = {
-            OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_PUB_KEY, static_cast<unsigned char*>(other_public_native.data()),
-                    other_public_native.size()),
-            OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_P, static_cast<unsigned char*>(p_native.data()),
-                    p_native.size()),
-            OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_FFC_G, static_cast<unsigned char*>(g_native.data()),
-                    g_native.size()),
-            OSSL_PARAM_construct_end()};
-
-    EVP_PKEY* temp = nullptr;
-    if (EVP_PKEY_fromdata(other_evp_pkey_ctx.get(), &temp, EVP_PKEY_PUBLIC_KEY, other_params) != 1) {
-        ERROR("EVP_PKEY_fromdata failed");
-        return false;
-    }
-
-    auto other_evp_pkey = std::shared_ptr<EVP_PKEY>(temp, EVP_PKEY_free);
     auto evp_pkey_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new(evp_pkey.get(), nullptr), EVP_PKEY_CTX_free);
-    if (evp_pkey == nullptr) {
+    if (evp_pkey_ctx == nullptr) {
         ERROR("EVP_PKEY_CTX_new failed");
         return false;
     }
@@ -416,10 +218,24 @@ bool SaKeyBase::dh_compute_secret(
         return false;
     }
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+    if (EVP_PKEY_CTX_set_dh_pad(evp_pkey_ctx.get(), 1) != 1) {
+        ERROR("EVP_PKEY_CTX_set_dh_pad failed");
+        return false;
+    }
+#endif
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+    if (EVP_PKEY_derive_set_peer_ex(evp_pkey_ctx.get(), other_evp_pkey.get(), 0) != 1) {
+        ERROR("EVP_PKEY_derive_set_peer_ex failed");
+        return false;
+    }
+#else
     if (EVP_PKEY_derive_set_peer(evp_pkey_ctx.get(), other_evp_pkey.get()) != 1) {
         ERROR("EVP_PKEY_derive_set_peer failed");
         return false;
     }
+#endif
 
     size_t shared_secret_size = 0;
     if (EVP_PKEY_derive(evp_pkey_ctx.get(), nullptr, &shared_secret_size) != 1) {
@@ -427,51 +243,22 @@ bool SaKeyBase::dh_compute_secret(
         return false;
     }
 
-    shared_secret.resize(modulus_size);
-    std::vector<uint8_t> local_shared_secret(modulus_size);
+    shared_secret.resize(shared_secret_size);
     size_t written = shared_secret_size;
-    if (EVP_PKEY_derive(evp_pkey_ctx.get(), local_shared_secret.data(), &written) != 1) {
+    if (EVP_PKEY_derive(evp_pkey_ctx.get(), shared_secret.data(), &written) != 1) {
         ERROR("EVP_PKEY_derive failed");
         return false;
     }
 
-    shared_secret.assign(modulus_size, 0);
-    memcpy(shared_secret.data() + modulus_size - written, local_shared_secret.data(), written);
-
-    return true;
-}
-#else
-bool SaKeyBase::dh_compute_secret(
-        std::vector<uint8_t>& shared_secret,
-        const std::shared_ptr<DH>& dh,
-        const std::vector<uint8_t>& other_pub_key) {
-
-    size_t modulus_size = DH_size(dh.get());
-    std::vector<uint8_t> other_public_bytes = other_pub_key;
-    while (other_public_bytes.size() < modulus_size)
-        other_public_bytes.insert(other_public_bytes.begin(), 0);
-
-    BIGNUM* other_pub_key_bn = BN_bin2bn(other_public_bytes.data(), static_cast<int>(other_public_bytes.size()),
-            nullptr);
-    if (other_pub_key_bn == nullptr) {
-        ERROR("BN_bin2bn failed");
-        return false;
+#if OPENSSL_VERSION_NUMBER < 0x10100000
+    if (written < shared_secret_size) {
+        memmove(shared_secret.data() + shared_secret_size - written, shared_secret.data(), written);
+        memset(shared_secret.data(), 0, shared_secret_size - written);
     }
-
-    shared_secret.resize(modulus_size);
-    std::vector<uint8_t> local_shared_secret(modulus_size);
-    int written = DH_compute_key(local_shared_secret.data(), other_pub_key_bn, dh.get());
-    BN_free(other_pub_key_bn);
-    if (written <= 0) {
-        ERROR("DH_compute_key failed");
-        return false;
-    }
-
-    shared_secret.assign(modulus_size, 0);
-    memcpy(shared_secret.data() + modulus_size - written, local_shared_secret.data(), written);
-    return true;
-}
 #endif
+
+    return true;
+}
 
 sa_status SaKeyBase::ec_generate_key(
         sa_elliptic_curve curve,
@@ -486,7 +273,7 @@ sa_status SaKeyBase::ec_generate_key(
             return SA_STATUS_INTERNAL_ERROR;
         }
 
-        auto group = ec_group_from_curve(curve);
+        auto group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
         if (group == nullptr) {
             ERROR("ec_group_from_curve failed");
             return SA_STATUS_INTERNAL_ERROR;
@@ -579,7 +366,7 @@ sa_status SaKeyBase::ec_generate_key(
 
         // The result will always start with a 4 to signify the following bytes are encoded as an uncompressed
         // point.
-        if (written != public_key_size || public_key[0] != 4) {
+        if (written != public_key_size || public_key[0] != POINT_CONVERSION_UNCOMPRESSED) {
             ERROR("i2d_PublicKey failed");
             return SA_STATUS_INTERNAL_ERROR;
         }
@@ -612,131 +399,32 @@ bool SaKeyBase::ecdh_compute_secret(
         sa_elliptic_curve curve,
         std::vector<uint8_t>& shared_secret,
         const std::shared_ptr<EVP_PKEY>& private_key,
-        const std::vector<uint8_t>& other_public_key) {
+        const std::shared_ptr<EVP_PKEY>& other_public_key) {
 
-    shared_secret.resize(ec_get_key_size(curve));
-
-    std::shared_ptr<EVP_PKEY> other_evp_pkey;
-    if (is_pcurve(curve)) {
-        std::vector<uint8_t> other_public_bytes(other_public_key);
-        other_public_bytes.insert(other_public_bytes.begin(), 4);
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-        auto evp_pkey_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new_id(EVP_PKEY_EC, nullptr), EVP_PKEY_CTX_free);
-        if (evp_pkey_ctx == nullptr) {
-            ERROR("EVP_PKEY_CTX_new_id failed");
-            return false;
-        }
-
-        if (EVP_PKEY_fromdata_init(evp_pkey_ctx.get()) != 1) {
-            ERROR("EVP_PKEY_fromdata_init failed");
-            return false;
-        }
-
-        const char* group_name = ec_get_name(curve);
-        if (group_name == nullptr) {
-            ERROR("ec_get_name failed");
-            return false;
-        }
-
-        OSSL_PARAM params[] = {
-                OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, const_cast<char*>(group_name),
-                        strlen(group_name)),
-                OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, other_public_bytes.data(),
-                        other_public_bytes.size()),
-                OSSL_PARAM_construct_end()};
-
-        EVP_PKEY* temp = nullptr;
-        if (EVP_PKEY_fromdata(evp_pkey_ctx.get(), &temp, EVP_PKEY_PUBLIC_KEY, params) != 1) {
-            ERROR("EVP_PKEY_fromdata failed");
-            return false;
-        }
-
-        other_evp_pkey = {temp, EVP_PKEY_free};
-#else
-        auto ec_group = ec_group_from_curve(curve);
-        auto other_public_point = std::shared_ptr<EC_POINT>(EC_POINT_new(ec_group.get()), EC_POINT_free);
-        if (other_public_point == nullptr) {
-            ERROR("EC_POINT_new failed");
-            return false;
-        }
-
-        if (EC_POINT_oct2point(ec_group.get(), other_public_point.get(), other_public_bytes.data(),
-                    other_public_bytes.size(), nullptr) != 1) {
-            ERROR("EC_POINT_oct2point failed");
-            return false;
-        }
-
-        auto other_ec_key = std::shared_ptr<EC_KEY>(EC_KEY_new(), EC_KEY_free);
-        if (other_ec_key == nullptr) {
-            ERROR("EC_KEY_new failed");
-            return false;
-        }
-
-        if (EC_KEY_set_group(other_ec_key.get(), ec_group.get()) != 1) {
-            ERROR("EC_KEY_set_group failed");
-            return false;
-        }
-
-        if (EC_KEY_set_public_key(other_ec_key.get(), other_public_point.get()) != 1) {
-            ERROR("EC_KEY_set_public_key failed");
-            return false;
-        }
-
-        other_evp_pkey = std::shared_ptr<EVP_PKEY>(EVP_PKEY_new(), EVP_PKEY_free);
-        if (other_evp_pkey == nullptr) {
-            ERROR("EVP_PKEY_new failed");
-            return false;
-        }
-
-        if (EVP_PKEY_set1_EC_KEY(other_evp_pkey.get(), other_ec_key.get()) != 1) {
-            ERROR("EVP_PKEY_set1_EC_KEY failed");
-            return false;
-        }
-#endif
-    } else {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-        ERROR("ec_group_from_curve failed");
-        return false;
-#else
-        int type = ec_get_type(curve);
-        if (type == 0) {
-            ERROR("ec_get_type failed");
-            return false;
-        }
-
-        EVP_PKEY* p = EVP_PKEY_new_raw_public_key(type, nullptr, other_public_key.data(), other_public_key.size());
-        other_evp_pkey = std::shared_ptr<EVP_PKEY>(p, EVP_PKEY_free);
-        if (other_evp_pkey == nullptr) {
-            ERROR("EVP_PKEY_new_raw_public_key failed");
-            return false;
-        }
-#endif
-    }
-
-    auto evp_pkey_cxt = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new(private_key.get(), nullptr), EVP_PKEY_CTX_free);
-    if (evp_pkey_cxt == nullptr) {
+    auto evp_pkey_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new(private_key.get(), nullptr), EVP_PKEY_CTX_free);
+    if (evp_pkey_ctx == nullptr) {
         ERROR("EVP_PKEY_CTX_new failed");
         return false;
     }
 
-    if (EVP_PKEY_derive_init(evp_pkey_cxt.get()) != 1) {
+    if (EVP_PKEY_derive_init(evp_pkey_ctx.get()) != 1) {
         ERROR("EVP_PKEY_derive_init failed");
         return false;
     }
 
-    if (EVP_PKEY_derive_set_peer(evp_pkey_cxt.get(), other_evp_pkey.get()) != 1) {
+    if (EVP_PKEY_derive_set_peer(evp_pkey_ctx.get(), other_public_key.get()) != 1) {
         ERROR("EVP_PKEY_derive_set_peer failed");
         return false;
     }
 
     size_t shared_secret_length = 0;
-    if (EVP_PKEY_derive(evp_pkey_cxt.get(), nullptr, &shared_secret_length) != 1) {
+    if (EVP_PKEY_derive(evp_pkey_ctx.get(), nullptr, &shared_secret_length) != 1) {
         ERROR("EVP_PKEY_derive failed");
         return false;
     }
 
     shared_secret.resize(shared_secret_length);
-    if (EVP_PKEY_derive(evp_pkey_cxt.get(), shared_secret.data(), &shared_secret_length) != 1) {
+    if (EVP_PKEY_derive(evp_pkey_ctx.get(), shared_secret.data(), &shared_secret_length) != 1) {
         ERROR("EVP_PKEY_derive failed");
         return false;
     }
@@ -769,23 +457,22 @@ bool SaKeyBase::execute_dh(
     std::vector<uint8_t> dh_public_key(dh_public_key_length);
     if (sa_key_get_public(dh_public_key.data(), &dh_public_key_length, *key) != SA_STATUS_OK)
         return false;
+    EVP_PKEY* temp = dh_import_public(dh_public_key.data(), dh_public_key.size(), dhp.data(), dhp.size(), dhg.data(),
+            dhg.size());
+    if (temp == nullptr) {
+        ERROR("dh_import_public failed");
+        return false;
+    }
+
+    auto public_evp_pkey = std::shared_ptr<EVP_PKEY>(temp, EVP_PKEY_free);
 
         //create other side info
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
     std::shared_ptr<EVP_PKEY> other_private_key;
     std::vector<uint8_t> other_public_key;
     if (!dh_generate(other_private_key, other_public_key, dhp, dhg)) {
         ERROR("dh_generate failed");
         return false;
     }
-#else
-    std::shared_ptr<DH> other_dh;
-    std::vector<uint8_t> other_public_key;
-    if (!dh_generate(other_dh, other_public_key, dhp, dhg)) {
-        ERROR("dh_generate failed");
-        return false;
-    }
-#endif
 
     if (sa_key_exchange(shared_secret.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_DH, *key,
                 other_public_key.data(), other_public_key.size(), nullptr) != SA_STATUS_OK) {
@@ -793,17 +480,10 @@ bool SaKeyBase::execute_dh(
         return false;
     }
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-    if (!dh_compute_secret(clear_shared_secret, other_private_key, dh_public_key, dhp, dhg)) {
+    if (!dh_compute_secret(clear_shared_secret, other_private_key, public_evp_pkey, dhp, dhg)) {
         ERROR("dh_compute_secret failed");
         return false;
     }
-#else
-    if (!dh_compute_secret(clear_shared_secret, other_dh, dh_public_key)) {
-        ERROR("dh_compute_secret failed");
-        return false;
-    }
-#endif
 
     return true;
 }
@@ -822,15 +502,7 @@ sa_status SaKeyBase::execute_ecdh(
     if (status != SA_STATUS_OK)
         return status;
 
-    size_t ec_public_key_length;
-    status = sa_key_get_public(nullptr, &ec_public_key_length, *other_private_key);
-    if (status != SA_STATUS_OK)
-        return status;
-
-    std::vector<uint8_t> other_public_key(ec_public_key_length);
-    status = sa_key_get_public(other_public_key.data(), &ec_public_key_length, *other_private_key);
-    if (status != SA_STATUS_OK)
-        return status;
+    std::shared_ptr<EVP_PKEY> other_public_key(get_public_key(*other_private_key), EVP_PKEY_free);
 
     std::shared_ptr<EVP_PKEY> private_key;
     std::vector<uint8_t> public_key;

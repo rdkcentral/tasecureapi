@@ -33,11 +33,13 @@ namespace {
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "key type not supported";
 
+        sa_type_parameters type_parameters;
+        memset(&type_parameters, 0, sizeof(sa_type_parameters));
         auto header = key_header(*key);
         ASSERT_NE(nullptr, header.get());
         ASSERT_TRUE(memcmp(&rights, &header->rights, sizeof(sa_rights)) == 0);
         ASSERT_EQ(128, header->size);
-        ASSERT_EQ(0, header->param);
+        ASSERT_EQ(memcmp(&type_parameters, &header->type_parameters, sizeof(sa_type_parameters)), 0);
         ASSERT_EQ(SA_KEY_TYPE_RSA, header->type);
 
         ASSERT_TRUE(key_check_rsa(*key, clear_key));

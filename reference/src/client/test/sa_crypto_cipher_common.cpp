@@ -322,37 +322,7 @@ std::vector<uint8_t> SaCipherCryptoBase::encrypt_openssl(
                 break;
             }
 
-            auto ec_group = ec_group_from_curve(parameters.curve);
-            if (ec_group == nullptr) {
-                ERROR("ec_group_from_curve failed");
-                status = false;
-                break;
-            }
-
-            int public_key_length = i2d_PublicKey(evp_pkey.get(), nullptr);
-            if (public_key_length <= 0) {
-                ERROR("i2d_PublicKey failed");
-                status = false;
-                break;
-            }
-
-            std::vector<uint8_t> public_bytes(public_key_length);
-            unsigned char* buffer = public_bytes.data();
-            if (i2d_PublicKey(evp_pkey.get(), &buffer) != public_key_length) {
-                ERROR("i2d_PublicKey failed");
-                status = false;
-                break;
-            }
-
-            auto ec_point = std::shared_ptr<EC_POINT>(EC_POINT_new(ec_group.get()), EC_POINT_free);
-            if (EC_POINT_oct2point(ec_group.get(), ec_point.get(), public_bytes.data(), public_bytes.size(),
-                        nullptr) != 1) {
-                ERROR("EC_POINT_oct2point failed");
-                status = false;
-                break;
-            }
-
-            status = encrypt_ec_elgamal_openssl(encrypted, clear, parameters.curve, ec_point);
+            status = encrypt_ec_elgamal_openssl(encrypted, clear, parameters.curve, evp_pkey);
             break;
         }
         default:

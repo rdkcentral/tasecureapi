@@ -65,6 +65,8 @@ The build assumes that the following packages have already been installed:
 YAJL - include -DYAJL_ROOT=<directory> if not found
 OPENSSL - include -DOPENSSL_ROOT_DIR=<directory> if not found
 
+OpenSSL 1.0.2 and 3.0.0+ is supported. OpenSSL 1.1.1j+ is supported.
+
 SOC and root key tests are also disabled by default. To enable these tests, add -DENABLE_SOC_KEY_TESTS=1. The TEST_KEY
 key defined in sa_key_common.cpp must match the root key defined on the test device for these tests to pass.
 
