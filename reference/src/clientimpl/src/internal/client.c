@@ -17,7 +17,7 @@
  */
 
 #include "client.h"
-#include "sa_log.h"
+#include "log.h"
 #include "ta_client.h"
 #include <stdbool.h>
 #include <stdlib.h>

@@ -65,7 +65,6 @@ add_library(taimpl STATIC
         include/internal/cipher_store.h
         include/internal/client_store.h
         include/internal/cmac_context.h
-        include/internal/common.h
         include/internal/dh.h
         include/internal/digest.h
         include/internal/digest_internal.h
@@ -76,7 +75,6 @@ add_library(taimpl STATIC
         include/internal/kdf.h
         include/internal/key_store.h
         include/internal/key_type.h
-        include/internal/log.h
         include/internal/mac_store.h
         include/internal/netflix.h
         include/internal/object_store.h
@@ -108,7 +106,6 @@ add_library(taimpl STATIC
         src/internal/kdf.c
         src/internal/key_store.c
         src/internal/key_type.c
-        src/internal/log.c
         src/internal/mac_store.c
         src/internal/netflix.c
         src/internal/object_store.c
@@ -176,6 +173,7 @@ target_include_directories(taimpl
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../client/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/internal>
         ${OPENSSL_INCLUDE_DIR}
         ${YAJL_INCLUDE_DIR}
@@ -183,6 +181,7 @@ target_include_directories(taimpl
 
 target_link_libraries(taimpl
         PRIVATE
+        util
         ${OPENSSL_CRYPTO_LIBRARY}
         ${CMAKE_THREAD_LIBS_INIT}
         ${YAJL_LIBRARY}
@@ -215,6 +214,7 @@ add_executable(taimpltest
 target_include_directories(taimpltest
         PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../client/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/internal>
         ${OPENSSL_INCLUDE_DIR}
         )
@@ -230,5 +230,11 @@ target_link_libraries(taimpltest
         )
 
 target_clangformat_setup(taimpltest)
+
+add_custom_command(
+        TARGET taimpltest POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/root_keystore.p12
+        ${CMAKE_CURRENT_BINARY_DIR}/root_keystore.p12)
 
 gtest_discover_tests(taimpltest)

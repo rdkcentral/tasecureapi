@@ -27,6 +27,7 @@
 
 #ifdef __cplusplus
 #include <cstddef>
+extern "C" {
 #else
 #include <stddef.h>
 #endif
@@ -71,5 +72,9 @@ void log_entry(
         const char* function,
         const char* format,
         ...);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // LOG_H

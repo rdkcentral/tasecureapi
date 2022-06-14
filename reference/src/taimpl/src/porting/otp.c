@@ -20,29 +20,90 @@
 #include "common.h"
 #include "hmac_internal.h"
 #include "log.h"
+#include "pkcs12.h"
 #include "porting/memory.h"
 #include "porting/otp_internal.h"
 #include "stored_key_internal.h"
+#include <ctype.h>
 #include <openssl/evp.h>
+#include <openssl/x509.h>
+#if OPENSSL_VERSION_NUMBER < 0x30000000
+#include <memory.h>
+#endif
 
-static struct {
-    /**
-     * Root key for the 3-stage HW key ladder. This key is device unique and serialized by the
-     * SOC manufacturer. Replace any reference to this variable in SecApi TA with actual HW key
-     * ladder operations.
-     */
-    const uint8_t root_key[SYM_128_KEY_SIZE];
+#define MAX_NAME_LENGTH 16
 
-    /**
-     * Device ID for the SOC part. This id is device unique and serialized by the SOC manufacturer.
-     */
-    const uint64_t device_id;
-} global_otp = {
-        .root_key = {
-                0xe7, 0x9b, 0x03, 0x18, 0x85, 0x1b, 0x9d, 0xbd,
-                0xd7, 0x17, 0x18, 0xf9, 0xec, 0x72, 0xf0, 0x3d},
-        .device_id = 0xfffffffffffffffeULL,
-};
+static uint64_t device_id;
+
+static uint64_t convert_str_to_int(
+        const unsigned char* str,
+        size_t str_length) {
+    static const char lookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
+    uint64_t value = 0;
+    if (str_length > MAX_NAME_LENGTH) {
+        ERROR("Invalid str length");
+        return 0;
+    }
+
+    for (size_t i = 0; i < str_length; i++) {
+        bool found = false;
+        for (size_t j = 0; !found && j < sizeof(lookup); j++) {
+            if (tolower(str[i]) == lookup[j]) {
+                value = (value << 4) + j;
+                found = true;
+            }
+        }
+
+        if (!found) {
+            ERROR("Invalid str value");
+            return 0;
+        }
+    }
+
+    return value;
+}
+
+static bool get_root_key(
+        void* root_key,
+        size_t* root_key_length) {
+    static size_t key_length = 0;
+    static uint8_t key[SYM_128_KEY_SIZE];
+
+    if (root_key_length == NULL) {
+        ERROR("NULL root_key_length");
+        return false;
+    }
+
+    if (root_key == NULL) {
+        ERROR("NULL root_key");
+        return false;
+    }
+
+    if (key_length == 0) {
+        uint8_t name[MAX_NAME_LENGTH];
+        size_t name_length = MAX_NAME_LENGTH;
+        if (load_pkcs12_secret_key(key, &key_length, name, &name_length) != 1) {
+            ERROR("load_pkcs12_secret_key failed");
+            return false;
+        }
+
+        device_id = convert_str_to_int(name, name_length);
+        if (device_id == 0) {
+            ERROR("Invalid device ID in keystore");
+            return false;
+        }
+    }
+
+    if (*root_key_length < key_length) {
+        ERROR("root key too short");
+        return false;
+    }
+
+    memcpy(root_key, key, key_length);
+    *root_key_length = key_length;
+    return true;
+}
 
 static bool wrap_aes_cbc(
         void* out,
@@ -165,8 +226,14 @@ static bool otp_hw_key_ladder(
     size_t k1_length = SYM_128_KEY_SIZE;
     uint8_t* k2 = NULL;
     size_t k2_length = SYM_128_KEY_SIZE;
-
+    uint8_t root_key[SYM_256_KEY_SIZE];
     do {
+        size_t root_key_length = SYM_256_KEY_SIZE;
+        if (!get_root_key(root_key, &root_key_length)) {
+            ERROR("get_root_key failed");
+            break;
+        }
+
         k1 = memory_secure_alloc(k1_length);
         if (k1 == NULL) {
             ERROR("memory_secure_alloc failed");
@@ -179,7 +246,7 @@ static bool otp_hw_key_ladder(
             break;
         }
 
-        if (!unwrap_aes_ecb_internal(k1, c1, AES_BLOCK_SIZE, global_otp.root_key, sizeof(global_otp.root_key))) {
+        if (!unwrap_aes_ecb_internal(k1, c1, AES_BLOCK_SIZE, root_key, root_key_length)) {
             ERROR("unwrap_aes_ecb_internal failed");
             break;
         }
@@ -197,6 +264,7 @@ static bool otp_hw_key_ladder(
         status = true;
     } while (false);
 
+    memory_memset_unoptimizable(root_key, 0, SYM_256_KEY_SIZE);
     if (k1 != NULL) {
         memory_memset_unoptimizable(k1, 0, k1_length);
         memory_secure_free(k1);
@@ -517,7 +585,11 @@ bool otp_device_id(uint64_t* id) {
         return false;
     }
 
-    *id = global_otp.device_id;
+    // If not initialized yet, attempt to set the device id and ignore the result.
+    if (device_id == 0)
+        get_root_key(NULL, NULL);
+
+    *id = device_id;
     return true;
 }
 

@@ -16,55 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SA_COMMON_H
-#define SA_COMMON_H
+#ifndef SA_PUBLIC_KEY_H
+#define SA_PUBLIC_KEY_H
 
 #include "sa.h"
 #include <openssl/evp.h>
 
 #ifdef __cplusplus
+#include <cstdbool>
 extern "C" {
-#endif
-
-#define AES_BLOCK_SIZE 16
-#define SYM_128_KEY_SIZE 16
-#define SYM_160_KEY_SIZE 20
-#define SYM_256_KEY_SIZE 32
-#define SYM_MAX_KEY_SIZE 32UL
-#define SHA1_DIGEST_LENGTH 20
-#define SHA256_DIGEST_LENGTH 32
-#define SHA384_DIGEST_LENGTH 48
-#define SHA512_DIGEST_LENGTH 64
-#define RSA_1024_BYTE_LENGTH 128
-#define RSA_2048_BYTE_LENGTH 256
-#define RSA_3072_BYTE_LENGTH 384
-#define RSA_4096_BYTE_LENGTH 512
-#define DH_768_BYTE_LENGTH 96L
-#define DH_1024_BYTE_LENGTH 128UL
-#define DH_1536_BYTE_LENGTH 192UL
-#define DH_2048_BYTE_LENGTH 256UL
-#define DH_3072_BYTE_LENGTH 384UL
-#define DH_4096_BYTE_LENGTH 512UL
-#define EC_P256_KEY_SIZE 32
-#define EC_P384_KEY_SIZE 48
-#define EC_P521_KEY_SIZE 66
-#define EC_25519_KEY_SIZE 32
-#define EC_ED448_KEY_SIZE 57
-#define EC_X448_KEY_SIZE 56
-#define GCM_IV_LENGTH 12
-#define MAX_NUM_SLOTS 256
-#define DH_MAX_MOD_SIZE 512
-#define RSA_PKCS1_PADDING_SIZE 11
-#define RSA_OAEP_PADDING_SIZE 42
-#define CHACHA20_NONCE_LENGTH 12
-#define CHACHA20_COUNTER_LENGTH 4
-#define CHACHA20_TAG_LENGTH 16
-#define MAX_SIGNATURE_LENGTH 512
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-#define RSA_PSS_SALTLEN_DIGEST -1
-#define RSA_PSS_SALTLEN_AUTO -2
-#define RSA_PSS_SALTLEN_MAX -3
+#else
+#include <stdbool.h>
 #endif
 
 /**
@@ -101,6 +63,16 @@ size_t ec_get_key_size(sa_elliptic_curve curve);
  * @return the OpenSSL type.
  */
 int ec_get_type(sa_elliptic_curve curve);
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+/**
+ * Returns the name of the curve.
+ *
+ * @param curve the curve to lookup.
+ * @return the name of the curve.
+ */
+const char* ec_get_name(sa_elliptic_curve curve);
+#endif
 
 /**
  * Imports an EC public key.
@@ -168,4 +140,4 @@ void rights_set_allow_all(sa_rights* rights);
 }
 #endif
 
-#endif // SA_COMMON_H
+#endif // SA_PUBLIC_KEY_H

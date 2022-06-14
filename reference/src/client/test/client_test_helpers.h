@@ -19,9 +19,10 @@
 #ifndef CLIENT_TEST_HELPERS_H
 #define CLIENT_TEST_HELPERS_H
 
+#include "common.h"
+#include "log.h"
+#include "sa_public_key.h"
 #include "sa.h"
-#include "sa_common.h"
-#include "sa_log.h"
 #include <ctime>
 #include <memory>
 #include <openssl/ec.h>
@@ -392,16 +393,6 @@ namespace client_test_helpers {
             sa_digest_algorithm digest_algorithm,
             const std::vector<uint8_t>& in,
             const std::vector<uint8_t>& signature);
-
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    /**
-     * Returns the name of the curve.
-     *
-     * @param curve the curve to lookup.
-     * @return the name of the curve.
-     */
-    const char* ec_get_name(sa_elliptic_curve curve);
-#endif
 
     /**
      * Encrypt using RSA OAEP algorithm.

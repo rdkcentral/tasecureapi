@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,6 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 #endif
-
-#define SYM_MAX_SIZE 512
 
 /**
  * The client slot ID.

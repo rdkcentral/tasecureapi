@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "log.h"
 #include "sa.h"
-#include "sa_log.h"
 
 sa_status sa_svp_buffer_alloc(
         sa_svp_buffer* svp_buffer,

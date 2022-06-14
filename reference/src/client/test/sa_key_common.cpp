@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sa_common.h"
+#include "common.h"
 #include <cstring>
 #include <openssl/cmac.h>
 #include <openssl/ec.h>
@@ -32,14 +32,34 @@
 #endif
 
 #include "client_test_helpers.h"
+#include "pkcs12.h"
 #include "sa_key_common.h"
 
 using namespace client_test_helpers;
 
-// This is a randomly generated value.
-const std::vector<uint8_t> SaKeyBase::TEST_KEY = {
-        0xe7, 0x9b, 0x03, 0x18, 0x85, 0x1b, 0x9d, 0xbd,
-        0xd7, 0x17, 0x18, 0xf9, 0xec, 0x72, 0xf0, 0x3d};
+std::vector<uint8_t> SaKeyBase::root_key;
+
+bool SaKeyBase::get_root_key(std::vector<uint8_t>& key) {
+    bool result = false;
+    if (root_key.empty()) {
+        uint8_t name[16];
+        size_t name_length = 16;
+        root_key.resize(SYM_256_KEY_SIZE);
+        size_t key_length = SYM_256_KEY_SIZE;
+        if (load_pkcs12_secret_key(root_key.data(), &key_length, name, &name_length) != 1) {
+            ERROR("load_pkcs12_secret_key failed");
+            return false;
+        }
+
+        root_key.resize(key_length);
+        result = true;
+    } else {
+        result = true;
+    }
+
+    key = root_key;
+    return result;
+}
 
 bool SaKeyBase::dh_generate(
         std::shared_ptr<EVP_PKEY>& evp_pkey,
@@ -534,8 +554,12 @@ std::shared_ptr<std::vector<uint8_t>> SaKeyBase::derive_test_key_ladder(
         std::vector<uint8_t>& c3,
         std::vector<uint8_t>& c4) {
     size_t key_length = 16;
+    std::vector<uint8_t> key;
+    if (!get_root_key(key))
+        return nullptr;
+
     std::vector<uint8_t> stage1(key_length);
-    if (!decrypt_aes_ecb_openssl(stage1, c1, TEST_KEY, false) || key_length != 16)
+    if (!decrypt_aes_ecb_openssl(stage1, c1, key, false) || key_length != 16)
         return nullptr;
 
     std::vector<uint8_t> stage2(key_length);

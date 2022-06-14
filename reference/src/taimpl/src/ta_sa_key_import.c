@@ -69,7 +69,7 @@ static sa_status ta_sa_key_import_symmetric_bytes(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (in_length < SYM_128_KEY_SIZE || in_length > SYM_MAX_SIZE) {
+    if (in_length < SYM_128_KEY_SIZE || in_length > SYM_MAX_KEY_SIZE) {
         ERROR("Bad in_length");
         return SA_STATUS_BAD_PARAMETER;
     }

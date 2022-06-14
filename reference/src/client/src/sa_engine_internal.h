@@ -20,7 +20,7 @@
 #define SA_ENGINE_INTERNAL_H
 
 #include "sa.h"
-#include "sa_common.h"
+#include "sa_public_key.h"
 #include <openssl/engine.h>
 #include <threads.h>
 

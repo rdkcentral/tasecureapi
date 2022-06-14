@@ -16,9 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sa_common.h"
+#include "sa_public_key.h"
+#include "common.h"
+#include "log.h"
 #include "sa.h"
-#include "sa_log.h"
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/ec.h>
@@ -107,6 +108,37 @@ int ec_get_type(sa_elliptic_curve curve) {
             return 0;
     }
 }
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+const char* ec_get_name(sa_elliptic_curve curve) {
+    switch (curve) {
+        case SA_ELLIPTIC_CURVE_NIST_P256:
+            return "P-256";
+
+        case SA_ELLIPTIC_CURVE_NIST_P384:
+            return "P-384";
+
+        case SA_ELLIPTIC_CURVE_NIST_P521:
+            return "P-521";
+
+        case SA_ELLIPTIC_CURVE_ED25519:
+            return "ED25519";
+
+        case SA_ELLIPTIC_CURVE_X25519:
+            return "X25519";
+
+        case SA_ELLIPTIC_CURVE_ED448:
+            return "ED448";
+
+        case SA_ELLIPTIC_CURVE_X448:
+            return "X448";
+
+        default:
+            ERROR("Unknown EC curve encountered");
+            return 0;
+    }
+}
+#endif
 
 EVP_PKEY* ec_import_public(
         sa_elliptic_curve curve,

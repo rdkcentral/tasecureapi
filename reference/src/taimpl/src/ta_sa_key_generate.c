@@ -54,7 +54,7 @@ static sa_status ta_sa_key_generate_symmetric(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (parameters->key_length < SYM_128_KEY_SIZE || parameters->key_length > SYM_MAX_SIZE) {
+    if (parameters->key_length < SYM_128_KEY_SIZE || parameters->key_length > SYM_MAX_KEY_SIZE) {
         ERROR("Bad key_length");
         return SA_STATUS_BAD_PARAMETER;
     }

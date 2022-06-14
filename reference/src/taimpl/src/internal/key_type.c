@@ -25,7 +25,7 @@ static bool valid_aes_size(size_t size) {
 }
 
 static bool valid_hmac_size(size_t size) {
-    return size >= SYM_128_KEY_SIZE && size <= SYM_MAX_SIZE;
+    return size >= SYM_128_KEY_SIZE && size <= SYM_MAX_KEY_SIZE;
 }
 
 static bool valid_rsa_size(size_t size) {

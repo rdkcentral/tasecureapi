@@ -17,11 +17,10 @@
  */
 
 #include "sa_engine.h"
+#include "log.h"
 #include "sa_engine_internal.h"
-#include "sa_log.h"
 #include <openssl/engine.h>
 #include <stdbool.h>
-#include <string.h>
 #include <threads.h>
 
 #define SA_ENGINE_ID "secapi3"
@@ -80,7 +79,7 @@ ENGINE* sa_get_engine() {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
                     !ENGINE_set_pkey_asn1_meths(engine, sa_get_engine_pkey_asn1_meths) ||
 #endif
-                    !ENGINE_set_pkey_meths(engine, sa_get_engine_pkey_methods) ) {
+                    !ENGINE_set_pkey_meths(engine, sa_get_engine_pkey_methods)) {
                 ENGINE_free(engine);
                 engine = NULL;
                 ERROR("Engine init failed");

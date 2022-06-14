@@ -20,8 +20,8 @@
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
 
+#include "log.h"
 #include "sa_engine_internal.h"
-#include "sa_log.h"
 #include <openssl/evp.h>
 #if OPENSSL_VERSION_NUMBER < 0x30000000
 #include <memory.h>
@@ -37,7 +37,7 @@ static int pkey_asn1_size(const EVP_PKEY* evp_pkey) {
         return 0;
     }
 
-    pkey_data* data = EVP_PKEY_get0((EVP_PKEY*)evp_pkey);
+    pkey_data* data = EVP_PKEY_get0((EVP_PKEY*) evp_pkey);
     if (data == NULL) {
         ERROR("NULL data");
         return 0;
@@ -155,7 +155,6 @@ int sa_get_engine_pkey_asn1_meths(
 
     if (sym_pkey_asn1_method == NULL)
         sym_pkey_asn1_method = get_pkey_asn1_method(EVP_PKEY_SYM, EVP_PKEY_SYM_NAME);
-
 
     if (!method) {
         if (nids == NULL)

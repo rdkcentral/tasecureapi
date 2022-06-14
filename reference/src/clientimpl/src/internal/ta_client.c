@@ -27,7 +27,7 @@
 #include "ta.h"
 
 #ifdef TA_CLIENT_TEST
-#include "sa_log.h"
+#include "log.h"
 #endif
 
 sa_status ta_open_session(void** session_context) {

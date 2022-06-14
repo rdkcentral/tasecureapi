@@ -45,16 +45,14 @@ find_package(OpenSSL REQUIRED)
 
 add_library(saclient SHARED
         include/sa.h
+        include/sa_cenc.h
         include/sa_crypto.h
         include/sa_engine.h
         include/sa_key.h
         include/sa_svp.h
         include/sa_ta_types.h
         include/sa_types.h
-        include/sa_cenc.h
 
-        src/sa_common.h
-        src/sa_common.c
         src/sa_engine.c
         src/sa_engine_cipher.c
         src/sa_engine_digest.c
@@ -62,8 +60,8 @@ add_library(saclient SHARED
         src/sa_engine_pkey.c
         src/sa_engine_pkey_asn1_method.c
         src/sa_engine_pkey_data.c
-        src/sa_log.c
-        src/sa_log.h
+        src/sa_public_key.h
+        src/sa_public_key.c
         )
 
 target_compile_options(saclient PRIVATE -Werror -Wall -Wextra -Wno-type-limits -Wno-unused-parameter
@@ -79,6 +77,7 @@ target_include_directories(saclient
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         PRIVATE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
         ${OPENSSL_INCLUDE_DIR}
         )
@@ -90,6 +89,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
             -Wl,-all_load
             saclientimpl
             -Wl,-noall_load
+            util
             ${OPENSSL_CRYPTO_LIBRARY}
             )
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -99,6 +99,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
             -Wl,--whole-archive
             saclientimpl
             -Wl,--no-whole-archive
+            util
             ${OPENSSL_CRYPTO_LIBRARY}
             )
 endif ()
@@ -257,6 +258,7 @@ target_compile_options(saclienttest PRIVATE -Werror -Wall -Wextra -Wno-type-limi
 target_include_directories(saclienttest
         PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
         ${OPENSSL_INCLUDE_DIR}
         )
@@ -266,6 +268,7 @@ target_link_libraries(saclienttest
         gtest_main
         gmock_main
         saclient
+        util
         ${OPENSSL_CRYPTO_LIBRARY}
         )
 
@@ -277,6 +280,12 @@ if (COVERAGE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif ()
 
 target_clangformat_setup(saclienttest)
+
+add_custom_command(
+        TARGET saclienttest POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/root_keystore.p12
+        ${CMAKE_CURRENT_BINARY_DIR}/root_keystore.p12)
 
 gtest_discover_tests(saclienttest)
 
