@@ -51,7 +51,11 @@ bool SaCipherCryptoBase::import_key(
         }
     } else if (key_type == SA_KEY_TYPE_EC) {
         sa_elliptic_curve curve;
-        if (key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P256))
+        if (key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P192))
+            curve = SA_ELLIPTIC_CURVE_NIST_P192;
+        else if (key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P224))
+            curve = SA_ELLIPTIC_CURVE_NIST_P224;
+        else if (key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P256))
             curve = SA_ELLIPTIC_CURVE_NIST_P256;
         else if (key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P384))
             curve = SA_ELLIPTIC_CURVE_NIST_P384;
@@ -580,6 +584,8 @@ INSTANTIATE_TEST_SUITE_P(
             std::make_tuple(SA_CIPHER_ALGORITHM_RSA_OAEP, SA_KEY_TYPE_RSA, RSA_3072_BYTE_LENGTH, SA_BUFFER_TYPE_CLEAR),
             std::make_tuple(SA_CIPHER_ALGORITHM_RSA_OAEP, SA_KEY_TYPE_RSA, RSA_4096_BYTE_LENGTH, SA_BUFFER_TYPE_CLEAR),
 
+            std::make_tuple(SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_KEY_TYPE_EC, ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P192), SA_BUFFER_TYPE_CLEAR),
+            std::make_tuple(SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_KEY_TYPE_EC, ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P224), SA_BUFFER_TYPE_CLEAR),
             std::make_tuple(SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_KEY_TYPE_EC, ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P256), SA_BUFFER_TYPE_CLEAR),
             std::make_tuple(SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_KEY_TYPE_EC, ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P384), SA_BUFFER_TYPE_CLEAR),
             std::make_tuple(SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_KEY_TYPE_EC, ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P521), SA_BUFFER_TYPE_CLEAR)));
@@ -624,6 +630,8 @@ INSTANTIATE_TEST_SUITE_P(
         SaCryptoCipherElGamalTests,
         SaCryptoCipherElGamalTest,
         ::testing::Values(
+            SA_ELLIPTIC_CURVE_NIST_P192,
+            SA_ELLIPTIC_CURVE_NIST_P224,
             SA_ELLIPTIC_CURVE_NIST_P256,
             SA_ELLIPTIC_CURVE_NIST_P384,
             SA_ELLIPTIC_CURVE_NIST_P521));

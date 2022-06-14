@@ -118,6 +118,7 @@ TEST_P(SaEnginePkeyMacTest, digestSignNoUpdateFinalTest) {
     ASSERT_EQ(mac, mac2);
 }
 
+// clang-format off
 INSTANTIATE_TEST_SUITE_P(
         SaEnginePkeyCmacTests,
         SaEnginePkeyMacTest,
@@ -133,6 +134,8 @@ INSTANTIATE_TEST_SUITE_P(
         ::testing::Combine(
                 ::testing::Values(SA_KEY_TYPE_SYMMETRIC),
                 ::testing::Values(SYM_128_KEY_SIZE, SYM_160_KEY_SIZE, SYM_256_KEY_SIZE),
-                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384, SA_DIGEST_ALGORITHM_SHA512),
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512),
                 ::testing::Values(SA_MAC_ALGORITHM_HMAC)));
+// clang-format on
 #endif

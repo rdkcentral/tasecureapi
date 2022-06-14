@@ -28,7 +28,10 @@
 #include <openssl/pkcs12.h>
 
 #ifdef __cplusplus
+#include <cstdint>
 extern "C" {
+#else
+#include <stdint.h>
 #endif
 
 /**

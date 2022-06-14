@@ -57,7 +57,11 @@ bool SaKeyUnwrapBase::wrap_key(
 
         case SA_CIPHER_ALGORITHM_EC_ELGAMAL:
             sa_elliptic_curve curve;
-            if (wrapping_key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P256))
+            if (wrapping_key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P192))
+                curve = SA_ELLIPTIC_CURVE_NIST_P192;
+            else if (wrapping_key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P224))
+                curve = SA_ELLIPTIC_CURVE_NIST_P224;
+            else if (wrapping_key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P256))
                 curve = SA_ELLIPTIC_CURVE_NIST_P256;
             else if (wrapping_key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P384))
                 curve = SA_ELLIPTIC_CURVE_NIST_P384;
@@ -259,7 +263,7 @@ bool SaKeyUnwrapBase::wrap_key_el_gamal(
 
     // Copy the key into temp beginning at offset. Leave the rest of the bytes unset. The last 4 bytes of temp
     // are used as a counter so we can make several tries to find a valid point.
-    int64_t offset = 8;
+    int64_t offset = 4;
     auto temp = random(wrapping_key_size);
     std::copy(clear_key.begin(), clear_key.end(), temp.begin() + offset);
 
@@ -310,6 +314,10 @@ INSTANTIATE_TEST_SUITE_P(
             std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
             std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
             // ECC keys
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_256_KEY_SIZE),
             std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_128_KEY_SIZE),
             std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC, SYM_256_KEY_SIZE),
             std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SYM_128_KEY_SIZE),
@@ -360,6 +368,10 @@ INSTANTIATE_TEST_SUITE_P(
             std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
             std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
             // ECC keys
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_256_KEY_SIZE),
             std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_128_KEY_SIZE),
             std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB, SYM_256_KEY_SIZE),
             std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, SYM_128_KEY_SIZE),
@@ -406,6 +418,10 @@ INSTANTIATE_TEST_SUITE_P(
             std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
             std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
             // ECC keys
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
             std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
             std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_256_KEY_SIZE),
             std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_CTR, SYM_128_KEY_SIZE),
@@ -444,6 +460,10 @@ INSTANTIATE_TEST_SUITE_P(
             std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
             std::make_tuple(RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
             // ECC keys
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
+            std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
             std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
             std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_256_KEY_SIZE),
             std::make_tuple(SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, SA_CIPHER_ALGORITHM_AES_GCM, SYM_128_KEY_SIZE),
@@ -487,7 +507,16 @@ INSTANTIATE_TEST_SUITE_P(
         SaKeyUnwrapTest,
         ::testing::Values(
             // AES_128 keys
-            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_EC_ELGAMAL, ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P256))));
+            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_EC_ELGAMAL,
+                ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P192)),
+            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_EC_ELGAMAL,
+                ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P224)),
+            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_EC_ELGAMAL,
+                ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P256)),
+            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_EC_ELGAMAL,
+                ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P384)),
+            std::make_tuple(SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, SA_CIPHER_ALGORITHM_EC_ELGAMAL,
+            ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P521))));
 
 INSTANTIATE_TEST_SUITE_P(
         SaKeyUnwrapAesCbcTests,

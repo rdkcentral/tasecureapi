@@ -126,10 +126,13 @@ TEST_F(SaEnginePkeyEncryptTest, defaultPaddingTest) {
     ASSERT_EQ(decrypted_data, data);
 }
 
+// clang-format off
 INSTANTIATE_TEST_SUITE_P(
         SaEnginePkeyEncryptTests,
         SaEnginePkeyEncryptTest,
         ::testing::Combine(
                 ::testing::Values(SA_KEY_TYPE_RSA),
-                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH, RSA_4096_BYTE_LENGTH),
+                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH,
+                    RSA_4096_BYTE_LENGTH),
                 ::testing::Values(RSA_PKCS1_PADDING, RSA_PKCS1_OAEP_PADDING)));
+// clang-format on

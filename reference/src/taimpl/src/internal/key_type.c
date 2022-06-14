@@ -34,7 +34,9 @@ static bool valid_rsa_size(size_t size) {
 }
 
 static bool valid_ec_size(sa_elliptic_curve curve, size_t size) {
-    return (curve == SA_ELLIPTIC_CURVE_NIST_P256 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_NIST_P256)) ||
+    return (curve == SA_ELLIPTIC_CURVE_NIST_P192 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_NIST_P192)) ||
+           (curve == SA_ELLIPTIC_CURVE_NIST_P224 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_NIST_P224)) ||
+           (curve == SA_ELLIPTIC_CURVE_NIST_P256 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_NIST_P256)) ||
            (curve == SA_ELLIPTIC_CURVE_NIST_P384 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_NIST_P384)) ||
            (curve == SA_ELLIPTIC_CURVE_NIST_P521 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_NIST_P521)) ||
            (curve == SA_ELLIPTIC_CURVE_ED25519 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_ED25519)) ||

@@ -71,7 +71,9 @@ static sa_status ta_sa_crypto_sign_ecdsa(
             break;
         }
 
-        if (header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P256 &&
+        if (header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P192 &&
+                header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P224 &&
+                header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P256 &&
                 header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P384 &&
                 header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P521) {
             ERROR("Bad curve for ECDSA");

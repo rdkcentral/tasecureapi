@@ -90,16 +90,20 @@ TEST_P(SaEnginePkcs7Test, pkcs7Test) {
     ASSERT_EQ(memcmp(bptr->data, data.data(), data.size()), 0);
 }
 
+// clang-format off
 INSTANTIATE_TEST_SUITE_P(
         SaEnginePkcs7RsaTest,
         SaEnginePkcs7Test,
         ::testing::Combine(
                 ::testing::Values(SA_KEY_TYPE_RSA),
-                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH, RSA_4096_BYTE_LENGTH)));
+                ::testing::Values(RSA_1024_BYTE_LENGTH, RSA_2048_BYTE_LENGTH, RSA_3072_BYTE_LENGTH,
+                    RSA_4096_BYTE_LENGTH)));
 
 INSTANTIATE_TEST_SUITE_P(
         SaEnginePkcs7EcTests,
         SaEnginePkcs7Test,
         ::testing::Combine(
                 ::testing::Values(SA_KEY_TYPE_EC),
-                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521)));
+                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224, SA_ELLIPTIC_CURVE_NIST_P256,
+                    SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521)));
+// clang-format on
