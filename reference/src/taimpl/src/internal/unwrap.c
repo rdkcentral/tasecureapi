@@ -25,8 +25,10 @@
 #include "porting/otp_internal.h"
 #include "rsa.h"
 #include "stored_key_internal.h"
-#include <memory.h>
 #include <openssl/evp.h>
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+#include <memory.h>
+#endif
 
 static sa_status import_key(
         stored_key_t** stored_key_unwrapped,
@@ -648,7 +650,7 @@ sa_status unwrap_chacha20_poly1305(
 
         const EVP_CIPHER* cipher = EVP_chacha20_poly1305();
         if (cipher == NULL) {
-            ERROR("EVP_chacha20 failed");
+            ERROR("EVP_chacha20_poly1305 failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
@@ -661,14 +663,14 @@ sa_status unwrap_chacha20_poly1305(
 
         // set nonce length
         if (EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_IVLEN, (int) parameters->nonce_length, NULL) != 1) {
-            ERROR("EVP_CIPHER_CTX_counterl failed");
+            ERROR("EVP_CIPHER_CTX_ctrl failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
         // init key and nonce
         if (EVP_DecryptInit_ex(context, cipher, NULL, key, parameters->nonce) != 1) {
-            ERROR("EVP_EncryptInit_ex failed");
+            ERROR("EVP_DecryptInit_ex failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
@@ -684,7 +686,7 @@ sa_status unwrap_chacha20_poly1305(
         if (parameters->aad != NULL) {
             int out_length = 0;
             if (EVP_DecryptUpdate(context, NULL, &out_length, parameters->aad, (int) parameters->aad_length) != 1) {
-                ERROR("EVP_EncryptUpdate failed");
+                ERROR("EVP_DecryptUpdate failed");
                 status = SA_STATUS_INTERNAL_ERROR;
                 break;
             }

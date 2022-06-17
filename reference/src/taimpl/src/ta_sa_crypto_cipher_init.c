@@ -787,7 +787,7 @@ static sa_status ta_sa_crypto_cipher_init_rsa_oaep(
 
         status = cipher_store_acquire_exclusive(&cipher, cipher_store, *context, caller_uuid);
         if (status != SA_STATUS_OK) {
-            ERROR("cipher_store_add_asymmetric_key failed");
+            ERROR("cipher_store_acquire_exclusive failed");
             break;
         }
 
@@ -1002,7 +1002,7 @@ sa_status ta_sa_crypto_cipher_init(
                     (sa_cipher_parameters_rsa_oaep*) parameters, client,
                     caller_uuid);
             if (status != SA_STATUS_OK) {
-                ERROR("ta_sa_crypto_cipher_init_rsa failed");
+                ERROR("ta_sa_crypto_cipher_init_rsa_oaep failed");
                 break;
             }
         } else { // cipher_algorithm == SA_CIPHER_ALGORITHM_EC_ELGAMAL

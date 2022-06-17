@@ -402,8 +402,7 @@ namespace client_test_helpers {
      * @param[in] evp_pkey RSA key.
      * @param[in] digest_algorithm the digest algorithm for OAEP padding.
      * @param[in] mgf1_digest_algorithm the digest algorithm for the MGF1 function.
-     * @param[in] label the label for the OAEP padding. May be NULL.
-     * @param[in] label_length the length of the label. Must be 0 if label is NULL.
+     * @param[in] label the label for the OAEP padding. May be empty.
      * @return status of the operation.
      */
     bool encrypt_rsa_oaep_openssl(

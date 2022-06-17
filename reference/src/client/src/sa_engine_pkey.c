@@ -158,7 +158,7 @@ static int pkey_copy(
     if (app_data->oaep_label_length > 0) {
         new_app_data->oaep_label = OPENSSL_malloc(app_data->oaep_label_length);
         if (new_app_data->oaep_label == NULL) {
-            ERROR("malloc failed");
+            ERROR("OPENSSL_malloc failed");
             return 0;
         }
 
@@ -848,8 +848,7 @@ static int pkey_encrypt(
                 }
 
                 memcpy(new_label, app_data->oaep_label, app_data->oaep_label_length);
-                if (EVP_PKEY_CTX_set0_rsa_oaep_label(encrypt_pkey_ctx, new_label, (int) app_data->oaep_label_length) !=
-                        1) {
+                if (EVP_PKEY_CTX_set0_rsa_oaep_label(encrypt_pkey_ctx, new_label, app_data->oaep_label_length) != 1) {
                     OPENSSL_free(new_label);
                     ERROR("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
                     break;

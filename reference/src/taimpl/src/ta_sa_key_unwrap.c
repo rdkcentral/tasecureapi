@@ -560,7 +560,7 @@ static sa_status ta_sa_key_unwrap_chacha20(
         status = unwrap_chacha20(&stored_key_unwrapped, in, in_length, rights, key_type, type_parameters,
                 algorithm_parameters, stored_key_wrapping);
         if (status != SA_STATUS_OK) {
-            ERROR("unwrap_aes_ctr failed");
+            ERROR("unwrap_chacha20 failed");
             break;
         }
 
@@ -678,7 +678,7 @@ static sa_status ta_sa_key_unwrap_chacha20_poly1305(
         status = unwrap_chacha20_poly1305(&stored_key_unwrapped, in, in_length, rights, key_type, type_parameters,
                 algorithm_parameters, stored_key_wrapping);
         if (status != SA_STATUS_OK) {
-            ERROR("unwrap_aes_gcm failed");
+            ERROR("unwrap_chacha20_poly1305 failed");
             break;
         }
 
@@ -980,7 +980,7 @@ sa_status ta_sa_key_unwrap(
                     (sa_unwrap_parameters_chacha20*) algorithm_parameters, wrapping_key, in,
                     in_length, client, caller_uuid);
             if (status != SA_STATUS_OK) {
-                ERROR("ta_sa_key_unwrap_aes_ctr failed");
+                ERROR("ta_sa_key_unwrap_chacha20 failed");
                 break;
             }
         } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
@@ -988,7 +988,7 @@ sa_status ta_sa_key_unwrap(
                     (sa_unwrap_parameters_chacha20_poly1305*) algorithm_parameters, wrapping_key, in,
                     in_length, client, caller_uuid);
             if (status != SA_STATUS_OK) {
-                ERROR("ta_sa_key_unwrap_aes_gcm failed");
+                ERROR("ta_sa_key_unwrap_chacha20_poly1305 failed");
                 break;
             }
 #endif
