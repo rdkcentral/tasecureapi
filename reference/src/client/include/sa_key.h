@@ -95,10 +95,9 @@ sa_status sa_key_export(
 
 /**
  * Import a key.
- * + RSA keys must be in PKCS8 format.
  * + Symmetric keys are raw bytes in big-endian byte order.
- * + ECC P-256, P-384, and P-521 private keys are raw bytes in big-endian byte order.
- * + ECC ED25519, X25519, ED448, and X448 private keys are raw bytes in little-endian byte order.
+ * + Asymmetric Private Keys must be in the OneAsymmetricKey format as defined in RFC 5958 (this obsoletes the PKCS 8
+ * format defined in RFC 5208).
  *
  * @param[out] key Imported key handle.
  * @param[in] key_format Key format.
@@ -130,10 +129,9 @@ sa_status sa_key_import(
 
 /**
  * Unwrap the key.
- * + Unwrapped RSA keys must be in PKCS8 format.
  * + Unwrapped Symmetric keys are raw bytes in big-endian byte order.
- * + Unwrapped ECC P-256, P-384, and P-521 private keys are raw bytes in big-endian byte order.
- * + Unwrapped ECC ED25519, X25519, ED448, and X448 private keys are raw bytes in little-endian byte order.
+ * + Unwrapped Asymmetric Private Keys must be in the OneAsymmetricKey format as defined in RFC 5958 (this obsoletes the
+ * PKCS 8 format defined in RFC 5208).
  *
  * @param[out] key Unwrapped key handle.
  * @param[in] rights Key rights to associate with the unwrapped key.
@@ -186,9 +184,11 @@ sa_status sa_key_unwrap(
 
 /**
  * Obtain the public component of an asymmetric key.
- * + RSA public keys are in PKCS1 format.
- * + ECC P-256, P-384, and P-521 public keys are raw uncompressed EC points X|Y in big-endian byte order.
- * + ECC ED25519, X25519, ED448, and X448 public keys are in RFC 8032 and RFC 7748 format in little-endian byte order.
+ * + Public keys are in the SubjectPublicKeyInfo format described in RFC 5280
+ * + Additional RSA public key info is defined in RFC 3279
+ * + Additional EC public key info is defined in RFC 5480
+ * + Additional ED25519, X25519, ED448, and X448 public keys info is defined in RFC 8410.
+ * + Additional DH public key info is defined in RFC 3279
  *
  * @param[out] out Output buffer. If NULL, size required for public key is returned.
  * @param[in,out] out_length Size of the output buffer in bytes. Set to public key length on

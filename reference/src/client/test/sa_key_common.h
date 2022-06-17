@@ -32,7 +32,7 @@ class SaKeyBase {
 protected:
     static bool get_root_key(std::vector<uint8_t>& key);
 
-    static bool dh_generate(
+    static bool dh_generate_key(
             std::shared_ptr<EVP_PKEY>& evp_pkey,
             std::vector<uint8_t>& public_key,
             const std::vector<uint8_t>& p,
@@ -40,8 +40,8 @@ protected:
 
     static bool dh_compute_secret(
             std::vector<uint8_t>& shared_secret,
-            const std::shared_ptr<EVP_PKEY>& evp_pkey,
-            const std::shared_ptr<EVP_PKEY>& other_evp_pkey,
+            const std::shared_ptr<EVP_PKEY>& private_key,
+            const std::shared_ptr<EVP_PKEY>& other_public_key,
             const std::vector<uint8_t>& p,
             const std::vector<uint8_t>& g);
 

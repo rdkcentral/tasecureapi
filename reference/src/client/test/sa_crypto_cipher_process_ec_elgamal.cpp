@@ -27,7 +27,7 @@ namespace {
     TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFailsBadInLength) {
         sa_elliptic_curve curve = std::get<0>(GetParam());
         size_t key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
 
         auto evp_pkey = ec_import_private(curve, clear_key);
         if (reinterpret_cast<uintptr_t>(evp_pkey.get()) == UNSUPPORTED_OPENSSL_KEY)
@@ -35,20 +35,23 @@ namespace {
 
         ASSERT_NE(evp_pkey, nullptr);
 
-        auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
+        auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_nid(curve)), EC_GROUP_free);
         ASSERT_NE(ec_group, nullptr);
 
         // pick valid random x coordinate
-        auto clear = random_ec(key_size);
+        auto clear = random(key_size);
+        if (curve == SA_ELLIPTIC_CURVE_NIST_P521)
+            clear[0] &= 1;
         while (!ec_is_valid_x_coordinate(ec_group, clear)) {
-            clear = random(clear.size());
+            auto* counter = reinterpret_cast<uint32_t*>(clear.data() + clear.size() - sizeof(uint32_t));
+            (*counter)++;
         }
 
         auto in = std::vector<uint8_t>(4 * key_size);
         ASSERT_TRUE(encrypt_ec_elgamal_openssl(in, clear, curve, evp_pkey));
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
@@ -80,7 +83,7 @@ namespace {
     TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFailsBadOutLength) {
         sa_elliptic_curve curve = std::get<0>(GetParam());
         size_t key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
 
         auto evp_pkey = ec_import_private(curve, clear_key);
         if (reinterpret_cast<uintptr_t>(evp_pkey.get()) == UNSUPPORTED_OPENSSL_KEY)
@@ -88,20 +91,23 @@ namespace {
 
         ASSERT_NE(evp_pkey, nullptr);
 
-        auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
+        auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_nid(curve)), EC_GROUP_free);
         ASSERT_NE(ec_group, nullptr);
 
         // pick valid random x coordinate
-        auto clear = random_ec(key_size);
+        auto clear = random(key_size);
+        if (curve == SA_ELLIPTIC_CURVE_NIST_P521)
+            clear[0] &= 1;
         while (!ec_is_valid_x_coordinate(ec_group, clear)) {
-            clear = random(clear.size());
+            auto* counter = reinterpret_cast<uint32_t*>(clear.data() + clear.size() - sizeof(uint32_t));
+            (*counter)++;
         }
 
         auto in = std::vector<uint8_t>(4 * key_size);
         ASSERT_TRUE(encrypt_ec_elgamal_openssl(in, clear, curve, evp_pkey));
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
@@ -133,7 +139,7 @@ namespace {
 
         sa_elliptic_curve curve = std::get<0>(GetParam());
         size_t key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
 
         auto evp_pkey = ec_import_private(curve, clear_key);
         if (reinterpret_cast<uintptr_t>(evp_pkey.get()) == UNSUPPORTED_OPENSSL_KEY)
@@ -141,20 +147,23 @@ namespace {
 
         ASSERT_NE(evp_pkey, nullptr);
 
-        auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
+        auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_nid(curve)), EC_GROUP_free);
         ASSERT_NE(ec_group, nullptr);
 
         // pick valid random x coordinate
-        auto clear = random_ec(key_size);
+        auto clear = random(key_size);
+        if (curve == SA_ELLIPTIC_CURVE_NIST_P521)
+            clear[0] &= 1;
         while (!ec_is_valid_x_coordinate(ec_group, clear)) {
-            clear = random(clear.size());
+            auto* counter = reinterpret_cast<uint32_t*>(clear.data() + clear.size() - sizeof(uint32_t));
+            (*counter)++;
         }
 
         auto in = std::vector<uint8_t>(4 * key_size);
         ASSERT_TRUE(encrypt_ec_elgamal_openssl(in, clear, curve, evp_pkey));
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);

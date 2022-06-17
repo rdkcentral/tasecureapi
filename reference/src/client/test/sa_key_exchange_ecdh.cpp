@@ -31,7 +31,7 @@ namespace {
         ASSERT_NE(ec_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_ec parameters = {curve};
         sa_status status = sa_key_generate(ec_key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
@@ -39,7 +39,7 @@ namespace {
             GTEST_SKIP() << "Curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
-        std::shared_ptr<EVP_PKEY> ec_public_key(get_public_key(*ec_key), EVP_PKEY_free);
+        std::shared_ptr<EVP_PKEY> ec_public_key(sa_get_public_key(*ec_key), EVP_PKEY_free);
 
         std::shared_ptr<EVP_PKEY> other_ec;
         std::vector<uint8_t> other_public_key;
@@ -80,7 +80,7 @@ namespace {
         ASSERT_NE(ec_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_ec parameters = {curve};
         sa_status status = sa_key_generate(ec_key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
@@ -107,7 +107,7 @@ namespace {
         ASSERT_NE(ec_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_ec parameters = {curve};
         sa_status status = sa_key_generate(ec_key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
@@ -136,7 +136,7 @@ namespace {
         ASSERT_NE(ec_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_ec parameters = {curve};
         sa_status status = sa_key_generate(ec_key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
@@ -158,7 +158,7 @@ namespace {
         ASSERT_NE(ec_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_KEY_EXCHANGE);
 
         sa_generate_parameters_ec parameters = {curve};
@@ -185,7 +185,7 @@ namespace {
     TEST_P(SaKeyExchangeEcdhTest, failsKeySupportsEcdh) {
         auto curve = std::get<0>(GetParam());
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> rsa_2048 = sample_rsa_2048_pkcs8();
         auto rsa_key = create_sa_key_rsa(&rights, rsa_2048);
@@ -208,14 +208,13 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
     }
 
-    TEST_P(SaKeyExchangeEcdhTest, failsOtherPublicSizeMismatch) {
+    TEST_P(SaKeyExchangeEcdhTest, failsOtherPublicMismatch) {
         auto curve = std::get<0>(GetParam());
-        auto key_size = ec_get_key_size(curve);
         auto ec_key = create_uninitialized_sa_key();
         ASSERT_NE(ec_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_ec parameters = {curve};
         sa_status status = sa_key_generate(ec_key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
@@ -224,7 +223,10 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        std::vector<uint8_t> other_public_key = random(key_size * 2 + 1);
+        std::shared_ptr<EVP_PKEY> other_key;
+        std::vector<uint8_t> other_public_key;
+        ASSERT_TRUE(dh_generate_key(other_key, other_public_key, sample_dh_p_2048(), sample_dh_g_2048()));
+
         auto key = create_uninitialized_sa_key();
         status = sa_key_exchange(key.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_ECDH, *ec_key,
                 other_public_key.data(), other_public_key.size(), nullptr);

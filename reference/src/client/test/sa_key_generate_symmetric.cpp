@@ -30,7 +30,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_symmetric parameters = {15};
 
@@ -43,7 +43,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_symmetric parameters = {513};
 
@@ -56,7 +56,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);

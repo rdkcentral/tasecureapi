@@ -39,9 +39,11 @@ find_package(OpenSSL REQUIRED)
 add_library(util STATIC
         include/common.h
         include/log.h
+        include/pkcs8.h
         include/pkcs12.h
 
         src/log.c
+        src/pkcs8.c
         src/pkcs12.c
 )
 

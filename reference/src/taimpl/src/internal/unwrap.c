@@ -71,17 +71,17 @@ static sa_status import_key(
         size_t key_size = in_length;
         if (key_type == SA_KEY_TYPE_EC) {
             sa_unwrap_type_parameters_ec* ec_parameters = (sa_unwrap_type_parameters_ec*) parameters;
-            status = ec_validate_private(ec_parameters->curve, in, in_length);
-            if (status != SA_STATUS_OK) {
+            key_size = ec_validate_private(ec_parameters->curve, in, in_length);
+            if (key_size == 0) {
                 ERROR("ec_validate_private failed");
                 break;
             }
 
             type_parameters.curve = ec_parameters->curve;
         } else if (key_type == SA_KEY_TYPE_RSA) { // key_type == SA_KEY_TYPE_RSA
-            key_size = rsa_validate_pkcs8(in, in_length);
+            key_size = rsa_validate_private(in, in_length);
             if (key_size == 0) {
-                ERROR("rsa_validate_pkcs8 failed");
+                ERROR("rsa_validate_private failed");
                 break;
             }
         }

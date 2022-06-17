@@ -35,7 +35,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> clear_key;
         size_t signature_length;
@@ -52,7 +52,7 @@ namespace {
                 parameters_ecdsa = {digest_algorithm, precomputed_digest};
                 sign_parameters = &parameters_ecdsa;
 
-                clear_key = random_ec(key_length);
+                clear_key = ec_generate_key_bytes(curve);
                 key = create_sa_key_ec(&rights, curve, clear_key);
                 break;
             }
@@ -62,7 +62,7 @@ namespace {
                 signature_length = key_length * 2;
                 sign_parameters = nullptr;
 
-                clear_key = random_ec(key_length);
+                clear_key = ec_generate_key_bytes(curve);
                 key = create_sa_key_ec(&rights, curve, clear_key);
                 break;
             }
@@ -148,7 +148,7 @@ namespace {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -166,7 +166,7 @@ namespace {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -185,7 +185,7 @@ namespace {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -213,11 +213,11 @@ namespace {
 
     TEST(SaCryptoSign, failsNotUsageFlagEcEcdsaSha256Ecp256) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
-        auto clear_key = random_ec(ec_get_key_size(curve));
+        auto clear_key = ec_generate_key_bytes(curve);
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SIGN);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
@@ -234,11 +234,11 @@ namespace {
 
     TEST(SaCryptoSign, failsNotUsageFlagEcEcdsaSha256Ecp384) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P384;
-        auto clear_key = random_ec(ec_get_key_size(curve));
+        auto clear_key = ec_generate_key_bytes(curve);
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SIGN);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
@@ -255,11 +255,11 @@ namespace {
 
     TEST(SaCryptoSign, failsNotUsageFlagEcEcdsaSha256Ecp521) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P521;
-        auto clear_key = random_ec(ec_get_key_size(curve));
+        auto clear_key = ec_generate_key_bytes(curve);
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SIGN);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
@@ -278,7 +278,7 @@ namespace {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);

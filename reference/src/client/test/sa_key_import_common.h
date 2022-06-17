@@ -190,7 +190,7 @@ protected:
 class SaKeyImportSocTest : public ::testing::Test, public SaKeyImportSocBase {};
 
 using SaKeyImportSocAllKeyCombosType =
-        std::tuple<uint8_t, std::vector<uint8_t>, std::string, size_t, sa_key_type, uint8_t, uint8_t>;
+        std::tuple<std::string, size_t, sa_key_type, uint8_t, uint8_t>;
 
 class SaKeyImportSocAllKeyCombosTest
     : public ::testing::TestWithParam<SaKeyImportSocAllKeyCombosType>,

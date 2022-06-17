@@ -30,7 +30,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
@@ -41,7 +41,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> dhp4096 = sample_dh_p_4096();
         std::vector<uint8_t> dhg4096 = sample_dh_g_4096();
@@ -57,7 +57,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> dhp4096 = sample_dh_p_4096();
         std::vector<uint8_t> dhg4096 = sample_dh_g_4096();
@@ -73,7 +73,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> dhp_bad_4096 = sample_dh_bad_p_4096();
         std::vector<uint8_t> dhg4096 = sample_dh_g_4096();
@@ -90,7 +90,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> dhp4096 = sample_dh_p_4096();
         std::vector<uint8_t> dhg4096 = sample_dh_g_4096();
@@ -106,7 +106,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> dhp4096 = sample_dh_p_4096();
         std::vector<uint8_t> dhg4096 = sample_dh_g_4096();
@@ -122,7 +122,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> dhp4096 = sample_dh_p_4096();
         std::vector<uint8_t> dhg4096 = sample_dh_g_4096();
@@ -138,7 +138,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> dhp4096 = sample_dh_p_4096();
         std::vector<uint8_t> dhg4096 = random(dhp4096.size() + 1);

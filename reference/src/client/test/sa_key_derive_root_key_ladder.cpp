@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ namespace {
         // clang-format on
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
@@ -63,7 +63,7 @@ namespace {
         // clang-format on
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_status status = sa_key_derive(nullptr, &rights, SA_KDF_ALGORITHM_ROOT_KEY_LADDER, &parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
@@ -71,7 +71,7 @@ namespace {
 
     TEST_F(SaKeyDeriveRootKeyLadderTest, failsNullRights) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_symmetric key_parameters = {.key_length = 16};
         auto key = create_uninitialized_sa_key();
@@ -93,7 +93,7 @@ namespace {
 
     TEST_F(SaKeyDeriveRootKeyLadderTest, failsNullParameters) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_symmetric key_parameters = {.key_length = 16};
         auto key = create_uninitialized_sa_key();
@@ -116,7 +116,7 @@ namespace {
         // clang-format on
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
@@ -135,7 +135,7 @@ namespace {
         // clang-format on
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, kdf_algorithm, &parameters);
@@ -153,7 +153,7 @@ namespace {
         // clang-format on
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
@@ -172,7 +172,7 @@ namespace {
         // clang-format on
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
@@ -191,7 +191,7 @@ namespace {
         // clang-format on
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
@@ -210,7 +210,7 @@ namespace {
         // clang-format on
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
@@ -229,7 +229,7 @@ namespace {
         // clang-format on
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
@@ -248,7 +248,7 @@ namespace {
         // clang-format on
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);

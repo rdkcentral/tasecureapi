@@ -41,24 +41,25 @@ extern "C" {
 #endif
 
 /**
- * Validates an EC private key.
- * @param[in] curve the Elliptic curve.
- * @param[in] private the private key bytes.
- * @param[in] private_length the length of the private key.
- * @return the status of the operation.
- */
-sa_status ec_validate_private(
-        sa_elliptic_curve curve,
-        const void* private,
-        size_t private_length);
-
-/**
  * Return the key size based on the curve.
  *
  * @param[in] curve Elliptic curve to use.
  * @return the key size.
  */
 size_t ec_key_size_from_curve(sa_elliptic_curve curve);
+
+/**
+ * Validates an EC private key and returns its size
+ * .
+ * @param[in] curve the Elliptic curve.
+ * @param[in] private the private key bytes.
+ * @param[in] private_length the length of the private key.
+ * @return the size of the private key or 0 if failed.
+ */
+size_t ec_validate_private(
+        sa_elliptic_curve curve,
+        const void* private,
+        size_t private_length);
 
 /**
  * Get public EC key in uncompressed [X|Y].
@@ -68,7 +69,7 @@ size_t ec_key_size_from_curve(sa_elliptic_curve curve);
  * @param[in] stored_key private key.
  * @return status of the operation.
  */
-sa_status ec_get_public(
+bool ec_get_public(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key);
@@ -106,17 +107,17 @@ sa_status ec_decrypt_elgamal(
  *
  * @param[out] stored_key_shared_secret shared secret.
  * @param[in] rights rights for the shared secret.
- * @param[in] stored_key private key.
  * @param[in] other_public other party's public key.
  * @param[in] other_public_length length of other party's public key.
+ * @param[in] stored_key private key.
  * @return status of the operation
  */
 sa_status ec_compute_ecdh_shared_secret(
         stored_key_t** stored_key_shared_secret,
         const sa_rights* rights,
-        const stored_key_t* stored_key,
         const void* other_public,
-        size_t other_public_length);
+        size_t other_public_length,
+        const stored_key_t* stored_key);
 
 /**
  * Sign a message using ECDSA.
@@ -158,13 +159,13 @@ sa_status ec_sign_eddsa(
 
 /**
  * Generate an EC key.
- * @param[out] stored_key_generated the generated EC key.
+ * @param[out] stored_key the generated EC key.
  * @param[in] rights the key rights.
  * @param[in] parameters the EC key parameters
  * @return status of the operation.
  */
 sa_status ec_generate_key(
-        stored_key_t** stored_key_generated,
+        stored_key_t** stored_key,
         const sa_rights* rights,
         sa_generate_parameters_ec* parameters);
 

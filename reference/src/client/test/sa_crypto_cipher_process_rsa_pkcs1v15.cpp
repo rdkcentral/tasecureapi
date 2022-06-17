@@ -38,7 +38,7 @@ namespace {
         in.resize(in_length - 1);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -77,7 +77,7 @@ namespace {
         in.resize(in_length);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -112,7 +112,7 @@ namespace {
         auto in = std::vector<uint8_t>(EVP_PKEY_bits(rsa.get()) / 8);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -151,7 +151,7 @@ namespace {
         in.resize(in_length);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -159,7 +159,7 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA256, NULL, 0};
+        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA256, nullptr, 0};
         sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_RSA_OAEP, SA_CIPHER_MODE_DECRYPT,
                 *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)

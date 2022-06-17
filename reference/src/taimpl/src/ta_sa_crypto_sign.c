@@ -87,20 +87,13 @@ static sa_status ta_sa_crypto_sign_ecdsa(
             break;
         }
 
-        size_t key_size = ec_key_size_from_curve(header->type_parameters.curve) * 2;
-        if (key_size == 0) {
-            ERROR("Unexpected ec curve encountered");
-            status = SA_STATUS_OPERATION_NOT_SUPPORTED;
-            break;
-        }
-
         if (out == NULL) {
-            *out_length = key_size;
+            *out_length = header->size * 2;
             status = SA_STATUS_OK;
             break;
         }
 
-        if (*out_length < key_size) {
+        if (*out_length < header->size * 2) {
             ERROR("Bad out_length");
             status = SA_STATUS_BAD_PARAMETER;
             break;

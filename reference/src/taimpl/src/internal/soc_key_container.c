@@ -31,7 +31,7 @@
 
 #define AES_128_GCM "A128GCM"
 #define MAX_AAD_SIZE 1300
-#define CONTAINER_VERSION 3
+#define SOC_CONTAINER_VERSION 4
 
 typedef struct {
     const void* in;
@@ -468,7 +468,7 @@ static size_t build_aad(
     length += header->alg_size;
 
     // container version
-    if (payload->container_version != CONTAINER_VERSION) {
+    if (payload->container_version != SOC_CONTAINER_VERSION) {
         ERROR("Invalid container version");
         return 0;
     }
@@ -713,9 +713,9 @@ static sa_status decrypt_key_and_verify_mac(
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
         if (key_type == SA_KEY_TYPE_RSA) {
-            size_t rsa_key_size = rsa_validate_pkcs8(key, payload->encrypted_key_length);
+            size_t rsa_key_size = rsa_validate_private(key, payload->encrypted_key_length);
             if (rsa_key_size == 0) {
-                ERROR("rsa_validate_pkcs8 failed");
+                ERROR("rsa_validate_private failed");
                 status = SA_STATUS_BAD_KEY_FORMAT;
                 break;
             }
@@ -726,9 +726,15 @@ static sa_status decrypt_key_and_verify_mac(
                 break;
             }
         } else if (key_type == SA_KEY_TYPE_EC) {
-            status = ec_validate_private(curve, key, payload->encrypted_key_length);
-            if (status != SA_STATUS_OK) {
+            size_t ec_key_size = ec_validate_private(curve, key, payload->encrypted_key_length);
+            if (ec_key_size == 0) {
                 ERROR("Invalid key size");
+                break;
+            }
+
+            if (ec_key_size != key_size) {
+                ERROR("Invalid EC key size");
+                status = SA_STATUS_BAD_KEY_FORMAT;
                 break;
             }
 

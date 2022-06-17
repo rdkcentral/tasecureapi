@@ -42,7 +42,7 @@ TEST_P(SaEngineCipherTest, encryptTest) {
 #endif
     auto clear_key = random(key_length);
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
     auto key = create_sa_key_symmetric(&rights, clear_key);
     auto data = random(16);
     auto iv = random(iv_length);
@@ -94,7 +94,7 @@ TEST_P(SaEngineCipherTest, decryptTest) {
 #endif
     auto clear_key = random(key_length);
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
     auto key = create_sa_key_symmetric(&rights, clear_key);
     auto data = random(16);
     auto iv = random(iv_length);
@@ -141,7 +141,7 @@ TEST_F(SaEngineCipherTest, initSeparateParams) {
 
     auto clear_key = random(key_length);
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
     auto key = create_sa_key_symmetric(&rights, clear_key);
     auto data = random(16);
     auto iv = random(iv_length);

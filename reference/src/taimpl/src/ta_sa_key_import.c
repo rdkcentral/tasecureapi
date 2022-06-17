@@ -129,17 +129,6 @@ static sa_status ta_sa_key_import_ec_private_bytes(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    size_t key_size = ec_key_size_from_curve(parameters->curve);
-    if (key_size == 0) {
-        ERROR("Unexpected ec curve encountered");
-        return SA_STATUS_BAD_PARAMETER;
-    }
-
-    if (in_length > key_size) {
-        ERROR("in_length too large");
-        return SA_STATUS_BAD_PARAMETER;
-    }
-
     if (client == NULL) {
         ERROR("NULL client");
         return SA_STATUS_NULL_PARAMETER;
@@ -150,19 +139,28 @@ static sa_status ta_sa_key_import_ec_private_bytes(
         return SA_STATUS_NULL_PARAMETER;
     }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000
+    if (parameters->curve == SA_ELLIPTIC_CURVE_ED25519 || parameters->curve == SA_ELLIPTIC_CURVE_ED448 ||
+            parameters->curve == SA_ELLIPTIC_CURVE_X25519 || parameters->curve == SA_ELLIPTIC_CURVE_X448) {
+        ERROR("Unsupported curve");
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+    }
+#endif
+
     sa_status status;
     stored_key_t* stored_key = NULL;
     do {
-        status = ec_validate_private(parameters->curve, in, in_length);
-        if (status != SA_STATUS_OK) {
+        size_t key_size = ec_validate_private(parameters->curve, in, in_length);
+        if (key_size == 0) {
             ERROR("ec_validate_private failed");
+            status = SA_STATUS_BAD_PARAMETER;
             break;
         }
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
         type_parameters.curve = parameters->curve;
-        if (!stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_EC, &type_parameters, in_length, in,
+        if (!stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_EC, &type_parameters, key_size, in,
                     in_length)) {
             ERROR("stored_key_import failed");
             status = SA_STATUS_INTERNAL_ERROR;
@@ -224,9 +222,9 @@ static sa_status ta_sa_key_import_rsa_private_key_info(
     sa_status status;
     stored_key_t* stored_key = NULL;
     do {
-        size_t key_size = rsa_validate_pkcs8(in, in_length);
+        size_t key_size = rsa_validate_private(in, in_length);
         if (key_size == 0) {
-            ERROR("rsa_validate_pkcs8 failed");
+            ERROR("rsa_validate_private failed");
             status = SA_STATUS_BAD_KEY_FORMAT;
             break;
         }

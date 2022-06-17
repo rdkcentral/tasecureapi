@@ -49,7 +49,7 @@ TEST_P(SaEnginePkeyDeriveTest, deriveTest) {
         std::tuple<std::vector<uint8_t>, std::vector<uint8_t>> dh_parameters = get_dh_parameters(key_length);
         auto p = std::get<0>(dh_parameters);
         auto g = std::get<1>(dh_parameters);
-        ASSERT_TRUE(dh_generate(other_private_key, other_public_key, p, g));
+        ASSERT_TRUE(dh_generate_key(other_private_key, other_public_key, p, g));
         ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_private_key, evp_pkey, p, g));
     } else if (key_type == SA_KEY_TYPE_EC) {
         ASSERT_EQ(ec_generate_key(curve, other_private_key, other_public_key), SA_STATUS_OK);
@@ -90,7 +90,7 @@ TEST_P(SaEnginePkeyDeriveTest, deriveTest) {
     auto derived_key = create_uninitialized_sa_key();
     ASSERT_NE(derived_key, nullptr);
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
     sa_status status = sa_key_derive(derived_key.get(), &rights, SA_KDF_ALGORITHM_CONCAT, &kdf_parameters_concat);
     ASSERT_EQ(status, SA_STATUS_OK);
     ASSERT_TRUE(key_check_sym(*derived_key, clear_derived_key));

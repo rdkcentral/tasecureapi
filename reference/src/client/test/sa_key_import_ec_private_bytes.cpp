@@ -26,11 +26,10 @@ using namespace client_test_helpers;
 namespace {
     TEST_F(SaKeyImportTest, nominalEcNoAvailableResourceSlot) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
-        auto key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_import_parameters_ec_private_bytes parameters = {&rights, curve};
 
@@ -50,28 +49,9 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT);
     }
 
-    TEST_F(SaKeyImportTest, failsEcPrivateBytesNistP256BadInLength) {
-        auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
-        auto key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size + 1);
-
-        sa_rights rights;
-        rights_set_allow_all(&rights);
-
-        sa_import_parameters_ec_private_bytes parameters = {&rights, curve};
-
-        auto key = create_uninitialized_sa_key();
-        ASSERT_NE(key, nullptr);
-
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_EC_PRIVATE_BYTES, clear_key.data(), clear_key.size(),
-                &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
-    }
-
     TEST_F(SaKeyImportTest, failsEcPrivateBytesNullParameters) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
-        auto key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
@@ -83,8 +63,7 @@ namespace {
 
     TEST_F(SaKeyImportTest, failsEcPrivateBytesNullRights) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
-        auto key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
 
         sa_import_parameters_ec_private_bytes parameters = {nullptr, curve};
 
@@ -98,11 +77,10 @@ namespace {
 
     TEST_F(SaKeyImportTest, failsEcPrivateBytesBadCurve) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
-        auto key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_import_parameters_ec_private_bytes parameters = {&rights, static_cast<sa_elliptic_curve>(UINT8_MAX)};
 

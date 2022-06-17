@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -48,7 +48,7 @@ namespace {
         auto clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -69,7 +69,7 @@ namespace {
         auto clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -98,7 +98,7 @@ namespace {
         auto clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -114,7 +114,7 @@ namespace {
         auto clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -142,11 +142,9 @@ namespace {
         sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
 
-        size_t key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
-
+        auto clear_key = ec_generate_key_bytes(curve);
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
@@ -166,7 +164,7 @@ namespace {
         auto clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SIGN);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
@@ -187,7 +185,7 @@ namespace {
         auto clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         rights.not_before = time(nullptr) + 10000;
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
@@ -208,7 +206,7 @@ namespace {
         auto clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         rights.not_on_or_after = time(nullptr) - 1;
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
@@ -229,7 +227,7 @@ namespace {
         auto clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -247,7 +245,7 @@ namespace {
         auto clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);

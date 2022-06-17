@@ -32,7 +32,7 @@ namespace {
         ASSERT_NE(dh_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_dh parameters = {
                 .p = dhp.data(),
@@ -42,21 +42,11 @@ namespace {
         sa_status status = sa_key_generate(dh_key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        size_t dh_public_key_length;
-        status = sa_key_get_public(nullptr, &dh_public_key_length, *dh_key);
-        ASSERT_EQ(status, SA_STATUS_OK);
-
-        std::vector<uint8_t> dh_public_key(dh_public_key_length);
-        status = sa_key_get_public(dh_public_key.data(), &dh_public_key_length, *dh_key);
-        ASSERT_EQ(status, SA_STATUS_OK);
-        EVP_PKEY* temp = dh_import_public(dh_public_key.data(), dh_public_key.size(), dhp.data(), dhp.size(),
-                dhg.data(), dhg.size());
-        ASSERT_NE(temp, nullptr);
-        auto public_evp_pkey = std::shared_ptr<EVP_PKEY>(temp, EVP_PKEY_free);
+        auto public_evp_pkey = std::shared_ptr<EVP_PKEY>(sa_get_public_key(*dh_key), EVP_PKEY_free);
 
         std::shared_ptr<EVP_PKEY> other_dh;
         std::vector<uint8_t> other_public_key;
-        ASSERT_TRUE(dh_generate(other_dh, other_public_key, dhp, dhg));
+        ASSERT_TRUE(dh_generate_key(other_dh, other_public_key, dhp, dhg));
         auto shared_secret = create_uninitialized_sa_key();
         ASSERT_NE(shared_secret, nullptr);
         status = sa_key_exchange(shared_secret.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_DH, *dh_key,
@@ -88,7 +78,7 @@ namespace {
         ASSERT_NE(dh_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> dhp3072 = sample_dh_p_3072();
         std::vector<uint8_t> dhg3072 = sample_dh_g_3072();
@@ -103,7 +93,7 @@ namespace {
 
         std::shared_ptr<EVP_PKEY> other_dh;
         std::vector<uint8_t> other_public_key;
-        ASSERT_TRUE(dh_generate(other_dh, other_public_key, dhp3072, dhg3072));
+        ASSERT_TRUE(dh_generate_key(other_dh, other_public_key, dhp3072, dhg3072));
         status = sa_key_exchange(nullptr, &rights, SA_KEY_EXCHANGE_ALGORITHM_DH, *dh_key,
                 other_public_key.data(), other_public_key.size(), nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
@@ -114,7 +104,7 @@ namespace {
         ASSERT_NE(dh_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> dhp3072 = sample_dh_p_3072();
         std::vector<uint8_t> dhg3072 = sample_dh_g_3072();
@@ -129,7 +119,7 @@ namespace {
 
         std::shared_ptr<EVP_PKEY> other_dh;
         std::vector<uint8_t> other_public_key;
-        ASSERT_TRUE(dh_generate(other_dh, other_public_key, dhp3072, dhg3072));
+        ASSERT_TRUE(dh_generate_key(other_dh, other_public_key, dhp3072, dhg3072));
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         status = sa_key_exchange(key.get(), nullptr, SA_KEY_EXCHANGE_ALGORITHM_DH, *dh_key,
@@ -142,7 +132,7 @@ namespace {
         ASSERT_NE(dh_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> dhp3072 = sample_dh_p_3072();
         std::vector<uint8_t> dhg3072 = sample_dh_g_3072();
@@ -166,7 +156,7 @@ namespace {
         ASSERT_NE(dh_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_KEY_EXCHANGE);
 
         std::vector<uint8_t> dhp3072 = sample_dh_p_3072();
@@ -181,7 +171,7 @@ namespace {
 
         std::shared_ptr<EVP_PKEY> other_dh;
         std::vector<uint8_t> other_public_key;
-        ASSERT_TRUE(dh_generate(other_dh, other_public_key, dhp3072, dhg3072));
+        ASSERT_TRUE(dh_generate_key(other_dh, other_public_key, dhp3072, dhg3072));
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         status = sa_key_exchange(key.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_DH, *dh_key,
@@ -191,7 +181,7 @@ namespace {
 
     TEST_F(SaKeyExchangeDhTest, failsKeySupportsDh) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> rsa_2048 = sample_rsa_2048_pkcs8();
         auto rsa_key = create_sa_key_rsa(&rights, rsa_2048);
@@ -201,7 +191,7 @@ namespace {
 
         std::shared_ptr<EVP_PKEY> other_dh;
         std::vector<uint8_t> other_public_key;
-        ASSERT_TRUE(dh_generate(other_dh, other_public_key, sample_dh_p_3072(), sample_dh_g_3072()));
+        ASSERT_TRUE(dh_generate_key(other_dh, other_public_key, sample_dh_p_3072(), sample_dh_g_3072()));
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_exchange(key.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_DH, *rsa_key,
@@ -209,12 +199,12 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
     }
 
-    TEST_F(SaKeyExchangeDhTest, failsOtherPublicSizeMismatch) {
+    TEST_F(SaKeyExchangeDhTest, failsOtherPublicMismatch) {
         auto dh_key = create_uninitialized_sa_key();
         ASSERT_NE(dh_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> dhp2048 = sample_dh_p_2048();
         std::vector<uint8_t> dhg2048 = sample_dh_g_2048();
@@ -226,9 +216,10 @@ namespace {
         sa_status status = sa_key_generate(dh_key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        std::shared_ptr<EVP_PKEY> other_dh;
+        std::shared_ptr<EVP_PKEY> other_key;
         std::vector<uint8_t> other_public_key;
-        ASSERT_TRUE(dh_generate(other_dh, other_public_key, sample_dh_p_3072(), sample_dh_g_3072()));
+        ASSERT_EQ(ec_generate_key(SA_ELLIPTIC_CURVE_NIST_P256, other_key, other_public_key), SA_STATUS_OK);
+
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         status = sa_key_exchange(key.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_DH, *dh_key,

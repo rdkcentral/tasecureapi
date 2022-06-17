@@ -25,8 +25,8 @@ namespace {
         sa_status status = sa_get_version(&version);
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_TRUE(version.specification_major >= 3);
-        ASSERT_TRUE(version.specification_minor >= 0);
-        ASSERT_TRUE(version.specification_revision >= 1);
+        ASSERT_TRUE(version.specification_minor >= 1);
+        ASSERT_TRUE(version.specification_revision >= 0);
         ASSERT_TRUE(version.implementation_revision >= 0);
     }
 

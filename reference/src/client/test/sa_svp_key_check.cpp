@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
@@ -47,7 +47,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -65,7 +65,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -83,7 +83,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
@@ -102,7 +102,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
@@ -118,7 +118,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
@@ -133,7 +133,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
@@ -152,7 +152,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
@@ -171,7 +171,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
@@ -191,7 +191,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_DECRYPT);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
@@ -207,18 +207,16 @@ namespace {
     }
 
     TEST_F(SaSvpKeyCheckTest, failNotAes) {
-        auto clear_key = random_ec(EC_P256_KEY_SIZE);
+        auto clear_key = ec_generate_key_bytes(SA_ELLIPTIC_CURVE_NIST_P256);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_ec(&rights, SA_ELLIPTIC_CURVE_NIST_P256, clear_key);
         ASSERT_NE(key, nullptr);
 
         auto clear = random(AES_BLOCK_SIZE);
         auto encrypted = std::vector<uint8_t>(clear.size());
-        ASSERT_TRUE(encrypt_aes_ecb_openssl(encrypted, clear, clear_key, false));
-
         auto encrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, encrypted);
         ASSERT_EQ(sa_svp_key_check(*key, encrypted_buffer.get(), clear.size(), clear.data(), clear.size()),
                 SA_STATUS_BAD_KEY_TYPE);

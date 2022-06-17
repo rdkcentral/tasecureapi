@@ -31,7 +31,7 @@ bool SaCipherCryptoBase::import_key(
         parameters.clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         parameters.key = create_sa_key_symmetric(&rights, parameters.clear_key);
         if (parameters.key == nullptr) {
@@ -42,7 +42,7 @@ bool SaCipherCryptoBase::import_key(
         parameters.clear_key = get_rsa_private_key(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         parameters.key = create_sa_key_rsa(&rights, parameters.clear_key);
         if (parameters.key == nullptr) {
@@ -50,25 +50,12 @@ bool SaCipherCryptoBase::import_key(
             return false;
         }
     } else if (key_type == SA_KEY_TYPE_EC) {
-        sa_elliptic_curve curve;
-        if (key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P192))
-            curve = SA_ELLIPTIC_CURVE_NIST_P192;
-        else if (key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P224))
-            curve = SA_ELLIPTIC_CURVE_NIST_P224;
-        else if (key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P256))
-            curve = SA_ELLIPTIC_CURVE_NIST_P256;
-        else if (key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P384))
-            curve = SA_ELLIPTIC_CURVE_NIST_P384;
-        else if (key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P521))
-            curve = SA_ELLIPTIC_CURVE_NIST_P521;
-        else
-            return false;
-
-        parameters.clear_key = random_ec(key_size);
+        auto curve = static_cast<sa_elliptic_curve>(key_size);
+        parameters.clear_key = ec_generate_key_bytes(curve);
         parameters.curve = curve;
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         parameters.key = create_sa_key_ec(&rights, curve, parameters.clear_key);
         if (parameters.key == nullptr) {
@@ -727,11 +714,8 @@ INSTANTIATE_TEST_SUITE_P(
         ::testing::Combine(
             ::testing::Values(SA_CIPHER_ALGORITHM_EC_ELGAMAL),
             ::testing::Values(SA_KEY_TYPE_EC),
-            ::testing::Values(ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P192),
-                ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P224),
-                ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P256),
-                ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P384),
-                ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P521)),
+            ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224, SA_ELLIPTIC_CURVE_NIST_P256,
+                SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521),
             ::testing::Values(SA_BUFFER_TYPE_CLEAR),
             ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
             ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),

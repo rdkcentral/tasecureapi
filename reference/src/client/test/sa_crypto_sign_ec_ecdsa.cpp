@@ -26,11 +26,11 @@ namespace {
     TEST(SaCryptoSign, failsEcEcdsaBadOutLengthEcp256) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         auto key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
@@ -53,11 +53,11 @@ namespace {
     TEST(SaCryptoSign, failsEcEcdsaBadOutLengthEcp384) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P384;
         auto key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
@@ -82,7 +82,7 @@ namespace {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -98,11 +98,11 @@ namespace {
     TEST(SaCryptoSign, failsEcEcdsaBadCurveX25519) {
         auto curve = SA_ELLIPTIC_CURVE_X25519;
         auto key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
@@ -120,11 +120,11 @@ namespace {
     TEST(SaCryptoSign, failsEcEcdsaBadCurveX448) {
         auto curve = SA_ELLIPTIC_CURVE_X448;
         auto key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
@@ -142,11 +142,11 @@ namespace {
     TEST(SaCryptoSign, failsEcEcdsaBadCurveED25519) {
         auto curve = SA_ELLIPTIC_CURVE_ED25519;
         auto key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
@@ -164,11 +164,11 @@ namespace {
     TEST(SaCryptoSign, failsEcEcdsaBadCurveED448) {
         auto curve = SA_ELLIPTIC_CURVE_ED448;
         auto key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)

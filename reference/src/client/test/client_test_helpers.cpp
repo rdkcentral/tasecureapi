@@ -17,6 +17,7 @@
  */
 
 #include "client_test_helpers.h"
+#include "pkcs8.h"
 #include "sa_public_key.h"
 #include <cstring>
 
@@ -24,6 +25,7 @@
 #include <openssl/dh.h>
 #include <openssl/hmac.h>
 #include <openssl/rand.h>
+#include <openssl/x509.h>
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
 #include <openssl/core_names.h>
 #else
@@ -1566,12 +1568,6 @@ namespace client_test_helpers {
             0x90, 0xA6, 0xC0, 0x8F, 0x4D, 0xF4, 0x35, 0xC9, 0x34, 0x06, 0x31, 0x99,
             0xFF, 0xFF, 0xFF, 0xFF, 0x08, 0x08, 0x08, 0x08};
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-    static void unsupported_openssl_key_free(EVP_PKEY* evp_pkey) {
-        // Do nothing.
-    }
-#endif
-
     static sa_buffer get_buffer(std::vector<uint8_t>& data) {
         return {SA_BUFFER_TYPE_CLEAR, {.clear = {data.data(), data.size(), 0}}};
     }
@@ -1793,7 +1789,7 @@ namespace client_test_helpers {
         }
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         if (unwrapped_key == nullptr) {
@@ -1838,27 +1834,14 @@ namespace client_test_helpers {
     static bool key_check_rsa_decrypt(sa_key key) {
         auto clear = random(65);
         std::vector<uint8_t> in(4096);
-        size_t public_key_length = 0;
 
-        auto header = key_header(key);
-        if (sa_key_get_public(nullptr, &public_key_length, key) != SA_STATUS_OK) {
-            ERROR("sa_key_get_public failed");
+        auto evp_pkey = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
+        if (evp_pkey == nullptr) {
+            ERROR("sa_get_public_key failed");
             return false;
         }
 
-        std::vector<uint8_t> public_key(public_key_length);
-        if (sa_key_get_public(public_key.data(), &public_key_length, key) != SA_STATUS_OK) {
-            ERROR("sa_key_get_public failed");
-            return false;
-        }
-
-        auto rsa = std::shared_ptr<EVP_PKEY>(rsa_import_public(public_key.data(), public_key.size()), EVP_PKEY_free);
-        if (rsa == nullptr) {
-            ERROR("rsa_import_public failed");
-            return false;
-        }
-
-        if (!encrypt_rsa_oaep_openssl(in, clear, rsa, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, {})) {
+        if (!encrypt_rsa_oaep_openssl(in, clear, evp_pkey, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, {})) {
             ERROR("encrypt_rsa_oaep_openssl failed");
             return false;
         }
@@ -1869,7 +1852,7 @@ namespace client_test_helpers {
             return false;
         }
 
-        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
         if (sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_RSA_OAEP, SA_CIPHER_MODE_DECRYPT, key,
                     &parameters) != SA_STATUS_OK) {
             ERROR("sa_crypto_cipher_init failed");
@@ -1904,23 +1887,9 @@ namespace client_test_helpers {
     static bool key_check_rsa_oaep_unwrap(sa_key key) {
         auto clear = random(AES_BLOCK_SIZE);
 
-        size_t public_key_length = 0;
-
-        auto header = key_header(key);
-        if (sa_key_get_public(nullptr, &public_key_length, key) != SA_STATUS_OK) {
-            ERROR("sa_key_get_public failed");
-            return false;
-        }
-
-        std::vector<uint8_t> public_key(public_key_length);
-        if (sa_key_get_public(public_key.data(), &public_key_length, key) != SA_STATUS_OK) {
-            ERROR("sa_key_get_public failed");
-            return false;
-        }
-
-        auto rsa = std::shared_ptr<EVP_PKEY>(rsa_import_public(public_key.data(), public_key.size()), EVP_PKEY_free);
+        auto rsa = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
         if (rsa == nullptr) {
-            ERROR("rsa_import_public failed");
+            ERROR("sa_get_public_key failed");
             return false;
         }
 
@@ -1931,7 +1900,7 @@ namespace client_test_helpers {
         }
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         if (unwrapped_key == nullptr) {
@@ -1939,7 +1908,7 @@ namespace client_test_helpers {
             return false;
         }
 
-        sa_unwrap_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+        sa_unwrap_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
         if (sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, SA_CIPHER_ALGORITHM_RSA_OAEP,
                     &parameters, key, encrypted.data(), encrypted.size()) != SA_STATUS_OK) {
             ERROR("sa_key_unwrap failed");
@@ -1972,22 +1941,17 @@ namespace client_test_helpers {
         auto header = key_header(key);
         auto curve = header->type_parameters.curve;
         size_t key_size = ec_get_key_size(curve);
-        size_t public_key_length = key_size * 2;
-        std::vector<uint8_t> public_key(public_key_length);
 
-        if (sa_key_get_public(public_key.data(), &public_key_length, key) != SA_STATUS_OK) {
-            ERROR("sa_key_get_public failed");
-            return false;
-        }
-
-        auto ec = std::shared_ptr<EVP_PKEY>(ec_import_public(curve, public_key.data(), public_key.size()),
-                EVP_PKEY_free);
+        auto ec = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
         if (ec == nullptr) {
-            ERROR("ec_import_public failed");
+            ERROR("sa_get_public_key failed");
             return false;
         }
 
-        auto clear = random_ec(key_size);
+        auto clear = random(key_size);
+        if (curve == SA_ELLIPTIC_CURVE_NIST_P521)
+            clear[0] &= 0x1;
+
         std::vector<uint8_t> in;
         if (!encrypt_ec_elgamal_openssl(in, clear, curve, ec)) {
             ERROR("encrypt_ec_elgamal_openssl failed");
@@ -2046,19 +2010,9 @@ namespace client_test_helpers {
 
         clear.assign(clear.size(), 0);
         memcpy(clear.data() + 4, clear_key.data(), clear_key.size());
-
-        size_t public_key_length = key_size * 2;
-        std::vector<uint8_t> public_key(public_key_length);
-
-        if (sa_key_get_public(public_key.data(), &public_key_length, key) != SA_STATUS_OK) {
-            ERROR("sa_key_get_public failed");
-            return false;
-        }
-
-        auto ec = std::shared_ptr<EVP_PKEY>(ec_import_public(curve, public_key.data(), public_key.size()),
-                EVP_PKEY_free);
+        auto ec = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
         if (ec == nullptr) {
-            ERROR("ec_import_public failed");
+            ERROR("sa_get_public_key failed");
             return false;
         }
 
@@ -2068,7 +2022,7 @@ namespace client_test_helpers {
         }
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         if (unwrapped_key == nullptr) {
@@ -2240,16 +2194,6 @@ namespace client_test_helpers {
         return data;
     }
 
-    std::vector<uint8_t> random_ec(size_t size) {
-        std::vector<uint8_t> data = random(size);
-        if (data.size() == EC_P521_KEY_SIZE) {
-            // Only the ls bit of byte 0 is used in a 521 bit key.
-            data[0] &= 1;
-        }
-
-        return data;
-    }
-
     std::string iso8601(const uint64_t instant) {
         static const char* ISO_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ";
 
@@ -2346,6 +2290,11 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& clear_key) {
 
         auto key = create_uninitialized_sa_key();
+        if (clear_key.empty()) {
+            *key = UNSUPPORTED_KEY;
+            return key;
+        }
+
         sa_import_parameters_ec_private_bytes params = {rights, curve};
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_EC_PRIVATE_BYTES, clear_key.data(), clear_key.size(),
                 &params);
@@ -2386,13 +2335,13 @@ namespace client_test_helpers {
             sa_elliptic_curve& curve) {
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         switch (key_type) {
             case SA_KEY_TYPE_EC: {
                 curve = static_cast<sa_elliptic_curve>(key_length);
                 key_length = ec_get_key_size(curve);
-                clear_key = random_ec(key_length);
+                clear_key = ec_generate_key_bytes(curve);
                 return create_sa_key_ec(&rights, curve, clear_key);
                 break;
             }
@@ -2531,8 +2480,8 @@ namespace client_test_helpers {
         }
 
         std::vector<uint8_t> openssl_public_key;
-        if (!rsa_get_public(openssl_public_key, evp_pkey)) {
-            ERROR("rsa_get_public failed");
+        if (!export_public_key(openssl_public_key, evp_pkey)) {
+            ERROR("export_public_key failed");
             return false;
         }
 
@@ -2620,8 +2569,8 @@ namespace client_test_helpers {
     bool key_check_ec(
             sa_key key,
             const std::vector<uint8_t>& clear_key) {
-        auto header = key_header(key);
 
+        auto header = key_header(key);
         if (header == nullptr) {
             ERROR("Could not get key header");
             return false;
@@ -2644,7 +2593,7 @@ namespace client_test_helpers {
         }
 
         std::vector<uint8_t> openssl_public_key;
-        if (!ec_get_public(openssl_public_key, header->type_parameters.curve, evp_pkey)) {
+        if (!export_public_key(openssl_public_key, evp_pkey)) {
             ERROR("ec_get_public failed");
             return false;
         }
@@ -2756,38 +2705,37 @@ namespace client_test_helpers {
         return true;
     }
 
-    std::shared_ptr<EVP_PKEY> rsa_import_pkcs8(
-            const std::vector<uint8_t>& in) {
-        const auto* p = in.data();
-
-        EVP_PKEY* evp_key = d2i_PrivateKey(EVP_PKEY_RSA, nullptr, &p, static_cast<int64_t>(in.size()));
-        if (evp_key == nullptr) {
-            ERROR("d2i_PrivateKey failed");
-            return nullptr;
-        }
-
-        return {evp_key, EVP_PKEY_free};
-    }
-
-    bool rsa_get_public(
+    bool export_public_key(
             std::vector<uint8_t>& out,
             std::shared_ptr<EVP_PKEY>& evp_pkey) {
-        int required_length = i2d_PublicKey(evp_pkey.get(), nullptr);
+        int required_length = i2d_PUBKEY(evp_pkey.get(), nullptr);
         if (required_length <= 0) {
-            ERROR("i2d_PublicKey failed");
+            ERROR("i2d_PUBKEY failed");
             return false;
         }
 
         out.resize(required_length);
 
         auto* buf = out.data();
-        int written = i2d_PublicKey(evp_pkey.get(), &buf);
+        int written = i2d_PUBKEY(evp_pkey.get(), &buf);
         if (written <= 0) {
-            ERROR("i2d_PublicKey failed");
+            ERROR("i2d_PUBKEY failed");
             return false;
         }
 
         return true;
+    }
+
+    std::shared_ptr<EVP_PKEY> rsa_import_pkcs8(
+            const std::vector<uint8_t>& in) {
+
+        EVP_PKEY* evp_pkey = evp_pkey_from_pkcs8(EVP_PKEY_RSA, in.data(), in.size());
+        if (evp_pkey == nullptr) {
+            ERROR("evp_pkey_from_pkcs8 failed");
+            return nullptr;
+        }
+
+        return {evp_pkey, EVP_PKEY_free};
     }
 
     bool verify_rsa_pss_openssl(
@@ -2914,13 +2862,13 @@ namespace client_test_helpers {
 
         if (!label.empty()) {
             void* new_label = malloc(label.size());
-            if (new_label == NULL) {
+            if (new_label == nullptr) {
                 ERROR("malloc failed");
                 return false;
             }
 
             memcpy(new_label, label.data(), label.size());
-            if (EVP_PKEY_CTX_set0_rsa_oaep_label(evp_pkey_ctx.get(), new_label, label.size()) != 1) {
+            if (EVP_PKEY_CTX_set0_rsa_oaep_label(evp_pkey_ctx.get(), new_label, static_cast<int>(label.size())) != 1) {
                 free(new_label);
                 ERROR("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
                 return false;
@@ -2976,220 +2924,107 @@ namespace client_test_helpers {
     std::shared_ptr<EVP_PKEY> ec_import_private(
             sa_elliptic_curve curve,
             const std::vector<uint8_t>& in) {
-        if (is_pcurve(curve)) {
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-            auto private_bn = std::shared_ptr<BIGNUM>(
-                    BN_bin2bn(static_cast<const unsigned char*>(in.data()), static_cast<int>(in.size()), nullptr),
-                    BN_free);
-            if (private_bn == nullptr) {
-                ERROR("BN_bin2bn failed");
-                return nullptr;
-            }
 
-            auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
-            if (ec_group == nullptr) {
-                ERROR("ec_group_from_curve failed");
-                return nullptr;
-            }
-
-            auto ec_point = std::shared_ptr<EC_POINT>(EC_POINT_new(ec_group.get()), EC_POINT_free);
-            if (ec_point == nullptr) {
-                ERROR("EC_POINT_new failed");
-                return nullptr;
-            }
-
-            if (EC_POINT_mul(ec_group.get(), ec_point.get(), private_bn.get(), nullptr, nullptr, nullptr) == 0) {
-                ERROR("EC_POINT_mul failed");
-                return nullptr;
-            }
-
-            size_t point_length = EC_KEY_SIZE(ec_group.get()) * 2;
-            if (point_length == 0) {
-                ERROR("EC_KEY_SIZE failed");
-                return nullptr;
-            }
-
-            std::vector<uint8_t> public_bytes(point_length + 1);
-            if (EC_POINT_point2oct(ec_group.get(), ec_point.get(), POINT_CONVERSION_UNCOMPRESSED, public_bytes.data(),
-                        public_bytes.size(), nullptr) != point_length + 1) {
-                ERROR("EC_POINT_point2oct failed");
-                return nullptr;
-            }
-
-            if (public_bytes[0] != POINT_CONVERSION_UNCOMPRESSED) {
-                ERROR("EC_POINT_point2oct failed");
-                return nullptr;
-            }
-
-            auto evp_pkey_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new_id(EVP_PKEY_EC, nullptr),
-                    EVP_PKEY_CTX_free);
-            if (evp_pkey_ctx == nullptr) {
-                ERROR("EVP_PKEY_CTX_new_id failed");
-                return nullptr;
-            }
-
-            if (EVP_PKEY_fromdata_init(evp_pkey_ctx.get()) != 1) {
-                ERROR("EVP_PKEY_fromdata_init failed");
-                return nullptr;
-            }
-
-            std::vector<uint8_t> private_bytes(static_cast<int>(in.size()));
-            if (BN_bn2nativepad(private_bn.get(), private_bytes.data(), static_cast<int>(private_bytes.size())) !=
-                    static_cast<int>(private_bytes.size())) {
-                ERROR("BN_bn2nativepad failed");
-                return nullptr;
-            }
-
-            const char* group_name = ec_get_name(curve);
-            if (group_name == nullptr) {
-                ERROR("ec_get_name failed");
-                return nullptr;
-            }
-
-            OSSL_PARAM params[] = {
-                    OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, const_cast<char*>(group_name),
-                            strlen(group_name)),
-                    OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_PRIV_KEY, private_bytes.data(), private_bytes.size()),
-                    OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, public_bytes.data(),
-                            public_bytes.size()),
-                    OSSL_PARAM_construct_end()};
-
-            EVP_PKEY* evp_pkey = nullptr;
-            if (EVP_PKEY_fromdata(evp_pkey_ctx.get(), &evp_pkey, EVP_PKEY_KEYPAIR, params) != 1) {
-                ERROR("EVP_PKEY_fromdata failed");
-                return nullptr;
-            }
-
-            return {evp_pkey, EVP_PKEY_free};
-#else
-            auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
-            int key_size = EC_KEY_SIZE(ec_group.get());
-            if (in.size() != static_cast<size_t>(key_size)) {
-                ERROR("Bad in_length");
-                return nullptr;
-            }
-
-            auto ec_key = std::shared_ptr<EC_KEY>(EC_KEY_new(), EC_KEY_free);
-            if (ec_key == nullptr) {
-                ERROR("EC_KEY_new failed");
-                return nullptr;
-            }
-
-            if (EC_KEY_set_group(ec_key.get(), ec_group.get()) == 0) {
-                ERROR("EC_KEY_set_group failed");
-                return nullptr;
-            }
-
-            auto bn_private = std::shared_ptr<BIGNUM>(BN_bin2bn(in.data(), static_cast<int>(in.size()), nullptr),
-                    BN_free);
-            if (bn_private == nullptr) {
-                ERROR("BN_bin2bn failed");
-                return nullptr;
-            }
-
-            if (EC_KEY_set_private_key(ec_key.get(), bn_private.get()) == 0) {
-                ERROR("EC_KEY_set_private_key failed");
-                return nullptr;
-            }
-
-            auto ec_point = std::shared_ptr<EC_POINT>(EC_POINT_new(ec_group.get()), EC_POINT_free);
-            if (ec_point == nullptr) {
-                ERROR("EC_POINT_new failed");
-                return nullptr;
-            }
-
-            if (EC_POINT_mul(ec_group.get(), ec_point.get(), bn_private.get(), nullptr, nullptr, nullptr) == 0) {
-                ERROR("EC_POINT_mul failed");
-                return nullptr;
-            }
-
-            if (EC_KEY_set_public_key(ec_key.get(), ec_point.get()) == 0) {
-                ERROR("EC_KEY_set_public_key failed");
-                return nullptr;
-            }
-
-            if (EC_KEY_check_key(ec_key.get()) == 0) {
-                ERROR("EC_KEY_check_key failed");
-                return nullptr;
-            }
-
-            auto evp_pkey = std::shared_ptr<EVP_PKEY>(EVP_PKEY_new(), EVP_PKEY_free);
-            if (EVP_PKEY_set1_EC_KEY(evp_pkey.get(), ec_key.get()) == 0) {
-                ERROR("EVP_PKEY_set1_EC_KEY failed");
-                return nullptr;
-            }
-
-            return evp_pkey;
+        int type;
+        if (is_pcurve(curve))
+            type = EVP_PKEY_EC;
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+        else if (curve == SA_ELLIPTIC_CURVE_ED25519)
+            type = EVP_PKEY_ED25519;
+        else if (curve == SA_ELLIPTIC_CURVE_X25519)
+            type = EVP_PKEY_X25519;
+        else if (curve == SA_ELLIPTIC_CURVE_ED448)
+            type = EVP_PKEY_ED448;
+        else if (curve == SA_ELLIPTIC_CURVE_X448)
+            type = EVP_PKEY_X448;
 #endif
-        } else {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-            ERROR("Curve not supported");
-            return std::shared_ptr<EVP_PKEY>(reinterpret_cast<EVP_PKEY*>(UNSUPPORTED_OPENSSL_KEY), // NOLINT
-                    unsupported_openssl_key_free);
-#else
-            std::shared_ptr<EVP_PKEY> evp_pkey;
-
-            // ED25519, X25519, ED448, or X448 curve.
-            int type = ec_get_type(curve);
-            evp_pkey = std::shared_ptr<EVP_PKEY>(EVP_PKEY_new_raw_private_key(type, nullptr, in.data(),
-                                                         in.size()),
-                    EVP_PKEY_free);
-            if (evp_pkey == nullptr) {
-                ERROR("Bad curve");
-                return nullptr;
-            }
-
-            return evp_pkey;
-#endif
+        else {
+            ERROR("Unknown curve");
+            return {};
         }
+
+        EVP_PKEY* evp_pkey = evp_pkey_from_pkcs8(type, in.data(), in.size());
+        if (evp_pkey == nullptr) {
+            ERROR("evp_pkey_from_pkcs8 failed");
+            return nullptr;
+        }
+
+        return {evp_pkey, EVP_PKEY_free};
     }
 
-    bool ec_get_public(
-            std::vector<uint8_t>& out,
-            sa_elliptic_curve curve,
-            std::shared_ptr<EVP_PKEY>& evp_pkey) {
-
-        if (is_pcurve(curve)) {
-            int public_key_size = i2d_PublicKey(evp_pkey.get(), nullptr);
-            if (public_key_size <= 0) {
-                ERROR("i2d_PublicKey failed");
-                return false;
-            }
-
-            out.resize(public_key_size);
-            unsigned char* buffer = out.data();
-            int written = i2d_PublicKey(evp_pkey.get(), &buffer);
-
-            // The result will always start with a 4 to signify the following bytes are encoded as an uncompressed
-            // point.
-            if (written != public_key_size || out[0] != POINT_CONVERSION_UNCOMPRESSED) {
-                ERROR("i2d_PublicKey failed");
-                return false;
-                return false;
-            }
-
-            // Strip off the 4.
-            out.erase(out.begin());
-        } else {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-            return false;
-#else
-            size_t public_key_size = 0;
-            if (EVP_PKEY_get_raw_public_key(evp_pkey.get(), nullptr, &public_key_size) != 1) {
-                ERROR("EVP_PKEY_get_raw_public_key failed");
-                return false;
-            }
-
-            out.resize(public_key_size);
-            if (EVP_PKEY_get_raw_public_key(evp_pkey.get(), out.data(), &public_key_size) != 1) {
-                ERROR("EVP_PKEY_get_raw_public_key failed");
-                return false;
-            }
-
-#endif
+    std::vector<uint8_t> ec_generate_key_bytes(sa_elliptic_curve curve) {
+        int type = ec_get_nid(curve);
+        if (type == 0) {
+            ERROR("ec_get_nid failed");
+            return {};
         }
 
-        return true;
+        std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx;
+        if (is_pcurve(curve)) {
+            auto param_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new_id(EVP_PKEY_EC, nullptr),
+                    EVP_PKEY_CTX_free);
+            if (param_ctx == nullptr) {
+                ERROR("EVP_PKEY_CTX_new_id failed");
+                return {};
+            }
+
+            if (EVP_PKEY_paramgen_init(param_ctx.get()) != 1) {
+                ERROR("EVP_PKEY_paramgen_init failed");
+                return {};
+            }
+
+            if (EVP_PKEY_CTX_set_ec_paramgen_curve_nid(param_ctx.get(), type) != 1) {
+                ERROR("EVP_PKEY_CTX_set_ec_paramgen_curve_nid failed");
+                return {};
+            }
+
+            if (EVP_PKEY_CTX_set_ec_param_enc(param_ctx.get(), OPENSSL_EC_NAMED_CURVE) != 1) {
+                ERROR("EVP_PKEY_CTX_set_ec_param_enc failed");
+                return {};
+            }
+
+            EVP_PKEY* params = nullptr;
+            if (EVP_PKEY_paramgen(param_ctx.get(), &params) <= 0) {
+                ERROR("EVP_PKEY_paramgen failed");
+                return {};
+            }
+
+            auto evp_pkey_params = std::shared_ptr<EVP_PKEY>(params, EVP_PKEY_free);
+            evp_pkey_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new(evp_pkey_params.get(), nullptr),
+                    EVP_PKEY_CTX_free);
+            if (evp_pkey_ctx == nullptr) {
+                ERROR("EVP_PKEY_CTX_new failed");
+                return {};
+            }
+        } else {
+            evp_pkey_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new_id(type, nullptr), EVP_PKEY_CTX_free);
+        }
+
+        if (EVP_PKEY_keygen_init(evp_pkey_ctx.get()) != 1) {
+            ERROR("EVP_PKEY_keygen_init failed");
+            return {};
+        }
+
+        EVP_PKEY* temp_pkey = nullptr;
+        if (EVP_PKEY_keygen(evp_pkey_ctx.get(), &temp_pkey) != 1) {
+            ERROR("EVP_PKEY_keygen failed");
+            return {};
+        }
+
+        auto evp_pkey = std::shared_ptr<EVP_PKEY>(temp_pkey, EVP_PKEY_free);
+        size_t length = 0;
+        if (!evp_pkey_to_pkcs8(nullptr, &length, evp_pkey.get())) {
+            ERROR("evp_pkey_to_pkcs8 failed");
+            return {};
+        }
+
+        std::vector<uint8_t> private_key(length);
+        if (!evp_pkey_to_pkcs8(private_key.data(), &length, evp_pkey.get())) {
+            ERROR("evp_pkey_to_pkcs8 failed");
+            return {};
+        }
+
+        return private_key;
     }
 
     bool verify_ec_ecdsa_openssl(
@@ -3325,7 +3160,7 @@ namespace client_test_helpers {
             sa_elliptic_curve curve,
             const std::shared_ptr<EVP_PKEY>& public_key) {
 
-        auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
+        auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_nid(curve)), EC_GROUP_free);
         if (ec_group == nullptr) {
             ERROR("NULL ec_group");
             return false;
@@ -3337,7 +3172,7 @@ namespace client_test_helpers {
             return false;
         }
 
-        auto w = random_ec(key_size);
+        auto w = ec_generate_key_bytes(curve);
         auto evp_pkey = ec_import_private(curve, w);
         if (evp_pkey == nullptr) {
             ERROR("EVP_PKEY_get1_EC_KEY failed");
@@ -3402,11 +3237,6 @@ namespace client_test_helpers {
                 break;
 #endif
             auto* counter = reinterpret_cast<uint32_t*>(in.data() + in.size() - sizeof(uint32_t));
-            if (*counter == INVALID_HANDLE) {
-                ERROR("EC_POINT_new failed");
-                return false;
-            }
-
             (*counter)++;
         } while (true);
 

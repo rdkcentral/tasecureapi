@@ -82,7 +82,7 @@ class SaEnginePkeyEncryptTest : public ::testing::TestWithParam<SaEnginePkeyEncr
 using SaEnginePkeyDeriveTestType = std::tuple<sa_key_type, size_t>;
 
 class SaEnginePkeyDeriveTest : public ::testing::TestWithParam<SaEnginePkeyDeriveTestType>,
-                                public SaKeyBase {};
+                               public SaKeyBase {};
 
 using SaEnginePkeyMacTestType = std::tuple<sa_key_type, size_t, sa_digest_algorithm, sa_mac_algorithm>;
 

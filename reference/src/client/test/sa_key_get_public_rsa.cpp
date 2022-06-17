@@ -28,7 +28,7 @@ namespace {
         auto clear_key = sample_rsa_1024_pkcs8_e3();
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -46,7 +46,7 @@ namespace {
         auto public_openssl = std::vector<uint8_t>(4096);
         auto rsa = rsa_import_pkcs8(clear_key);
         ASSERT_NE(rsa, nullptr);
-        ASSERT_TRUE(rsa_get_public(public_openssl, rsa));
+        ASSERT_TRUE(export_public_key(public_openssl, rsa));
 
         // compare public from OpenSSL and SecApi
         ASSERT_EQ(out, public_openssl);
@@ -56,7 +56,7 @@ namespace {
         auto clear_key = sample_rsa_1024_pkcs8();
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);

@@ -31,7 +31,7 @@ namespace {
         size_t length = digest_length(digest_algorithm);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_status status;
         std::vector<uint8_t> clear_key;
@@ -58,7 +58,7 @@ namespace {
 
     TEST(SaKeyDigestTest, failOutLengthNull) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto clear_key = random(SYM_128_KEY_SIZE);
         auto key = create_sa_key_symmetric(&rights, clear_key);
 
@@ -71,7 +71,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         std::vector<uint8_t> dhp2048 = sample_dh_p_2048();
         std::vector<uint8_t> dhg2048 = sample_dh_g_2048();
 
@@ -89,7 +89,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_ec parameters = {SA_ELLIPTIC_CURVE_NIST_P256};
         sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
@@ -102,7 +102,7 @@ namespace {
 
     TEST(SaKeyDigestTest, failRsa) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto rsa_key = sample_rsa_2048_pkcs8();
         sa_import_parameters_rsa_private_key_info rsa_parameters = {&rights};

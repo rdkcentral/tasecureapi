@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sa.h"
 #include "log.h"
+#include "sa.h"
 #include "ta_client.h"
 
 sa_status sa_svp_memory_alloc(

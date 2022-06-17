@@ -37,7 +37,7 @@ namespace {
                 SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_status status = sa_key_unwrap(nullptr, &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_CHACHA20_POLY1305, wrapping_parameters.get(), *wrapping_key,
@@ -74,7 +74,7 @@ namespace {
                 SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
@@ -95,7 +95,7 @@ namespace {
                 SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
@@ -109,7 +109,7 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
@@ -136,7 +136,7 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
@@ -164,7 +164,7 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
@@ -191,7 +191,7 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
@@ -218,7 +218,7 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
@@ -253,7 +253,7 @@ namespace {
                 SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
@@ -267,7 +267,7 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights wrapping_key_rights;
-        rights_set_allow_all(&wrapping_key_rights);
+        sa_rights_set_allow_all(&wrapping_key_rights);
         SA_USAGE_BIT_CLEAR(wrapping_key_rights.usage_flags, SA_USAGE_FLAG_UNWRAP);
         std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
@@ -285,7 +285,7 @@ namespace {
                 .tag_length = tag.size()};
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
@@ -298,7 +298,7 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights wrapping_key_rights;
-        rights_set_allow_all(&wrapping_key_rights);
+        sa_rights_set_allow_all(&wrapping_key_rights);
         wrapping_key_rights.not_before = time(nullptr) + 60;
         std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
@@ -316,7 +316,7 @@ namespace {
                 .tag_length = tag.size()};
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
@@ -329,7 +329,7 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights wrapping_key_rights;
-        rights_set_allow_all(&wrapping_key_rights);
+        sa_rights_set_allow_all(&wrapping_key_rights);
         wrapping_key_rights.not_on_or_after = time(nullptr) - 60;
         std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
@@ -347,7 +347,7 @@ namespace {
                 .tag_length = tag.size()};
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
@@ -358,12 +358,11 @@ namespace {
 
     TEST_F(SaKeyUnwrapChacha20Poly1305Test, failsWrappingKeyNotAes) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
-        auto key_size = ec_get_key_size(curve);
-        std::vector<uint8_t> wrapped_key = random_ec(AES_BLOCK_SIZE);
+        std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(key_size);
+        sa_rights_set_allow_all(&rights);
+        std::vector<uint8_t> clear_wrapping_key = ec_generate_key_bytes(curve);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_ec(&rights, curve, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
@@ -390,7 +389,7 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE + 1);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);

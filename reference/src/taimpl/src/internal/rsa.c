@@ -19,30 +19,13 @@
 #include "rsa.h" // NOLINT
 #include "digest_internal.h"
 #include "log.h"
+#include "pkcs8.h"
 #include "porting/memory.h"
 #include "stored_key_internal.h"
 #include <memory.h>
 #include <openssl/pem.h>
 
-static EVP_PKEY* rsa_import_pkcs8(
-        const void* in,
-        size_t in_length) {
-
-    if (in == NULL) {
-        ERROR("NULL pkcs8");
-        return NULL;
-    }
-
-    const unsigned char* in_bytes = (const unsigned char*) in;
-    EVP_PKEY* evp_pkey = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &in_bytes, (long) in_length);
-    if (evp_pkey == NULL) {
-        ERROR("d2i_PrivateKey failed");
-    }
-
-    return evp_pkey;
-}
-
-size_t rsa_validate_pkcs8(
+size_t rsa_validate_private(
         const void* in,
         size_t in_length) {
 
@@ -51,9 +34,9 @@ size_t rsa_validate_pkcs8(
         return 0;
     }
 
-    EVP_PKEY* evp_pkey = rsa_import_pkcs8(in, in_length);
+    EVP_PKEY* evp_pkey = evp_pkey_from_pkcs8(EVP_PKEY_RSA, in, in_length);
     if (evp_pkey == NULL) {
-        ERROR("rsa_import_pkcs8 failed");
+        ERROR("evp_pkey_from_pkcs8 failed");
         return 0;
     }
 
@@ -87,32 +70,37 @@ bool rsa_get_public(
         }
 
         size_t key_length = stored_key_get_length(stored_key);
-        evp_pkey = rsa_import_pkcs8(key, key_length);
-        int required_length = i2d_PublicKey(evp_pkey, NULL);
-        if (required_length <= 0) {
-            ERROR("i2d_PublicKey failed");
+        evp_pkey = evp_pkey_from_pkcs8(EVP_PKEY_RSA, key, key_length);
+        if (evp_pkey == NULL) {
+            ERROR("evp_pkey_from_pkcs8 failed");
+            break;
+        }
+
+        int length = i2d_PUBKEY(evp_pkey, NULL);
+        if (length <= 0) {
+            ERROR("i2d_PUBKEY failed");
             break;
         }
 
         if (out == NULL) {
-            *out_length = required_length;
+            *out_length = length;
             status = true;
             break;
         }
 
-        if (*out_length < (size_t) required_length) {
+        if (*out_length < (size_t) length) {
             ERROR("Bad out_length");
             break;
         }
 
-        unsigned char* buf = (uint8_t*) out;
-        int written = i2d_PublicKey(evp_pkey, &buf);
-        if (written <= 0) {
-            ERROR("i2d_PublicKey failed");
+        uint8_t* p_out = out;
+        length = i2d_PUBKEY(evp_pkey, &p_out);
+        if (length <= 0) {
+            ERROR("i2d_PUBKEY failed");
             break;
         }
 
-        *out_length = written;
+        *out_length = length;
         status = true;
     } while (false);
 
@@ -166,9 +154,9 @@ bool rsa_decrypt_pkcs1v15(
         }
 
         size_t key_length = stored_key_get_length(stored_key);
-        evp_pkey = rsa_import_pkcs8(key, key_length);
+        evp_pkey = evp_pkey_from_pkcs8(EVP_PKEY_RSA, key, key_length);
         if (evp_pkey == NULL) {
-            ERROR("rsa_import_pkcs8 failed");
+            ERROR("evp_pkey_from_pkcs8 failed");
             break;
         }
 
@@ -254,9 +242,9 @@ bool rsa_decrypt_oaep(
         }
 
         size_t key_length = stored_key_get_length(stored_key);
-        evp_pkey = rsa_import_pkcs8(key, key_length);
+        evp_pkey = evp_pkey_from_pkcs8(EVP_PKEY_RSA, key, key_length);
         if (evp_pkey == NULL) {
-            ERROR("rsa_import_pkcs8 failed");
+            ERROR("evp_pkey_from_pkcs8 failed");
             break;
         }
 
@@ -362,9 +350,9 @@ bool rsa_sign_pkcs1v15(
         }
 
         size_t key_length = stored_key_get_length(stored_key);
-        evp_pkey = rsa_import_pkcs8(key, key_length);
+        evp_pkey = evp_pkey_from_pkcs8(EVP_PKEY_RSA, key, key_length);
         if (evp_pkey == NULL) {
-            ERROR("rsa_import_pkcs8 failed");
+            ERROR("evp_pkey_from_pkcs8 failed");
             break;
         }
 
@@ -478,9 +466,9 @@ bool rsa_sign_pss(
         }
 
         size_t key_length = stored_key_get_length(stored_key);
-        evp_pkey = rsa_import_pkcs8(key, key_length);
+        evp_pkey = evp_pkey_from_pkcs8(EVP_PKEY_RSA, key, key_length);
         if (evp_pkey == NULL) {
-            ERROR("rsa_import_pkcs8 failed");
+            ERROR("evp_pkey_from_pkcs8 failed");
             break;
         }
 
