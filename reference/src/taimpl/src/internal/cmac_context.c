@@ -259,7 +259,7 @@ bool cmac_context_compute(
 }
 
 bool cmac_context_done(cmac_context_t* context) {
-    if (context) {
+    if (context != NULL) {
         return context->done;
     }
 

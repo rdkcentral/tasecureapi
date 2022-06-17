@@ -74,7 +74,7 @@ class SaEnginePkcs7Test : public ::testing::TestWithParam<SaEnginePkcs7TestType>
 class SaEnginePkcs7EdTest : public ::testing::TestWithParam<SaEnginePkcs7TestType>,
                             public SaEngineTest {};
 
-using SaEnginePkeyEncryptTestType = std::tuple<sa_key_type, size_t, int>;
+using SaEnginePkeyEncryptTestType = std::tuple<sa_key_type, size_t, int, sa_digest_algorithm, sa_digest_algorithm, int>;
 
 class SaEnginePkeyEncryptTest : public ::testing::TestWithParam<SaEnginePkeyEncryptTestType>,
                                 public SaEngineTest {};

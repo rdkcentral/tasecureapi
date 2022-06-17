@@ -649,9 +649,8 @@ static sa_status ta_sa_crypto_cipher_init_chacha20_poly1305(
     return status;
 }
 
-static sa_status ta_sa_crypto_cipher_init_rsa(
+static sa_status ta_sa_crypto_cipher_init_rsa_pkcs1v15(
         sa_crypto_cipher_context* context,
-        sa_cipher_algorithm cipher_algorithm,
         sa_cipher_mode cipher_mode,
         stored_key_t* stored_key,
         client_t* client,
@@ -694,27 +693,114 @@ static sa_status ta_sa_crypto_cipher_init_rsa(
         return SA_STATUS_BAD_PARAMETER;
     }
 
-    if (cipher_algorithm != SA_CIPHER_ALGORITHM_RSA_PKCS1V15 && cipher_algorithm != SA_CIPHER_ALGORITHM_RSA_OAEP) {
-        ERROR("Bad algorithm");
-        return SA_STATUS_BAD_PARAMETER;
-    }
-
     sa_status status;
     do {
-        status = rsa_verify_cipher(cipher_algorithm, cipher_mode, stored_key);
+        status = rsa_verify_cipher(SA_CIPHER_ALGORITHM_RSA_PKCS1V15, cipher_mode, stored_key);
         if (status != SA_STATUS_OK) {
             ERROR("rsa_verify_cipher failed");
             break;
         }
 
         cipher_store_t* cipher_store = client_get_cipher_store(client);
-        status = cipher_store_add_asymmetric_key(context, cipher_store, cipher_algorithm, cipher_mode, stored_key,
-                caller_uuid);
+        status = cipher_store_add_asymmetric_key(context, cipher_store, SA_CIPHER_ALGORITHM_RSA_PKCS1V15, cipher_mode,
+                stored_key, caller_uuid);
         if (status != SA_STATUS_OK) {
             ERROR("cipher_store_add_asymmetric_key failed");
             break;
         }
     } while (false);
+
+    return status;
+}
+
+static sa_status ta_sa_crypto_cipher_init_rsa_oaep(
+        sa_crypto_cipher_context* context,
+        sa_cipher_mode cipher_mode,
+        stored_key_t* stored_key,
+        sa_cipher_parameters_rsa_oaep* parameters,
+        client_t* client,
+        const sa_uuid* caller_uuid) {
+
+    if (context == NULL) {
+        ERROR("NULL context");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+    *context = INVALID_HANDLE;
+
+    if (stored_key == NULL) {
+        ERROR("NULL stored_key");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (parameters == NULL) {
+        ERROR("NULL parameters");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (parameters->label == NULL && parameters->label_length != 0) {
+        ERROR("Invalid label_length");
+        return SA_STATUS_BAD_PARAMETER;
+    }
+
+    const sa_header* header = stored_key_get_header(stored_key);
+    if (header == NULL) {
+        ERROR("stored_key_get_header failed");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (!key_type_supports_rsa(header->type, header->size)) {
+        ERROR("key_type_supports_rsa failed");
+        return SA_STATUS_BAD_KEY_TYPE;
+    }
+
+    if (client == NULL) {
+        ERROR("NULL client");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (caller_uuid == NULL) {
+        ERROR("NULL caller_uuid");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (cipher_mode != SA_CIPHER_MODE_DECRYPT) {
+        ERROR("Bad mode");
+        return SA_STATUS_BAD_PARAMETER;
+    }
+
+    sa_status status;
+    cipher_store_t* cipher_store = client_get_cipher_store(client);
+    cipher_t* cipher = NULL;
+    do {
+        status = rsa_verify_cipher(SA_CIPHER_ALGORITHM_RSA_OAEP, cipher_mode, stored_key);
+        if (status != SA_STATUS_OK) {
+            ERROR("rsa_verify_cipher failed");
+            break;
+        }
+
+        status = cipher_store_add_asymmetric_key(context, cipher_store, SA_CIPHER_ALGORITHM_RSA_OAEP, cipher_mode,
+                stored_key, caller_uuid);
+        if (status != SA_STATUS_OK) {
+            ERROR("cipher_store_add_asymmetric_key failed");
+            break;
+        }
+
+        status = cipher_store_acquire_exclusive(&cipher, cipher_store, *context, caller_uuid);
+        if (status != SA_STATUS_OK) {
+            ERROR("cipher_store_acquire_exclusive failed");
+            break;
+        }
+
+        status = cipher_set_oaep_parameters(cipher, parameters->digest_algorithm, parameters->mgf1_digest_algorithm,
+                parameters->label, parameters->label_length);
+        if (status != SA_STATUS_OK) {
+            ERROR("cipher_set_oaep_parameters failed");
+            break;
+        }
+    } while (false);
+
+    if (cipher != NULL)
+        cipher_store_release_exclusive(cipher_store, *context, cipher, caller_uuid);
 
     return status;
 }
@@ -905,12 +991,18 @@ sa_status ta_sa_crypto_cipher_init(
                 ERROR("ta_sa_crypto_cipher_init_chacha20_poly1305 failed");
                 break;
             }
-        } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15 ||
-                   cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
-            status = ta_sa_crypto_cipher_init_rsa(context, cipher_algorithm, cipher_mode, stored_key, client,
-                    caller_uuid);
+        } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15) {
+            status = ta_sa_crypto_cipher_init_rsa_pkcs1v15(context, cipher_mode, stored_key, client, caller_uuid);
             if (status != SA_STATUS_OK) {
                 ERROR("ta_sa_crypto_cipher_init_rsa failed");
+                break;
+            }
+        } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
+            status = ta_sa_crypto_cipher_init_rsa_oaep(context, cipher_mode, stored_key,
+                    (sa_cipher_parameters_rsa_oaep*) parameters, client,
+                    caller_uuid);
+            if (status != SA_STATUS_OK) {
+                ERROR("ta_sa_crypto_cipher_init_rsa_oaep failed");
                 break;
             }
         } else { // cipher_algorithm == SA_CIPHER_ALGORITHM_EC_ELGAMAL

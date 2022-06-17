@@ -400,12 +400,18 @@ namespace client_test_helpers {
      * @param[out] out output buffer.
      * @param[in] in input buffer.
      * @param[in] evp_pkey RSA key.
+     * @param[in] digest_algorithm the digest algorithm for OAEP padding.
+     * @param[in] mgf1_digest_algorithm the digest algorithm for the MGF1 function.
+     * @param[in] label the label for the OAEP padding. May be empty.
      * @return status of the operation.
      */
     bool encrypt_rsa_oaep_openssl(
             std::vector<uint8_t>& out,
             const std::vector<uint8_t>& in,
-            const std::shared_ptr<EVP_PKEY>& evp_pkey);
+            const std::shared_ptr<EVP_PKEY>& evp_pkey,
+            sa_digest_algorithm digest_algorithm,
+            sa_digest_algorithm mgf1_digest_algorithm,
+            const std::vector<uint8_t>& label);
 
     /**
      * Encrypt using RSA PKCS1v15 algorithm.

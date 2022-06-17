@@ -39,6 +39,10 @@ typedef struct {
     int pss_salt_length;
     EVP_MD_CTX* evp_md_ctx;
     const EVP_MD* evp_md;
+    const EVP_MD* oaep_md;
+    const EVP_MD* oaep_mgf1_md;
+    void* oaep_label;
+    int oaep_label_length;
     // Mac key signing
     sa_crypto_mac_context mac_context;
 } pkey_app_data;
@@ -100,13 +104,25 @@ static int pkey_init(EVP_PKEY_CTX* evp_pkey_ctx) {
         if (key_type == EVP_PKEY_RSA) {
             app_data->padding_mode = RSA_DEFAULT_PADDING_MODE;
             app_data->pss_salt_length = RSA_DEFAULT_PSS_SALT_LENGTH;
+            app_data->oaep_md = EVP_sha1();
+            app_data->oaep_mgf1_md = EVP_sha1();
+            app_data->oaep_label = NULL;
+            app_data->oaep_label_length = 0;
         } else {
             app_data->padding_mode = 0;
             app_data->pss_salt_length = 0;
+            app_data->oaep_md = NULL;
+            app_data->oaep_mgf1_md = NULL;
+            app_data->oaep_label = NULL;
+            app_data->oaep_label_length = 0;
         }
     } else {
         app_data->padding_mode = 0;
         app_data->pss_salt_length = 0;
+        app_data->oaep_md = NULL;
+        app_data->oaep_mgf1_md = NULL;
+        app_data->oaep_label = NULL;
+        app_data->oaep_label_length = 0;
     }
 
     app_data->evp_md_ctx = NULL;
@@ -137,6 +153,22 @@ static int pkey_copy(
     new_app_data->pss_salt_length = app_data->pss_salt_length;
     new_app_data->evp_md_ctx = app_data->evp_md_ctx;
     new_app_data->evp_md = app_data->evp_md;
+    new_app_data->oaep_md = app_data->oaep_md;
+    new_app_data->oaep_mgf1_md = app_data->oaep_mgf1_md;
+    if (app_data->oaep_label_length > 0) {
+        new_app_data->oaep_label = OPENSSL_malloc(app_data->oaep_label_length);
+        if (new_app_data->oaep_label == NULL) {
+            ERROR("OPENSSL_malloc failed");
+            return 0;
+        }
+
+        memcpy(new_app_data->oaep_label, app_data->oaep_label, app_data->oaep_label_length);
+        new_app_data->oaep_label_length = app_data->oaep_label_length;
+    } else {
+        new_app_data->oaep_label = NULL;
+        new_app_data->oaep_label_length = 0;
+    }
+
     new_app_data->mac_context = app_data->mac_context;
     EVP_PKEY_CTX_set_app_data(dst_evp_pkey_ctx, new_app_data);
     return 1;
@@ -144,6 +176,9 @@ static int pkey_copy(
 
 static void pkey_cleanup(EVP_PKEY_CTX* evp_pkey_ctx) {
     pkey_app_data* app_data = EVP_PKEY_CTX_get_app_data(evp_pkey_ctx);
+    if (app_data->oaep_label != NULL)
+        OPENSSL_free(app_data->oaep_label);
+
     if (app_data != NULL)
         OPENSSL_free(app_data);
 }
@@ -766,7 +801,6 @@ static int pkey_encrypt(
     EVP_PKEY* encrypt_pkey = NULL;
     EVP_PKEY_CTX* encrypt_pkey_ctx = NULL;
     do {
-
         const pkey_data* data = sa_get_pkey_data(evp_pkey);
         if (data == NULL) {
             ERROR("sa_get_pkey_data failed");
@@ -795,8 +829,35 @@ static int pkey_encrypt(
             break;
         }
 
+        if (app_data->padding_mode == RSA_PKCS1_OAEP_PADDING) {
+            if (EVP_PKEY_CTX_set_rsa_oaep_md(encrypt_pkey_ctx, app_data->oaep_md) != 1) {
+                ERROR("EVP_PKEY_CTX_set_rsa_oaep_md failed");
+                break;
+            }
+
+            if (EVP_PKEY_CTX_set_rsa_mgf1_md(encrypt_pkey_ctx, app_data->oaep_mgf1_md) != 1) {
+                ERROR("EVP_PKEY_CTX_set_rsa_mgf1_md failed");
+                break;
+            }
+
+            if (app_data->oaep_label != NULL && app_data->oaep_label_length > 0) {
+                uint8_t* new_label = OPENSSL_malloc(app_data->oaep_label_length);
+                if (new_label == NULL) {
+                    ERROR("OPENSSL_malloc failed");
+                    break;
+                }
+
+                memcpy(new_label, app_data->oaep_label, app_data->oaep_label_length);
+                if (EVP_PKEY_CTX_set0_rsa_oaep_label(encrypt_pkey_ctx, new_label, app_data->oaep_label_length) != 1) {
+                    OPENSSL_free(new_label);
+                    ERROR("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
+                    break;
+                }
+            }
+        }
+
         if (EVP_PKEY_encrypt(encrypt_pkey_ctx, out, out_length, in, in_length) != 1) {
-            ERROR("EVP_PKEY_encrypt");
+            ERROR("EVP_PKEY_encrypt failed");
             break;
         }
 
@@ -850,14 +911,22 @@ static int pkey_decrypt(
     }
 
     sa_cipher_algorithm cipher_algorithm;
-    if (app_data->padding_mode == RSA_PKCS1_OAEP_PADDING)
+    sa_cipher_parameters_rsa_oaep parameters_rsa_oaep;
+    void* parameters = NULL;
+    if (app_data->padding_mode == RSA_PKCS1_OAEP_PADDING) {
         cipher_algorithm = SA_CIPHER_ALGORITHM_RSA_OAEP;
-    else
+        parameters_rsa_oaep.digest_algorithm = get_digest_algorithm(app_data->oaep_md);
+        parameters_rsa_oaep.mgf1_digest_algorithm = get_digest_algorithm(app_data->oaep_mgf1_md);
+        parameters_rsa_oaep.label = app_data->oaep_label;
+        parameters_rsa_oaep.label_length = app_data->oaep_label_length;
+        parameters = &parameters_rsa_oaep;
+    } else {
         cipher_algorithm = SA_CIPHER_ALGORITHM_RSA_PKCS1V15;
+    }
 
     sa_crypto_cipher_context cipher_context;
     sa_status status = sa_crypto_cipher_init(&cipher_context, cipher_algorithm, SA_CIPHER_MODE_DECRYPT,
-            data->private_key, NULL);
+            data->private_key, parameters);
     if (status != SA_STATUS_OK) {
         ERROR("sa_crypto_cipher_init failed");
         return 0;
@@ -1164,6 +1233,35 @@ static int pkey_ctrl(
                 return 0;
             }
 
+            break;
+
+        case EVP_PKEY_CTRL_RSA_OAEP_MD:
+            if (p2 == NULL) {
+                ERROR("oaep_md is NULL");
+                return 0;
+            }
+
+            app_data->oaep_md = p2;
+            break;
+
+        case EVP_PKEY_CTRL_RSA_MGF1_MD:
+            if (p2 == NULL) {
+                ERROR("oaep_mgf1_md is NULL");
+                return 0;
+            }
+
+            app_data->oaep_mgf1_md = p2;
+            break;
+
+        case EVP_PKEY_CTRL_RSA_OAEP_LABEL:
+            if (p2 == NULL && p1 > 0) {
+                ERROR("oaep_label is NULL");
+                return 0;
+            }
+
+            // Take ownership of label.
+            app_data->oaep_label = p2;
+            app_data->oaep_label_length = p1;
             break;
 
         default:

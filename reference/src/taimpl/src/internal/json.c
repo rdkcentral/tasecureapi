@@ -19,8 +19,8 @@
 #include "json.h"
 #include "log.h"
 #include "porting/memory.h"
+#include <memory.h>
 #include <openssl/evp.h>
-#include <string.h>
 #include <yajl/yajl_parse.h>
 #include <yajl/yajl_version.h>
 
@@ -319,7 +319,7 @@ static json_stack_t* json_stack_pop(
     json_stack_t* new_top = top->previous;
     top->previous = NULL;
 
-    if (value) {
+    if (value != NULL) {
         *value = top->value;
         top->value = NULL;
     }
@@ -999,7 +999,7 @@ json_value_t** json_value_as_array(
         values_array[i] = array_payload->value;
     }
 
-    if (count) {
+    if (count != NULL) {
         *count = size;
     }
 
@@ -1036,7 +1036,7 @@ json_key_value_t* json_value_as_map(
         map_key_values[i].value = map_payload->value;
     }
 
-    if (count) {
+    if (count != NULL) {
         *count = size;
     }
 
@@ -1080,7 +1080,7 @@ const char* json_value_as_string(
         return NULL;
     }
 
-    if (size) {
+    if (size != NULL) {
         *size = value->payload_length;
     }
 

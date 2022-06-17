@@ -25,10 +25,13 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_P(SaKeyUnwrapTest, nominal) {
-        auto key_size = std::get<0>(GetParam());
-        auto key_type = std::get<1>(GetParam());
-        auto wrapping_algorithm = std::get<2>(GetParam());
-        auto wrapping_key_size = std::get<3>(GetParam());
+        auto key_size = std::get<0>(std::get<0>(GetParam()));
+        auto key_type = std::get<1>(std::get<0>(GetParam()));
+        auto wrapping_algorithm = std::get<0>(std::get<1>(GetParam()));
+        auto wrapping_key_size = std::get<1>(std::get<1>(GetParam()));
+        auto oaep_digest_algorithm = std::get<2>(std::get<1>(GetParam()));
+        auto oaep_mgf1_digest_algorithm = std::get<3>(std::get<1>(GetParam()));
+        auto oaep_label_length = std::get<4>(std::get<1>(GetParam()));
 
         std::vector<uint8_t> clear_key;
         auto curve = static_cast<sa_elliptic_curve>(UINT8_MAX);
@@ -55,7 +58,7 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters, wrapping_key_size,
-                clear_key, wrapping_algorithm));
+                clear_key, wrapping_algorithm, oaep_digest_algorithm, oaep_mgf1_digest_algorithm, oaep_label_length));
 
         sa_rights rights;
         rights_set_allow_all(&rights);

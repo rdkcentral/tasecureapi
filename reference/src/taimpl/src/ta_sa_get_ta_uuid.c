@@ -18,7 +18,7 @@
 
 #include "log.h"
 #include "ta_sa.h"
-#include <string.h>
+#include <memory.h>
 
 sa_status ta_sa_get_ta_uuid(
         sa_uuid* uuid,

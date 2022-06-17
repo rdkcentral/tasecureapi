@@ -182,7 +182,7 @@ static void client_store_global_create() {
 client_store_t* client_store_global() {
     static client_store_t* global = NULL;
 
-    if (global) {
+    if (global != NULL) {
         if (global_shutdown)
             return NULL;
 
@@ -198,7 +198,7 @@ client_store_t* client_store_global() {
 
     do {
         // someone may have created an instance underneath us
-        if (global) {
+        if (global != NULL) {
             break;
         }
 

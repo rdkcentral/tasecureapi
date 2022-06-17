@@ -32,7 +32,8 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                RSA_2048_BYTE_LENGTH, clear_key, cipher_algorithm));
+                RSA_2048_BYTE_LENGTH, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1,
+                0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -50,7 +51,8 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                RSA_2048_BYTE_LENGTH, clear_key, cipher_algorithm));
+                RSA_2048_BYTE_LENGTH, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1,
+                0));
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
@@ -67,7 +69,8 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                RSA_2048_BYTE_LENGTH, clear_key, cipher_algorithm));
+                RSA_2048_BYTE_LENGTH, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1,
+                0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -87,7 +90,8 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                RSA_2048_BYTE_LENGTH, clear_key, cipher_algorithm));
+                RSA_2048_BYTE_LENGTH, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1,
+                0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -107,7 +111,8 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                RSA_2048_BYTE_LENGTH, clear_key, cipher_algorithm));
+                RSA_2048_BYTE_LENGTH, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1,
+                0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -134,8 +139,15 @@ namespace {
         rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
+        void* parameters = NULL;
+        sa_unwrap_parameters_rsa_oaep parameters_rsa_oaep;
+        if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
+            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+            parameters = &parameters_rsa_oaep;
+        }
+
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, cipher_algorithm,
-                nullptr, *wrapping_key, wrapped_key.data(), wrapped_key.size());
+                parameters, *wrapping_key, wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
@@ -154,8 +166,15 @@ namespace {
         rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
+        void* parameters = NULL;
+        sa_unwrap_parameters_rsa_oaep parameters_rsa_oaep;
+        if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
+            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+            parameters = &parameters_rsa_oaep;
+        }
+
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, cipher_algorithm,
-                nullptr, *wrapping_key, wrapped_key.data(), wrapped_key.size());
+                parameters, *wrapping_key, wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
@@ -174,8 +193,15 @@ namespace {
         rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
+        void* parameters = NULL;
+        sa_unwrap_parameters_rsa_oaep parameters_rsa_oaep;
+        if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
+            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+            parameters = &parameters_rsa_oaep;
+        }
+
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, cipher_algorithm,
-                nullptr, *wrapping_key, wrapped_key.data(), wrapped_key.size());
+                parameters, *wrapping_key, wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
@@ -193,8 +219,15 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
+        void* parameters = NULL;
+        sa_unwrap_parameters_rsa_oaep parameters_rsa_oaep;
+        if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
+            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+            parameters = &parameters_rsa_oaep;
+        }
+
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, cipher_algorithm,
-                nullptr, *wrapping_key, wrapped_key.data(), wrapped_key.size());
+                parameters, *wrapping_key, wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
     }
 
@@ -210,8 +243,15 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
+        void* parameters = NULL;
+        sa_unwrap_parameters_rsa_oaep parameters_rsa_oaep;
+        if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
+            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+            parameters = &parameters_rsa_oaep;
+        }
+
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, cipher_algorithm,
-                nullptr, *wrapping_key, wrapped_key.data(), wrapped_key.size());
+                parameters, *wrapping_key, wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
     }
 } // namespace

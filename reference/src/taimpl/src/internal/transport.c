@@ -18,7 +18,7 @@
 
 #include "transport.h" // NOLINT
 #include "log.h"
-#include <string.h>
+#include <memory.h>
 
 sa_status transport_authenticate_caller(sa_uuid* uuid) {
     if (uuid == NULL) {

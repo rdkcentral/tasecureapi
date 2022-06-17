@@ -29,7 +29,7 @@ static void* openssl_secure_malloc(size_t size, const char* file, int line) {
 #endif
     void* buffer = memory_secure_alloc(size);
 
-    if (buffer) {
+    if (buffer != NULL) {
         memory_memset_unoptimizable(buffer, 0, size);
     }
 

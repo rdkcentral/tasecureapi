@@ -1858,7 +1858,7 @@ namespace client_test_helpers {
             return false;
         }
 
-        if (!encrypt_rsa_oaep_openssl(in, clear, rsa)) {
+        if (!encrypt_rsa_oaep_openssl(in, clear, rsa, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, {})) {
             ERROR("encrypt_rsa_oaep_openssl failed");
             return false;
         }
@@ -1869,8 +1869,9 @@ namespace client_test_helpers {
             return false;
         }
 
+        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
         if (sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_RSA_OAEP, SA_CIPHER_MODE_DECRYPT, key,
-                    nullptr) != SA_STATUS_OK) {
+                    &parameters) != SA_STATUS_OK) {
             ERROR("sa_crypto_cipher_init failed");
             return false;
         }
@@ -1924,7 +1925,7 @@ namespace client_test_helpers {
         }
 
         auto encrypted = std::vector<uint8_t>(EVP_PKEY_bits(rsa.get()) / 8);
-        if (!encrypt_rsa_oaep_openssl(encrypted, clear, rsa)) {
+        if (!encrypt_rsa_oaep_openssl(encrypted, clear, rsa, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, {})) {
             ERROR("encrypt_rsa_oaep_openssl failed");
             return false;
         }
@@ -1938,8 +1939,9 @@ namespace client_test_helpers {
             return false;
         }
 
+        sa_unwrap_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
         if (sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, SA_CIPHER_ALGORITHM_RSA_OAEP,
-                    nullptr, key, encrypted.data(), encrypted.size()) != SA_STATUS_OK) {
+                    &parameters, key, encrypted.data(), encrypted.size()) != SA_STATUS_OK) {
             ERROR("sa_key_unwrap failed");
             return false;
         }
@@ -2871,11 +2873,15 @@ namespace client_test_helpers {
     bool encrypt_rsa_oaep_openssl(
             std::vector<uint8_t>& out,
             const std::vector<uint8_t>& in,
-            const std::shared_ptr<EVP_PKEY>& evp_pkey) {
+            const std::shared_ptr<EVP_PKEY>& evp_pkey,
+            sa_digest_algorithm digest_algorithm,
+            sa_digest_algorithm mgf1_digest_algorithm,
+            const std::vector<uint8_t>& label) {
 
+        size_t digest_len = digest_length(digest_algorithm);
         size_t key_size = EVP_PKEY_bits(evp_pkey.get()) / 8;
         out.resize(key_size);
-        if (in.size() > key_size - RSA_OAEP_PADDING_SIZE) {
+        if (in.size() > key_size - 2 * digest_len - 1) {
             ERROR("Bad in.size()");
             return false;
         }
@@ -2896,6 +2902,31 @@ namespace client_test_helpers {
             return false;
         }
 
+        if (EVP_PKEY_CTX_set_rsa_oaep_md(evp_pkey_ctx.get(), digest_mechanism(digest_algorithm)) != 1) {
+            ERROR("EVP_PKEY_CTX_set_rsa_oaep_md failed");
+            return false;
+        }
+
+        if (EVP_PKEY_CTX_set_rsa_mgf1_md(evp_pkey_ctx.get(), digest_mechanism(mgf1_digest_algorithm)) != 1) {
+            ERROR("EVP_PKEY_CTX_set_rsa_mgf1_md failed");
+            return false;
+        }
+
+        if (!label.empty()) {
+            void* new_label = malloc(label.size());
+            if (new_label == NULL) {
+                ERROR("malloc failed");
+                return false;
+            }
+
+            memcpy(new_label, label.data(), label.size());
+            if (EVP_PKEY_CTX_set0_rsa_oaep_label(evp_pkey_ctx.get(), new_label, label.size()) != 1) {
+                free(new_label);
+                ERROR("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
+                return false;
+            }
+        }
+
         size_t out_length = out.size();
         if (EVP_PKEY_encrypt(evp_pkey_ctx.get(), out.data(), &out_length, in.data(), in.size()) != 1) {
             ERROR("EVP_PKEY_encrypt failed");
@@ -2912,7 +2943,7 @@ namespace client_test_helpers {
 
         size_t key_size = EVP_PKEY_bits(evp_pkey.get()) / 8;
         out.resize(key_size);
-        if (in.size() > key_size - RSA_OAEP_PADDING_SIZE) {
+        if (in.size() > key_size - RSA_PKCS1_PADDING_SIZE) {
             ERROR("Bad in.size()");
             return false;
         }

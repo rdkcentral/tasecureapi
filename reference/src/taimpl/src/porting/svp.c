@@ -22,7 +22,7 @@
 #include "porting/memory.h"
 #include "porting/otp_internal.h"
 #include "stored_key_internal.h"
-#include <string.h>
+#include <memory.h>
 
 // An SVP buffer contains a pointer to the SVP memory region and its size.
 struct svp_buffer_s {
@@ -215,7 +215,7 @@ bool svp_key_check(
         status = true;
     } while (false);
 
-    if (decrypted) {
+    if (decrypted != NULL) {
         memory_memset_unoptimizable(decrypted, 0, bytes_to_process);
         memory_internal_free(decrypted);
     }

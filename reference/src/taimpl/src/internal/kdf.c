@@ -24,7 +24,7 @@
 #include "log.h"
 #include "porting/memory.h"
 #include "stored_key_internal.h"
-#include <string.h>
+#include <memory.h>
 
 bool kdf_hkdf_hmac(
         stored_key_t** stored_key_derived,

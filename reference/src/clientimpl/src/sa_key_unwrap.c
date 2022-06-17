@@ -247,6 +247,136 @@ sa_status sa_key_unwrap(
                     param3_size = 0;
                     param3_type = TA_PARAM_NULL;
                 }
+
+                break;
+
+            case SA_CIPHER_ALGORITHM_CHACHA20:
+                if (algorithm_parameters == NULL) {
+                    ERROR("NULL algorithm_parameters");
+                    status = SA_STATUS_NULL_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                sa_unwrap_parameters_chacha20* parameters_chacha20 =
+                        (sa_unwrap_parameters_chacha20*) algorithm_parameters;
+                if (parameters_chacha20->counter == NULL) {
+                    ERROR("NULL counter");
+                    status = SA_STATUS_NULL_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                if (parameters_chacha20->counter_length != CHACHA20_COUNTER_LENGTH) {
+                    ERROR("counter_length is not 4");
+                    status = SA_STATUS_BAD_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                if (parameters_chacha20->nonce == NULL) {
+                    ERROR("NULL nonce");
+                    status = SA_STATUS_NULL_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                if (parameters_chacha20->nonce_length != CHACHA20_NONCE_LENGTH) {
+                    ERROR("nonce_length is not 12");
+                    status = SA_STATUS_BAD_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                CREATE_COMMAND(sa_unwrap_parameters_chacha20_s, param2);
+                if (param2 == NULL) {
+                    ERROR("CREATE_COMMAND failed");
+                    status = SA_STATUS_INTERNAL_ERROR;
+                    continue; // NOLINT
+                }
+
+                sa_unwrap_parameters_chacha20_s* parameters_chacha20_s = (sa_unwrap_parameters_chacha20_s*) param2;
+                memcpy(parameters_chacha20_s->counter, parameters_chacha20->counter,
+                        parameters_chacha20->counter_length);
+                parameters_chacha20_s->counter_length = parameters_chacha20->counter_length;
+                memcpy(parameters_chacha20_s->nonce, parameters_chacha20->nonce,
+                        parameters_chacha20->nonce_length);
+                parameters_chacha20_s->nonce_length = parameters_chacha20->nonce_length;
+                param2_size = sizeof(sa_unwrap_parameters_chacha20_s);
+                param2_type = TA_PARAM_IN;
+
+                param3_size = 0;
+                param3_type = TA_PARAM_NULL;
+                break;
+
+            case SA_CIPHER_ALGORITHM_CHACHA20_POLY1305:
+                if (algorithm_parameters == NULL) {
+                    ERROR("NULL algorithm_parameters");
+                    status = SA_STATUS_NULL_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                sa_unwrap_parameters_chacha20_poly1305* parameters_chacha20_poly1305 =
+                        (sa_unwrap_parameters_chacha20_poly1305*) algorithm_parameters;
+                if (parameters_chacha20_poly1305->nonce == NULL) {
+                    ERROR("NULL nonce");
+                    status = SA_STATUS_NULL_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                if (parameters_chacha20_poly1305->nonce_length != CHACHA20_NONCE_LENGTH) {
+                    ERROR("nonce_length is not 12");
+                    status = SA_STATUS_BAD_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                if (parameters_chacha20_poly1305->tag == NULL) {
+                    ERROR("NULL tag");
+                    status = SA_STATUS_NULL_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                if (parameters_chacha20_poly1305->tag_length != AES_BLOCK_SIZE) {
+                    ERROR("tag_length is not 16");
+                    status = SA_STATUS_BAD_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                if (parameters_chacha20_poly1305->aad == NULL && parameters_chacha20_poly1305->aad_length > 0) {
+                    ERROR("NULL aad");
+                    status = SA_STATUS_NULL_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                CREATE_COMMAND(sa_unwrap_parameters_chacha20_poly1305_s, param2);
+                if (param2 == NULL) {
+                    ERROR("CREATE_COMMAND failed");
+                    status = SA_STATUS_INTERNAL_ERROR;
+                    continue; // NOLINT
+                }
+
+                sa_unwrap_parameters_chacha20_poly1305_s* parameters_chacha20_poly1305_s =
+                        (sa_unwrap_parameters_chacha20_poly1305_s*) param2;
+                memcpy(parameters_chacha20_poly1305_s->nonce, parameters_chacha20_poly1305->nonce,
+                        parameters_chacha20_poly1305->nonce_length);
+                parameters_chacha20_poly1305_s->nonce_length = parameters_chacha20_poly1305->nonce_length;
+                memcpy(parameters_chacha20_poly1305_s->tag, parameters_chacha20_poly1305->tag,
+                        parameters_chacha20_poly1305->tag_length);
+                parameters_chacha20_poly1305_s->tag_length = parameters_chacha20_poly1305->tag_length;
+                param2_size = sizeof(sa_unwrap_parameters_chacha20_poly1305_s);
+                param2_type = TA_PARAM_IN;
+
+                if (parameters_chacha20_poly1305->aad != NULL) {
+                    CREATE_PARAM(param3, (void*) parameters_chacha20_poly1305->aad,
+                            parameters_chacha20_poly1305->aad_length);
+                    if (param3 == NULL) {
+                        ERROR("CREATE_PARAM failed");
+                        status = SA_STATUS_INTERNAL_ERROR;
+                        continue; // NOLINT
+                    }
+
+                    param3_size = parameters_chacha20_poly1305->aad_length;
+                    param3_type = TA_PARAM_IN;
+                } else {
+                    param3_size = 0;
+                    param3_type = TA_PARAM_NULL;
+                }
+
                 break;
 
             case SA_CIPHER_ALGORITHM_EC_ELGAMAL:
@@ -278,11 +408,56 @@ sa_status sa_key_unwrap(
             case SA_CIPHER_ALGORITHM_AES_ECB:
             case SA_CIPHER_ALGORITHM_AES_ECB_PKCS7:
             case SA_CIPHER_ALGORITHM_RSA_PKCS1V15:
-            case SA_CIPHER_ALGORITHM_RSA_OAEP:
                 param2_size = 0;
                 param2_type = TA_PARAM_NULL;
                 param3_size = 0;
                 param3_type = TA_PARAM_NULL;
+                break;
+
+            case SA_CIPHER_ALGORITHM_RSA_OAEP:
+                if (algorithm_parameters == NULL) {
+                    ERROR("NULL algorithm_parameters");
+                    status = SA_STATUS_NULL_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                sa_unwrap_parameters_rsa_oaep* parameters_rsa_oaep =
+                        (sa_unwrap_parameters_rsa_oaep*) algorithm_parameters;
+                if (parameters_rsa_oaep->label == NULL && parameters_rsa_oaep->label_length != 0) {
+                    ERROR("NULL label");
+                    status = SA_STATUS_NULL_PARAMETER;
+                    continue; // NOLINT
+                }
+
+                CREATE_COMMAND(sa_unwrap_parameters_rsa_oaep_s, param2);
+                if (param2 == NULL) {
+                    ERROR("CREATE_COMMAND failed");
+                    status = SA_STATUS_INTERNAL_ERROR;
+                    continue; // NOLINT
+                }
+
+                sa_unwrap_parameters_rsa_oaep_s* parameters_rsa_oaep_s = (sa_unwrap_parameters_rsa_oaep_s*) param2;
+                parameters_rsa_oaep_s->digest_algorithm = parameters_rsa_oaep->digest_algorithm;
+                parameters_rsa_oaep_s->mgf1_digest_algorithm = parameters_rsa_oaep->mgf1_digest_algorithm;
+
+                param2_size = sizeof(sa_unwrap_parameters_rsa_oaep_s);
+                param2_type = TA_PARAM_IN;
+                if (parameters_rsa_oaep->label != NULL) {
+                    CREATE_PARAM(param3, (void*) parameters_rsa_oaep->label,
+                            parameters_rsa_oaep_s->label_length);
+                    if (param3 == NULL) {
+                        ERROR("CREATE_PARAM failed");
+                        status = SA_STATUS_INTERNAL_ERROR;
+                        continue; // NOLINT
+                    }
+
+                    param3_size = parameters_rsa_oaep->label_length;
+                    param3_type = TA_PARAM_IN;
+                } else {
+                    param3_size = 0;
+                    param3_type = TA_PARAM_NULL;
+                }
+
                 break;
 
             default:

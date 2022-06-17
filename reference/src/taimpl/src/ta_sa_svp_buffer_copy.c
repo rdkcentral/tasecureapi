@@ -77,10 +77,10 @@ sa_status ta_sa_svp_buffer_copy(
         *in_offset += in_length;
     } while (false);
 
-    if (in_svp)
+    if (in_svp != NULL)
         svp_store_release_exclusive(svp_store, in, in_svp, caller_uuid);
 
-    if (out_svp)
+    if (out_svp != NULL)
         svp_store_release_exclusive(svp_store, out, out_svp, caller_uuid);
 
     client_store_release(client_store, client_slot, client, caller_uuid);

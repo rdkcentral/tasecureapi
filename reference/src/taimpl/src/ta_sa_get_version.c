@@ -19,7 +19,7 @@
 #include "log.h"
 #include "saimpl.h"
 #include "ta_sa.h"
-#include <string.h>
+#include <memory.h>
 
 sa_status ta_sa_get_version(
         sa_version* version,

@@ -129,7 +129,7 @@ sa_status ta_sa_crypto_mac_compute(
         status = SA_STATUS_OK;
     } while (false);
 
-    if (mac)
+    if (mac != NULL)
         mac_store_release_exclusive(mac_store, context, mac, caller_uuid);
 
     client_store_release(client_store, client_slot, client, caller_uuid);

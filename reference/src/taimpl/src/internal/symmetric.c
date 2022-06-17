@@ -23,8 +23,8 @@
 #include "porting/rand.h"
 #include "sa_types.h"
 #include "stored_key_internal.h"
+#include <memory.h>
 #include <openssl/evp.h>
-#include <string.h>
 
 struct symmetric_context_s {
     sa_cipher_algorithm cipher_algorithm;
@@ -425,7 +425,7 @@ symmetric_context_t* symmetric_create_aes_gcm_encrypt_context(
         }
 
         // set aad
-        if (aad) {
+        if (aad != NULL) {
             int out_length = 0;
             if (EVP_EncryptUpdate(context->evp_cipher, NULL, &out_length, aad, (int) aad_length) != 1) {
                 ERROR("EVP_EncryptUpdate failed");
@@ -630,7 +630,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_encrypt_context(
         }
 
         // set aad
-        if (aad) {
+        if (aad != NULL) {
             int out_length = 0;
             if (EVP_EncryptUpdate(context->evp_cipher, NULL, &out_length, aad, (int) aad_length) != 1) {
                 ERROR("EVP_EncryptUpdate failed");
@@ -974,7 +974,7 @@ symmetric_context_t* symmetric_create_aes_gcm_decrypt_context(
         }
 
         // set aad
-        if (aad) {
+        if (aad != NULL) {
             int out_length = 0;
             if (EVP_DecryptUpdate(context->evp_cipher, NULL, &out_length, aad, (int) aad_length) != 1) {
                 ERROR("EVP_DecryptUpdate failed");
@@ -1179,7 +1179,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_decrypt_context(
         }
 
         // set aad
-        if (aad) {
+        if (aad != NULL) {
             int out_length = 0;
             if (EVP_DecryptUpdate(context->evp_cipher, NULL, &out_length, aad, (int) aad_length) != 1) {
                 ERROR("EVP_DecryptUpdate failed");

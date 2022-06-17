@@ -26,7 +26,7 @@
 #include "porting/memory.h"
 #include "rights.h"
 #include "ta_sa.h"
-#include <string.h>
+#include <memory.h>
 
 static sa_status ta_sa_key_exchange_dh(
         sa_key* key,
@@ -125,7 +125,7 @@ static sa_status ta_sa_key_exchange_dh(
         }
     } while (false);
 
-    if (other_public_bytes) {
+    if (other_public_bytes != NULL) {
         memory_memset_unoptimizable(other_public_bytes, 0, modulus_size);
         memory_internal_free(other_public_bytes);
     }
@@ -398,7 +398,7 @@ static sa_status ta_sa_key_exchange_netflix_dh(
         }
     } while (false);
 
-    if (other_public_bytes) {
+    if (other_public_bytes != NULL) {
         memory_memset_unoptimizable(other_public_bytes, 0, modulus_size);
         memory_internal_free(other_public_bytes);
     }

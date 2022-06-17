@@ -89,6 +89,40 @@ size_t cipher_get_key_size(const cipher_t* cipher);
 const sa_rights* cipher_get_key_rights(const cipher_t* cipher);
 
 /**
+ * Sets the OAEP parameters on the cipher context.
+ *
+ * @param[in] cipher the cipher context.
+ * @param[in] digest_algorithm the digest algorithm of the OAEP padding.
+ * @param[in] mgf1_digest_algorithm the digest algorithm fo the MGF1 function.
+ * @param[in] label the label for the OAEP padding. May be NULL.
+ * @param[in] label_length the length of the label. Must be0 if label is NULL.
+ * @return SA_STATUS_OK if success.
+ */
+sa_status cipher_set_oaep_parameters(
+        cipher_t* cipher,
+        sa_digest_algorithm digest_algorithm,
+        sa_digest_algorithm mgf1_digest_algorithm,
+        void* label,
+        size_t label_length);
+
+/**
+ * Gets the OAEP parameters on the cipher context.
+ *
+ * @param[in] cipher the cipher context.
+ * @param[out] digest_algorithm the digest algorithm of the OAEP padding.
+ * @param[out] mgf1_digest_algorithm the digest algorithm fo the MGF1 function.
+ * @param[out] label the label for the OAEP padding. May be NULL.
+ * @param[out] label_length the length of the label. Must be0 if label is NULL.
+ * @return SA_STATUS_OK if success.
+ */
+sa_status cipher_get_oaep_parameters(
+        const cipher_t* cipher,
+        sa_digest_algorithm* digest_algorithm,
+        sa_digest_algorithm* mgf1_digest_algorithm,
+        const void** label,
+        size_t* label_length);
+
+/**
  * Create and initialize a new cipher store.
  *
  * @param[in] size number of cipher slots in the store.

@@ -20,6 +20,7 @@
 #include "cipher_store.h"
 #include "client_store.h"
 #include "common.h"
+#include "digest.h"
 #include "ec.h"
 #include "log.h"
 #include "rights.h"
@@ -29,7 +30,9 @@
 static size_t get_required_length(
         cipher_t* cipher,
         size_t bytes_to_process,
-        bool apply_padding) {
+        bool apply_padding,
+        sa_digest_algorithm digest_algorithm,
+        sa_digest_algorithm mgf1_digest_algorithm) {
     sa_cipher_algorithm cipher_algorithm = cipher_get_algorithm(cipher);
 
     switch (cipher_algorithm) {
@@ -46,11 +49,7 @@ static size_t get_required_length(
             return bytes_to_process + (apply_padding ? AES_BLOCK_SIZE : 0);
 
         case SA_CIPHER_ALGORITHM_RSA_PKCS1V15:
-            return cipher_get_key_size(cipher) - RSA_PKCS1_PADDING_SIZE;
-
         case SA_CIPHER_ALGORITHM_RSA_OAEP:
-            return cipher_get_key_size(cipher) - RSA_OAEP_PADDING_SIZE;
-
         case SA_CIPHER_ALGORITHM_EC_ELGAMAL:
             return cipher_get_key_size(cipher);
 
@@ -143,6 +142,7 @@ static sa_status ta_sa_crypto_cipher_process_symmetric(
 
 static sa_status ta_sa_crypto_cipher_process_rsa_pkcs1v15(
         void* out,
+        size_t out_length,
         cipher_t* cipher,
         const void* in,
         size_t* bytes_to_process,
@@ -196,7 +196,6 @@ static sa_status ta_sa_crypto_cipher_process_rsa_pkcs1v15(
         return SA_STATUS_OPERATION_NOT_ALLOWED;
     }
 
-    size_t out_length = *bytes_to_process;
     const stored_key_t* stored_key = cipher_get_stored_key(cipher);
     if (stored_key == NULL) {
         ERROR("cipher_get_stored_key failed");
@@ -214,6 +213,7 @@ static sa_status ta_sa_crypto_cipher_process_rsa_pkcs1v15(
 
 static sa_status ta_sa_crypto_cipher_process_rsa_oaep(
         void* out,
+        size_t out_length,
         cipher_t* cipher,
         const void* in,
         size_t* bytes_to_process,
@@ -272,14 +272,24 @@ static sa_status ta_sa_crypto_cipher_process_rsa_oaep(
         return SA_STATUS_OPERATION_NOT_ALLOWED;
     }
 
-    size_t out_length = *bytes_to_process;
     const stored_key_t* stored_key = cipher_get_stored_key(cipher);
     if (stored_key == NULL) {
         ERROR("cipher_get_stored_key failed");
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (!rsa_decrypt_oaep(out, &out_length, stored_key, in, *bytes_to_process)) {
+    sa_digest_algorithm digest_algorithm;
+    sa_digest_algorithm mgf1_digest_algorithm;
+    const void* label;
+    size_t label_length;
+    if (cipher_get_oaep_parameters(cipher, &digest_algorithm, &mgf1_digest_algorithm, &label, &label_length) !=
+            SA_STATUS_OK) {
+        ERROR("cipher_get_oaep_parameters failed");
+        return SA_STATUS_INTERNAL_ERROR;
+    }
+
+    if (!rsa_decrypt_oaep(out, &out_length, stored_key, digest_algorithm, mgf1_digest_algorithm, label, label_length,
+                in, *bytes_to_process)) {
         ERROR("rsa_decrypt_oaep failed");
         return SA_STATUS_VERIFICATION_FAILED;
     }
@@ -405,8 +415,23 @@ sa_status ta_sa_crypto_cipher_process(
         }
 
         sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
+        sa_digest_algorithm digest_algorithm;
+        sa_digest_algorithm mgf1_digest_algorithm;
+        const void* label;
+        size_t label_length;
+        status = cipher_get_oaep_parameters(cipher, &digest_algorithm, &mgf1_digest_algorithm, &label, &label_length);
+        if (status != SA_STATUS_OK) {
+            ERROR("cipher_get_oaep_parameters failed");
+            break;
+        }
+
         size_t required_length = get_required_length(cipher, *bytes_to_process,
-                !out && cipher_mode == SA_CIPHER_MODE_ENCRYPT);
+                !out && cipher_mode == SA_CIPHER_MODE_ENCRYPT, digest_algorithm, mgf1_digest_algorithm);
+        if (required_length == 0) {
+            status = SA_STATUS_BAD_PARAMETER;
+            break;
+        }
+
         if (out == NULL) {
             *bytes_to_process = required_length;
             status = SA_STATUS_OK;
@@ -481,14 +506,15 @@ sa_status ta_sa_crypto_cipher_process(
                 break;
             }
         } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15) {
-            status = ta_sa_crypto_cipher_process_rsa_pkcs1v15(out_bytes, cipher, in_bytes, bytes_to_process,
-                    caller_uuid);
+            status = ta_sa_crypto_cipher_process_rsa_pkcs1v15(out_bytes, required_length, cipher, in_bytes,
+                    bytes_to_process, caller_uuid);
             if (status != SA_STATUS_OK) {
                 ERROR("ta_sa_crypto_cipher_process_rsa_pkcs1v15 failed");
                 break;
             }
         } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
-            status = ta_sa_crypto_cipher_process_rsa_oaep(out_bytes, cipher, in_bytes, bytes_to_process, caller_uuid);
+            status = ta_sa_crypto_cipher_process_rsa_oaep(out_bytes, required_length, cipher, in_bytes,
+                    bytes_to_process, caller_uuid);
             if (status != SA_STATUS_OK) {
                 ERROR("ta_sa_crypto_cipher_process_rsa_oaep failed");
                 break;
@@ -518,13 +544,13 @@ sa_status ta_sa_crypto_cipher_process(
         }
     } while (false);
 
-    if (in_svp)
+    if (in_svp != NULL)
         svp_store_release_exclusive(client_get_svp_store(client), in->context.svp.buffer, in_svp, caller_uuid);
 
-    if (out_svp)
+    if (out_svp != NULL)
         svp_store_release_exclusive(client_get_svp_store(client), out->context.svp.buffer, out_svp, caller_uuid);
 
-    if (cipher)
+    if (cipher != NULL)
         cipher_store_release_exclusive(cipher_store, context, cipher, caller_uuid);
 
     client_store_release(client_store, client_slot, client, caller_uuid);

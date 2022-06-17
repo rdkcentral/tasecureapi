@@ -32,7 +32,7 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, cipher_algorithm));
+                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -51,7 +51,7 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, cipher_algorithm));
+                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0));
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
@@ -69,7 +69,7 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, cipher_algorithm));
+                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -90,7 +90,7 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, cipher_algorithm));
+                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0));
         wrapped_key = random(AES_BLOCK_SIZE + 1);
 
         sa_rights rights;
@@ -112,7 +112,7 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, cipher_algorithm));
+                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -178,7 +178,7 @@ namespace {
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
         ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, cipher_algorithm));
+                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0));
 
         sa_rights rights;
         rights_set_allow_all(&rights);
@@ -328,7 +328,8 @@ namespace {
             std::shared_ptr<void> wrapping_parameters;
 
             ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                    SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_CBC));
+                    SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_CBC, SA_DIGEST_ALGORITHM_SHA1,
+                    SA_DIGEST_ALGORITHM_SHA1, 0));
 
             sa_rights rights;
             rights_set_allow_all(&rights);

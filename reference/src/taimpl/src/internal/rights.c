@@ -19,7 +19,7 @@
 #include "rights.h" // NOLINT
 #include "log.h"
 #include "porting/memory.h"
-#include <string.h>
+#include <memory.h>
 #include <time.h>
 
 const sa_uuid NO_MATCH = {

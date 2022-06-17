@@ -37,8 +37,9 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
+        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA256, NULL, 0};
         sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_RSA_OAEP, SA_CIPHER_MODE_DECRYPT,
-                *key, nullptr);
+                *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 

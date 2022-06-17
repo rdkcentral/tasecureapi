@@ -571,7 +571,7 @@ bool unwrap_aes_gcm_internal(
         status = true;
     } while (false);
 
-    if (context) {
+    if (context != NULL) {
         EVP_CIPHER_CTX_free(context);
         context = NULL;
     }

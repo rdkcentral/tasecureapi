@@ -119,7 +119,7 @@ sa_status ta_sa_svp_key_check(
         status = SA_STATUS_OK;
     } while (false);
 
-    if (in_svp)
+    if (in_svp != NULL)
         svp_store_release_exclusive(client_get_svp_store(client), in->context.svp.buffer, in_svp, caller_uuid);
 
     stored_key_free(stored_key);

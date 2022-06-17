@@ -20,7 +20,7 @@
 #include "log.h"
 #include "porting/memory.h"
 #include <inttypes.h>
-#include <string.h>
+#include <memory.h>
 
 #define BLOCK_IDX(slot) ((slot) / (sizeof(int) * 8))
 #define BLOCK_BIT(slot) ((slot) % (sizeof(int) * 8))

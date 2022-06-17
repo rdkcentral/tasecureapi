@@ -35,7 +35,10 @@ namespace {
                 .tag = {},
                 .parameters = nullptr,
                 .end_parameters = nullptr,
-                .curve = SA_ELLIPTIC_CURVE_NIST_P256};
+                .curve = SA_ELLIPTIC_CURVE_NIST_P256,
+                .oaep_digest_algorithm = SA_DIGEST_ALGORITHM_SHA1,
+                .oaep_mgf1_digest_algorithm = SA_DIGEST_ALGORITHM_SHA1,
+                .oaep_label_length = 0};
 
         ASSERT_TRUE(import_key(parameters, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE));
 

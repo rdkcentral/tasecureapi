@@ -163,14 +163,14 @@ static sa_status verify_sample(
         }
     } while (false);
 
-    if (in_svp)
+    if (in_svp != NULL)
         svp_store_release_exclusive(client_get_svp_store(client), sample->in->context.svp.buffer, in_svp, caller_uuid);
 
-    if (out_svp)
+    if (out_svp != NULL)
         svp_store_release_exclusive(client_get_svp_store(client), sample->out->context.svp.buffer, out_svp,
                 caller_uuid);
 
-    if (cipher)
+    if (cipher != NULL)
         cipher_store_release_exclusive(cipher_store, sample->context, cipher, caller_uuid);
 
     return status;
