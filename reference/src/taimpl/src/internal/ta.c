@@ -932,9 +932,11 @@ static sa_status ta_invoke_crypto_cipher_process(
                 &cipher_process->bytes_to_process, context->client, uuid);
     }
 
+    // clang-format off
     if (params[1].mem_ref != NULL)
-        cipher_process->out_offset =
-                (cipher_process->out_buffer_type == SA_BUFFER_TYPE_CLEAR) ? out.context.clear.offset : out.context.svp.offset;
+        cipher_process->out_offset = (cipher_process->out_buffer_type == SA_BUFFER_TYPE_CLEAR)
+                                             ? out.context.clear.offset : out.context.svp.offset;
+    // clang-format on
 
     cipher_process->in_offset =
             (cipher_process->in_buffer_type == SA_BUFFER_TYPE_CLEAR) ? in.context.clear.offset : in.context.svp.offset;

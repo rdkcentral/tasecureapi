@@ -655,7 +655,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTypeDisallowed) {
     parameters.clear_key = random(SYM_128_KEY_SIZE);
 
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
     SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
 
     parameters.key = create_sa_key_symmetric(&rights, parameters.clear_key);

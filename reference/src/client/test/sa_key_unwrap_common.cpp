@@ -100,7 +100,7 @@ bool SaKeyUnwrapBase::wrap_key_aes_cbc(
         sa_cipher_algorithm wrapping_algorithm) {
 
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
 
     clear_wrapping_key = random(wrapping_key_size);
     auto iv = random(AES_BLOCK_SIZE);
@@ -135,7 +135,7 @@ bool SaKeyUnwrapBase::wrap_key_aes_ecb(
         sa_cipher_algorithm wrapping_algorithm) {
 
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
 
     clear_wrapping_key = random(wrapping_key_size);
     if (!encrypt_aes_ecb_openssl(wrapped_key, clear_key, clear_wrapping_key,
@@ -157,7 +157,7 @@ bool SaKeyUnwrapBase::wrap_key_aes_ctr(
         const std::vector<uint8_t>& clear_key) {
 
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
 
     clear_wrapping_key = random(wrapping_key_size);
     auto ctr = random(AES_BLOCK_SIZE);
@@ -189,7 +189,7 @@ bool SaKeyUnwrapBase::wrap_key_aes_gcm(
         const std::vector<uint8_t>& clear_key) {
 
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
     clear_wrapping_key = random(wrapping_key_size);
     auto iv = random(GCM_IV_LENGTH);
     auto aad = random(1024);
@@ -230,7 +230,7 @@ bool SaKeyUnwrapBase::wrap_key_chacha20(
         const std::vector<uint8_t>& clear_key) {
 
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
 
     clear_wrapping_key = random(wrapping_key_size);
     std::vector<uint8_t> counter = {0, 0, 0, 0};
@@ -267,7 +267,7 @@ bool SaKeyUnwrapBase::wrap_key_chacha20_poly1305(
         const std::vector<uint8_t>& clear_key) {
 
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
     clear_wrapping_key = random(wrapping_key_size);
     auto nonce = random(CHACHA20_NONCE_LENGTH);
     auto aad = random(1024);
@@ -313,7 +313,7 @@ bool SaKeyUnwrapBase::wrap_key_rsa(
         size_t label_length) {
 
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
 
     clear_wrapping_key = get_rsa_private_key(wrapping_key_size);
     auto rsa = rsa_import_pkcs8(clear_wrapping_key);
@@ -357,14 +357,14 @@ bool SaKeyUnwrapBase::wrap_key_el_gamal(
         sa_elliptic_curve curve) {
 
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
     // Can only be used with AES_128 keys.
     if (clear_key.size() != SYM_128_KEY_SIZE)
         return false;
 
-    clear_wrapping_key = random_ec(wrapping_key_size);
+    clear_wrapping_key = ec_generate_key_bytes(curve);
 
-    auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
+    auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_nid(curve)), EC_GROUP_free);
     if (ec_group == nullptr) {
         ERROR("ec_group_from_curve failed");
         return false;
@@ -430,21 +430,6 @@ INSTANTIATE_TEST_SUITE_P(
         SaKeyUnwrapTest,
         ::testing::Combine(
             ::testing::Combine(
-                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_ED25519,
-                    SA_ELLIPTIC_CURVE_X25519),
-                ::testing::Values(SA_KEY_TYPE_EC)),
-            ::testing::Combine(
-                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CBC),
-                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
-                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
-                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
-                ::testing::Values(0))));
-
-INSTANTIATE_TEST_SUITE_P(
-        SaKeyUnwrapEcAesCbcPkcs7Tests,
-        SaKeyUnwrapTest,
-        ::testing::Combine(
-            ::testing::Combine(
                 ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224,
                     SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521,
                     SA_ELLIPTIC_CURVE_ED25519, SA_ELLIPTIC_CURVE_X25519, SA_ELLIPTIC_CURVE_ED448,
@@ -488,21 +473,6 @@ INSTANTIATE_TEST_SUITE_P(
 
 INSTANTIATE_TEST_SUITE_P(
         SaKeyUnwrapEcAesEcbTests,
-        SaKeyUnwrapTest,
-        ::testing::Combine(
-            ::testing::Combine(
-                ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P256, SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_ED25519,
-                    SA_ELLIPTIC_CURVE_X25519),
-                ::testing::Values(SA_KEY_TYPE_EC)),
-            ::testing::Combine(
-                ::testing::Values(SA_CIPHER_ALGORITHM_AES_ECB),
-                ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
-                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
-                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
-                ::testing::Values(0))));
-
-INSTANTIATE_TEST_SUITE_P(
-        SaKeyUnwrapEcAesEcbPkcs7Tests,
         SaKeyUnwrapTest,
         ::testing::Combine(
             ::testing::Combine(

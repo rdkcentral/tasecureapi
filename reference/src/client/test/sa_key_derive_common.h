@@ -20,6 +20,7 @@
 
 #include "sa_key_common.h"
 
+// clang-format off
 class SaKeyDeriveTest : public ::testing::Test {};
 
 using SaKeyDeriveAnsiX963TestType = std::tuple<std::tuple<sa_key_type, size_t>, sa_digest_algorithm, size_t, size_t>;
@@ -43,4 +44,5 @@ class SaKeyDeriveNetflixTest : public ::testing::Test, public SaKeyBase {};
 
 class SaKeyDeriveRootKeyLadderTest : public ::testing::Test, public SaKeyBase {};
 
+// clang-format off
 #endif // SA_KEY_DERIVE_COMMON_H

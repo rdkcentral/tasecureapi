@@ -64,7 +64,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_status status = sa_key_generate(key.get(), &rights, key_type, parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
@@ -95,7 +95,7 @@ namespace {
 
     TEST_F(SaKeyGenerateTest, failsNullKey) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_symmetric parameters = {AES_BLOCK_SIZE};
 
@@ -118,7 +118,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_symmetric parameters = {128};
 

@@ -42,7 +42,9 @@ namespace {
 
             case SA_KEY_TYPE_EC:
                 curve = static_cast<sa_elliptic_curve>(key_size);
-                clear_key = random_ec(ec_get_key_size(curve));
+                clear_key = ec_generate_key_bytes(curve);
+                if (clear_key.empty())
+                    GTEST_SKIP() << "Curve not supported";
                 break;
 
             case SA_KEY_TYPE_RSA:
@@ -61,7 +63,7 @@ namespace {
                 clear_key, wrapping_algorithm, oaep_digest_algorithm, oaep_mgf1_digest_algorithm, oaep_label_length));
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
@@ -81,7 +83,7 @@ namespace {
         auto clear_wrapping_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);

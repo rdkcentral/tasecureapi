@@ -23,7 +23,10 @@
 #include <openssl/engine.h>
 #include <openssl/evp.h>
 
-#if OPENSSL_VERSION_NUMBER < 0x30000000
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+#define MAX_GROUP_NAME 24
+#include <openssl/core_names.h>
+#else
 #include <memory.h>
 #endif
 
@@ -388,7 +391,7 @@ static int pkey_verify(
             return 0;
         }
 
-        verify_pkey = get_public_key(data->private_key);
+        verify_pkey = sa_get_public_key(data->private_key);
         if (verify_pkey == NULL) {
             ERROR("NULL verify_pkey");
             break;
@@ -557,7 +560,7 @@ static int pkey_digestverify(
             return 0;
         }
 
-        verify_pkey = get_public_key(data->private_key);
+        verify_pkey = sa_get_public_key(data->private_key);
         if (verify_pkey == NULL) {
             ERROR("NULL verify_pkey");
             break;
@@ -807,9 +810,9 @@ static int pkey_encrypt(
             return 0;
         }
 
-        encrypt_pkey = get_public_key(data->private_key);
+        encrypt_pkey = sa_get_public_key(data->private_key);
         if (encrypt_pkey == NULL) {
-            ERROR("get_public_key failed");
+            ERROR("sa_get_public_key failed");
             break;
         }
 
@@ -1020,67 +1023,37 @@ static int pkey_pderive(
         if (type == EVP_PKEY_DH) {
             key_exchange_algorithm = SA_KEY_EXCHANGE_ALGORITHM_DH;
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
-            const DH* dh = EVP_PKEY_get0_DH(peer_key);
-            if (dh == NULL) {
-                ERROR("NULL dh");
-                break;
-            }
-
-            const BIGNUM* pub_bn = DH_get0_pub_key(dh);
-            if (pub_bn == NULL) {
-                ERROR("NULL pub_bn");
-                break;
-            }
+        } else if (type == EVP_PKEY_EC || type == EVP_PKEY_X25519 || type == EVP_PKEY_X448) {
 #else
-            const DH* dh = peer_key->pkey.dh;
-            const BIGNUM* pub_bn = dh->pub_key;
-#endif
-            other_public_length = BN_num_bytes(pub_bn);
-            other_public = OPENSSL_malloc(other_public_length);
-            if (other_public == NULL) {
-                ERROR("OPENSSL_malloc failed");
-                break;
-            }
-
-            if (BN_bn2bin(pub_bn, other_public) != (int) other_public_length) {
-                ERROR("BN_bn2bin failed");
-                break;
-            }
         } else if (type == EVP_PKEY_EC) {
-            key_exchange_algorithm = SA_KEY_EXCHANGE_ALGORITHM_ECDH;
-            other_public_length = i2d_PublicKey(peer_key, &other_public);
-            if (other_public_length == 0) {
-                ERROR("i2d_PublicKey failed");
-                break;
-            }
-
-            memmove(other_public, other_public + 1, --other_public_length);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-        } else if (type == EVP_PKEY_X25519 || type == EVP_PKEY_X448) {
-            key_exchange_algorithm = SA_KEY_EXCHANGE_ALGORITHM_ECDH;
-            if (EVP_PKEY_get_raw_public_key(peer_key, NULL, &other_public_length) != 1) {
-                ERROR("EVP_PKEY_get_raw_public_key failed");
-                break;
-            }
-
-            other_public = OPENSSL_malloc(other_public_length);
-            if (other_public == NULL) {
-                ERROR("OPENSSL_malloc failed");
-                break;
-            }
-
-            if (EVP_PKEY_get_raw_public_key(peer_key, other_public, &other_public_length) != 1) {
-                ERROR("EVP_PKEY_get_raw_public_key failed");
-                break;
-            }
 #endif
+            key_exchange_algorithm = SA_KEY_EXCHANGE_ALGORITHM_ECDH;
         } else {
             ERROR("Invalid key type");
             break;
         }
 
+        other_public_length = i2d_PUBKEY(peer_key, NULL);
+        if (other_public_length <= 0) {
+            ERROR("Invalid other_public_length");
+            break;
+        }
+
+        other_public = OPENSSL_malloc(other_public_length);
+        if (other_public == NULL) {
+            ERROR("OPENSSL_malloc failed");
+            break;
+        }
+
+        uint8_t* p_pther_public = other_public;
+        other_public_length = i2d_PUBKEY(peer_key, &p_pther_public);
+        if (other_public_length <= 0) {
+            ERROR("Invalid other_public_length");
+            break;
+        }
+
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         sa_status status = sa_key_exchange((void*) shared_secret_key, &rights, key_exchange_algorithm,
                 data->private_key, other_public, other_public_length, NULL);
         if (status != SA_STATUS_OK) {
@@ -1271,13 +1244,6 @@ static int pkey_ctrl(
     return 1;
 }
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-int pkey_check(EVP_PKEY* pkey) {
-    // Just pass the check.
-    return 1;
-}
-#endif
-
 static EVP_PKEY_METHOD* get_pkey_method(
         int nid,
         int flags) {
@@ -1287,14 +1253,170 @@ static EVP_PKEY_METHOD* get_pkey_method(
         EVP_PKEY_meth_set_copy(evp_pkey_method, pkey_copy);
         EVP_PKEY_meth_set_cleanup(evp_pkey_method, pkey_cleanup);
         EVP_PKEY_meth_set_ctrl(evp_pkey_method, pkey_ctrl, NULL);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-        EVP_PKEY_meth_set_check(evp_pkey_method, pkey_check);
-        EVP_PKEY_meth_set_public_check(evp_pkey_method, pkey_check);
-#endif
     }
 
     return evp_pkey_method;
 }
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+// OpenSSL 3 doesn't set up a key read through d2i_PUBKEY correctly for use by an engine. Stream it out as a PublicKey
+// and reread it to get the correct settings.
+static EVP_PKEY* fixup_openssl3_key(EVP_PKEY* evp_pkey) {
+    int type = EVP_PKEY_id(evp_pkey);
+    EVP_PKEY* new_evp_pkey = NULL;
+    uint8_t* public_key = NULL;
+    EC_GROUP* ec_group = NULL;
+    EC_POINT* ec_point = NULL;
+    EC_KEY* ec_key = NULL;
+    do {
+        if (type == EVP_PKEY_DH) {
+            // Don't fix a DH key.
+            return evp_pkey;
+        }
+
+        if (type == EVP_PKEY_RSA) {
+            int length = i2d_PublicKey(evp_pkey, NULL);
+            if (length <= 0) {
+                ERROR("i2d_PublicKey failed");
+                break;
+            }
+
+            public_key = OPENSSL_malloc(length);
+            if (public_key == NULL) {
+                ERROR("OPENSSL_malloc failed");
+                break;
+            }
+
+            uint8_t* p_public_key = public_key;
+            length = i2d_PublicKey(evp_pkey, &p_public_key);
+            if (length <= 0) {
+                ERROR("i2d_PublicKey failed");
+                break;
+            }
+
+            const uint8_t* p_public_key2 = public_key;
+            new_evp_pkey = d2i_PublicKey(type, NULL, &p_public_key2, length);
+            if (new_evp_pkey == NULL) {
+                ERROR("d2i_PublicKey failed");
+                break;
+            }
+        } else if (type == EVP_PKEY_EC) {
+            char group_name[MAX_GROUP_NAME];
+            size_t group_name_length = MAX_GROUP_NAME;
+            if (EVP_PKEY_get_utf8_string_param(evp_pkey, OSSL_PKEY_PARAM_GROUP_NAME, group_name,
+                        group_name_length, &group_name_length) != 1) {
+                ERROR("EVP_PKEY_get_utf8_string_param failed");
+                break;
+            }
+
+            size_t public_key_length = 0;
+            if (EVP_PKEY_get_octet_string_param(evp_pkey, OSSL_PKEY_PARAM_PUB_KEY, NULL, public_key_length,
+                        &public_key_length) != 1) {
+                ERROR("EVP_PKEY_get_octet_string_param failed");
+                break;
+            }
+
+            public_key = OPENSSL_malloc(public_key_length);
+            if (public_key == NULL) {
+                ERROR("OPENSSL_malloc failed");
+                break;
+            }
+
+            if (EVP_PKEY_get_octet_string_param(evp_pkey, OSSL_PKEY_PARAM_PUB_KEY, public_key, public_key_length,
+                        &public_key_length) != 1) {
+                ERROR("EVP_PKEY_get_octet_string_param failed");
+                break;
+            }
+
+            OSSL_PARAM params[] = {
+                    OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, group_name, group_name_length),
+                    OSSL_PARAM_construct_end()};
+
+            ec_group = EC_GROUP_new_from_params(params, NULL, NULL);
+            if (ec_group == NULL) {
+                ERROR("EVP_PKEY_get_octet_string_param failed");
+                break;
+            }
+
+            ec_point = EC_POINT_new(ec_group);
+            if (ec_point == NULL) {
+                ERROR("EC_POINT_new failed");
+                break;
+            }
+
+            if (EC_POINT_oct2point(ec_group, ec_point, public_key, public_key_length, NULL) != 1) {
+                ERROR("EC_POINT_oct2point failed");
+                break;
+            }
+
+            ec_key = EC_KEY_new();
+            if (ec_key == NULL) {
+                ERROR("EC_KEY_new failed");
+                break;
+            }
+
+            if (EC_KEY_set_group(ec_key, ec_group) != 1) {
+                ERROR("EC_KEY_set_group failed");
+                break;
+            }
+
+            if (EC_KEY_set_public_key(ec_key, ec_point) != 1) {
+                ERROR("EC_KEY_set_public_key failed");
+                break;
+            }
+
+            new_evp_pkey = EVP_PKEY_new();
+            if (new_evp_pkey == NULL) {
+                ERROR("EVP_PKEY_new failed");
+                break;
+            }
+
+            if (EVP_PKEY_set1_EC_KEY(new_evp_pkey, ec_key) != 1) {
+                ERROR("EVP_PKEY_set1_EC_KEY failed");
+                EVP_PKEY_free(evp_pkey);
+                break;
+            }
+        } else if (type == EVP_PKEY_ED25519 || type == EVP_PKEY_ED448 || type == EVP_PKEY_X25519 || type == EVP_PKEY_X448) {
+            size_t public_key_length = 0;
+            if (EVP_PKEY_get_raw_public_key(evp_pkey, NULL, &public_key_length) != 1) {
+                ERROR("EVP_PKEY_get_raw_public_key failed");
+                break;
+            }
+
+            public_key = OPENSSL_malloc(public_key_length);
+            if (public_key == NULL) {
+                ERROR("OPENSSL_malloc failed");
+                break;
+            }
+
+            if (EVP_PKEY_get_raw_public_key(evp_pkey, public_key, &public_key_length) != 1) {
+                ERROR("EVP_PKEY_get_raw_public_key failed");
+                break;
+            }
+
+            new_evp_pkey = EVP_PKEY_new_raw_public_key(type, NULL, public_key, public_key_length);
+            if (new_evp_pkey == NULL) {
+                ERROR("EVP_PKEY_new_raw_public_key failed");
+                break;
+            }
+
+            break;
+        } else {
+            ERROR("Unknown key type");
+            break;
+        }
+    } while (false);
+
+    OPENSSL_free(public_key);
+    EC_GROUP_free(ec_group);
+    EC_POINT_free(ec_point);
+    EC_KEY_free(ec_key);
+    EVP_PKEY_free(evp_pkey);
+
+    evp_pkey = new_evp_pkey;
+    return evp_pkey;
+}
+#endif
 
 EVP_PKEY* sa_load_engine_private_pkey(
         ENGINE* engine,
@@ -1312,11 +1434,15 @@ EVP_PKEY* sa_load_engine_private_pkey(
         }
 
         if (data.header.type != SA_KEY_TYPE_SYMMETRIC) {
-            evp_pkey = get_public_key(data.private_key);
+            evp_pkey = sa_get_public_key(data.private_key);
             if (evp_pkey == NULL) {
-                ERROR("get_public_key failed");
+                ERROR("sa_get_public_key failed");
                 break;
             }
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+            evp_pkey = fixup_openssl3_key(evp_pkey);
+#endif
         }
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
         else {

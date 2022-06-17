@@ -29,7 +29,7 @@ namespace {
         auto key_length = std::get<1>(GetParam());
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> clear_key;
         sa_elliptic_curve curve;
@@ -55,7 +55,7 @@ namespace {
         auto clear_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_import_parameters_symmetric parameters = {&rights};
 
@@ -68,7 +68,7 @@ namespace {
         auto clear_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_import_parameters_symmetric parameters = {&rights};
 
@@ -84,7 +84,7 @@ namespace {
         auto clear_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_import_parameters_symmetric parameters = {&rights};
 

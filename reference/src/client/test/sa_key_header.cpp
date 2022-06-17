@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -48,7 +48,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);

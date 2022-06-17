@@ -29,7 +29,7 @@ namespace {
         auto key_length = std::get<1>(GetParam());
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_status status;
         std::vector<uint8_t> clear_key;
@@ -57,14 +57,15 @@ namespace {
                     GTEST_SKIP() << "Unsupported curve";
 
                 ASSERT_NE(evp_pkey, nullptr);
-                ASSERT_TRUE(ec_get_public(public_openssl, curve, evp_pkey));
+                ASSERT_TRUE(export_public_key(public_openssl, evp_pkey));
 
                 // compare public from OpenSSL and SecApi
                 ASSERT_EQ(out, public_openssl);
                 break;
             }
             case SA_KEY_TYPE_DH: {
-                ASSERT_EQ(out_length, key_length);
+                auto evp_pkey = std::shared_ptr<EVP_PKEY>(sa_import_public_key(out.data(), out.size()), EVP_PKEY_free);
+                ASSERT_NE(evp_pkey, nullptr);
                 break;
             }
             case SA_KEY_TYPE_RSA: {
@@ -72,7 +73,7 @@ namespace {
                 auto public_openssl = std::vector<uint8_t>(out_length);
                 auto rsa = rsa_import_pkcs8(clear_key);
                 ASSERT_NE(rsa, nullptr);
-                ASSERT_TRUE(rsa_get_public(public_openssl, rsa));
+                ASSERT_TRUE(export_public_key(public_openssl, rsa));
 
                 // compare public from OpenSSL and SecApi
                 ASSERT_EQ(out, public_openssl);
@@ -84,11 +85,10 @@ namespace {
 
     TEST_F(SaKeyGetPublicTest, failsNullOutLength) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
-        auto key_size = ec_get_key_size(curve);
-        auto clear_key = random(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);

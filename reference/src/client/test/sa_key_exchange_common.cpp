@@ -62,7 +62,7 @@ bool SaKeyExchangeNetflixTest::setup_key_exchange(
         const std::vector<uint8_t>& dhp,
         const std::vector<uint8_t>& dhg) {
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
 
     // Generate a DH key.
     dh_key = create_uninitialized_sa_key();
@@ -76,30 +76,17 @@ bool SaKeyExchangeNetflixTest::setup_key_exchange(
         return false;
     }
 
-    size_t dh_public_key_length;
-    if (sa_key_get_public(nullptr, &dh_public_key_length, *dh_key) != SA_STATUS_OK) {
-        ERROR("sa_key_get_public failed");
-        return false;
-    }
-
-    std::vector<uint8_t> dh_public_key_bytes(dh_public_key_length);
-    if (sa_key_get_public(dh_public_key_bytes.data(), &dh_public_key_length, *dh_key) != SA_STATUS_OK) {
-        ERROR("sa_key_get_public failed");
-        return false;
-    }
-
-    EVP_PKEY* temp = dh_import_public(dh_public_key_bytes.data(), dh_public_key_bytes.size(), dhp.data(), dhp.size(),
-            dhg.data(), dhg.size());
+    EVP_PKEY* temp = sa_get_public_key(*dh_key);
     if (temp == nullptr) {
-        ERROR("dh_import_public failed");
+        ERROR("sa_get_public_key failed");
         return false;
     }
 
     dh_public_key = std::shared_ptr<EVP_PKEY>(temp, EVP_PKEY_free);
 
     // Generate the other DH key.
-    if (!dh_generate(other_dh, other_public_key, dhp, dhg)) {
-        ERROR("dh_generate failed");
+    if (!dh_generate_key(other_dh, other_public_key, dhp, dhg)) {
+        ERROR("dh_generate_key failed");
         return false;
     }
 

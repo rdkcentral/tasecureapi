@@ -32,7 +32,7 @@ namespace {
         auto clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -56,7 +56,7 @@ namespace {
     TEST_F(SaCryptoMacProcessKey, failsBadContext) {
         auto clear_mac_key = random(SYM_128_KEY_SIZE);
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto mac_key = create_sa_key_symmetric(&rights, clear_mac_key);
         ASSERT_NE(mac_key, nullptr);
 
@@ -68,7 +68,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -94,7 +94,7 @@ namespace {
         auto clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -120,7 +120,7 @@ namespace {
         auto clear_key = random(key_size);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -154,7 +154,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         std::vector<uint8_t> dhp2048 = sample_dh_p_2048();
         std::vector<uint8_t> dhg2048 = sample_dh_g_2048();
 
@@ -181,7 +181,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_ec parameters = {SA_ELLIPTIC_CURVE_NIST_P256};
         sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
@@ -203,7 +203,7 @@ namespace {
 
     TEST_F(SaCryptoMacProcessKey, failRsa) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto rsa_key = sample_rsa_2048_pkcs8();
         sa_import_parameters_rsa_private_key_info rsa_parameters = {&rights};

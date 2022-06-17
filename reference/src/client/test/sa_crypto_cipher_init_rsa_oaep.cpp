@@ -28,7 +28,7 @@ namespace {
         auto clear_key = sample_rsa_1024_pkcs8();
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -36,7 +36,7 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
         sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_RSA_OAEP, SA_CIPHER_MODE_ENCRYPT,
                 *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
@@ -48,7 +48,7 @@ namespace {
         auto clear_key = random(128);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -56,7 +56,7 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
         sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_RSA_OAEP, SA_CIPHER_MODE_DECRYPT,
                 *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)

@@ -26,10 +26,10 @@ using namespace client_test_helpers;
 namespace {
     TEST_F(SaCryptoCipherWithoutSvpTest, initChacha20FailsBadKeyType) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
-        auto clear_key = random_ec(EC_P256_KEY_SIZE);
+        auto clear_key = ec_generate_key_bytes(curve);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
@@ -52,7 +52,7 @@ namespace {
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -72,7 +72,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -95,7 +95,7 @@ namespace {
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -117,7 +117,7 @@ namespace {
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -140,7 +140,7 @@ namespace {
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -163,7 +163,7 @@ namespace {
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);

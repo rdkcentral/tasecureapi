@@ -29,7 +29,7 @@ namespace {
         const std::vector<uint8_t>& dhg = std::get<1>(GetParam());
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -74,7 +74,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsNullKey) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -105,7 +105,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsNullRights) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -137,7 +137,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsNullOtherPublic) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -169,7 +169,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsNullParameters) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -194,7 +194,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsOutKeNull) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -226,7 +226,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsNullRightsKe) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -258,7 +258,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsOutKhNull) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -290,7 +290,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsNullRightsKh) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -322,7 +322,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsUnknownKw) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -354,7 +354,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsKwDisallowsDerive) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -367,7 +367,7 @@ namespace {
 
         // Generate a kd that disallows derive.
         sa_rights kw_rights;
-        rights_set_allow_all(&kw_rights);
+        sa_rights_set_allow_all(&kw_rights);
         SA_USAGE_BIT_CLEAR(kw_rights.usage_flags, SA_USAGE_FLAG_DERIVE);
         sa_generate_parameters_symmetric symmetric_parameters = {
                 .key_length = SYM_128_KEY_SIZE};
@@ -399,7 +399,7 @@ namespace {
     TEST_F(SaKeyExchangeNetflixTest, failsKwNotSymmetric) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -439,7 +439,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsUnknownKey) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -472,7 +472,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsKeyDisallowsExchange) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -485,7 +485,7 @@ namespace {
 
         // Generate a dh key that disallows exchange.
         sa_rights key_rights;
-        rights_set_allow_all(&key_rights);
+        sa_rights_set_allow_all(&key_rights);
         SA_USAGE_BIT_CLEAR(key_rights.usage_flags, SA_USAGE_FLAG_KEY_EXCHANGE);
         auto dhp = sample_dh_p_3072();
         auto dhg = sample_dh_g_3072();
@@ -522,7 +522,7 @@ namespace {
     TEST_F(SaKeyExchangeNetflixTest, failsKeyNotDh) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -562,7 +562,7 @@ namespace {
 
     TEST_F(SaKeyExchangeNetflixTest, failsOtherPublicMismatch) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         std::shared_ptr<sa_key> kd;
         std::vector<uint8_t> clear_kd;
@@ -574,7 +574,7 @@ namespace {
                 sample_dh_p_2048(), sample_dh_g_2048()));
 
         // Generate the other DH key.
-        ASSERT_TRUE(dh_generate(other_dh, other_public_key, sample_dh_p_3072(), sample_dh_g_3072()));
+        ASSERT_TRUE(dh_generate_key(other_dh, other_public_key, sample_dh_p_3072(), sample_dh_g_3072()));
 
         // Do the netflix key exchange.
         auto kenc = create_uninitialized_sa_key();

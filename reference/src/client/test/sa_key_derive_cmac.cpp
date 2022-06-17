@@ -29,7 +29,7 @@ namespace {
         const size_t other_data_size = std::get<1>(GetParam());
         const uint8_t counter = std::get<2>(GetParam());
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto symmetric_key = random(key_size);
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
@@ -57,7 +57,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, failsNullKey) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto symmetric_key = random(SYM_128_KEY_SIZE);
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
@@ -79,7 +79,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, failsNullRights) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto symmetric_key = random(SYM_128_KEY_SIZE);
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
@@ -103,7 +103,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, failsNullParameters) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
@@ -113,7 +113,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, failsMaxKeyLength) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto symmetric_key = random(SYM_128_KEY_SIZE);
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
@@ -137,7 +137,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, failsBadDigest) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto symmetric_key = random(SYM_128_KEY_SIZE);
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
@@ -161,7 +161,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, failsUnknownParent) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto other_data = random(AES_BLOCK_SIZE);
         sa_kdf_parameters_cmac kdf_parameters_cmac = {
@@ -179,7 +179,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, failsNullOtherData) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto symmetric_key = random(SYM_128_KEY_SIZE);
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
@@ -202,7 +202,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, fails0Counter) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto symmetric_key = random(SYM_128_KEY_SIZE);
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
@@ -226,7 +226,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, fails5Counter) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto symmetric_key = random(SYM_128_KEY_SIZE);
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
@@ -250,7 +250,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, failsBadLengthCtrCombination) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto symmetric_key = random(SYM_128_KEY_SIZE);
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
@@ -274,7 +274,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, failsParentDisallowsDerive) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_DERIVE);
 
         auto symmetric_key = random(SYM_128_KEY_SIZE);
@@ -299,7 +299,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, failsParentNotSymmetric) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto rsa_key = sample_rsa_2048_pkcs8();
         auto parent_key = create_sa_key_rsa(&rights, rsa_key);
@@ -323,7 +323,7 @@ namespace {
 
     TEST_F(SaKeyDeriveCmacTest, failsParentNotAes) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto symmetric_key = random(20);
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);

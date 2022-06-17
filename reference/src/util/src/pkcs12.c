@@ -192,7 +192,7 @@ bool load_pkcs12_secret_key(
     if (password == NULL)
         password = DEFAULT_ROOT_KEYSTORE_PASSWORD;
 
-    bool result = false;
+    bool status = false;
     FILE* file = NULL;
     PKCS12* pkcs12 = NULL;
     STACK_OF(PKCS7)* auth_safes = NULL;
@@ -246,7 +246,7 @@ bool load_pkcs12_secret_key(
             sk_PKCS12_SAFEBAG_pop_free(pkcs12_safebags, PKCS12_SAFEBAG_free);
         }
 
-        result = true;
+        status = true;
     } while (false);
 
     PKCS12_free(pkcs12);
@@ -254,5 +254,5 @@ bool load_pkcs12_secret_key(
     if (file != NULL)
         fclose(file);
 
-    return result;
+    return status;
 }

@@ -26,11 +26,10 @@ using namespace client_test_helpers;
 namespace {
     TEST_P(SaCryptoCipherElGamalTest, initEcElgamalFailsBadMode) {
         sa_elliptic_curve curve = std::get<0>(GetParam());
-        size_t key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
@@ -48,11 +47,10 @@ namespace {
 
     TEST_P(SaCryptoCipherElGamalTest, initEcElgamalFailsBadKeyType) {
         sa_elliptic_curve curve = std::get<0>(GetParam());
-        size_t key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -70,11 +68,10 @@ namespace {
 
     TEST_P(SaCryptoCipherElGamalFailTest, initEcElgamalFailsBadCurve) {
         sa_elliptic_curve curve = std::get<0>(GetParam());
-        size_t key_size = ec_get_key_size(curve);
-        auto clear_key = random_ec(key_size);
+        auto clear_key = ec_generate_key_bytes(curve);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);

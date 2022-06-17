@@ -25,31 +25,39 @@
 
 using namespace client_test_helpers;
 
+#define SOC_CONTAINER_VERSION 4
+
 namespace {
     TEST_P(SaKeyImportSocAllKeyCombosTest, nominal) {
-        uint8_t container_version = std::get<0>(GetParam());
-        std::vector<uint8_t> clear_key = std::get<1>(GetParam());
-        std::string key_type = std::get<2>(GetParam());
-        size_t key_size = std::get<3>(GetParam());
-        sa_key_type clear_key_type = std::get<4>(GetParam());
-        uint8_t key_usage = std::get<5>(GetParam());
-        uint8_t decrypted_key_usage = std::get<6>(GetParam());
-        std::vector<uint8_t> tag;
+        std::string key_type_string = std::get<0>(GetParam());
+        size_t key_size = std::get<1>(GetParam());
+        sa_key_type key_type = std::get<2>(GetParam());
+        uint8_t key_usage = std::get<3>(GetParam());
+        uint8_t decrypted_key_usage = std::get<4>(GetParam());
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
         auto c3 = random(AES_BLOCK_SIZE);
 
         auto curve = static_cast<sa_elliptic_curve>(0);
-        if (clear_key_type == SA_KEY_TYPE_EC) {
+        std::vector<uint8_t> clear_key;
+        if (key_type == SA_KEY_TYPE_EC) {
             curve = static_cast<sa_elliptic_curve>(key_size);
             key_size = ec_get_key_size(curve);
+            clear_key = ec_generate_key_bytes(curve);
+            if (clear_key.empty())
+                GTEST_SKIP() << "Curve not supported";
+        } else if (key_type == SA_KEY_TYPE_SYMMETRIC) {
+            clear_key = random(key_size);
+        } else if (key_type == SA_KEY_TYPE_RSA) {
+            clear_key = get_rsa_private_key(key_size);
         }
 
+        ASSERT_FALSE(clear_key.empty());
         sa_rights key_rights;
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, clear_key_type, clear_key, iv, key_usage,
-                decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type_string, key_type, clear_key, iv,
+                key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Curve not supported";
 
@@ -64,7 +72,7 @@ namespace {
         ASSERT_TRUE(memcmp(&key_rights, &header->rights, sizeof(sa_rights)) == 0);
         ASSERT_EQ(key_size, header->size);
         ASSERT_EQ(memcmp(&type_parameters, &header->type_parameters, sizeof(sa_type_parameters)), 0);
-        ASSERT_EQ(clear_key_type, header->type);
+        ASSERT_EQ(key_type, header->type);
 
         // Test exporting and re-importing key
         auto mixin = random(AES_BLOCK_SIZE);
@@ -82,13 +90,12 @@ namespace {
         ASSERT_TRUE(memcmp(&key_rights, &header->rights, sizeof(sa_rights)) == 0);
         ASSERT_EQ(key_size, exported_key_header->size);
         ASSERT_EQ(memcmp(&type_parameters, &exported_key_header->type_parameters, sizeof(sa_type_parameters)), 0);
-        ASSERT_EQ(clear_key_type, exported_key_header->type);
+        ASSERT_EQ(key_type, exported_key_header->type);
 
-        ASSERT_TRUE(key_check(clear_key_type, *exported_key, clear_key));
+        ASSERT_TRUE(key_check(key_type, *exported_key, clear_key));
     }
 
     TEST_F(SaKeyImportSocTest, invalidKeyUsage1) {
-        uint8_t container_version = 3;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "HMAC-128";
         uint8_t key_usage = 2;
@@ -100,13 +107,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, invalidKeyUsage2) {
-        uint8_t container_version = 3;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "HMAC-160";
         uint8_t key_usage = 2;
@@ -118,13 +124,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, invalidKeyUsage3) {
-        uint8_t container_version = 3;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "HMAC-256";
         uint8_t key_usage = 2;
@@ -136,13 +141,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, invalidContainerVersion) {
-        uint8_t container_version = 0;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
         uint8_t key_usage = 3;
@@ -154,13 +158,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), 0, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, missingIv) {
-        uint8_t container_version = 3;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
         uint8_t key_usage = 3;
@@ -172,13 +175,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, missingC1) {
-        uint8_t container_version = 3;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
         uint8_t key_usage = 3;
@@ -190,13 +192,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, missingC2) {
-        uint8_t container_version = 3;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
         uint8_t key_usage = 3;
@@ -208,13 +209,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, missingC3) {
-        uint8_t container_version = 3;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
         uint8_t key_usage = 3;
@@ -226,13 +226,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, unknownKeyType) {
-        uint8_t container_version = 3;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-64";
         uint8_t key_usage = 3;
@@ -244,13 +243,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, unknownKeyUsage1) {
-        uint8_t container_version = 0;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
         uint8_t key_usage = 0;
@@ -262,13 +260,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, unknownKeyUsage2) {
-        uint8_t container_version = 0;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
         uint8_t key_usage = 4;
@@ -280,13 +277,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, unknownDecryptedKeyUsage1) {
-        uint8_t container_version = 0;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
         uint8_t key_usage = 2;
@@ -298,13 +294,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, unknownDecryptedKeyUsage2) {
-        uint8_t container_version = 0;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
         uint8_t key_usage = 2;
@@ -316,13 +311,12 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, failsDisallowedKey) {
-        uint8_t container_version = 3;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
         uint8_t key_usage = 3;
@@ -336,7 +330,7 @@ namespace {
 
         sa_rights key_rights;
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, entitled_ta_ids, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Curve not supported";
@@ -351,7 +345,6 @@ namespace {
     }
 
     TEST_P(SaKeyImportSocTaIdRangeTest, multipleEntitledTaIdsCounts) {
-        uint8_t container_version = 3;
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
         uint8_t key_usage = 3;
@@ -376,7 +369,7 @@ namespace {
         }
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), container_version, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, entitled_ta_ids, key_rights, c1, c2, c3);
         if (count > MAX_NUM_ALLOWED_TA_IDS) {
             ASSERT_NE(status, SA_STATUS_OK);
