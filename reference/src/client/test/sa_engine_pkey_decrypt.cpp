@@ -79,7 +79,7 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
             if (EVP_PKEY_CTX_set0_rsa_oaep_label(encrypt_pkey_ctx.get(), new_label,
                         static_cast<int>(label.size())) != 1) {
                 free(new_label);
-                GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_ctrl failed");
+                GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
             }
 #endif
         }
@@ -119,7 +119,7 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
             if (EVP_PKEY_CTX_set0_rsa_oaep_label(decrypt_pkey_ctx.get(), new_label,
                         static_cast<int>(label.size())) != 1) {
                 free(new_label);
-                GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_ctrl failed");
+                GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
             }
 #endif
         }

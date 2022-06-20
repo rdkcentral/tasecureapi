@@ -1334,7 +1334,7 @@ static EVP_PKEY* fixup_openssl3_key(EVP_PKEY* evp_pkey) {
 
             ec_group = EC_GROUP_new_from_params(params, NULL, NULL);
             if (ec_group == NULL) {
-                ERROR("EVP_PKEY_get_octet_string_param failed");
+                ERROR("EC_GROUP_new_from_params failed");
                 break;
             }
 
