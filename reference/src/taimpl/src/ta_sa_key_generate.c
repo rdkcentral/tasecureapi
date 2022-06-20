@@ -122,7 +122,7 @@ static sa_status ta_sa_key_generate_ec(
     do {
         status = ec_generate_key(&stored_key, rights, parameters);
         if (status != SA_STATUS_OK) {
-            ERROR("ec_generate_key_bytes failed");
+            ERROR("ec_generate_key failed");
             break;
         }
 

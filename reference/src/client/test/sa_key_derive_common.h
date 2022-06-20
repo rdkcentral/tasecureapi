@@ -44,5 +44,5 @@ class SaKeyDeriveNetflixTest : public ::testing::Test, public SaKeyBase {};
 
 class SaKeyDeriveRootKeyLadderTest : public ::testing::Test, public SaKeyBase {};
 
-// clang-format off
+// clang-format on
 #endif // SA_KEY_DERIVE_COMMON_H

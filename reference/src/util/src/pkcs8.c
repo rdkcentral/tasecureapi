@@ -90,6 +90,8 @@ EVP_PKEY* evp_pkey_from_pkcs8(
 
         if (EVP_PKEY_id(evp_pkey) != type) {
             ERROR("wrong key type");
+            EVP_PKEY_free(evp_pkey);
+            evp_pkey = NULL;
             break;
         }
     } while (false);

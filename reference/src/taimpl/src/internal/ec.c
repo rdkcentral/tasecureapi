@@ -301,7 +301,7 @@ size_t ec_validate_private(
 #else
             ec_key = EVP_PKEY_get1_EC_KEY(evp_pkey);
             if (ec_key == NULL) {
-                ERROR("EVP_PKEY_get0_EC_KEY failed");
+                ERROR("EVP_PKEY_get1_EC_KEY failed");
                 break;
             }
 
