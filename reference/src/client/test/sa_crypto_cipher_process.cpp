@@ -77,10 +77,14 @@ namespace {
             GTEST_SKIP() << "Cipher algorithm not supported";
 
         std::vector<uint8_t> clear;
-        if (key_type == SA_KEY_TYPE_EC)
-            clear = random_ec(key_size);
-        else
+        if (key_type == SA_KEY_TYPE_EC) {
+            key_size = ec_get_key_size(parameters.curve);
+            clear = random(key_size);
+            if (parameters.curve == SA_ELLIPTIC_CURVE_NIST_P521)
+                clear[0] &= 0x1;
+        } else {
             clear = random(AES_BLOCK_SIZE * 2);
+        }
 
         // encrypt using OpenSSL
         auto encrypted = encrypt_openssl(clear, parameters);
@@ -119,7 +123,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -160,7 +164,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);

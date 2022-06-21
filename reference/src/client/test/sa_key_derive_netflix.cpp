@@ -26,7 +26,7 @@ using namespace client_test_helpers;
 namespace {
     TEST_F(SaKeyDeriveNetflixTest, nominal) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto clear_encryption_key = random(SYM_128_KEY_SIZE);
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);
@@ -56,7 +56,7 @@ namespace {
 
     TEST_F(SaKeyDeriveNetflixTest, failsNullKey) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto clear_encryption_key = random(SYM_128_KEY_SIZE);
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);
@@ -74,7 +74,7 @@ namespace {
 
     TEST_F(SaKeyDeriveNetflixTest, failsNullRights) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto clear_encryption_key = random(SYM_128_KEY_SIZE);
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);
@@ -94,7 +94,7 @@ namespace {
 
     TEST_F(SaKeyDeriveNetflixTest, failsNullParameters) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
@@ -104,7 +104,7 @@ namespace {
 
     TEST_F(SaKeyDeriveNetflixTest, failsUnknownEncryptionKey) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto clear_hmac_key = random(SYM_256_KEY_SIZE);
         auto hmac_key = create_sa_key_symmetric(&rights, clear_hmac_key);
@@ -124,7 +124,7 @@ namespace {
 
     TEST_F(SaKeyDeriveNetflixTest, failsUnknownHmacKey) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto clear_encryption_key = random(SYM_128_KEY_SIZE);
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);
@@ -144,7 +144,7 @@ namespace {
 
     TEST_F(SaKeyDeriveNetflixTest, failsEncKeyDisallowsDerive) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_DERIVE);
 
         auto clear_encryption_key = random(SYM_128_KEY_SIZE);
@@ -172,7 +172,7 @@ namespace {
 
     TEST_F(SaKeyDeriveNetflixTest, failsHmacKeyDisallowsDerive) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto clear_encryption_key = random(SYM_128_KEY_SIZE);
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);
@@ -199,7 +199,7 @@ namespace {
 
     TEST_F(SaKeyDeriveNetflixTest, failsEncKeyNotSymmetric) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto rsa_key = sample_rsa_2048_pkcs8();
         auto encryption_key = create_sa_key_rsa(&rights, rsa_key);
@@ -225,7 +225,7 @@ namespace {
 
     TEST_F(SaKeyDeriveNetflixTest, failsHmacKeyNotSymmetric) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto clear_encryption_key = random(SYM_128_KEY_SIZE);
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);

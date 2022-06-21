@@ -30,7 +30,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_ec parameters = {static_cast<sa_elliptic_curve>(UINT8_MAX)};
 
@@ -43,7 +43,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_EC, nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);

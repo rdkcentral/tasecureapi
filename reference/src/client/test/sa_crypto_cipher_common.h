@@ -87,9 +87,12 @@ protected:
             const std::vector<uint8_t>& coordinate);
 };
 
-using SaCryptoCipherDecryptTestType = std::tuple<sa_cipher_algorithm, sa_key_type, size_t, sa_buffer_type, sa_digest_algorithm, sa_digest_algorithm, size_t>;
+// clang-format off
+using SaCryptoCipherDecryptTestType = std::tuple<sa_cipher_algorithm, sa_key_type, size_t, sa_buffer_type,
+    sa_digest_algorithm, sa_digest_algorithm, size_t>;
 
-class SaCryptoCipherDecryptTest : public ::testing::TestWithParam<SaCryptoCipherDecryptTestType>, public SaCipherCryptoBase {
+class SaCryptoCipherDecryptTest : public ::testing::TestWithParam<SaCryptoCipherDecryptTestType>,
+                                  public SaCipherCryptoBase {
 protected:
     void SetUp() override;
 };
@@ -135,4 +138,5 @@ public:
     static void* process_multiple_threads(void* args);
 };
 
+// clang-format on
 #endif // SA_CRYPTO_CIPHER_COMMON_H

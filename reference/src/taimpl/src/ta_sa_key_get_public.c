@@ -45,12 +45,12 @@ static sa_status ta_sa_key_get_public_ec(
         return SA_STATUS_BAD_KEY_TYPE;
     }
 
-    sa_status status = ec_get_public(out, out_length, stored_key);
-    if (status != SA_STATUS_OK) {
+    if (!ec_get_public(out, out_length, stored_key)) {
         ERROR("ec_get_public failed");
+        return SA_STATUS_BAD_PARAMETER;
     }
 
-    return status;
+    return SA_STATUS_OK;
 }
 
 static sa_status ta_sa_key_get_public_dh(
@@ -72,16 +72,6 @@ static sa_status ta_sa_key_get_public_dh(
     if (header->type != SA_KEY_TYPE_DH) {
         ERROR("Bad type");
         return SA_STATUS_BAD_KEY_TYPE;
-    }
-
-    if (out == NULL) {
-        *out_length = header->size;
-        return SA_STATUS_OK;
-    }
-
-    if (*out_length < header->size) {
-        ERROR("Bad out_length");
-        return SA_STATUS_BAD_PARAMETER;
     }
 
     if (!dh_get_public(out, out_length, stored_key)) {

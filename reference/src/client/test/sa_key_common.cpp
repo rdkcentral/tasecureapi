@@ -40,28 +40,28 @@ using namespace client_test_helpers;
 std::vector<uint8_t> SaKeyBase::root_key;
 
 bool SaKeyBase::get_root_key(std::vector<uint8_t>& key) {
-    bool result = false;
+    bool status = false;
     if (root_key.empty()) {
         uint8_t name[16];
         size_t name_length = 16;
         root_key.resize(SYM_256_KEY_SIZE);
         size_t key_length = SYM_256_KEY_SIZE;
-        if (load_pkcs12_secret_key(root_key.data(), &key_length, name, &name_length) != 1) {
+        if (!load_pkcs12_secret_key(root_key.data(), &key_length, name, &name_length)) {
             ERROR("load_pkcs12_secret_key failed");
             return false;
         }
 
         root_key.resize(key_length);
-        result = true;
+        status = true;
     } else {
-        result = true;
+        status = true;
     }
 
     key = root_key;
-    return result;
+    return status;
 }
 
-bool SaKeyBase::dh_generate(
+bool SaKeyBase::dh_generate_key(
         std::shared_ptr<EVP_PKEY>& evp_pkey,
         std::vector<uint8_t>& public_key,
         const std::vector<uint8_t>& p,
@@ -149,19 +149,7 @@ bool SaKeyBase::dh_generate(
     }
 
     evp_pkey = std::shared_ptr<EVP_PKEY>(temp, EVP_PKEY_free);
-
-    BIGNUM* public_bn = nullptr;
-    if (EVP_PKEY_get_bn_param(evp_pkey.get(), "pub", &public_bn) != 1) {
-        ERROR("EVP_PKEY_get_bn_param failed");
-        return false;
-    }
-
-    size_t public_key_size = BN_num_bytes(public_bn);
-    public_key.resize(public_key_size);
-    size_t written = BN_bn2bin(public_bn, public_key.data());
-    BN_free(public_bn);
 #else
-
     auto dh = std::shared_ptr<DH>(DH_new(), DH_free);
     if (dh == nullptr) {
         ERROR("DH_new failed");
@@ -194,40 +182,32 @@ bool SaKeyBase::dh_generate(
         return false;
     }
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-    const BIGNUM* public_bn = DH_get0_pub_key(dh.get());
-    if (public_bn == nullptr) {
-        ERROR("DH_get0_pub_key failed");
+#endif
+    int length = i2d_PUBKEY(evp_pkey.get(), nullptr);
+    if (length <= 0) {
+        ERROR("i2d_PUBKEY failed");
         return false;
     }
 
-    size_t public_key_size = BN_num_bytes(public_bn);
-    public_key.resize(public_key_size);
-    size_t written = BN_bn2bin(public_bn, public_key.data());
-#else
-    size_t public_key_size = BN_num_bytes(dh->pub_key);
-    public_key.resize(public_key_size);
-    size_t written = BN_bn2bin(dh->pub_key, public_key.data());
-#endif
-#endif
-    if (written <= 0) {
-        ERROR("BN_bn2bin failed");
+    public_key.resize(length);
+    uint8_t* p_public_key = public_key.data();
+    length = i2d_PUBKEY(evp_pkey.get(), &p_public_key);
+    if (length <= 0) {
+        ERROR("i2d_PUBKEY failed");
         return false;
     }
-
-    public_key.resize(written);
 
     return true;
 }
 
 bool SaKeyBase::dh_compute_secret(
         std::vector<uint8_t>& shared_secret,
-        const std::shared_ptr<EVP_PKEY>& evp_pkey,
-        const std::shared_ptr<EVP_PKEY>& other_evp_pkey,
+        const std::shared_ptr<EVP_PKEY>& private_key,
+        const std::shared_ptr<EVP_PKEY>& other_public_key,
         const std::vector<uint8_t>& p,
         const std::vector<uint8_t>& g) {
 
-    auto evp_pkey_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new(evp_pkey.get(), nullptr), EVP_PKEY_CTX_free);
+    auto evp_pkey_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new(private_key.get(), nullptr), EVP_PKEY_CTX_free);
     if (evp_pkey_ctx == nullptr) {
         ERROR("EVP_PKEY_CTX_new failed");
         return false;
@@ -246,12 +226,13 @@ bool SaKeyBase::dh_compute_secret(
 #endif
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
-    if (EVP_PKEY_derive_set_peer_ex(evp_pkey_ctx.get(), other_evp_pkey.get(), 0) != 1) {
+    // Don't validate the peer because it is an engine key.
+    if (EVP_PKEY_derive_set_peer_ex(evp_pkey_ctx.get(), other_public_key.get(), 0) != 1) {
         ERROR("EVP_PKEY_derive_set_peer_ex failed");
         return false;
     }
 #else
-    if (EVP_PKEY_derive_set_peer(evp_pkey_ctx.get(), other_evp_pkey.get()) != 1) {
+    if (EVP_PKEY_derive_set_peer(evp_pkey_ctx.get(), other_public_key.get()) != 1) {
         ERROR("EVP_PKEY_derive_set_peer failed");
         return false;
     }
@@ -285,131 +266,30 @@ sa_status SaKeyBase::ec_generate_key(
         std::shared_ptr<EVP_PKEY>& private_key,
         std::vector<uint8_t>& public_key) {
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-    if (is_pcurve(curve)) {
-        auto ec_key = std::shared_ptr<EC_KEY>(EC_KEY_new(), EC_KEY_free);
-        if (ec_key == nullptr) {
-            ERROR("EC_KEY_new failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-
-        auto group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_type(curve)), EC_GROUP_free);
-        if (group == nullptr) {
-            ERROR("ec_group_from_curve failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-
-        EC_KEY_set_group(ec_key.get(), group.get());
-
-        if (EC_KEY_generate_key(ec_key.get()) != 1) {
-            ERROR("EC_KEY_generate_key failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-
-        private_key = {EVP_PKEY_new(), EVP_PKEY_free};
-        if (EVP_PKEY_set1_EC_KEY(private_key.get(), ec_key.get()) == 0) {
-            ERROR("EVP_PKEY_set1_EC_KEY failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-    } else {
-        ERROR("Invalid curve");
+    std::vector<uint8_t> private_key_bytes = ec_generate_key_bytes(curve);
+    if (private_key_bytes.empty()) {
+        ERROR("ec_generate_key_bytes failed");
         return SA_STATUS_OPERATION_NOT_SUPPORTED;
     }
-#else
-    int type = ec_get_type(curve);
-    if (type == 0) {
-        ERROR("ec_get_type failed");
+
+    private_key = ec_import_private(curve, private_key_bytes);
+    if (private_key == nullptr) {
+        ERROR("ec_import_private failed");
         return SA_STATUS_INTERNAL_ERROR;
     }
 
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx;
-    if (is_pcurve(curve)) {
-        auto param_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new_id(EVP_PKEY_EC, nullptr), EVP_PKEY_CTX_free);
-        if (param_ctx == nullptr) {
-            ERROR("EVP_PKEY_CTX_new_id failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-
-        if (EVP_PKEY_paramgen_init(param_ctx.get()) != 1) {
-            ERROR("EVP_PKEY_paramgen_init failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-
-        if (EVP_PKEY_CTX_set_ec_paramgen_curve_nid(param_ctx.get(), type) != 1) {
-            ERROR("EVP_PKEY_CTX_set_ec_paramgen_curve_nid failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-
-        if (EVP_PKEY_CTX_set_ec_param_enc(param_ctx.get(), OPENSSL_EC_NAMED_CURVE) != 1) {
-            ERROR("EVP_PKEY_CTX_set_ec_param_enc failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-
-        EVP_PKEY* params = nullptr;
-        if (EVP_PKEY_paramgen(param_ctx.get(), &params) <= 0) {
-            ERROR("EVP_PKEY_paramgen failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-
-        auto evp_pkey_params = std::shared_ptr<EVP_PKEY>(params, EVP_PKEY_free);
-        evp_pkey_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new(evp_pkey_params.get(), nullptr),
-                EVP_PKEY_CTX_free);
-        if (evp_pkey_ctx == nullptr) {
-            ERROR("EVP_PKEY_CTX_new failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-    } else {
-        evp_pkey_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new_id(type, nullptr), EVP_PKEY_CTX_free);
-    }
-
-    if (EVP_PKEY_keygen_init(evp_pkey_ctx.get()) != 1) {
-        ERROR("EVP_PKEY_keygen_init failed");
+    int length = i2d_PUBKEY(private_key.get(), nullptr);
+    if (length <= 0) {
+        ERROR("i2d_PUBKEY failed");
         return SA_STATUS_INTERNAL_ERROR;
     }
 
-    EVP_PKEY* evp_pkey = nullptr;
-    if (EVP_PKEY_keygen(evp_pkey_ctx.get(), &evp_pkey) != 1) {
-        ERROR("EVP_PKEY_keygen failed");
+    public_key.resize(length);
+    uint8_t* p_public_key = public_key.data();
+    length = i2d_PUBKEY(private_key.get(), &p_public_key);
+    if (length <= 0) {
+        ERROR("i2d_PUBKEY failed");
         return SA_STATUS_INTERNAL_ERROR;
-    }
-
-    private_key = {evp_pkey, EVP_PKEY_free};
-#endif
-
-    size_t key_length = ec_get_key_size(curve);
-
-    if (is_pcurve(curve)) {
-        size_t public_key_size = key_length * 2 + 1;
-        public_key.resize(public_key_size);
-        unsigned char* buffer = public_key.data();
-        size_t written = i2d_PublicKey(private_key.get(), &buffer);
-
-        // The result will always start with a 4 to signify the following bytes are encoded as an uncompressed
-        // point.
-        if (written != public_key_size || public_key[0] != POINT_CONVERSION_UNCOMPRESSED) {
-            ERROR("i2d_PublicKey failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-
-        // Strip off the 4.
-        public_key.erase(public_key.begin());
-    } else {
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-        ERROR("curve not supported");
-        return SA_STATUS_OPERATION_NOT_SUPPORTED;
-#else
-        size_t public_key_size;
-        if (EVP_PKEY_get_raw_public_key(private_key.get(), nullptr, &public_key_size) != 1) {
-            ERROR("EVP_PKEY_get_raw_public_key failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-
-        public_key.resize(public_key_size);
-        if (EVP_PKEY_get_raw_public_key(private_key.get(), public_key.data(), &public_key_size) != 1) {
-            ERROR("EVP_PKEY_get_raw_public_key failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-#endif
     }
 
     return SA_STATUS_OK;
@@ -432,10 +312,18 @@ bool SaKeyBase::ecdh_compute_secret(
         return false;
     }
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+    // Don't validate the peer because it is an engine key.
+    if (EVP_PKEY_derive_set_peer_ex(evp_pkey_ctx.get(), other_public_key.get(), 0) != 1) {
+        ERROR("EVP_PKEY_derive_set_peer_ex failed");
+        return false;
+    }
+#else
     if (EVP_PKEY_derive_set_peer(evp_pkey_ctx.get(), other_public_key.get()) != 1) {
         ERROR("EVP_PKEY_derive_set_peer failed");
         return false;
     }
+#endif
 
     size_t shared_secret_length = 0;
     if (EVP_PKEY_derive(evp_pkey_ctx.get(), nullptr, &shared_secret_length) != 1) {
@@ -460,7 +348,7 @@ bool SaKeyBase::execute_dh(
     auto key = create_uninitialized_sa_key();
 
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
 
     sa_generate_parameters_dh parameters = {
             .p = dhp.data(),
@@ -470,27 +358,19 @@ bool SaKeyBase::execute_dh(
     if (sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters) != SA_STATUS_OK)
         return false;
 
-    size_t dh_public_key_length;
-    if (sa_key_get_public(nullptr, &dh_public_key_length, *key) != SA_STATUS_OK)
-        return false;
-
-    std::vector<uint8_t> dh_public_key(dh_public_key_length);
-    if (sa_key_get_public(dh_public_key.data(), &dh_public_key_length, *key) != SA_STATUS_OK)
-        return false;
-    EVP_PKEY* temp = dh_import_public(dh_public_key.data(), dh_public_key.size(), dhp.data(), dhp.size(), dhg.data(),
-            dhg.size());
+    EVP_PKEY* temp = sa_get_public_key(*key);
     if (temp == nullptr) {
-        ERROR("dh_import_public failed");
+        ERROR("sa_get_public_key failed");
         return false;
     }
 
     auto public_evp_pkey = std::shared_ptr<EVP_PKEY>(temp, EVP_PKEY_free);
 
-        //create other side info
+    //create other side info
     std::shared_ptr<EVP_PKEY> other_private_key;
     std::vector<uint8_t> other_public_key;
-    if (!dh_generate(other_private_key, other_public_key, dhp, dhg)) {
-        ERROR("dh_generate failed");
+    if (!dh_generate_key(other_private_key, other_public_key, dhp, dhg)) {
+        ERROR("dh_generate_key failed");
         return false;
     }
 
@@ -515,20 +395,20 @@ sa_status SaKeyBase::execute_ecdh(
     auto other_private_key = create_uninitialized_sa_key();
 
     sa_rights rights;
-    rights_set_allow_all(&rights);
+    sa_rights_set_allow_all(&rights);
 
     sa_generate_parameters_ec parameters = {curve};
     sa_status status = sa_key_generate(other_private_key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
     if (status != SA_STATUS_OK)
         return status;
 
-    std::shared_ptr<EVP_PKEY> other_public_key(get_public_key(*other_private_key), EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> other_public_key(sa_get_public_key(*other_private_key), EVP_PKEY_free);
 
     std::shared_ptr<EVP_PKEY> private_key;
     std::vector<uint8_t> public_key;
     status = ec_generate_key(curve, private_key, public_key);
     if (status != SA_STATUS_OK) {
-        ERROR("ec_generate_key failed");
+        ERROR("ec_generate_key_bytes failed");
         return status;
     }
 
@@ -901,6 +781,7 @@ bool SaKeyBase::key_check(
     return true;
 }
 
+// clang-format off
 INSTANTIATE_TEST_SUITE_P(
         SaKeyExportTests,
         SaKeyExportTest,
@@ -935,7 +816,8 @@ INSTANTIATE_TEST_SUITE_P(
         ::testing::Combine(
                 ::testing::Values(SA_KEY_TYPE_SYMMETRIC),
                 ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
-                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384, SA_DIGEST_ALGORITHM_SHA512)));
+                ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
+                    SA_DIGEST_ALGORITHM_SHA512)));
 
 INSTANTIATE_TEST_SUITE_P(
         SaKeyGenerateTests,
@@ -984,3 +866,5 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_2048_BYTE_LENGTH),
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_3072_BYTE_LENGTH),
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_4096_BYTE_LENGTH)));
+
+// clang-format on

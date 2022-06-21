@@ -63,13 +63,24 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
                 1);
         if (oaep_label > 0) {
             void* new_label = malloc(label.size());
-            ASSERT_NE(new_label, nullptr);
+            if (new_label == nullptr) {
+                GTEST_FATAL_FAILURE_("malloc failed");
+            }
+
             memcpy(new_label, label.data(), label.size());
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
-            ASSERT_EQ(EVP_PKEY_CTX_ctrl(encrypt_pkey_ctx.get(), EVP_PKEY_RSA, EVP_PKEY_OP_ENCRYPT,
-                    EVP_PKEY_CTRL_RSA_OAEP_LABEL, label.size(), new_label), 1);
+            if (EVP_PKEY_CTX_ctrl(encrypt_pkey_ctx.get(), EVP_PKEY_RSA, EVP_PKEY_OP_ENCRYPT,
+                        EVP_PKEY_CTRL_RSA_OAEP_LABEL, static_cast<int>(label.size()), new_label) != 1) {
+                free(new_label);
+                GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_ctrl failed");
+            }
 #else
-            ASSERT_EQ(EVP_PKEY_CTX_set0_rsa_oaep_label(encrypt_pkey_ctx.get(), new_label, label.size()), 1);
+
+            if (EVP_PKEY_CTX_set0_rsa_oaep_label(encrypt_pkey_ctx.get(), new_label,
+                        static_cast<int>(label.size())) != 1) {
+                free(new_label);
+                GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
+            }
 #endif
         }
     }
@@ -93,13 +104,23 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
                 1);
         if (oaep_label > 0) {
             void* new_label = malloc(label.size());
-            ASSERT_NE(new_label, nullptr);
+            if (new_label == nullptr) {
+                GTEST_FATAL_FAILURE_("malloc failed");
+            }
+
             memcpy(new_label, label.data(), label.size());
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
-            ASSERT_EQ(EVP_PKEY_CTX_ctrl(decrypt_pkey_ctx.get(), EVP_PKEY_RSA, EVP_PKEY_OP_DECRYPT,
-                              EVP_PKEY_CTRL_RSA_OAEP_LABEL, label.size(), new_label), 1);
+            if (EVP_PKEY_CTX_ctrl(decrypt_pkey_ctx.get(), EVP_PKEY_RSA, EVP_PKEY_OP_DECRYPT,
+                        EVP_PKEY_CTRL_RSA_OAEP_LABEL, static_cast<int>(label.size()), new_label) != 1) {
+                free(new_label);
+                GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_ctrl failed");
+            }
 #else
-            ASSERT_EQ(EVP_PKEY_CTX_set0_rsa_oaep_label(decrypt_pkey_ctx.get(), new_label, label.size()), 1);
+            if (EVP_PKEY_CTX_set0_rsa_oaep_label(decrypt_pkey_ctx.get(), new_label,
+                        static_cast<int>(label.size())) != 1) {
+                free(new_label);
+                GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
+            }
 #endif
         }
     }

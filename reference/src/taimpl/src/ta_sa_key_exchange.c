@@ -26,7 +26,6 @@
 #include "porting/memory.h"
 #include "rights.h"
 #include "ta_sa.h"
-#include <memory.h>
 
 static sa_status ta_sa_key_exchange_dh(
         sa_key* key,
@@ -64,10 +63,8 @@ static sa_status ta_sa_key_exchange_dh(
     }
 
     sa_status status;
-    uint8_t* other_public_bytes = NULL;
     stored_key_t* stored_key_shared_secret = NULL;
     stored_key_t* stored_key_private = NULL;
-    size_t modulus_size;
     do {
         key_store_t* key_store = client_get_key_store(client);
         status = key_store_unwrap(&stored_key_private, key_store, private_key, caller_uuid);
@@ -83,36 +80,21 @@ static sa_status ta_sa_key_exchange_dh(
             break;
         }
 
-        modulus_size = header->size;
-
         if (!rights_allowed_exchange(&header->rights)) {
             ERROR("rights_allowed_exchange failed");
             status = SA_STATUS_OPERATION_NOT_ALLOWED;
             break;
         }
 
-        if (!key_type_supports_dh(header->type, modulus_size)) {
+        if (!key_type_supports_dh(header->type, header->size)) {
             ERROR("key_type_supports_dh failed");
             status = SA_STATUS_BAD_KEY_TYPE;
             break;
         }
 
-        if (other_public_length > modulus_size) {
-            ERROR("Bad other_public_length");
-            status = SA_STATUS_BAD_PARAMETER;
-            break;
-        }
-
-        other_public_bytes = memory_internal_alloc(modulus_size);
-        if (other_public_bytes == NULL) {
-            ERROR("memory_internal_alloc failed");
-            break;
-        }
-
-        // The incoming public key can occasionally be a bit shorter than modulus_size, so pad the beginning with zeros.
-        memory_memset_unoptimizable(other_public_bytes, 0, modulus_size);
-        memcpy(other_public_bytes + modulus_size - other_public_length, other_public, other_public_length);
-        if (!dh_compute(&stored_key_shared_secret, rights, other_public_bytes, modulus_size, stored_key_private)) {
+        status = dh_compute_shared_secret(&stored_key_shared_secret, rights, other_public, other_public_length,
+                stored_key_private);
+        if (status != SA_STATUS_OK) {
             ERROR("dh_compute failed");
             status = SA_STATUS_BAD_PARAMETER;
             break;
@@ -124,11 +106,6 @@ static sa_status ta_sa_key_exchange_dh(
             break;
         }
     } while (false);
-
-    if (other_public_bytes != NULL) {
-        memory_memset_unoptimizable(other_public_bytes, 0, modulus_size);
-        memory_internal_free(other_public_bytes);
-    }
 
     stored_key_free(stored_key_private);
     stored_key_free(stored_key_shared_secret);
@@ -201,8 +178,8 @@ static sa_status ta_sa_key_exchange_ecdh(
             break;
         }
 
-        status = ec_compute_ecdh_shared_secret(&stored_key_shared_secret, rights, stored_key_private, other_public,
-                other_public_length);
+        status = ec_compute_ecdh_shared_secret(&stored_key_shared_secret, rights, other_public, other_public_length,
+                stored_key_private);
         if (status != SA_STATUS_OK) {
             ERROR("ec_compute_ecdh_shared_secret failed");
             break;
@@ -282,14 +259,12 @@ static sa_status ta_sa_key_exchange_netflix_dh(
     }
 
     sa_status status;
-    uint8_t* other_public_bytes = NULL;
     stored_key_t* stored_key_enc = NULL;
     stored_key_t* stored_key_hmac = NULL;
     stored_key_t* stored_key_wrap = NULL;
     stored_key_t* stored_key_private = NULL;
     stored_key_t* stored_key_in = NULL;
     stored_key_t* stored_key_shared_secret = NULL;
-    size_t modulus_size;
     do {
         key_store_t* key_store = client_get_key_store(client);
         status = key_store_unwrap(&stored_key_in, key_store, parameters->in_kw, caller_uuid);
@@ -330,37 +305,21 @@ static sa_status ta_sa_key_exchange_netflix_dh(
             break;
         }
 
-        modulus_size = private_header->size;
-
         if (!rights_allowed_exchange(&private_header->rights)) {
             ERROR("rights_allowed_exchange failed");
             status = SA_STATUS_OPERATION_NOT_ALLOWED;
             break;
         }
 
-        if (!key_type_supports_dh(private_header->type, modulus_size)) {
+        if (!key_type_supports_dh(private_header->type, private_header->size)) {
             ERROR("key_type_supports_dh failed");
             status = SA_STATUS_BAD_KEY_TYPE;
             break;
         }
 
-        if (other_public_length > modulus_size) {
-            ERROR("Bad other_public_length");
-            status = SA_STATUS_BAD_PARAMETER;
-            break;
-        }
-
-        other_public_bytes = memory_internal_alloc(modulus_size);
-        if (other_public_bytes == NULL) {
-            ERROR("memory_internal_alloc failed");
-            break;
-        }
-
-        // The incoming public key can occasionally be a bit shorter than modulus_size, so pad the beginning with zeros.
-        memory_memset_unoptimizable(other_public_bytes, 0, modulus_size);
-        memcpy(other_public_bytes + modulus_size - other_public_length, other_public, other_public_length);
-        if (!dh_compute(&stored_key_shared_secret, &in_header->rights, other_public_bytes, modulus_size,
-                    stored_key_private)) {
+        status = dh_compute_shared_secret(&stored_key_shared_secret, &in_header->rights, other_public,
+                other_public_length, stored_key_private);
+        if (status != SA_STATUS_OK) {
             ERROR("dh_compute failed");
             status = SA_STATUS_BAD_PARAMETER;
             break;
@@ -397,11 +356,6 @@ static sa_status ta_sa_key_exchange_netflix_dh(
             break;
         }
     } while (false);
-
-    if (other_public_bytes != NULL) {
-        memory_memset_unoptimizable(other_public_bytes, 0, modulus_size);
-        memory_internal_free(other_public_bytes);
-    }
 
     stored_key_free(stored_key_shared_secret);
     stored_key_free(stored_key_private);

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ namespace {
                 0));
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_status status = sa_key_unwrap(nullptr, &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, cipher_algorithm,
                 wrapping_parameters.get(), *wrapping_key, wrapped_key.data(), wrapped_key.size());
@@ -73,7 +73,7 @@ namespace {
                 0));
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
@@ -94,7 +94,7 @@ namespace {
                 0));
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
@@ -115,7 +115,7 @@ namespace {
                 0));
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
@@ -129,20 +129,20 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights wrapping_key_rights;
-        rights_set_allow_all(&wrapping_key_rights);
+        sa_rights_set_allow_all(&wrapping_key_rights);
         SA_USAGE_BIT_CLEAR(wrapping_key_rights.usage_flags, SA_USAGE_FLAG_UNWRAP);
         std::vector<uint8_t> clear_wrapping_key = get_rsa_private_key(RSA_2048_BYTE_LENGTH);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_rsa(&wrapping_key_rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        void* parameters = NULL;
+        void* parameters = nullptr;
         sa_unwrap_parameters_rsa_oaep parameters_rsa_oaep;
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
-            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
             parameters = &parameters_rsa_oaep;
         }
 
@@ -156,20 +156,20 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights wrapping_key_rights;
-        rights_set_allow_all(&wrapping_key_rights);
+        sa_rights_set_allow_all(&wrapping_key_rights);
         wrapping_key_rights.not_before = time(nullptr) + 60;
         std::vector<uint8_t> clear_wrapping_key = get_rsa_private_key(RSA_2048_BYTE_LENGTH);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_rsa(&wrapping_key_rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        void* parameters = NULL;
+        void* parameters = nullptr;
         sa_unwrap_parameters_rsa_oaep parameters_rsa_oaep;
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
-            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
             parameters = &parameters_rsa_oaep;
         }
 
@@ -183,20 +183,20 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights wrapping_key_rights;
-        rights_set_allow_all(&wrapping_key_rights);
+        sa_rights_set_allow_all(&wrapping_key_rights);
         wrapping_key_rights.not_on_or_after = time(nullptr) - 60;
         std::vector<uint8_t> clear_wrapping_key = get_rsa_private_key(RSA_2048_BYTE_LENGTH);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_rsa(&wrapping_key_rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        void* parameters = NULL;
+        void* parameters = nullptr;
         sa_unwrap_parameters_rsa_oaep parameters_rsa_oaep;
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
-            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
             parameters = &parameters_rsa_oaep;
         }
 
@@ -207,22 +207,21 @@ namespace {
 
     TEST_P(SaKeyUnwrapRsaTest, failsWrappingKeyNotRsa) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
-        auto key_size = ec_get_key_size(curve);
         auto cipher_algorithm = GetParam();
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random_ec(key_size);
+        sa_rights_set_allow_all(&rights);
+        std::vector<uint8_t> clear_wrapping_key = ec_generate_key_bytes(curve);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_ec(&rights, curve, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        void* parameters = NULL;
+        void* parameters = nullptr;
         sa_unwrap_parameters_rsa_oaep parameters_rsa_oaep;
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
-            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
             parameters = &parameters_rsa_oaep;
         }
 
@@ -236,17 +235,17 @@ namespace {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE * 2);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         std::vector<uint8_t> clear_wrapping_key = get_rsa_private_key(RSA_2048_BYTE_LENGTH);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_rsa(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        void* parameters = NULL;
+        void* parameters = nullptr;
         sa_unwrap_parameters_rsa_oaep parameters_rsa_oaep;
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
-            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, NULL, 0};
+            parameters_rsa_oaep = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
             parameters = &parameters_rsa_oaep;
         }
 

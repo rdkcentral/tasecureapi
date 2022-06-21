@@ -109,6 +109,14 @@ static sa_status ta_sa_key_generate_ec(
         return SA_STATUS_NULL_PARAMETER;
     }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000
+    if (parameters->curve == SA_ELLIPTIC_CURVE_ED25519 || parameters->curve == SA_ELLIPTIC_CURVE_ED448 ||
+            parameters->curve == SA_ELLIPTIC_CURVE_X25519 || parameters->curve == SA_ELLIPTIC_CURVE_X448) {
+        ERROR("Unsupported curve");
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+    }
+#endif
+
     sa_status status;
     stored_key_t* stored_key = NULL;
     do {
@@ -193,9 +201,9 @@ static sa_status ta_sa_key_generate_dh(
     sa_status status;
     stored_key_t* stored_key = NULL;
     do {
-        if (!dh_generate(&stored_key, rights, parameters->p, parameters->p_length, parameters->g,
+        if (!dh_generate_key(&stored_key, rights, parameters->p, parameters->p_length, parameters->g,
                     parameters->g_length)) {
-            ERROR("dh_generate failed");
+            ERROR("dh_generate_key failed");
             status = SA_STATUS_BAD_PARAMETER;
             break;
         }

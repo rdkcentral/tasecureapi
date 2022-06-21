@@ -28,7 +28,7 @@ namespace {
         auto clear_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_import_parameters_symmetric parameters = {&rights};
 
@@ -52,7 +52,7 @@ namespace {
         auto clear_key = random(15);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_import_parameters_symmetric parameters = {&rights};
 
@@ -68,7 +68,7 @@ namespace {
         auto clear_key = random(513);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_import_parameters_symmetric parameters = {&rights};
 

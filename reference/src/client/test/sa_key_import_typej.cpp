@@ -33,7 +33,7 @@ namespace {
         auto macclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights mackey_rights;
-        rights_set_allow_all(&mackey_rights);
+        sa_rights_set_allow_all(&mackey_rights);
 
         auto mackey = create_sa_key_symmetric(&mackey_rights, macclear_key);
         ASSERT_NE(mackey, nullptr);
@@ -41,7 +41,7 @@ namespace {
         auto encclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights enckey_rights;
-        rights_set_allow_all(&enckey_rights);
+        sa_rights_set_allow_all(&enckey_rights);
 
         auto enckey = create_sa_key_symmetric(&enckey_rights, encclear_key);
         ASSERT_NE(enckey, nullptr);
@@ -89,7 +89,7 @@ namespace {
         auto macclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights mackey_rights;
-        rights_set_allow_all(&mackey_rights);
+        sa_rights_set_allow_all(&mackey_rights);
 
         auto mackey = create_sa_key_symmetric(&mackey_rights, macclear_key);
         ASSERT_NE(mackey, nullptr);
@@ -97,7 +97,7 @@ namespace {
         auto encclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights enckey_rights;
-        rights_set_allow_all(&enckey_rights);
+        sa_rights_set_allow_all(&enckey_rights);
 
         auto enckey = create_sa_key_symmetric(&enckey_rights, encclear_key);
         ASSERT_NE(enckey, nullptr);
@@ -173,7 +173,7 @@ namespace {
         auto macclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights mackey_rights;
-        rights_set_allow_all(&mackey_rights);
+        sa_rights_set_allow_all(&mackey_rights);
 
         auto mackey = create_sa_key_symmetric(&mackey_rights, macclear_key);
         ASSERT_NE(mackey, nullptr);
@@ -181,7 +181,7 @@ namespace {
         auto encclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights enckey_rights;
-        rights_set_allow_all(&enckey_rights);
+        sa_rights_set_allow_all(&enckey_rights);
 
         auto enckey = create_sa_key_symmetric(&enckey_rights, encclear_key);
         ASSERT_NE(enckey, nullptr);
@@ -259,7 +259,7 @@ namespace {
         auto macclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights mackey_rights;
-        rights_set_allow_all(&mackey_rights);
+        sa_rights_set_allow_all(&mackey_rights);
 
         auto mackey = create_sa_key_symmetric(&mackey_rights, macclear_key);
         ASSERT_NE(mackey, nullptr);
@@ -267,7 +267,7 @@ namespace {
         auto encclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights enckey_rights;
-        rights_set_allow_all(&enckey_rights);
+        sa_rights_set_allow_all(&enckey_rights);
 
         auto enckey = create_sa_key_symmetric(&enckey_rights, encclear_key);
         ASSERT_NE(enckey, nullptr);
@@ -320,7 +320,7 @@ namespace {
         auto macclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights mackey_rights;
-        rights_set_allow_all(&mackey_rights);
+        sa_rights_set_allow_all(&mackey_rights);
 
         auto mackey = create_sa_key_symmetric(&mackey_rights, macclear_key);
         ASSERT_NE(mackey, nullptr);
@@ -328,7 +328,7 @@ namespace {
         auto encclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights enckey_rights;
-        rights_set_allow_all(&enckey_rights);
+        sa_rights_set_allow_all(&enckey_rights);
 
         auto enckey = create_sa_key_symmetric(&enckey_rights, encclear_key);
         ASSERT_NE(enckey, nullptr);
@@ -374,7 +374,7 @@ namespace {
         auto macclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights mackey_rights;
-        rights_set_allow_all(&mackey_rights);
+        sa_rights_set_allow_all(&mackey_rights);
 
         auto mackey = create_sa_key_symmetric(&mackey_rights, macclear_key);
         ASSERT_NE(mackey, nullptr);
@@ -382,7 +382,7 @@ namespace {
         auto encclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights enckey_rights;
-        rights_set_allow_all(&enckey_rights);
+        sa_rights_set_allow_all(&enckey_rights);
 
         auto enckey = create_sa_key_symmetric(&enckey_rights, encclear_key);
         ASSERT_NE(enckey, nullptr);
@@ -408,7 +408,7 @@ namespace {
         auto macclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights mackey_rights;
-        rights_set_allow_all(&mackey_rights);
+        sa_rights_set_allow_all(&mackey_rights);
 
         auto mackey = create_sa_key_symmetric(&mackey_rights, macclear_key);
         ASSERT_NE(mackey, nullptr);
@@ -416,7 +416,7 @@ namespace {
         auto encclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights enckey_rights;
-        rights_set_allow_all(&enckey_rights);
+        sa_rights_set_allow_all(&enckey_rights);
 
         auto enckey = create_sa_key_symmetric(&enckey_rights, encclear_key);
         ASSERT_NE(enckey, nullptr);
@@ -445,7 +445,7 @@ namespace {
         auto macclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights mackey_rights;
-        rights_set_allow_all(&mackey_rights);
+        sa_rights_set_allow_all(&mackey_rights);
 
         auto mackey = create_sa_key_symmetric(&mackey_rights, macclear_key);
         ASSERT_NE(mackey, nullptr);
@@ -453,7 +453,7 @@ namespace {
         auto encclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights enckey_rights;
-        rights_set_allow_all(&enckey_rights);
+        sa_rights_set_allow_all(&enckey_rights);
 
         auto enckey = create_sa_key_symmetric(&enckey_rights, encclear_key);
         ASSERT_NE(enckey, nullptr);
@@ -478,7 +478,7 @@ namespace {
         auto macclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights mackey_rights;
-        rights_set_allow_all(&mackey_rights);
+        sa_rights_set_allow_all(&mackey_rights);
 
         auto mackey = create_sa_key_symmetric(&mackey_rights, macclear_key);
         ASSERT_NE(mackey, nullptr);
@@ -511,7 +511,7 @@ namespace {
         auto encclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights enckey_rights;
-        rights_set_allow_all(&enckey_rights);
+        sa_rights_set_allow_all(&enckey_rights);
 
         auto enckey = create_sa_key_symmetric(&enckey_rights, encclear_key);
         ASSERT_NE(enckey, nullptr);
@@ -540,7 +540,7 @@ namespace {
         auto macclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights mackey_rights;
-        rights_set_allow_all(&mackey_rights);
+        sa_rights_set_allow_all(&mackey_rights);
 
         auto mackey = create_sa_key_symmetric(&mackey_rights, macclear_key);
         ASSERT_NE(mackey, nullptr);
@@ -548,7 +548,7 @@ namespace {
         auto encclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights enckey_rights;
-        rights_set_allow_all(&enckey_rights);
+        sa_rights_set_allow_all(&enckey_rights);
         SA_USAGE_BIT_CLEAR(enckey_rights.usage_flags, SA_USAGE_FLAG_UNWRAP);
 
         auto enckey = create_sa_key_symmetric(&enckey_rights, encclear_key);
@@ -578,7 +578,7 @@ namespace {
         auto macclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights mackey_rights;
-        rights_set_allow_all(&mackey_rights);
+        sa_rights_set_allow_all(&mackey_rights);
         SA_USAGE_BIT_CLEAR(mackey_rights.usage_flags, SA_USAGE_FLAG_SIGN);
 
         auto mackey = create_sa_key_symmetric(&mackey_rights, macclear_key);
@@ -587,7 +587,7 @@ namespace {
         auto encclear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights enckey_rights;
-        rights_set_allow_all(&enckey_rights);
+        sa_rights_set_allow_all(&enckey_rights);
 
         auto enckey = create_sa_key_symmetric(&enckey_rights, encclear_key);
         ASSERT_NE(enckey, nullptr);

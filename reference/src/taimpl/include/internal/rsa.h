@@ -40,13 +40,13 @@ extern "C" {
 #endif
 
 /**
- * Validates an RSA PKCS8 private key and returns its size.
+ * Validates an RSA private key and returns its size.
  *
  * @param[in] in input data.
  * @param[in] in_length input data length.
  * @return the size of the valid key. If 0 is returned, the key is not a valid RSA key.
  */
-size_t rsa_validate_pkcs8(
+size_t rsa_validate_private(
         const void* in,
         size_t in_length);
 

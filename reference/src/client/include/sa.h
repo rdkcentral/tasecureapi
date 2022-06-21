@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,8 +43,8 @@
  * SecAPI specification version
  */
 #define SA_SPECIFICATION_MAJOR 3
-#define SA_SPECIFICATION_MINOR 0
-#define SA_SPECIFICATION_REVISION 8
+#define SA_SPECIFICATION_MINOR 1
+#define SA_SPECIFICATION_REVISION 0
 
 #ifdef __cplusplus
 extern "C" {

@@ -20,13 +20,14 @@
 #include "common.h"
 #include "digest_internal.h"
 #include "log.h"
+#include "pkcs8.h"
 #include "porting/memory.h"
-#include "porting/rand.h"
 #include "stored_key_internal.h"
 #include <memory.h>
 #include <openssl/pem.h>
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 #include <openssl/core_names.h>
+#define MAX_GROUP_NAME_SIZE 50
 #endif
 
 #define EC_KEY_SIZE(ec_group) (EC_GROUP_get_degree(ec_group) / 8 + (EC_GROUP_get_degree(ec_group) % 8 == 0 ? 0 : 1))
@@ -39,6 +40,26 @@ static inline bool is_pcurve(sa_elliptic_curve curve) {
 }
 
 static int ec_get_type(sa_elliptic_curve curve) {
+    int type;
+    if (is_pcurve(curve))
+        type = EVP_PKEY_EC;
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+    else if (curve == SA_ELLIPTIC_CURVE_ED25519)
+        type = EVP_PKEY_ED25519;
+    else if (curve == SA_ELLIPTIC_CURVE_X25519)
+        type = EVP_PKEY_X25519;
+    else if (curve == SA_ELLIPTIC_CURVE_ED448)
+        type = EVP_PKEY_ED448;
+    else if (curve == SA_ELLIPTIC_CURVE_X448)
+        type = EVP_PKEY_X448;
+#endif
+    else
+        type = 0;
+
+    return type;
+}
+
+static int ec_get_nid(sa_elliptic_curve curve) {
     switch (curve) {
         case SA_ELLIPTIC_CURVE_NIST_P192:
             return NID_X9_62_prime192v1;
@@ -111,19 +132,19 @@ size_t ec_key_size_from_curve(sa_elliptic_curve curve) {
 static const char* ec_get_name(sa_elliptic_curve curve) {
     switch (curve) {
         case SA_ELLIPTIC_CURVE_NIST_P192:
-            return "P-192";
+            return "prime192v1";
 
         case SA_ELLIPTIC_CURVE_NIST_P224:
-            return "P-224";
+            return "secp224r1";
 
         case SA_ELLIPTIC_CURVE_NIST_P256:
-            return "P-256";
+            return "prime256v1";
 
         case SA_ELLIPTIC_CURVE_NIST_P384:
-            return "P-384";
+            return "secp384r1";
 
         case SA_ELLIPTIC_CURVE_NIST_P521:
-            return "P-521";
+            return "secp521r1";
 
         case SA_ELLIPTIC_CURVE_ED25519:
             return "ED25519";
@@ -146,9 +167,9 @@ static const char* ec_get_name(sa_elliptic_curve curve) {
 
 static EC_GROUP* ec_group_from_curve(sa_elliptic_curve curve) {
     EC_GROUP* ec_group = NULL;
-    int type = ec_get_type(curve);
+    int type = ec_get_nid(curve);
     if (type == 0) {
-        ERROR("ec_get_type failed");
+        ERROR("ec_get_nid failed");
     } else {
         ec_group = EC_GROUP_new_by_curve_name(type);
         if (ec_group == NULL) {
@@ -202,30 +223,11 @@ static size_t export_point(
     *out = memory_secure_alloc(out_length);
     if (*out == NULL) {
         ERROR("memory_secure_alloc failed");
-        return false;
+        return 0;
     }
 
     memcpy(*out, &buffer[raw ? 1 : 0], out_length);
     return out_length;
-}
-
-static EC_POINT* calculate_point(
-        EC_GROUP* ec_group,
-        BIGNUM* private_key) {
-
-    EC_POINT* ec_point = EC_POINT_new(ec_group);
-    if (ec_point == NULL) {
-        ERROR("EC_POINT_new failed");
-        return NULL;
-    }
-
-    if (EC_POINT_mul(ec_group, ec_point, private_key, NULL, NULL, NULL) == 0) {
-        ERROR("EC_POINT_mul failed");
-        EC_POINT_free(ec_point);
-        return NULL;
-    }
-
-    return ec_point;
 }
 
 static bool bn_export(
@@ -257,251 +259,7 @@ static bool bn_export(
     return true;
 }
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-static EVP_PKEY* ec_import_private(
-        sa_elliptic_curve curve,
-        const void* private_key,
-        size_t private_key_length) {
-
-    if (private_key == NULL) {
-        ERROR("NULL private");
-        return NULL;
-    }
-
-    size_t key_size = ec_key_size_from_curve(curve);
-    if (key_size == 0) {
-        ERROR("Bad curve");
-        return NULL;
-    }
-
-    if (private_key_length != key_size) {
-        ERROR("Bad private_length");
-        return NULL;
-    }
-
-    bool status = false;
-    EVP_PKEY* evp_pkey = NULL;
-    EVP_PKEY_CTX* evp_pkey_ctx = NULL;
-    uint8_t* private_bytes = NULL;
-    uint8_t* public_bytes = NULL;
-    BIGNUM* private_bn = NULL;
-    EC_GROUP* ec_group = NULL;
-    EC_POINT* public_point = NULL;
-    do {
-        if (is_pcurve(curve)) {
-            private_bn = BN_bin2bn((const unsigned char*) private_key, (int) private_key_length, NULL);
-            if (private_bn == NULL) {
-                ERROR("BN_bin2bn failed");
-                break;
-            }
-
-            ec_group = ec_group_from_curve(curve);
-            if (ec_group == NULL) {
-                ERROR("ec_group_from_curve failed");
-                break;
-            }
-
-            public_point = calculate_point(ec_group, private_bn);
-            if (public_point == NULL) {
-                ERROR("calculate_point failed");
-                break;
-            }
-
-            size_t public_key_length = export_point(&public_bytes, ec_group, public_point, false);
-            if (public_key_length == 0) {
-                ERROR("export_point failed");
-                break;
-            }
-
-            evp_pkey_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
-            if (evp_pkey_ctx == NULL) {
-                ERROR("EVP_PKEY_CTX_new_id failed");
-                break;
-            }
-
-            if (EVP_PKEY_fromdata_init(evp_pkey_ctx) != 1) {
-                ERROR("EVP_PKEY_fromdata_init failed");
-                break;
-            }
-
-            private_bytes = memory_secure_alloc(private_key_length);
-            if (private_bytes == NULL) {
-                ERROR("memory_secure_alloc failed");
-                break;
-            }
-
-            if (BN_bn2nativepad(private_bn, private_bytes, (int) private_key_length) != (int) private_key_length) {
-                ERROR("BN_bn2nativepad failed");
-                break;
-            }
-
-            const char* group_name = ec_get_name(curve);
-            OSSL_PARAM params[] = {
-                    OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, (char*) group_name,
-                            strlen(group_name)),
-                    OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_PRIV_KEY, (void*) private_bytes, private_key_length),
-                    OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, public_bytes, public_key_length),
-                    OSSL_PARAM_construct_end()};
-
-            if (EVP_PKEY_fromdata(evp_pkey_ctx, &evp_pkey, EVP_PKEY_KEYPAIR, params) != 1) {
-                ERROR("EVP_PKEY_fromdata failed");
-                break;
-            }
-        } else {
-            int type = ec_get_type(curve);
-            if (type == 0) {
-                ERROR("ec_get_type failed");
-                break;
-            }
-
-            evp_pkey = EVP_PKEY_new_raw_private_key(type, NULL, private_key, private_key_length);
-            if (evp_pkey == NULL) {
-                ERROR("EVP_PKEY_new_raw_private_key failed");
-                break;
-            }
-        }
-
-        status = true;
-    } while (false);
-
-    if (private_bytes != NULL) {
-        memory_memset_unoptimizable(private_bytes, 0, private_key_length);
-        memory_secure_free(private_bytes);
-    }
-
-    if (public_bytes != NULL)
-        memory_secure_free(public_bytes);
-
-    EC_POINT_free(public_point);
-    EC_GROUP_free(ec_group);
-    BN_free(private_bn);
-    EVP_PKEY_CTX_free(evp_pkey_ctx);
-    if (!status) {
-        EVP_PKEY_free(evp_pkey);
-        evp_pkey = NULL;
-    }
-
-    return evp_pkey;
-}
-
-#else
-static EVP_PKEY* ec_import_private(
-        sa_elliptic_curve curve,
-        const void* private_key,
-        size_t private_key_length) {
-
-    if (private_key == NULL) {
-        ERROR("NULL private");
-        return NULL;
-    }
-
-    size_t key_size = ec_key_size_from_curve(curve);
-    if (key_size == 0) {
-        ERROR("Bad curve");
-        return NULL;
-    }
-
-    if (private_key_length != key_size) {
-        ERROR("Bad private_length");
-        return NULL;
-    }
-
-    bool status = false;
-    EVP_PKEY* evp_pkey = NULL;
-    if (is_pcurve(curve)) {
-        // P256, P384, or P521 curve.
-        EC_GROUP* ec_group = NULL;
-        BIGNUM* private_bn = NULL;
-        EC_KEY* ec_key = NULL;
-        EC_POINT* ec_point = NULL;
-        do {
-            ec_group = ec_group_from_curve(curve);
-            if (ec_group == NULL) {
-                ERROR("ec_group_from_curve failed");
-                break;
-            }
-
-            ec_key = EC_KEY_new();
-            if (ec_key == NULL) {
-                ERROR("EC_KEY_new failed");
-                break;
-            }
-
-            if (EC_KEY_set_group(ec_key, ec_group) == 0) {
-                ERROR("EC_KEY_set_group failed");
-                break;
-            }
-
-            private_bn = BN_bin2bn((const unsigned char*) private_key, (int) private_key_length, NULL);
-            if (private_bn == NULL) {
-                ERROR("BN_bin2bn failed");
-                break;
-            }
-
-            if (EC_KEY_set_private_key(ec_key, private_bn) == 0) {
-                ERROR("EC_KEY_set_private_key failed");
-                break;
-            }
-
-            ec_point = calculate_point(ec_group, private_bn);
-            if (ec_point == NULL) {
-                ERROR("calculate_point failed");
-                break;
-            }
-
-            if (EC_KEY_set_public_key(ec_key, ec_point) == 0) {
-                ERROR("EC_KEY_set_public_key failed");
-                break;
-            }
-
-            if (EC_KEY_check_key(ec_key) == 0) {
-                ERROR("EC_KEY_check_key failed");
-                break;
-            }
-
-            evp_pkey = EVP_PKEY_new();
-            if (EVP_PKEY_set1_EC_KEY(evp_pkey, ec_key) == 0) {
-                ERROR("EVP_PKEY_set1_EC_KEY failed");
-                break;
-            }
-
-            status = true;
-        } while (false);
-
-        EC_POINT_free(ec_point);
-        BN_free(private_bn);
-        EC_KEY_free(ec_key);
-        EC_GROUP_free(ec_group);
-    } else {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-        ERROR("Curve not supported");
-#else
-        int type = ec_get_type(curve);
-        if (type == 0) {
-            ERROR("ec_get_type failed");
-            return NULL;
-        }
-
-        evp_pkey = EVP_PKEY_new_raw_private_key(type, NULL, private_key, private_key_length);
-        if (evp_pkey == NULL) {
-            ERROR("EVP_PKEY_new_raw_private_key failed");
-            return NULL;
-        }
-
-        status = true;
-#endif
-    }
-
-    if (!status) {
-        EVP_PKEY_free(evp_pkey);
-        evp_pkey = NULL;
-    }
-
-    return evp_pkey;
-}
-#endif
-
-sa_status ec_validate_private(
+size_t ec_validate_private(
         sa_elliptic_curve curve,
         const void* private,
         size_t private_length) {
@@ -511,123 +269,132 @@ sa_status ec_validate_private(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    EVP_PKEY* evp_pkey = ec_import_private(curve, private, private_length);
-    sa_status status = (evp_pkey != NULL) ? SA_STATUS_OK : SA_STATUS_OPERATION_NOT_SUPPORTED;
+    size_t result = 0;
+    EVP_PKEY* evp_pkey = NULL;
+#if OPENSSL_VERSION_NUMBER < 0x30000000
+    EC_KEY* ec_key = NULL;
+    EC_GROUP* ec_group2 = NULL;
+#endif
+    do {
+        evp_pkey = evp_pkey_from_pkcs8(ec_get_type(curve), private, private_length);
+        if (evp_pkey == NULL) {
+            ERROR("evp_pkey_from_pkcs8 failed");
+            break;
+        }
+
+        // ED and X curves are checked in evp_pkey_from_pkcs8.
+        if (is_pcurve(curve)) {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+            char group_name[MAX_GROUP_NAME_SIZE];
+            size_t length = 0;
+            if (EVP_PKEY_get_utf8_string_param(evp_pkey, OSSL_PKEY_PARAM_GROUP_NAME, group_name, MAX_GROUP_NAME_SIZE,
+                        &length) != 1) {
+                ERROR("EVP_PKEY_get_utf8_string_param failed");
+                break;
+            }
+
+            if (strcmp(group_name, ec_get_name(curve)) != 0) {
+                ERROR("EC_GROUP_cmp failed");
+                break;
+            }
+
+#else
+            ec_key = EVP_PKEY_get1_EC_KEY(evp_pkey);
+            if (ec_key == NULL) {
+                ERROR("EVP_PKEY_get1_EC_KEY failed");
+                break;
+            }
+
+            const EC_GROUP* ec_group = EC_KEY_get0_group(ec_key);
+            if (ec_group == NULL) {
+                ERROR("EC_KEY_get0_group failed");
+                break;
+            }
+
+            ec_group2 = ec_group_from_curve(curve);
+            if (EC_GROUP_cmp(ec_group, ec_group2, NULL) != 0) {
+                ERROR("EC_GROUP_cmp failed");
+                break;
+            }
+#endif
+        }
+
+        result = ec_key_size_from_curve(curve);
+    } while (false);
+
     EVP_PKEY_free(evp_pkey);
-    return status;
+#if OPENSSL_VERSION_NUMBER < 0x30000000
+    EC_KEY_free(ec_key);
+    EC_GROUP_free(ec_group2);
+#endif
+
+    return result;
 }
 
-sa_status ec_get_public(
+bool ec_get_public(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key) {
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return SA_STATUS_NULL_PARAMETER;
+        return false;
     }
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return SA_STATUS_NULL_PARAMETER;
+        return false;
     }
 
-    sa_status status = SA_STATUS_INTERNAL_ERROR;
+    bool status = false;
     EVP_PKEY* evp_pkey = NULL;
-    uint8_t* public_bytes = NULL;
     do {
-        const void* key = stored_key_get_key(stored_key);
+        const uint8_t* key = stored_key_get_key(stored_key);
         if (key == NULL) {
             ERROR("stored_key_get_key failed");
             break;
         }
 
-        size_t key_length = stored_key_get_length(stored_key);
         const sa_header* header = stored_key_get_header(stored_key);
         if (header == NULL) {
             ERROR("stored_key_get_header failed");
             break;
         }
 
-        evp_pkey = ec_import_private(header->type_parameters.curve, key, key_length);
+        size_t key_length = stored_key_get_length(stored_key);
+        evp_pkey = evp_pkey_from_pkcs8(ec_get_type(header->type_parameters.curve), key, key_length);
         if (evp_pkey == NULL) {
-            ERROR("ec_import_private failed");
+            ERROR("evp_pkey_from_pkcs8 failed");
             break;
         }
 
-        if (is_pcurve(header->type_parameters.curve)) {
-            int required_length = i2d_PublicKey(evp_pkey, NULL);
-            if (required_length <= 0) {
-                ERROR("i2d_PublicKey failed");
-                break;
-            }
-
-            if (out == NULL) {
-                *out_length = required_length - 1;
-                status = SA_STATUS_OK;
-                break;
-            }
-
-            if (*out_length < (size_t) required_length - 1) {
-                ERROR("Bad out_length");
-                status = SA_STATUS_BAD_PARAMETER;
-                break;
-            }
-
-            public_bytes = memory_secure_alloc(required_length);
-            if (public_bytes == NULL) {
-                ERROR("memory_secure_alloc failed");
-                break;
-            }
-
-            unsigned char* buffer = public_bytes;
-            int written = i2d_PublicKey(evp_pkey, &buffer);
-
-            // The result will always start with a 4 to signify the following bytes are encoded as an uncompressed
-            // point.
-            if (written != required_length || public_bytes[0] != POINT_CONVERSION_UNCOMPRESSED) {
-                ERROR("i2d_PublicKey failed");
-                break;
-            }
-
-            // Strip off the 4.
-            memcpy(out, public_bytes + 1, written - 1);
-            *out_length = written - 1;
-        } else {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-            ERROR("Curve not supported");
+        int length = i2d_PUBKEY(evp_pkey, NULL);
+        if (length <= 0) {
+            ERROR("i2d_PUBKEY failed");
             break;
-#else
-            size_t public_key_size;
-            if (EVP_PKEY_get_raw_public_key(evp_pkey, NULL, &public_key_size) != 1) {
-                ERROR("EVP_PKEY_get_raw_public_key failed");
-                break;
-            }
-
-            if (out == NULL) {
-                *out_length = public_key_size;
-                status = SA_STATUS_OK;
-                break;
-            }
-
-            if (*out_length < public_key_size) {
-                ERROR("Bad out_length");
-                status = SA_STATUS_BAD_PARAMETER;
-                break;
-            }
-
-            if (EVP_PKEY_get_raw_public_key(evp_pkey, out, out_length) != 1) {
-                ERROR("EVP_PKEY_get_raw_public_key failed");
-                break;
-            }
-#endif
         }
 
-        status = SA_STATUS_OK;
+        if (out == NULL) {
+            *out_length = length;
+            status = true;
+            break;
+        }
+
+        if (*out_length < (size_t) length) {
+            ERROR("Bad out_length");
+            break;
+        }
+
+        uint8_t* p_out = out;
+        length = i2d_PUBKEY(evp_pkey, &p_out);
+        if (length <= 0) {
+            ERROR("i2d_PUBKEY failed");
+            break;
+        }
+
+        *out_length = length;
+        status = true;
     } while (false);
-
-    if (public_bytes != NULL)
-        memory_secure_free(public_bytes);
 
     EVP_PKEY_free(evp_pkey);
     return status;
@@ -690,7 +457,6 @@ sa_status ec_decrypt_elgamal(
         }
 
         size_t key_length = stored_key_get_length(stored_key);
-        size_t point_length = key_length * 2;
         const sa_header* header = stored_key_get_header(stored_key);
         if (header == NULL) {
             ERROR("stored_key_get_header failed");
@@ -702,20 +468,20 @@ sa_status ec_decrypt_elgamal(
             status = SA_STATUS_OPERATION_NOT_ALLOWED;
         }
 
-        evp_pkey = ec_import_private(header->type_parameters.curve, key, key_length);
+        evp_pkey = evp_pkey_from_pkcs8(ec_get_type(header->type_parameters.curve), key, key_length);
         if (evp_pkey == NULL) {
-            ERROR("ec_import_private failed");
+            ERROR("evp_pkey_from_pkcs8 failed");
             break;
         }
 
-        ec_group = ec_group_from_curve(header->type_parameters.curve);
+        size_t point_length = header->size * 2;
         if (out == NULL) {
             *out_length = point_length * 2;
             status = SA_STATUS_OK;
             break;
         }
 
-        if (*out_length < key_length) {
+        if (*out_length < header->size) {
             ERROR("Bad out_length");
             break;
         }
@@ -725,13 +491,13 @@ sa_status ec_decrypt_elgamal(
             break;
         }
 
+        ec_group = ec_group_from_curve(header->type_parameters.curve);
         c1 = EC_POINT_new(ec_group);
         if (c1 == NULL) {
             ERROR("EC_POINT_new failed");
             break;
         }
 
-        // 4 indicates the buffer is encoded as an uncompressed point.
         uint8_t in_buffer[point_length + 1];
         in_buffer[0] = POINT_CONVERSION_UNCOMPRESSED;
         memcpy(in_buffer + 1, in, point_length);
@@ -809,8 +575,8 @@ sa_status ec_decrypt_elgamal(
         }
 
         // The message is just the X coordinate.
-        memcpy(out, buffer, key_length);
-        *out_length = key_length;
+        memcpy(out, buffer, header->size);
+        *out_length = header->size;
         status = SA_STATUS_OK;
     } while (false);
 
@@ -831,12 +597,17 @@ sa_status ec_decrypt_elgamal(
 sa_status ec_compute_ecdh_shared_secret(
         stored_key_t** stored_key_shared_secret,
         const sa_rights* rights,
-        const stored_key_t* stored_key,
         const void* other_public,
-        size_t other_public_length) {
+        size_t other_public_length,
+        const stored_key_t* stored_key) {
 
     if (stored_key_shared_secret == NULL) {
         ERROR("NULL stored_key_shared_secret");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (other_public == NULL) {
+        ERROR("NULL other_public");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -851,13 +622,11 @@ sa_status ec_compute_ecdh_shared_secret(
     }
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
-    EC_GROUP* ec_group = NULL;
-    EVP_PKEY* evp_pkey = NULL;
-    EC_POINT* other_public_point = NULL;
-    EVP_PKEY* other_evp_pkey = NULL;
-    EVP_PKEY_CTX* evp_pkey_ctx = NULL;
     uint8_t* shared_secret = NULL;
     size_t shared_secret_length = 0;
+    EVP_PKEY* evp_pkey = NULL;
+    EVP_PKEY* other_evp_pkey = NULL;
+    EVP_PKEY_CTX* evp_pkey_ctx = NULL;
     do {
         const void* key = stored_key_get_key(stored_key);
         if (key == NULL) {
@@ -879,115 +648,23 @@ sa_status ec_compute_ecdh_shared_secret(
             break;
         }
 
-        evp_pkey = ec_import_private(header->type_parameters.curve, key, key_length);
+        evp_pkey = evp_pkey_from_pkcs8(ec_get_type(header->type_parameters.curve), key, key_length);
         if (evp_pkey == NULL) {
-            ERROR("ec_import_private failed");
+            ERROR("evp_pkey_from_pkcs8 failed");
             break;
         }
 
-        ec_group = ec_group_from_curve(header->type_parameters.curve);
-        if (is_pcurve(header->type_parameters.curve)) {
-            uint8_t other_public_bytes[other_public_length + 1];
-            memcpy(other_public_bytes + 1, other_public, other_public_length);
-            other_public_bytes[0] = POINT_CONVERSION_UNCOMPRESSED;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-            evp_pkey_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
-            if (evp_pkey_ctx == NULL) {
-                ERROR("EVP_PKEY_CTX_new_id failed");
-                break;
-            }
-
-            if (EVP_PKEY_fromdata_init(evp_pkey_ctx) != 1) {
-                ERROR("EVP_PKEY_fromdata_init failed");
-                break;
-            }
-
-            const char* group_name = ec_get_name(header->type_parameters.curve);
-            OSSL_PARAM params[] = {
-                    OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, (char*) group_name,
-                            strlen(group_name)),
-                    OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, other_public_bytes,
-                            other_public_length + 1),
-                    OSSL_PARAM_construct_end()};
-
-            if (EVP_PKEY_fromdata(evp_pkey_ctx, &other_evp_pkey, EVP_PKEY_PUBLIC_KEY, params) != 1) {
-                status = SA_STATUS_BAD_PARAMETER;
-                ERROR("EVP_PKEY_fromdata failed");
-                break;
-            }
-
-            EVP_PKEY_CTX_free(evp_pkey_ctx);
-#else
-            other_public_point = EC_POINT_new(ec_group);
-            if (other_public_point == NULL) {
-                ERROR("EC_POINT_new failed");
-                break;
-            }
-
-            if (EC_POINT_oct2point(ec_group, other_public_point, other_public_bytes, other_public_length + 1,
-                        NULL) != 1) {
-                status = SA_STATUS_BAD_PARAMETER;
-                ERROR("EC_POINT_oct2point failed");
-                break;
-            }
-
-            EC_KEY* other_ec_key = EC_KEY_new();
-            if (other_ec_key == NULL) {
-                ERROR("EC_KEY_new failed");
-                break;
-            }
-
-            if (EC_KEY_set_group(other_ec_key, ec_group) != 1) {
-                ERROR("EC_KEY_set_group failed");
-                EC_KEY_free(other_ec_key);
-                break;
-            }
-
-            if (EC_KEY_set_public_key(other_ec_key, other_public_point) != 1) {
-                ERROR("EC_KEY_set_public_key failed");
-                EC_KEY_free(other_ec_key);
-                break;
-            }
-
-            other_evp_pkey = EVP_PKEY_new();
-            if (other_evp_pkey == NULL) {
-                ERROR("EC_KEY_new failed");
-                EC_KEY_free(other_ec_key);
-                break;
-            }
-
-            if (EVP_PKEY_set1_EC_KEY(other_evp_pkey, other_ec_key) != 1) {
-                ERROR("EVP_PKEY_set1_EC_KEY failed");
-                EC_KEY_free(other_ec_key);
-                break;
-            }
-
-            EC_KEY_free(other_ec_key);
-#endif
-        } else {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-            ERROR("Curve not supported");
+        const uint8_t* p_other_public = other_public;
+        other_evp_pkey = d2i_PUBKEY(NULL, &p_other_public, (long) other_public_length);
+        if (other_evp_pkey == NULL) {
+            ERROR("d2i_PUBKEY failed");
             break;
-#else
-            if (other_public_length != key_length) {
-                ERROR("Invalid other_public_length");
-                status = SA_STATUS_BAD_PARAMETER;
-                break;
-            }
+        }
 
-            int type = ec_get_type(header->type_parameters.curve);
-            if (type == 0) {
-                ERROR("ec_get_type failed");
-                break;
-            }
-
-            other_evp_pkey = EVP_PKEY_new_raw_public_key(type, NULL, other_public, other_public_length);
-            if (other_evp_pkey == NULL) {
-                ERROR("EVP_PKEY_new_raw_public_key failed");
-                status = SA_STATUS_BAD_PARAMETER;
-                break;
-            }
-#endif
+        if (EVP_PKEY_id(evp_pkey) != EVP_PKEY_id(other_evp_pkey)) {
+            ERROR("Key type mismatch");
+            status = SA_STATUS_BAD_PARAMETER;
+            break;
         }
 
         evp_pkey_ctx = EVP_PKEY_CTX_new(evp_pkey, NULL);
@@ -1014,11 +691,9 @@ sa_status ec_compute_ecdh_shared_secret(
         shared_secret = memory_secure_alloc(shared_secret_length);
         if (shared_secret == NULL) {
             ERROR("memory_secure_alloc failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
-        /* Derive the shared secret */
         if (EVP_PKEY_derive(evp_pkey_ctx, shared_secret, &shared_secret_length) != 1) {
             ERROR("EVP_PKEY_derive failed");
             break;
@@ -1035,17 +710,14 @@ sa_status ec_compute_ecdh_shared_secret(
         status = SA_STATUS_OK;
     } while (false);
 
-    EVP_PKEY_free(other_evp_pkey);
-    EC_POINT_free(other_public_point);
-    EVP_PKEY_CTX_free(evp_pkey_ctx);
-    EVP_PKEY_free(evp_pkey);
-    EC_GROUP_free(ec_group);
-
     if (shared_secret != NULL) {
         memory_memset_unoptimizable(shared_secret, 0, shared_secret_length);
         memory_secure_free(shared_secret);
     }
 
+    EVP_PKEY_free(other_evp_pkey);
+    EVP_PKEY_CTX_free(evp_pkey_ctx);
+    EVP_PKEY_free(evp_pkey);
     return status;
 }
 
@@ -1095,9 +767,9 @@ sa_status ec_sign_ecdsa(
             break;
         }
 
-        evp_pkey = ec_import_private(header->type_parameters.curve, key, key_length);
+        evp_pkey = evp_pkey_from_pkcs8(ec_get_type(header->type_parameters.curve), key, key_length);
         if (evp_pkey == NULL) {
-            ERROR("ec_import_private failed");
+            ERROR("evp_pkey_from_pkcs8 failed");
             break;
         }
 
@@ -1107,7 +779,7 @@ sa_status ec_sign_ecdsa(
             break;
         }
 
-        size_t ec_signature_length = 2 * key_length;
+        size_t ec_signature_length = 2 * header->size;
         if (signature == NULL) {
             *signature_length = ec_signature_length;
             status = SA_STATUS_OK;
@@ -1155,7 +827,6 @@ sa_status ec_sign_ecdsa(
                 break;
             }
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
             if (EVP_DigestSignUpdate(evp_md_ctx, in, in_length) != 1) {
                 ERROR("EVP_DigestSignUpdate failed");
                 break;
@@ -1165,12 +836,6 @@ sa_status ec_sign_ecdsa(
                 ERROR("EVP_DigestSignFinal failed");
                 break;
             }
-#else
-            if (EVP_DigestSign(evp_md_ctx, local_signature, &local_signature_length, in, in_length) != 1) {
-                ERROR("EVP_DigestSign failed");
-                break;
-            }
-#endif
         }
 
         const uint8_t* local_pointer = local_signature;
@@ -1190,12 +855,12 @@ sa_status ec_sign_ecdsa(
 #endif
 
         uint8_t* signature_bytes = (uint8_t*) signature;
-        if (!bn_export(signature_bytes, key_length, esigr)) {
+        if (!bn_export(signature_bytes, header->size, esigr)) {
             ERROR("bn_export failed");
             break;
         }
 
-        if (!bn_export(signature_bytes + key_length, key_length, esigs)) {
+        if (!bn_export(signature_bytes + header->size, header->size, esigs)) {
             ERROR("bn_export failed");
             break;
         }
@@ -1255,9 +920,9 @@ sa_status ec_sign_eddsa(
             break;
         }
 
-        evp_pkey = ec_import_private(header->type_parameters.curve, key, key_length);
+        evp_pkey = evp_pkey_from_pkcs8(ec_get_type(header->type_parameters.curve), key, key_length);
         if (evp_pkey == NULL) {
-            ERROR("ec_import_private failed");
+            ERROR("evp_pkey_from_pkcs8 failed");
             break;
         }
 
@@ -1267,7 +932,7 @@ sa_status ec_sign_eddsa(
             break;
         }
 
-        size_t ec_signature_length = 2 * key_length;
+        size_t ec_signature_length = 2 * header->size;
         if (signature == NULL) {
             *signature_length = ec_signature_length;
             status = SA_STATUS_OK;
@@ -1308,12 +973,12 @@ sa_status ec_sign_eddsa(
 }
 
 sa_status ec_generate_key(
-        stored_key_t** stored_key_generated,
+        stored_key_t** stored_key,
         const sa_rights* rights,
         sa_generate_parameters_ec* parameters) {
 
-    if (stored_key_generated == NULL) {
-        ERROR("NULL stored_key_generated");
+    if (stored_key == NULL) {
+        ERROR("NULL stored_key");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -1334,38 +999,85 @@ sa_status ec_generate_key(
     }
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
-    uint8_t* generated = NULL;
+    uint8_t* key = NULL;
+    EVP_PKEY_CTX* evp_pkey_param_ctx = NULL;
+    EVP_PKEY* evp_pkey_params = NULL;
+    EVP_PKEY_CTX* evp_pkey_ctx = NULL;
+    EVP_PKEY* evp_pkey = NULL;
     do {
-        generated = memory_secure_alloc(key_size);
-        if (generated == NULL) {
+        int type = ec_get_nid(parameters->curve);
+        if (type == 0) {
+            ERROR("ec_get_nid failed");
+            break;
+        }
+
+        if (is_pcurve(parameters->curve)) {
+            evp_pkey_param_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+            if (evp_pkey_param_ctx == NULL) {
+                ERROR("EVP_PKEY_CTX_new_id failed");
+                break;
+            }
+
+            if (EVP_PKEY_paramgen_init(evp_pkey_param_ctx) != 1) {
+                ERROR("EVP_PKEY_paramgen_init failed");
+                break;
+            }
+
+            if (EVP_PKEY_CTX_set_ec_paramgen_curve_nid(evp_pkey_param_ctx, type) != 1) {
+                ERROR("EVP_PKEY_CTX_set_ec_paramgen_curve_nid failed");
+                break;
+            }
+
+            if (EVP_PKEY_CTX_set_ec_param_enc(evp_pkey_param_ctx, OPENSSL_EC_NAMED_CURVE) != 1) {
+                ERROR("EVP_PKEY_CTX_set_ec_param_enc failed");
+                break;
+            }
+
+            if (EVP_PKEY_paramgen(evp_pkey_param_ctx, &evp_pkey_params) <= 0) {
+                ERROR("EVP_PKEY_paramgen failed");
+                break;
+            }
+
+            evp_pkey_ctx = EVP_PKEY_CTX_new(evp_pkey_params, NULL);
+            if (evp_pkey_ctx == NULL) {
+                ERROR("EVP_PKEY_CTX_new failed");
+                break;
+            }
+        } else {
+            evp_pkey_ctx = EVP_PKEY_CTX_new_id(type, NULL);
+        }
+
+        if (EVP_PKEY_keygen_init(evp_pkey_ctx) != 1) {
+            ERROR("EVP_PKEY_keygen_init failed");
+            break;
+        }
+
+        if (EVP_PKEY_keygen(evp_pkey_ctx, &evp_pkey) != 1) {
+            ERROR("EVP_PKEY_keygen failed");
+            break;
+        }
+
+        size_t key_length = 0;
+        if (!evp_pkey_to_pkcs8(NULL, &key_length, evp_pkey)) {
+            ERROR("evp_pkey_to_pkcs8 failed");
+            break;
+        }
+
+        key = memory_secure_alloc(key_length);
+        if (key == NULL) {
             ERROR("memory_secure_alloc failed");
             break;
         }
 
-        if (!rand_bytes(generated, key_size)) {
-            ERROR("rand_bytes failed");
+        if (!evp_pkey_to_pkcs8(key, &key_length, evp_pkey)) {
+            ERROR("evp_pkey_to_pkcs8 failed");
             break;
         }
 
-        if (key_size == EC_P521_KEY_SIZE) {
-            // Only the ls bit is used of the MS Byte of the EC P521 private key.
-            generated[0] &= 1;
-        }
-
-        EVP_PKEY* evp_pkey = ec_import_private(parameters->curve, generated, key_size);
-        if (evp_pkey == NULL) {
-            EVP_PKEY_free(evp_pkey);
-            ERROR("ec_import_private failed");
-            status = SA_STATUS_OPERATION_NOT_SUPPORTED;
-            break;
-        }
-
-        EVP_PKEY_free(evp_pkey);
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(type_parameters));
         type_parameters.curve = parameters->curve;
-        if (!stored_key_create(stored_key_generated, rights, NULL, SA_KEY_TYPE_EC, &type_parameters, key_size,
-                    generated, key_size)) {
+        if (!stored_key_create(stored_key, rights, NULL, SA_KEY_TYPE_EC, &type_parameters, key_size, key, key_length)) {
             ERROR("stored_key_create failed");
             break;
         }
@@ -1373,10 +1085,14 @@ sa_status ec_generate_key(
         status = SA_STATUS_OK;
     } while (false);
 
-    if (generated != NULL) {
-        memory_memset_unoptimizable(generated, 0, key_size);
-        memory_secure_free(generated);
+    if (key != NULL) {
+        memory_memset_unoptimizable(key, 0, key_size);
+        memory_secure_free(key);
     }
 
+    EVP_PKEY_CTX_free(evp_pkey_param_ctx);
+    EVP_PKEY_free(evp_pkey_params);
+    EVP_PKEY_CTX_free(evp_pkey_ctx);
+    EVP_PKEY_free(evp_pkey);
     return status;
 }

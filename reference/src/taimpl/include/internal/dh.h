@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,23 @@ bool dh_get_public(
         const stored_key_t* stored_key);
 
 /**
+ * Compute the DH shared secret.
+ *
+ * @param[out] stored_key_shared_secret shared secret
+ * @param[in] rights the rights for the shared secret.
+ * @param[in] other_public other party's public key
+ * @param[in] other_public_length other party's public key length
+ * @param[in] stored_key the stored private key
+ * @return status of the operation
+ */
+sa_status dh_compute_shared_secret(
+        stored_key_t** stored_key_shared_secret,
+        const sa_rights* rights,
+        const void* other_public,
+        size_t other_public_length,
+        const stored_key_t* stored_key);
+
+/**
  * Generate the private/public key pair for the given DH parameters.
  *
  * @param[out] stored_key the generated key
@@ -64,30 +81,13 @@ bool dh_get_public(
  * @param[in] g_length the length of g
  * @return status of the operation
  */
-bool dh_generate(
+bool dh_generate_key(
         stored_key_t** stored_key,
         const sa_rights* rights,
         const void* p,
         size_t p_length,
         const void* g,
         size_t g_length);
-
-/**
- * Compute the DH shared secret.
- *
- * @param[out] shared_secret shared secret
- * @param[in] rights the rights for the shared secret.
- * @param[in] other_public other party's public key
- * @param[in] other_public_length other party's public key length
- * @param[in] stored_key_private the stored private key
- * @return status of the operation
- */
-bool dh_compute(
-        stored_key_t** shared_secret,
-        const sa_rights* rights,
-        const void* other_public,
-        size_t other_public_length,
-        const stored_key_t* stored_key_private);
 
 #ifdef __cplusplus
 }

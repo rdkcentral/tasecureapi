@@ -28,7 +28,7 @@ namespace {
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -59,7 +59,7 @@ namespace {
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -83,7 +83,7 @@ namespace {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);

@@ -29,7 +29,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_generate_parameters_rsa parameters = {256};
 

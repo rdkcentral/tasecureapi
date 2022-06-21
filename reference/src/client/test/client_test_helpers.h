@@ -21,8 +21,8 @@
 
 #include "common.h"
 #include "log.h"
-#include "sa_public_key.h"
 #include "sa.h"
+#include "sa_public_key.h"
 #include <ctime>
 #include <memory>
 #include <openssl/ec.h>
@@ -200,14 +200,6 @@ namespace client_test_helpers {
     std::vector<uint8_t> random(size_t size);
 
     /**
-     * Generate a vector of random data for an EC key.
-     *
-     * @param[in] size size of the EC key.
-     * @return generated EC key.
-     */
-    std::vector<uint8_t> random_ec(size_t size);
-
-    /**
      * Convert time instant into ISO8601 format.
      *
      * @param[in] instant instant to convert.
@@ -345,22 +337,23 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& clear_key);
 
     /**
+     * Exports a public key into a DER SubjectPublicKeyInfo byte vector.
+     *
+     * @param out the DER encoded public key.
+     * @param evp_pkey the private key.
+     * @return status of the operation.
+     */
+    bool export_public_key(
+            std::vector<uint8_t>& out,
+            std::shared_ptr<EVP_PKEY>& evp_pkey);
+
+    /**
      * Import a PKCS8 RSA key into OpenSSL EVP_PKEY key.
      *
      * @param[in] in pkcs8 data.
      * @return imported key.
      */
     std::shared_ptr<EVP_PKEY> rsa_import_pkcs8(const std::vector<uint8_t>& in);
-
-    /**
-     * Retrieves an RSA public key.
-     * @param out the RSA public key.
-     * @param evp_pkey the private key.
-     * @return status of the operation.
-     */
-    bool rsa_get_public(
-            std::vector<uint8_t>& out,
-            std::shared_ptr<EVP_PKEY>& evp_pkey);
 
     /**
      * Verify RSA PSS signature.
@@ -438,17 +431,12 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& in);
 
     /**
-     * Get the public key from a private EC key.
+     * Generate a EC Key in OneAsymmetricKey format.
      *
-     * @param out the public key.
-     * @param curve the elliptic curve to use.
-     * @param evp_pkey the private key.
-     * @return status of the operation.
+     * @param[in] size size of the EC key.
+     * @return generated EC key.
      */
-    bool ec_get_public(
-            std::vector<uint8_t>& out,
-            sa_elliptic_curve curve,
-            std::shared_ptr<EVP_PKEY>& evp_pkey);
+    std::vector<uint8_t> ec_generate_key_bytes(sa_elliptic_curve curve);
 
     /**
      * Verify an ECDSA signature.

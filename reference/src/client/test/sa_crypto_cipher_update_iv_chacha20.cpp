@@ -28,7 +28,7 @@ namespace {
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);

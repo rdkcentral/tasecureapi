@@ -469,7 +469,7 @@ std::string SaKeyImportTypejBase::generate_typej_v3(
 }
 
 void SaKeyImportTypejBase::typej_rights_set_allow_all(sa_rights* rights) {
-    rights_set_allow_all(rights);
+    sa_rights_set_allow_all(rights);
 
     // remove flags that cannot be expressed using Type-J rights
     SA_USAGE_BIT_CLEAR(rights->usage_flags, SA_USAGE_FLAG_KEY_EXCHANGE);
@@ -693,7 +693,7 @@ sa_status SaKeyImportSocBase::import_key(
             entitled_ta_ids, c1, c2, c3, tag);
     std::string key_container = jwt_header + "." + jwt_payload + "." + b64_encode(tag.data(), tag.size());
 
-    rights_set_allow_all(&key_rights);
+    sa_rights_set_allow_all(&key_rights);
     set_key_usage_flags(key_usage, decrypted_key_usage, key_rights, clear_key_type);
     int i = 0;
     for (auto& entitled_ta_id : entitled_ta_ids) {
@@ -704,6 +704,7 @@ sa_status SaKeyImportSocBase::import_key(
     return sa_key_import(key, SA_KEY_FORMAT_SOC, key_container.data(), key_container.size(), nullptr);
 }
 
+// clang-format off
 INSTANTIATE_TEST_SUITE_P(
         SaKeyImportTests,
         SaKeyImportTest,
@@ -795,7 +796,8 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(SYM_160_KEY_SIZE, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SVP_REQUIRED_MASK),
                 std::make_tuple(SYM_256_KEY_SIZE, SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, SVP_REQUIRED_MASK)));
 
-INSTANTIATE_TEST_SUITE_P(SaKeyImportTypejTest, SaKeyImportTypejTaIdRangeTest, ::testing::Range(0, MAX_NUM_ALLOWED_TA_IDS + 1));
+INSTANTIATE_TEST_SUITE_P(SaKeyImportTypejTest, SaKeyImportTypejTaIdRangeTest,
+    ::testing::Range(0, MAX_NUM_ALLOWED_TA_IDS + 1));
 
 #ifdef ENABLE_SOC_KEY_TESTS
 
@@ -804,94 +806,102 @@ INSTANTIATE_TEST_SUITE_P(
         SaKeyImportSocAllKeyCombosTest,
         ::testing::Values(
                 // Key Usage 1=Data Only
-                std::make_tuple(3, random(SYM_128_KEY_SIZE), "AES-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 1, 0),
-                std::make_tuple(3, random(SYM_256_KEY_SIZE), "AES-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 1, 0),
-                std::make_tuple(3, random(SYM_128_KEY_SIZE), "HMAC-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 1, 0),
-                std::make_tuple(3, random(SYM_160_KEY_SIZE), "HMAC-160", SYM_160_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 1, 0),
-                std::make_tuple(3, random(SYM_256_KEY_SIZE), "HMAC-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 1, 0),
-                std::make_tuple(3, sample_rsa_1024_pkcs8(), "RSA-1024", RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, 1, 0),
-                std::make_tuple(3, sample_rsa_2048_pkcs8(), "RSA-2048", RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, 1, 0),
-                std::make_tuple(3, sample_rsa_3072_pkcs8(), "RSA-3072", RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, 1, 0),
-                std::make_tuple(3, sample_rsa_4096_pkcs8(), "RSA-4096", RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, 1, 0),
-                std::make_tuple(3, random_ec(EC_P192_KEY_SIZE), "ECC-P192", SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, 1, 0),
-                std::make_tuple(3, random_ec(EC_P224_KEY_SIZE), "ECC-P224", SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, 1, 0),
-                std::make_tuple(3, random_ec(EC_P256_KEY_SIZE), "ECC-P256", SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, 1, 0),
-                std::make_tuple(3, random_ec(EC_P384_KEY_SIZE), "ECC-P384", SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, 1, 0),
-                std::make_tuple(3, random_ec(EC_P521_KEY_SIZE), "ECC-P521", SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, 1, 0),
-                std::make_tuple(3, random_ec(EC_25519_KEY_SIZE), "ECC-ED25519", SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, 1, 0),
-                std::make_tuple(3, random_ec(EC_ED448_KEY_SIZE), "ECC-ED448", SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, 1, 0),
-                std::make_tuple(3, random_ec(EC_25519_KEY_SIZE), "ECC-X25519", SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, 1, 0),
-                std::make_tuple(3, random_ec(EC_X448_KEY_SIZE), "ECC-X448", SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, 1, 0),
+                std::make_tuple("AES-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 1, 0),
+                std::make_tuple("AES-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 1, 0),
+                std::make_tuple("CHACHA20-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 1, 0),
+                std::make_tuple("HMAC-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 1, 0),
+                std::make_tuple("HMAC-160", SYM_160_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 1, 0),
+                std::make_tuple("HMAC-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 1, 0),
+                std::make_tuple("RSA-1024", RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, 1, 0),
+                std::make_tuple("RSA-2048", RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, 1, 0),
+                std::make_tuple("RSA-3072", RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, 1, 0),
+                std::make_tuple("RSA-4096", RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, 1, 0),
+                std::make_tuple("ECC-P192", SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, 1, 0),
+                std::make_tuple("ECC-P224", SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, 1, 0),
+                std::make_tuple("ECC-P256", SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, 1, 0),
+                std::make_tuple("ECC-P384", SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, 1, 0),
+                std::make_tuple("ECC-P521", SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, 1, 0),
+                std::make_tuple("ECC-ED25519", SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, 1, 0),
+                std::make_tuple("ECC-ED448", SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, 1, 0),
+                std::make_tuple("ECC-X25519", SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, 1, 0),
+                std::make_tuple("ECC-X448", SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, 1, 0),
                 // Key Usage 2=Key Only, Decrypted Key Usage 1=Data Only
-                std::make_tuple(3, random(SYM_128_KEY_SIZE), "AES-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 1),
-                std::make_tuple(3, random(SYM_256_KEY_SIZE), "AES-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 1),
+                std::make_tuple("AES-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 1),
+                std::make_tuple("AES-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 1),
+                std::make_tuple("CHACHA20-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 1),
                 // HMAC keys with key usage 2 is an invalid combination.
-                std::make_tuple(3, sample_rsa_1024_pkcs8(), "RSA-1024", RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 1),
-                std::make_tuple(3, sample_rsa_2048_pkcs8(), "RSA-2048", RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 1),
-                std::make_tuple(3, sample_rsa_3072_pkcs8(), "RSA-3072", RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 1),
-                std::make_tuple(3, sample_rsa_4096_pkcs8(), "RSA-4096", RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 1),
-                std::make_tuple(3, random_ec(EC_P192_KEY_SIZE), "ECC-P192", SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, 2, 1),
-                std::make_tuple(3, random_ec(EC_P224_KEY_SIZE), "ECC-P224", SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, 2, 1),
-                std::make_tuple(3, random_ec(EC_P256_KEY_SIZE), "ECC-P256", SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, 2, 1),
-                std::make_tuple(3, random_ec(EC_P384_KEY_SIZE), "ECC-P384", SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, 2, 1),
-                std::make_tuple(3, random_ec(EC_P521_KEY_SIZE), "ECC-P521", SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, 2, 1),
-                std::make_tuple(3, random_ec(EC_25519_KEY_SIZE), "ECC-ED25519", SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, 2, 1),
-                std::make_tuple(3, random_ec(EC_ED448_KEY_SIZE), "ECC-ED448", SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, 2, 1),
-                std::make_tuple(3, random_ec(EC_25519_KEY_SIZE), "ECC-X25519", SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, 2, 1),
-                std::make_tuple(3, random_ec(EC_X448_KEY_SIZE), "ECC-X448", SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, 2, 1),
+                std::make_tuple("RSA-1024", RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 1),
+                std::make_tuple("RSA-2048", RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 1),
+                std::make_tuple("RSA-3072", RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 1),
+                std::make_tuple("RSA-4096", RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 1),
+                std::make_tuple("ECC-P192", SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, 2, 1),
+                std::make_tuple("ECC-P224", SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, 2, 1),
+                std::make_tuple("ECC-P256", SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, 2, 1),
+                std::make_tuple("ECC-P384", SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, 2, 1),
+                std::make_tuple("ECC-P521", SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, 2, 1),
+                std::make_tuple("ECC-ED25519", SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, 2, 1),
+                std::make_tuple("ECC-ED448", SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, 2, 1),
+                std::make_tuple("ECC-X25519", SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, 2, 1),
+                std::make_tuple("ECC-X448", SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, 2, 1),
                 // Key Usage 2=Key Only, Decrypted Key Usage 2=Key Only
-                std::make_tuple(3, random(SYM_128_KEY_SIZE), "AES-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 2),
-                std::make_tuple(3, random(SYM_256_KEY_SIZE), "AES-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 2),
+                std::make_tuple("AES-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 2),
+                std::make_tuple("AES-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 2),
+                std::make_tuple("CHACHA20-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 2),
                 // HMAC keys with key usage 2 is an invalid combination.
-                std::make_tuple(3, sample_rsa_1024_pkcs8(), "RSA-1024", RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 2),
-                std::make_tuple(3, sample_rsa_2048_pkcs8(), "RSA-2048", RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 2),
-                std::make_tuple(3, sample_rsa_3072_pkcs8(), "RSA-3072", RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 2),
-                std::make_tuple(3, sample_rsa_4096_pkcs8(), "RSA-4096", RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 2),
-                std::make_tuple(3, random_ec(EC_P192_KEY_SIZE), "ECC-P192", SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, 2, 2),
-                std::make_tuple(3, random_ec(EC_P224_KEY_SIZE), "ECC-P224", SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, 2, 2),
-                std::make_tuple(3, random_ec(EC_P256_KEY_SIZE), "ECC-P256", SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, 2, 2),
-                std::make_tuple(3, random_ec(EC_P384_KEY_SIZE), "ECC-P384", SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, 2, 2),
-                std::make_tuple(3, random_ec(EC_P521_KEY_SIZE), "ECC-P521", SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, 2, 2),
-                std::make_tuple(3, random_ec(EC_25519_KEY_SIZE), "ECC-ED25519", SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, 2, 2),
-                std::make_tuple(3, random_ec(EC_ED448_KEY_SIZE), "ECC-ED448", SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, 2, 2),
-                std::make_tuple(3, random_ec(EC_25519_KEY_SIZE), "ECC-X25519", SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, 2, 2),
-                std::make_tuple(3, random_ec(EC_X448_KEY_SIZE), "ECC-X448", SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, 2, 2),
+                std::make_tuple("RSA-1024", RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 2),
+                std::make_tuple("RSA-2048", RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 2),
+                std::make_tuple("RSA-3072", RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 2),
+                std::make_tuple("RSA-4096", RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 2),
+                std::make_tuple("ECC-P192", SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, 2, 2),
+                std::make_tuple("ECC-P224", SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, 2, 2),
+                std::make_tuple("ECC-P256", SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, 2, 2),
+                std::make_tuple("ECC-P384", SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, 2, 2),
+                std::make_tuple("ECC-P521", SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, 2, 2),
+                std::make_tuple("ECC-ED25519", SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, 2, 2),
+                std::make_tuple("ECC-ED448", SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, 2, 2),
+                std::make_tuple("ECC-X25519", SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, 2, 2),
+                std::make_tuple("ECC-X448", SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, 2, 2),
                 // Key Usage 2=Key Only, Decrypted Key Usage 3=Data and Key
-                std::make_tuple(3, random(SYM_128_KEY_SIZE), "AES-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 3),
-                std::make_tuple(3, random(SYM_256_KEY_SIZE), "AES-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 3),
+                std::make_tuple("AES-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 3),
+                std::make_tuple("AES-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 3),
+                std::make_tuple("CHACHA20-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 2, 3),
                 // HMAC keys with key usage 2 is an invalid combination.
-                std::make_tuple(3, sample_rsa_1024_pkcs8(), "RSA-1024", RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 3),
-                std::make_tuple(3, sample_rsa_2048_pkcs8(), "RSA-2048", RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 3),
-                std::make_tuple(3, sample_rsa_3072_pkcs8(), "RSA-3072", RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 3),
-                std::make_tuple(3, sample_rsa_4096_pkcs8(), "RSA-4096", RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 3),
-                std::make_tuple(3, random_ec(EC_P192_KEY_SIZE), "ECC-P192", SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, 2, 3),
-                std::make_tuple(3, random_ec(EC_P224_KEY_SIZE), "ECC-P224", SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, 2, 3),
-                std::make_tuple(3, random_ec(EC_P256_KEY_SIZE), "ECC-P256", SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, 2, 3),
-                std::make_tuple(3, random_ec(EC_P384_KEY_SIZE), "ECC-P384", SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, 2, 3),
-                std::make_tuple(3, random_ec(EC_P521_KEY_SIZE), "ECC-P521", SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, 2, 3),
-                std::make_tuple(3, random_ec(EC_25519_KEY_SIZE), "ECC-ED25519", SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, 2, 3),
-                std::make_tuple(3, random_ec(EC_ED448_KEY_SIZE), "ECC-ED448", SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, 2, 3),
-                std::make_tuple(3, random_ec(EC_25519_KEY_SIZE), "ECC-X25519", SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, 2, 3),
-                std::make_tuple(3, random_ec(EC_X448_KEY_SIZE), "ECC-X448", SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, 2, 3),
+                std::make_tuple("RSA-1024", RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 3),
+                std::make_tuple("RSA-2048", RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 3),
+                std::make_tuple("RSA-3072", RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 3),
+                std::make_tuple("RSA-4096", RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, 2, 3),
+                std::make_tuple("ECC-P192", SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, 2, 3),
+                std::make_tuple("ECC-P224", SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, 2, 3),
+                std::make_tuple("ECC-P256", SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, 2, 3),
+                std::make_tuple("ECC-P384", SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, 2, 3),
+                std::make_tuple("ECC-P521", SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, 2, 3),
+                std::make_tuple("ECC-ED25519", SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, 2, 3),
+                std::make_tuple("ECC-ED448", SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, 2, 3),
+                std::make_tuple("ECC-X25519", SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, 2, 3),
+                std::make_tuple("ECC-X448", SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, 2, 3),
                 // Key Usage 3=Data and Key
-                std::make_tuple(3, random(SYM_128_KEY_SIZE), "AES-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 3, 0),
-                std::make_tuple(3, random(SYM_256_KEY_SIZE), "AES-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 3, 0),
-                std::make_tuple(3, random(SYM_128_KEY_SIZE), "HMAC-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 3, 0),
-                std::make_tuple(3, random(SYM_160_KEY_SIZE), "HMAC-160", SYM_160_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 3, 0),
-                std::make_tuple(3, random(SYM_256_KEY_SIZE), "HMAC-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 3, 0),
-                std::make_tuple(3, sample_rsa_1024_pkcs8(), "RSA-1024", RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, 3, 0),
-                std::make_tuple(3, sample_rsa_2048_pkcs8(), "RSA-2048", RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, 3, 0),
-                std::make_tuple(3, sample_rsa_3072_pkcs8(), "RSA-3072", RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, 3, 0),
-                std::make_tuple(3, sample_rsa_4096_pkcs8(), "RSA-4096", RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, 3, 0),
-                std::make_tuple(3, random_ec(EC_P192_KEY_SIZE), "ECC-P192", SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, 3, 0),
-                std::make_tuple(3, random_ec(EC_P224_KEY_SIZE), "ECC-P224", SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, 3, 0),
-                std::make_tuple(3, random_ec(EC_P256_KEY_SIZE), "ECC-P256", SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, 3, 0),
-                std::make_tuple(3, random_ec(EC_P384_KEY_SIZE), "ECC-P384", SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, 3, 0),
-                std::make_tuple(3, random_ec(EC_P521_KEY_SIZE), "ECC-P521", SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, 3, 0),
-                std::make_tuple(3, random_ec(EC_25519_KEY_SIZE), "ECC-ED25519", SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, 3, 0),
-                std::make_tuple(3, random_ec(EC_ED448_KEY_SIZE), "ECC-ED448", SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, 3, 0),
-                std::make_tuple(3, random_ec(EC_25519_KEY_SIZE), "ECC-X25519", SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, 3, 0),
-                std::make_tuple(3, random_ec(EC_X448_KEY_SIZE), "ECC-X448", SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, 3, 0)));
+                std::make_tuple("AES-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 3, 0),
+                std::make_tuple("AES-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 3, 0),
+                std::make_tuple("CHACHA20-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 3, 0),
+                std::make_tuple("HMAC-128", SYM_128_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 3, 0),
+                std::make_tuple("HMAC-160", SYM_160_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 3, 0),
+                std::make_tuple("HMAC-256", SYM_256_KEY_SIZE, SA_KEY_TYPE_SYMMETRIC, 3, 0),
+                std::make_tuple("RSA-1024", RSA_1024_BYTE_LENGTH, SA_KEY_TYPE_RSA, 3, 0),
+                std::make_tuple("RSA-2048", RSA_2048_BYTE_LENGTH, SA_KEY_TYPE_RSA, 3, 0),
+                std::make_tuple("RSA-3072", RSA_3072_BYTE_LENGTH, SA_KEY_TYPE_RSA, 3, 0),
+                std::make_tuple("RSA-4096", RSA_4096_BYTE_LENGTH, SA_KEY_TYPE_RSA, 3, 0),
+                std::make_tuple("ECC-P192", SA_ELLIPTIC_CURVE_NIST_P192, SA_KEY_TYPE_EC, 3, 0),
+                std::make_tuple("ECC-P224", SA_ELLIPTIC_CURVE_NIST_P224, SA_KEY_TYPE_EC, 3, 0),
+                std::make_tuple("ECC-P256", SA_ELLIPTIC_CURVE_NIST_P256, SA_KEY_TYPE_EC, 3, 0),
+                std::make_tuple("ECC-P384", SA_ELLIPTIC_CURVE_NIST_P384, SA_KEY_TYPE_EC, 3, 0),
+                std::make_tuple("ECC-P521", SA_ELLIPTIC_CURVE_NIST_P521, SA_KEY_TYPE_EC, 3, 0),
+                std::make_tuple("ECC-ED25519", SA_ELLIPTIC_CURVE_ED25519, SA_KEY_TYPE_EC, 3, 0),
+                std::make_tuple("ECC-ED448", SA_ELLIPTIC_CURVE_ED448, SA_KEY_TYPE_EC, 3, 0),
+                std::make_tuple("ECC-X25519", SA_ELLIPTIC_CURVE_X25519, SA_KEY_TYPE_EC, 3, 0),
+                std::make_tuple("ECC-X448", SA_ELLIPTIC_CURVE_X448, SA_KEY_TYPE_EC, 3, 0)));
 
-INSTANTIATE_TEST_SUITE_P(SaKeyImportSocTest, SaKeyImportSocTaIdRangeTest, ::testing::Range(0, MAX_NUM_ALLOWED_TA_IDS + 1));
+INSTANTIATE_TEST_SUITE_P(SaKeyImportSocTest, SaKeyImportSocTaIdRangeTest,
+    ::testing::Range(0, MAX_NUM_ALLOWED_TA_IDS + 1));
+
+// clang-format on
 #endif

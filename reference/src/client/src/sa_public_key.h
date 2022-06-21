@@ -30,17 +30,6 @@ extern "C" {
 #endif
 
 /**
- * Imports an RSA public key.
- *
- * @param[in] in the RSA public key bytes.
- * @param[in] in_length the length of the RSA public key bytes.
- * @return an EVP_PKEY encapsulating the RSA public key.
- */
-EVP_PKEY* rsa_import_public(
-        const uint8_t* in,
-        size_t in_length);
-
-/**
  * Deteremines if the curve is a P-256, P-384, or P-521 curve.
  *
  * @param[in] curve the EC curve.
@@ -62,30 +51,7 @@ size_t ec_get_key_size(sa_elliptic_curve curve);
  * @param[in] curve the EC curve.
  * @return the OpenSSL type.
  */
-int ec_get_type(sa_elliptic_curve curve);
-
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-/**
- * Returns the name of the curve.
- *
- * @param curve the curve to lookup.
- * @return the name of the curve.
- */
-const char* ec_get_name(sa_elliptic_curve curve);
-#endif
-
-/**
- * Imports an EC public key.
- *
- * @param[in] curve the EC curve.
- * @param[in] in the RSA public key bytes.
- * @param[in] in_length the length of the RSA public key bytes.
- * @return an EVP_PKEY encapsulating the RSA public key.
- */
-EVP_PKEY* ec_import_public(
-        sa_elliptic_curve curve,
-        const uint8_t* in,
-        size_t in_length);
+int ec_get_nid(sa_elliptic_curve curve);
 
 /**
  * Encodes an EC signature in OpenSSL format ASN.1{r,s}.
@@ -103,23 +69,15 @@ bool ec_encode_signature(
         size_t in_length);
 
 /**
- * Import DH public key.
+ * Import a public key.
  *
- * @param[in] in the DH public key bytes.
- * @param[in] in_length the length of DH public key bytes
- * @param[in] p the DH p value.
- * @param[in] p_length the length of the DH p value.
- * @param[in] g the DH g value.
- * @param[in] g_length the length of the DH g value.
- * @return
+ * @param[in] in the public key bytes.
+ * @param[in] in_length the length of the public key bytes
+ * @return the public key.
  */
-EVP_PKEY* dh_import_public(
+EVP_PKEY* sa_import_public_key(
         const uint8_t* in,
-        size_t in_length,
-        const uint8_t* p,
-        size_t p_length,
-        const uint8_t* g,
-        size_t g_length);
+        size_t in_length);
 
 /**
  * Creates an EVP_PKEY public key from an sa_key.
@@ -127,14 +85,14 @@ EVP_PKEY* dh_import_public(
  * @param[in] key the sa_key to create an EVP_PKEY from.
  * @return the EVP_PKEY.
  */
-EVP_PKEY* get_public_key(sa_key key);
+EVP_PKEY* sa_get_public_key(sa_key key);
 
 /**
  * Set key rights to allow all operations.
  *
  * @param[out] rights key rights
  */
-void rights_set_allow_all(sa_rights* rights);
+void sa_rights_set_allow_all(sa_rights* rights);
 
 #ifdef __cplusplus
 }

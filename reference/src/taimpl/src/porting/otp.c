@@ -145,7 +145,6 @@ static bool wrap_aes_cbc(
 
     bool status = false;
     EVP_CIPHER_CTX* context = NULL;
-
     do {
         context = EVP_CIPHER_CTX_new();
         if (context == NULL) {
@@ -312,7 +311,6 @@ bool unwrap_aes_ecb_internal(
 
     bool status = false;
     EVP_CIPHER_CTX* context = NULL;
-
     do {
         context = EVP_CIPHER_CTX_new();
         if (context == NULL) {
@@ -396,7 +394,6 @@ bool unwrap_aes_cbc_internal(
 
     bool status = false;
     EVP_CIPHER_CTX* context = NULL;
-
     do {
         context = EVP_CIPHER_CTX_new();
         if (context == NULL) {
@@ -501,7 +498,6 @@ bool unwrap_aes_gcm_internal(
 
     bool status = false;
     EVP_CIPHER_CTX* context = NULL;
-
     do {
         context = EVP_CIPHER_CTX_new();
         if (context == NULL) {
@@ -923,7 +919,6 @@ bool otp_hmac_sha256(
     bool status = false;
     uint8_t* hmac_key = NULL;
     size_t hmac_key_length = SYM_128_KEY_SIZE;
-
     do {
         hmac_key = memory_secure_alloc(hmac_key_length);
         if (hmac_key == NULL) {

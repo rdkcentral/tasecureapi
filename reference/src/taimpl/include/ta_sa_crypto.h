@@ -31,13 +31,13 @@
 
 #ifdef __cplusplus
 
-#include <cstddef>
 #include <cstdbool>
+#include <cstddef>
 
 extern "C" {
 #else
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 #endif
 
 /**

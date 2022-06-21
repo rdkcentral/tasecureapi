@@ -26,7 +26,7 @@ using namespace client_test_helpers;
 namespace {
     TEST_F(SaKeyImportTest, nominalRsaPrivateKeyInfo1024E3) {
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         auto clear_key = sample_rsa_1024_pkcs8_e3();
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
@@ -48,7 +48,7 @@ namespace {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_import_parameters_rsa_private_key_info parameters = {&rights};
 
@@ -72,7 +72,7 @@ namespace {
         auto clear_key = sample_rsa_6144_pkcs8();
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_import_parameters_rsa_private_key_info parameters = {&rights};
 
@@ -88,7 +88,7 @@ namespace {
         auto clear_key = std::vector<uint8_t>(256);
 
         sa_rights rights;
-        rights_set_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         sa_import_parameters_rsa_private_key_info parameters = {&rights};
 
