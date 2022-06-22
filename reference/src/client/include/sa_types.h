@@ -909,6 +909,18 @@ typedef struct {
     sa_rights* rights_kh;
 } sa_key_exchange_parameters_netflix_authenticated_dh;
 
+/**
+ * Structure to use in sa_svp_buffer_copy_blocks
+ */
+typedef struct {
+    // offset into the output svp buffer.
+    size_t out_offset;
+    // offset into the input svp buffer.
+    size_t in_offset;
+    // numbers of bytes to copy.
+    size_t length;
+} sa_svp_block;
+
 #ifdef __cplusplus
 }
 #endif

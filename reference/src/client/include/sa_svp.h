@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -198,6 +198,30 @@ sa_status sa_svp_buffer_copy(
         sa_svp_buffer in,
         size_t* in_offset,
         size_t in_length);
+
+/**
+ * Copy multiple block of data from one secure buffer to another. Destination buffer is validated to be wholly contained within
+ * the restricted SVP memory region. Destination range is validated to be wholly contained within the destination SVP
+ * buffer. Input range is validated to be wholly contained within the input SVP buffer.
+ *
+ * @param[in] out Destination SVP buffer.
+ * @param[in] in Source SVP buffer.
+ * @param[in] blocks the list of blocks to copy from in to out.
+ * @param[in] blocks_length Number of blocks to copy.
+ * @return Operation status. Possible values are:
+ * + SA_STATUS_OK - Operation succeeded.
+ * + SA_STATUS_NULL_PARAMETER - out, out_offset or in is NULL.
+ * + SA_STATUS_BAD_PARAMETER - Reading or writing past the end of the SVP buffer detected.
+ * + SA_STATUS_BAD_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
+ * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
+ * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
+ * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
+ */
+sa_status sa_svp_buffer_copy_blocks(
+        sa_svp_buffer out,
+        sa_svp_buffer in,
+        sa_svp_block* blocks,
+        size_t blocks_length);
 
 /**
  * Perform a key check by decrypting input data with an AES ECB into restricted memory and comparing with reference

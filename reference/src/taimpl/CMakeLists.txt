@@ -162,6 +162,7 @@ add_library(taimpl STATIC
         src/ta_sa_process_common_encryption.c
         src/ta_sa_svp_buffer_check.c
         src/ta_sa_svp_buffer_copy.c
+        src/ta_sa_svp_buffer_copy_blocks.c
         src/ta_sa_svp_buffer_create.c
         src/ta_sa_svp_buffer_release.c
         src/ta_sa_svp_buffer_write.c

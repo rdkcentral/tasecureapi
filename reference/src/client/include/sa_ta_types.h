@@ -76,7 +76,8 @@ typedef enum {
     SA_SVP_BUFFER_COPY,
     SA_SVP_KEY_CHECK,
     SA_SVP_BUFFER_CHECK,
-    SA_PROCESS_COMMON_ENCRYPTION
+    SA_PROCESS_COMMON_ENCRYPTION,
+    SA_SVP_BUFFER_COPY_BLOCKS
 } SA_COMMAND_ID;
 
 /**
@@ -468,6 +469,16 @@ typedef struct {
     size_t in_offset;
     size_t in_length;
 } sa_svp_buffer_copy_s;
+
+// sa_svp_buffer_copy_blocks
+// param[0] IN - sa_svp_buffer_copy_block_s
+// param[1] IN - sa_svp_block
+typedef struct {
+    uint8_t api_version;
+    sa_svp_buffer out_svp_buffer;
+    sa_svp_buffer in_svp_buffer;
+    size_t blocks_length;
+} sa_svp_buffer_copy_block_s;
 
 // sa_svp_key_check
 // param[0] INOUT - sa_svp_key_check_s
