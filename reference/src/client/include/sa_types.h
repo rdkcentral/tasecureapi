@@ -760,6 +760,8 @@ typedef struct {
 typedef struct {
     /** The digest algorithm to use in the signature. */
     sa_digest_algorithm digest_algorithm;
+    /** MGF1 digest algorithm. */
+    sa_digest_algorithm mgf1_digest_algorithm;
     /** Indicates the in parameter has the result of the digest operation. */
     bool precomputed_digest;
     /** Salt length. */

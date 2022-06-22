@@ -56,7 +56,7 @@ using SaEngineCipherTestType = std::tuple<int, int, int, int>;
 class SaEngineCipherTest : public ::testing::TestWithParam<SaEngineCipherTestType>,
                            public SaEngineTest {};
 
-using SaEnginePkeySignTestType = std::tuple<sa_key_type, size_t, int, int, int>;
+using SaEnginePkeySignTestType = std::tuple<sa_key_type, size_t, int, int, int, int>;
 
 class SaEnginePkeySignTest : public ::testing::TestWithParam<SaEnginePkeySignTestType>,
                              public SaEngineTest {};

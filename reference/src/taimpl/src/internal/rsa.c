@@ -434,6 +434,7 @@ bool rsa_sign_pss(
         size_t* out_length,
         sa_digest_algorithm digest_algorithm,
         const stored_key_t* stored_key,
+        sa_digest_algorithm mgf1_digest_algorithm,
         size_t salt_length,
         const void* in,
         size_t in_length,
@@ -496,6 +497,11 @@ bool rsa_sign_pss(
                 break;
             }
 
+            if (EVP_PKEY_CTX_set_rsa_mgf1_md(evp_pkey_ctx, digest_mechanism(mgf1_digest_algorithm)) != 1) {
+                ERROR("EVP_PKEY_CTX_set_rsa_mgf1_md failed");
+                break;
+            }
+
             if (EVP_PKEY_CTX_set_rsa_pss_saltlen(evp_pkey_ctx, (int) salt_length) != 1) {
                 ERROR("EVP_PKEY_CTX_set_rsa_pss_saltlen failed");
                 break;
@@ -526,6 +532,11 @@ bool rsa_sign_pss(
 
             if (EVP_PKEY_CTX_set_rsa_padding(evp_md_pkey_ctx, RSA_PKCS1_PSS_PADDING) != 1) {
                 ERROR("EVP_PKEY_CTX_set_rsa_padding failed");
+                break;
+            }
+
+            if (EVP_PKEY_CTX_set_rsa_mgf1_md(evp_md_pkey_ctx, digest_mechanism(mgf1_digest_algorithm)) != 1) {
+                ERROR("EVP_PKEY_CTX_set_rsa_mgf1_md failed");
                 break;
             }
 

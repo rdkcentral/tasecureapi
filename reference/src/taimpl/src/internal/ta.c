@@ -1126,6 +1126,7 @@ static sa_status ta_invoke_crypto_sign(
     void* parameters;
     if (sign->signature_algorithm == SA_SIGNATURE_ALGORITHM_RSA_PSS) {
         parameters_rsa_pss.digest_algorithm = sign->digest_algorithm;
+        parameters_rsa_pss.mgf1_digest_algorithm = sign->mgf1_digest_algorithm;
         parameters_rsa_pss.precomputed_digest = sign->precomputed_digest;
         parameters_rsa_pss.salt_length = sign->salt_length;
         parameters = &parameters_rsa_pss;

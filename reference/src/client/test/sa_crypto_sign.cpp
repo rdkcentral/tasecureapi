@@ -28,8 +28,9 @@ namespace {
         auto signature_algorithm = std::get<0>(GetParam());
         auto key_length = std::get<1>(GetParam());
         auto digest_algorithm = std::get<2>(GetParam());
-        auto salt = std::get<3>(GetParam());
-        auto precomputed_digest = std::get<4>(GetParam());
+        auto mgf1_digest_algorithm = std::get<2>(GetParam());
+        auto salt = std::get<4>(GetParam());
+        auto precomputed_digest = std::get<5>(GetParam());
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
@@ -68,7 +69,7 @@ namespace {
             }
             case SA_SIGNATURE_ALGORITHM_RSA_PSS: {
                 signature_length = key_length;
-                parameters_rsa_pss = {digest_algorithm, precomputed_digest, salt};
+                parameters_rsa_pss = {digest_algorithm, mgf1_digest_algorithm, precomputed_digest, salt};
                 sign_parameters = &parameters_rsa_pss;
 
                 clear_key = get_rsa_private_key(key_length);
@@ -139,7 +140,8 @@ namespace {
             case SA_SIGNATURE_ALGORITHM_RSA_PSS: {
                 auto rsa_key = rsa_import_pkcs8(clear_key);
                 ASSERT_NE(rsa_key, nullptr);
-                ASSERT_TRUE(verify_rsa_pss_openssl(rsa_key, digest_algorithm, parameters_rsa_pss.salt_length, in, out));
+                ASSERT_TRUE(verify_rsa_pss_openssl(rsa_key, digest_algorithm, parameters_rsa_pss.mgf1_digest_algorithm,
+                        parameters_rsa_pss.salt_length, in, out));
             }
         }
     }
@@ -156,7 +158,7 @@ namespace {
         auto out = std::vector<uint8_t>(4096);
         auto in = random(25);
 
-        sa_sign_parameters_rsa_pss parameters = {SA_DIGEST_ALGORITHM_SHA1, false, 20};
+        sa_sign_parameters_rsa_pss parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, false, 20};
         sa_status status = sa_crypto_sign(out.data(), nullptr, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key, in.data(),
                 in.size(), &parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
@@ -175,7 +177,7 @@ namespace {
         size_t out_length = out.size();
         auto in = random(25);
 
-        sa_sign_parameters_rsa_pss parameters = {SA_DIGEST_ALGORITHM_SHA1, false, 20};
+        sa_sign_parameters_rsa_pss parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, false, 20};
         sa_status status = sa_crypto_sign(out.data(), &out_length, static_cast<sa_signature_algorithm>(UINT8_MAX),
                 *key, in.data(), in.size(), &parameters);
         ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
@@ -194,7 +196,27 @@ namespace {
         size_t out_length = out.size();
         auto in = random(25);
 
-        sa_sign_parameters_rsa_pss parameters = {static_cast<sa_digest_algorithm>(UINT8_MAX), false, 20};
+        sa_sign_parameters_rsa_pss parameters = {static_cast<sa_digest_algorithm>(UINT8_MAX), SA_DIGEST_ALGORITHM_SHA1, false, 20};
+        sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key, in.data(),
+                in.size(), &parameters);
+        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    }
+
+    TEST(SaCryptoSign, failsBadMgf1DigestAlgorithm) {
+        auto clear_key = sample_rsa_2048_pkcs8();
+
+        sa_rights rights;
+        sa_rights_set_allow_all(&rights);
+
+        auto key = create_sa_key_rsa(&rights, clear_key);
+        ASSERT_NE(key, nullptr);
+
+        auto out = std::vector<uint8_t>(4096);
+        size_t out_length = out.size();
+        auto in = random(25);
+
+        sa_sign_parameters_rsa_pss parameters = {SA_DIGEST_ALGORITHM_SHA1, static_cast<sa_digest_algorithm>(UINT8_MAX),
+                false, 20};
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key, in.data(),
                 in.size(), &parameters);
         ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
@@ -205,7 +227,7 @@ namespace {
         size_t out_length = out.size();
         auto in = random(25);
 
-        sa_sign_parameters_rsa_pss parameters = {SA_DIGEST_ALGORITHM_SHA1, false, 20};
+        sa_sign_parameters_rsa_pss parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, false, 20};
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, INVALID_HANDLE,
                 in.data(), in.size(), &parameters);
         ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
@@ -285,7 +307,7 @@ namespace {
 
         auto out = std::vector<uint8_t>(4096);
 
-        sa_sign_parameters_rsa_pss parameters = {SA_DIGEST_ALGORITHM_SHA1, false, 20};
+        sa_sign_parameters_rsa_pss parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, false, 20};
         sa_status status = sa_crypto_sign(out.data(), nullptr, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key, nullptr, 1,
                 &parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);

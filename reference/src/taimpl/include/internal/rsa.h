@@ -145,6 +145,7 @@ bool rsa_sign_pkcs1v15(
  * @param[out] out output buffer.
  * @param[in,out] out_length output buffer length.
  * @param[in] digest_algorithm digest algorithm.
+ * @param[in] mgf1_digest_algorithm digest algorithm for the MGF1 function.
  * @param[in] stored_key RSA key.
  * @param[in] salt_length salt length.
  * @param[in] in input data.
@@ -157,6 +158,7 @@ bool rsa_sign_pss(
         size_t* out_length,
         sa_digest_algorithm digest_algorithm,
         const stored_key_t* stored_key,
+        sa_digest_algorithm mgf1_digest_algorithm,
         size_t salt_length,
         const void* in,
         size_t in_length,
