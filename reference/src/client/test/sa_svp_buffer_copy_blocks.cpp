@@ -104,7 +104,7 @@ namespace {
         sa_status status = sa_svp_buffer_write(*in_buffer, &out_offset, in.data(), in.size());
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_EQ(out_offset, in.size());
-        status = sa_svp_buffer_copy_blocks(*out_buffer, *in_buffer, NULL, 0);
+        status = sa_svp_buffer_copy_blocks(*out_buffer, *in_buffer, nullptr, 0);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
