@@ -60,7 +60,8 @@ sa_status sa_svp_buffer_copy_blocks(
         CREATE_PARAM(param1, blocks, sizeof(sa_svp_block) * blocks_length);
         param1_size = sizeof(sa_svp_block) * blocks_length;
         param1_type = TA_PARAM_IN;
-                                                     // clang-format off
+        
+        // clang-format off
         ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, param1_type, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{svp_buffer_copy_blocks, sizeof(sa_svp_buffer_copy_block_s)},
                                           {param1, param1_size},
