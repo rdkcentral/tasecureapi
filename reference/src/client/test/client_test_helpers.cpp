@@ -2511,7 +2511,7 @@ namespace client_test_helpers {
 
         if (SA_USAGE_BIT_TEST(header->rights.usage_flags, SA_USAGE_FLAG_SIGN)) {
             std::vector<uint8_t> signature(MAX_SIGNATURE_LENGTH);
-            sa_sign_parameters_rsa_pss params = {SA_DIGEST_ALGORITHM_SHA256, false, 32};
+            sa_sign_parameters_rsa_pss params = {SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA256, false, 32};
             size_t signature_length = signature.size();
             status = sa_crypto_sign(signature.data(), &signature_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, key,
                     clear_key.data(), clear_key.size(), &params);
@@ -2522,14 +2522,14 @@ namespace client_test_helpers {
 
             signature.resize(signature_length);
 
-            if (!verify_rsa_pss_openssl(evp_pkey, SA_DIGEST_ALGORITHM_SHA256, params.salt_length, clear_key,
-                        signature)) {
+            if (!verify_rsa_pss_openssl(evp_pkey, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA256,
+                        params.salt_length, clear_key, signature)) {
                 ERROR("verify_rsa_pss_openssl failed");
                 return false;
             }
         } else {
             std::vector<uint8_t> signature(MAX_SIGNATURE_LENGTH);
-            sa_sign_parameters_rsa_pss params = {SA_DIGEST_ALGORITHM_SHA256, false, 32};
+            sa_sign_parameters_rsa_pss params = {SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA256, false, 32};
             size_t signature_length = signature.size();
             status = sa_crypto_sign(signature.data(), &signature_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, key,
                     clear_key.data(), clear_key.size(), &params);
@@ -2741,6 +2741,7 @@ namespace client_test_helpers {
     bool verify_rsa_pss_openssl(
             const std::shared_ptr<EVP_PKEY>& evp_key,
             sa_digest_algorithm digest_algorithm,
+            sa_digest_algorithm mgf1_digest_algorithm,
             size_t salt_length,
             const std::vector<uint8_t>& in,
             const std::vector<uint8_t>& signature) {
@@ -2760,6 +2761,11 @@ namespace client_test_helpers {
 
         if (EVP_PKEY_CTX_set_rsa_padding(evp_pkey_context, RSA_PKCS1_PSS_PADDING) != 1) {
             ERROR("EVP_PKEY_CTX_set_rsa_padding failed");
+            return false;
+        }
+
+        if (EVP_PKEY_CTX_set_rsa_mgf1_md(evp_pkey_context, digest_mechanism(mgf1_digest_algorithm)) != 1) {
+            ERROR("EVP_PKEY_CTX_set_rsa_mgf1_md failed");
             return false;
         }
 

@@ -74,6 +74,7 @@ sa_status sa_crypto_sign(
             sa_sign_parameters_rsa_pss* parameters_rsa_pss = (sa_sign_parameters_rsa_pss*) parameters;
             sign->salt_length = parameters_rsa_pss->salt_length;
             sign->digest_algorithm = parameters_rsa_pss->digest_algorithm;
+            sign->mgf1_digest_algorithm = parameters_rsa_pss->mgf1_digest_algorithm;
             sign->precomputed_digest = parameters_rsa_pss->precomputed_digest;
         } else if (signature_algorithm == SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15) {
             if (parameters == NULL) {
@@ -84,6 +85,7 @@ sa_status sa_crypto_sign(
 
             sa_sign_parameters_rsa_pkcs1v15* parameters_rsa_pkcs1v15 = (sa_sign_parameters_rsa_pkcs1v15*) parameters;
             sign->digest_algorithm = parameters_rsa_pkcs1v15->digest_algorithm;
+            sign->mgf1_digest_algorithm = 0;
             sign->precomputed_digest = parameters_rsa_pkcs1v15->precomputed_digest;
         } else if (signature_algorithm == SA_SIGNATURE_ALGORITHM_ECDSA) {
             if (parameters == NULL) {
@@ -94,10 +96,12 @@ sa_status sa_crypto_sign(
 
             sa_sign_parameters_ecdsa* parameters_ecdsa = (sa_sign_parameters_ecdsa*) parameters;
             sign->digest_algorithm = parameters_ecdsa->digest_algorithm;
+            sign->mgf1_digest_algorithm = 0;
             sign->precomputed_digest = parameters_ecdsa->precomputed_digest;
         } else {
             sign->salt_length = 0;
             sign->digest_algorithm = 0;
+            sign->mgf1_digest_algorithm = 0;
             sign->precomputed_digest = false;
         }
 

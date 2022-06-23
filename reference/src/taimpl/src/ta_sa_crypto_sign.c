@@ -223,6 +223,14 @@ static sa_status ta_sa_crypto_sign_rsa_pss(
         return SA_STATUS_BAD_PARAMETER;
     }
 
+    if (parameters->mgf1_digest_algorithm != SA_DIGEST_ALGORITHM_SHA1 &&
+            parameters->mgf1_digest_algorithm != SA_DIGEST_ALGORITHM_SHA256 &&
+            parameters->mgf1_digest_algorithm != SA_DIGEST_ALGORITHM_SHA384 &&
+            parameters->mgf1_digest_algorithm != SA_DIGEST_ALGORITHM_SHA512) {
+        ERROR("Unknown mgf1 digest algorithm encountered");
+        return SA_STATUS_BAD_PARAMETER;
+    }
+
     sa_status status;
     do {
         const sa_header* header = stored_key_get_header(stored_key);
@@ -264,9 +272,9 @@ static sa_status ta_sa_crypto_sign_rsa_pss(
             break;
         }
 
-        if (!rsa_sign_pss(out, out_length, parameters->digest_algorithm, stored_key, parameters->salt_length, in,
-                    in_length, parameters->precomputed_digest)) {
-            ERROR("rsa_sign_psssha512 failed");
+        if (!rsa_sign_pss(out, out_length, parameters->digest_algorithm, stored_key, parameters->mgf1_digest_algorithm,
+                    parameters->salt_length, in, in_length, parameters->precomputed_digest)) {
+            ERROR("rsa_sign_pss failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }

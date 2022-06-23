@@ -22,8 +22,11 @@
 #include "gtest/gtest.h"
 #include <sa_types.h>
 
-using SaCryptoSignTestType = std::tuple<sa_signature_algorithm, size_t, sa_digest_algorithm, size_t, bool>;
+// clang-format off
+using SaCryptoSignTestType = std::tuple<sa_signature_algorithm, size_t, sa_digest_algorithm, sa_digest_algorithm,
+        size_t, bool>;
 
 class SaCryptoSign : public ::testing::TestWithParam<SaCryptoSignTestType> {};
+// clang-format on
 
 #endif //SA_CRYPTO_SIGN_COMMON_H

@@ -360,6 +360,7 @@ namespace client_test_helpers {
      *
      * @param[in] evp_key RSA key.
      * @param[in] digest_algorithm digest algorithm.
+     * @param[in] mgf1_digest_algorithm the digest algorithm for the MGF1 function.
      * @param[in] salt_length salt length.
      * @param[in] in input message.
      * @param[in] signature message signature.
@@ -368,6 +369,7 @@ namespace client_test_helpers {
     bool verify_rsa_pss_openssl(
             const std::shared_ptr<EVP_PKEY>& evp_key,
             sa_digest_algorithm digest_algorithm,
+            sa_digest_algorithm mgf1_digest_algorithm,
             size_t salt_length,
             const std::vector<uint8_t>& in,
             const std::vector<uint8_t>& signature);

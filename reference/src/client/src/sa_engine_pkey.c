@@ -42,8 +42,7 @@ typedef struct {
     int pss_salt_length;
     EVP_MD_CTX* evp_md_ctx;
     const EVP_MD* evp_md;
-    const EVP_MD* oaep_md;
-    const EVP_MD* oaep_mgf1_md;
+    const EVP_MD* mgf1_md;
     void* oaep_label;
     int oaep_label_length;
     // Mac key signing
@@ -107,29 +106,28 @@ static int pkey_init(EVP_PKEY_CTX* evp_pkey_ctx) {
         if (key_type == EVP_PKEY_RSA) {
             app_data->padding_mode = RSA_DEFAULT_PADDING_MODE;
             app_data->pss_salt_length = RSA_DEFAULT_PSS_SALT_LENGTH;
-            app_data->oaep_md = EVP_sha1();
-            app_data->oaep_mgf1_md = EVP_sha1();
+            app_data->evp_md = EVP_sha1();
+            app_data->mgf1_md = EVP_sha1();
             app_data->oaep_label = NULL;
             app_data->oaep_label_length = 0;
         } else {
             app_data->padding_mode = 0;
             app_data->pss_salt_length = 0;
-            app_data->oaep_md = NULL;
-            app_data->oaep_mgf1_md = NULL;
+            app_data->evp_md = NULL;
+            app_data->mgf1_md = NULL;
             app_data->oaep_label = NULL;
             app_data->oaep_label_length = 0;
         }
     } else {
         app_data->padding_mode = 0;
         app_data->pss_salt_length = 0;
-        app_data->oaep_md = NULL;
-        app_data->oaep_mgf1_md = NULL;
+        app_data->evp_md = NULL;
+        app_data->mgf1_md = NULL;
         app_data->oaep_label = NULL;
         app_data->oaep_label_length = 0;
     }
 
     app_data->evp_md_ctx = NULL;
-    app_data->evp_md = NULL;
     app_data->mac_context = 0;
     EVP_PKEY_CTX_set_app_data(evp_pkey_ctx, app_data);
     return 1;
@@ -156,8 +154,7 @@ static int pkey_copy(
     new_app_data->pss_salt_length = app_data->pss_salt_length;
     new_app_data->evp_md_ctx = app_data->evp_md_ctx;
     new_app_data->evp_md = app_data->evp_md;
-    new_app_data->oaep_md = app_data->oaep_md;
-    new_app_data->oaep_mgf1_md = app_data->oaep_mgf1_md;
+    new_app_data->mgf1_md = app_data->mgf1_md;
     if (app_data->oaep_label_length > 0) {
         new_app_data->oaep_label = OPENSSL_malloc(app_data->oaep_label_length);
         if (new_app_data->oaep_label == NULL) {
@@ -262,7 +259,13 @@ static int pkey_sign(
             } else if (app_data->padding_mode == RSA_PKCS1_PSS_PADDING) {
                 signature_algorithm = SA_SIGNATURE_ALGORITHM_RSA_PSS;
                 parameters_rsa_pss.digest_algorithm = get_digest_algorithm(app_data->evp_md);
+                parameters_rsa_pss.mgf1_digest_algorithm = get_digest_algorithm(app_data->mgf1_md);
                 if (parameters_rsa_pss.digest_algorithm == UINT32_MAX) {
+                    ERROR("digest_algorithm unknown");
+                    return 0;
+                }
+
+                if (parameters_rsa_pss.mgf1_digest_algorithm == UINT32_MAX) {
                     ERROR("digest_algorithm unknown");
                     return 0;
                 }
@@ -416,6 +419,11 @@ static int pkey_verify(
             }
 
             if (app_data->padding_mode == RSA_PKCS1_PSS_PADDING) {
+                if (EVP_PKEY_CTX_set_rsa_mgf1_md(verify_pkey_ctx, app_data->mgf1_md) != 1) {
+                    ERROR("EVP_PKEY_CTX_set_rsa_mgf1_md failed");
+                    break;
+                }
+
                 if (EVP_PKEY_CTX_set_rsa_pss_saltlen(verify_pkey_ctx, app_data->pss_salt_length) != 1) {
                     ERROR("EVP_PKEY_CTX_set_rsa_pss_saltlen failed");
                     break;
@@ -423,11 +431,9 @@ static int pkey_verify(
             }
         }
 
-        if (key_type == EVP_PKEY_RSA || key_type == EVP_PKEY_EC) {
-            if (EVP_PKEY_CTX_set_signature_md(verify_pkey_ctx, app_data->evp_md) != 1) {
-                ERROR("EVP_PKEY_CTX_set_signature_md failed");
-                break;
-            }
+        if (EVP_PKEY_CTX_set_signature_md(verify_pkey_ctx, app_data->evp_md) != 1) {
+            ERROR("EVP_PKEY_CTX_set_signature_md failed");
+            break;
         }
 
         if (EVP_PKEY_verify(verify_pkey_ctx, signature, signature_length, in, in_length) != 1) {
@@ -833,12 +839,12 @@ static int pkey_encrypt(
         }
 
         if (app_data->padding_mode == RSA_PKCS1_OAEP_PADDING) {
-            if (EVP_PKEY_CTX_set_rsa_oaep_md(encrypt_pkey_ctx, app_data->oaep_md) != 1) {
+            if (EVP_PKEY_CTX_set_rsa_oaep_md(encrypt_pkey_ctx, app_data->evp_md) != 1) {
                 ERROR("EVP_PKEY_CTX_set_rsa_oaep_md failed");
                 break;
             }
 
-            if (EVP_PKEY_CTX_set_rsa_mgf1_md(encrypt_pkey_ctx, app_data->oaep_mgf1_md) != 1) {
+            if (EVP_PKEY_CTX_set_rsa_mgf1_md(encrypt_pkey_ctx, app_data->mgf1_md) != 1) {
                 ERROR("EVP_PKEY_CTX_set_rsa_mgf1_md failed");
                 break;
             }
@@ -918,8 +924,8 @@ static int pkey_decrypt(
     void* parameters = NULL;
     if (app_data->padding_mode == RSA_PKCS1_OAEP_PADDING) {
         cipher_algorithm = SA_CIPHER_ALGORITHM_RSA_OAEP;
-        parameters_rsa_oaep.digest_algorithm = get_digest_algorithm(app_data->oaep_md);
-        parameters_rsa_oaep.mgf1_digest_algorithm = get_digest_algorithm(app_data->oaep_mgf1_md);
+        parameters_rsa_oaep.digest_algorithm = get_digest_algorithm(app_data->evp_md);
+        parameters_rsa_oaep.mgf1_digest_algorithm = get_digest_algorithm(app_data->mgf1_md);
         parameters_rsa_oaep.label = app_data->oaep_label;
         parameters_rsa_oaep.label_length = app_data->oaep_label_length;
         parameters = &parameters_rsa_oaep;
@@ -1214,16 +1220,16 @@ static int pkey_ctrl(
                 return 0;
             }
 
-            app_data->oaep_md = p2;
+            app_data->evp_md = p2;
             break;
 
         case EVP_PKEY_CTRL_RSA_MGF1_MD:
             if (p2 == NULL) {
-                ERROR("oaep_mgf1_md is NULL");
+                ERROR("mgf1_md is NULL");
                 return 0;
             }
 
-            app_data->oaep_mgf1_md = p2;
+            app_data->mgf1_md = p2;
             break;
 
         case EVP_PKEY_CTRL_RSA_OAEP_LABEL:
