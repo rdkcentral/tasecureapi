@@ -30,10 +30,10 @@ namespace {
         auto out_buffer = create_sa_svp_buffer(1024);
         ASSERT_NE(out_buffer, nullptr);
         auto in = random(1024);
-        auto chunk_size = offset_length > 1 ? (1024 / (2 * offset_length)) : 1024;
+        long chunk_size = offset_length > 1 ? (1024 / (2 * offset_length)) : 1024; // NOLINT
         std::vector<uint8_t> digest_vector;
         sa_svp_offset offsets[offset_length];
-        for (size_t i = 0; i < offset_length; i++) {
+        for (long i = 0; i < offset_length; i++) { // NOLINT
             offsets[i].out_offset = i * chunk_size;
             offsets[i].in_offset = i * 2 * chunk_size;
             offsets[i].length = chunk_size;

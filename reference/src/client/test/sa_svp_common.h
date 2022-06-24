@@ -34,7 +34,7 @@ class SaSvpBufferAllocTest : public SaSvpBase {};
 
 class SaSvpBufferCheckTest : public ::testing::WithParamInterface<sa_digest_algorithm>, public SaSvpBase {};
 
-using SaSvpBufferTestType = std::tuple<size_t>;
+using SaSvpBufferTestType = std::tuple<long>;
 
 class SaSvpBufferCopyTest : public ::testing::WithParamInterface<SaSvpBufferTestType>, public SaSvpBase {};
 
