@@ -104,11 +104,12 @@ sa_status ta_sa_svp_buffer_release(
 /**
  * Write a block of data into an SVP buffer.
  *
- * @param[in] svp_buffer Destination SVP buffer.
- * @param[in,out] offset Offset at which to write the data. Will be set to offset at which the written data ends on
- * function return.
- * @param[in] in Input data to write.
- * @param[in] in_length Size of input data in bytes.
+ * @param[in] out Destination SVP buffer.
+ * @param[in] in Source data to write.
+ * @param[in] in_length The length of the source data.
+ * @param[in] offsets a list of offsets into the source and destination of the block to copy and the length of the
+ * block.
+ * @param[in] offset_length Number of offset blocks to copy.
  * @param[in] client_slot the client slot ID.
  * @param[in] caller_uuid the UUID of the caller.
  * @return Operation status. Possible values are:
@@ -121,10 +122,11 @@ sa_status ta_sa_svp_buffer_release(
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
  */
 sa_status ta_sa_svp_buffer_write(
-        sa_svp_buffer svp_buffer,
-        size_t* offset,
+        sa_svp_buffer out,
         const void* in,
         size_t in_length,
+        sa_svp_offset* offsets,
+        size_t offsets_length,
         ta_client client_slot,
         const sa_uuid* caller_uuid);
 
@@ -134,11 +136,10 @@ sa_status ta_sa_svp_buffer_write(
  * buffer. Input range is validated to be wholly contained within the input SVP buffer.
  *
  * @param[in] out Destination SVP buffer.
- * @param[in,out] out_offset Offset at which to write the data. Will be set to offset at which the written data ends.
- * @param[in] in Source SVP buffer.
- * @param[in,out] in_offset Source SVP buffer offset from which to copy the data. Will be set to offset at which the
- * read data ends.
- * @param[in] in_length Number of bytes to copy.
+ * @param[in] in Source data to write.
+ * @param[in] offsets a list of offsets into the source and destination of the block to copy and the length of the
+ * block.
+ * @param[in] offset_length Number of offset blocks to copy.
  * @param[in] client_slot the client slot ID.
  * @param[in] caller_uuid the UUID of the caller.
  * @return Operation status. Possible values are:
@@ -152,38 +153,9 @@ sa_status ta_sa_svp_buffer_write(
  */
 sa_status ta_sa_svp_buffer_copy(
         sa_svp_buffer out,
-        size_t* out_offset,
         sa_svp_buffer in,
-        size_t* in_offset,
-        size_t in_length,
-        ta_client client_slot,
-        const sa_uuid* caller_uuid);
-
-/**
- * Copy multiple block of data from one secure buffer to another. Destination buffer is validated to be wholly contained within
- * the restricted SVP memory region. Destination range is validated to be wholly contained within the destination SVP
- * buffer. Input range is validated to be wholly contained within the input SVP buffer.
- *
- * @param[in] out Destination SVP buffer.
- * @param[in] in Source SVP buffer.
- * @param[in] blocks the list of blocks to copy from in to out.
- * @param[in] blocks_length Number of blocks to copy.
- * @param[in] client_slot the client slot ID.
- * @param[in] caller_uuid the UUID of the caller.
- * @return Operation status. Possible values are:
- * + SA_STATUS_OK - Operation succeeded.
- * + SA_STATUS_NULL_PARAMETER - out, out_offset or in is NULL.
- * + SA_STATUS_BAD_PARAMETER - Reading or writing past the end of the SVP buffer detected.
- * + SA_STATUS_BAD_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
- * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
- * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
- * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
- */
-sa_status ta_sa_svp_buffer_copy_blocks(
-        sa_svp_buffer out,
-        sa_svp_buffer in,
-        sa_svp_block* blocks,
-        size_t blocks_length,
+        sa_svp_offset* offsets,
+        size_t offsets_length,
         ta_client client_slot,
         const sa_uuid* caller_uuid);
 

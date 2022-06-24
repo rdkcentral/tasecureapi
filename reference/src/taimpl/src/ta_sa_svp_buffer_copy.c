@@ -22,10 +22,9 @@
 
 sa_status ta_sa_svp_buffer_copy(
         sa_svp_buffer out,
-        size_t* out_offset,
-        const sa_svp_buffer in,
-        size_t* in_offset,
-        size_t in_length,
+        sa_svp_buffer in,
+        sa_svp_offset* offsets,
+        size_t offsets_length,
         ta_client client_slot,
         const sa_uuid* caller_uuid) {
 
@@ -34,8 +33,8 @@ sa_status ta_sa_svp_buffer_copy(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (out_offset == NULL) {
-        ERROR("NULL out_offset");
+    if (offsets == NULL) {
+        ERROR("NULL offsets");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -67,14 +66,11 @@ sa_status ta_sa_svp_buffer_copy(
 
         svp_buffer_t* out_svp_buffer = svp_get_buffer(out_svp);
         svp_buffer_t* in_svp_buffer = svp_get_buffer(in_svp);
-        if (!svp_copy(out_svp_buffer, *out_offset, in_svp_buffer, *in_offset, in_length)) {
+        if (!svp_copy(out_svp_buffer, in_svp_buffer, offsets, offsets_length)) {
             ERROR("svp_copy failed");
             status = SA_STATUS_BAD_SVP_BUFFER;
             break;
         }
-
-        *out_offset += in_length;
-        *in_offset += in_length;
     } while (false);
 
     if (in_svp != NULL)

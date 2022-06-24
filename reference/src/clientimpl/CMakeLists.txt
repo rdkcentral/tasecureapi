@@ -81,7 +81,6 @@ add_library(saclientimpl STATIC
         src/sa_svp_buffer_alloc.c
         src/sa_svp_buffer_check.c
         src/sa_svp_buffer_copy.c
-        src/sa_svp_buffer_copy_blocks.c
         src/sa_svp_buffer_free.c
         src/sa_svp_buffer_release.c
         src/sa_svp_buffer_write.c

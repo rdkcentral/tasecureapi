@@ -4547,8 +4547,9 @@ namespace client_test_helpers {
         if (buffer_type == SA_BUFFER_TYPE_CLEAR) {
             memcpy(buffer->context.clear.buffer, initial_value.data(), initial_value.size());
         } else {
-            if (sa_svp_buffer_write(buffer->context.svp.buffer, &buffer->context.svp.offset, initial_value.data(),
-                        initial_value.size()) != SA_STATUS_OK) {
+            sa_svp_offset offsets = {0, 0, initial_value.size()};
+            if (sa_svp_buffer_write(buffer->context.svp.buffer, initial_value.data(), initial_value.size(),
+                        &offsets, 1) != SA_STATUS_OK) {
                 ERROR("sa_svp_buffer_write");
                 return nullptr;
             }

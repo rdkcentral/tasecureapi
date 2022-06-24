@@ -1217,8 +1217,8 @@ static sa_status ta_invoke_svp_buffer_write(
     }
 
     sa_svp_buffer_write_s* svp_buffer_write = (sa_svp_buffer_write_s*) params[0].mem_ref;
-    return ta_sa_svp_buffer_write(svp_buffer_write->svp_buffer, &svp_buffer_write->offset, params[1].mem_ref,
-            params[1].mem_ref_size, context->client, uuid);
+    return ta_sa_svp_buffer_write(svp_buffer_write->out, params[1].mem_ref, params[1].mem_ref_size,
+            params[2].mem_ref, params[2].mem_ref_size / sizeof(sa_svp_offset), context->client, uuid);
 }
 
 static sa_status ta_invoke_svp_buffer_copy(
@@ -1242,35 +1242,8 @@ static sa_status ta_invoke_svp_buffer_copy(
     }
 
     sa_svp_buffer_copy_s* svp_buffer_copy = (sa_svp_buffer_copy_s*) params[0].mem_ref;
-    return ta_sa_svp_buffer_copy(svp_buffer_copy->out_svp_buffer, &svp_buffer_copy->out_offset,
-            svp_buffer_copy->in_svp_buffer, &svp_buffer_copy->in_offset, svp_buffer_copy->in_length, context->client,
-            uuid);
-}
-
-static sa_status ta_invoke_svp_buffer_copy_blocks(
-        ta_param params[NUM_TA_PARAMS],
-        const ta_session_context* context,
-        const sa_uuid* uuid) {
-
-    if (params == NULL) {
-        ERROR("NULL params");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (params[0].mem_ref == NULL) {
-        ERROR("NULL params[0].mem_ref");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (params[0].mem_ref_size != sizeof(sa_svp_buffer_copy_block_s)) {
-        ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
-    }
-
-    sa_svp_buffer_copy_block_s* svp_buffer_copy_blocks = (sa_svp_buffer_copy_block_s*) params[0].mem_ref;
-    sa_svp_block* blocks = params[1].mem_ref;
-    return ta_sa_svp_buffer_copy_blocks(svp_buffer_copy_blocks->out_svp_buffer, svp_buffer_copy_blocks->in_svp_buffer,
-            blocks, svp_buffer_copy_blocks->blocks_length, context->client, uuid);
+    return ta_sa_svp_buffer_copy(svp_buffer_copy->out, svp_buffer_copy->in, params[1].mem_ref,
+            params[1].mem_ref_size / sizeof(sa_svp_offset), context->client, uuid);
 }
 
 static sa_status ta_invoke_svp_key_check(
@@ -1572,10 +1545,6 @@ sa_status ta_invoke_command_handler(
 
             case SA_SVP_BUFFER_COPY:
                 status = ta_invoke_svp_buffer_copy(params, context, &uuid);
-                break;
-
-            case SA_SVP_BUFFER_COPY_BLOCKS:
-                status = ta_invoke_svp_buffer_copy_blocks(params, context, &uuid);
                 break;
 
             case SA_SVP_KEY_CHECK:

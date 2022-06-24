@@ -34,15 +34,15 @@ class SaSvpBufferAllocTest : public SaSvpBase {};
 
 class SaSvpBufferCheckTest : public ::testing::WithParamInterface<sa_digest_algorithm>, public SaSvpBase {};
 
-class SaSvpBufferCopyTest : public SaSvpBase {};
+using SaSvpBufferTestType = std::tuple<size_t>;
 
-class SaSvpBufferCopyBlocksTest : public SaSvpBase {};
+class SaSvpBufferCopyTest : public ::testing::WithParamInterface<SaSvpBufferTestType>, public SaSvpBase {};
 
 class SaSvpBufferCreateTest : public SaSvpBase {};
 
 class SaSvpBufferReleaseTest : public SaSvpBase {};
 
-class SaSvpBufferWriteTest : public SaSvpBase {};
+class SaSvpBufferWriteTest : public ::testing::WithParamInterface<SaSvpBufferTestType>, public SaSvpBase {};
 
 class SaSvpKeyCheckTest : public SaSvpBase {};
 

@@ -21,10 +21,11 @@
 #include "ta_sa.h"
 
 sa_status ta_sa_svp_buffer_write(
-        sa_svp_buffer svp_buffer,
-        size_t* offset,
+        sa_svp_buffer out,
         const void* in,
         size_t in_length,
+        sa_svp_offset* offsets,
+        size_t offsets_length,
         ta_client client_slot,
         const sa_uuid* caller_uuid) {
 
@@ -33,13 +34,13 @@ sa_status ta_sa_svp_buffer_write(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (offset == NULL) {
-        ERROR("NULL offset");
+    if (in == NULL) {
+        ERROR("NULL in");
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (in == NULL) {
-        ERROR("NULL in");
+    if (offsets == NULL) {
+        ERROR("NULL offset");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -56,24 +57,22 @@ sa_status ta_sa_svp_buffer_write(
         }
 
         svp_store = client_get_svp_store(client);
-        status = svp_store_acquire_exclusive(&out_svp, svp_store, svp_buffer, caller_uuid);
+        status = svp_store_acquire_exclusive(&out_svp, svp_store, out, caller_uuid);
         if (status != SA_STATUS_OK) {
             ERROR("svp_store_acquire_exclusive failed");
             break;
         }
 
         svp_buffer_t* out_svp_buffer = svp_get_buffer(out_svp);
-        if (!svp_write(out_svp_buffer, *offset, in, in_length)) {
+        if (!svp_write(out_svp_buffer, in, in_length, offsets, offsets_length)) {
             ERROR("svp_write failed");
             status = SA_STATUS_BAD_SVP_BUFFER;
             break;
         }
-
-        *offset += in_length;
     } while (false);
 
     if (out_svp != NULL)
-        svp_store_release_exclusive(svp_store, svp_buffer, out_svp, caller_uuid);
+        svp_store_release_exclusive(svp_store, out, out_svp, caller_uuid);
 
     client_store_release(client_store, client_slot, client, caller_uuid);
 

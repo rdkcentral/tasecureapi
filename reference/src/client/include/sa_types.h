@@ -913,13 +913,13 @@ typedef struct {
  * Structure to use in sa_svp_buffer_copy_blocks
  */
 typedef struct {
-    // offset into the output svp buffer.
+    // offset into the output buffer.
     size_t out_offset;
-    // offset into the input svp buffer.
+    // offset into the input buffer.
     size_t in_offset;
-    // numbers of bytes to copy.
+    // numbers of bytes to copy or write.
     size_t length;
-} sa_svp_block;
+} sa_svp_offset;
 
 #ifdef __cplusplus
 }

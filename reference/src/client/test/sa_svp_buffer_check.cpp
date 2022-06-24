@@ -29,10 +29,9 @@ namespace {
         auto buffer = create_sa_svp_buffer(1024);
         ASSERT_NE(buffer, nullptr);
         auto in = random(1024);
-        size_t out_offset = 0;
-        sa_status status = sa_svp_buffer_write(*buffer, &out_offset, in.data(), in.size());
+        sa_svp_offset offset = {0, 0, in.size()};
+        sa_status status = sa_svp_buffer_write(*buffer, in.data(), in.size(), &offset, 1);
         ASSERT_EQ(status, SA_STATUS_OK);
-        ASSERT_EQ(out_offset, in.size());
 
         size_t length = digest_length(digest);
         std::vector<uint8_t> hash(length);
@@ -41,32 +40,14 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
-    TEST_P(SaSvpBufferCheckTest, nominalWithOffset) {
-        auto digest = GetParam();
-        auto buffer = create_sa_svp_buffer(2048);
-        ASSERT_NE(buffer, nullptr);
-        auto in = random(1024);
-        size_t out_offset = 1024;
-        sa_status status = sa_svp_buffer_write(*buffer, &out_offset, in.data(), in.size());
-        ASSERT_EQ(status, SA_STATUS_OK);
-        ASSERT_EQ(out_offset, in.size() + 1024);
-
-        size_t length = digest_length(digest);
-        std::vector<uint8_t> hash(length);
-        ASSERT_TRUE(digest_openssl(hash, digest, in, {}, {}));
-        status = sa_svp_buffer_check(*buffer, 1024, 1024, digest, hash.data(), hash.size());
-        ASSERT_EQ(status, SA_STATUS_OK);
-    }
-
     TEST_P(SaSvpBufferCheckTest, failsHashMismatch) {
         auto digest = GetParam();
         auto buffer = create_sa_svp_buffer(1024);
         ASSERT_NE(buffer, nullptr);
         auto in = random(1024);
-        size_t out_offset = 0;
-        sa_status status = sa_svp_buffer_write(*buffer, &out_offset, in.data(), in.size());
+        sa_svp_offset offset = {0, 0, in.size()};
+        sa_status status = sa_svp_buffer_write(*buffer, in.data(), in.size(), &offset, 1);
         ASSERT_EQ(status, SA_STATUS_OK);
-        ASSERT_EQ(out_offset, in.size());
 
         size_t length = digest_length(digest);
         std::vector<uint8_t> hash(length);

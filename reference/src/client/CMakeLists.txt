@@ -246,7 +246,6 @@ add_executable(saclienttest
         test/sa_svp_buffer_alloc.cpp
         test/sa_svp_buffer_check.cpp
         test/sa_svp_buffer_copy.cpp
-        test/sa_svp_buffer_copy_blocks.cpp
         test/sa_svp_buffer_create.cpp
         test/sa_svp_buffer_release.cpp
         test/sa_svp_buffer_write.cpp

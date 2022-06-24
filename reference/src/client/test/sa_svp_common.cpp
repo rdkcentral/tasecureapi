@@ -56,3 +56,13 @@ INSTANTIATE_TEST_SUITE_P(
                 SA_DIGEST_ALGORITHM_SHA256,
                 SA_DIGEST_ALGORITHM_SHA384,
                 SA_DIGEST_ALGORITHM_SHA512));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaSvpBufferCopyTests,
+        SaSvpBufferCopyTest,
+        ::testing::Values(1, 3, 10));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaSvpBufferWriteTests,
+        SaSvpBufferWriteTest,
+        ::testing::Values(1, 3, 10));
