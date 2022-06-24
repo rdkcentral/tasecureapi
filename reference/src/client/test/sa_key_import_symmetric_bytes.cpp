@@ -48,7 +48,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT);
     }
 
-    TEST_F(SaKeyImportTest, failsSymmetricBytesBadInLength15) {
+    TEST_F(SaKeyImportTest, failsSymmetricBytesInvalidInLength15) {
         auto clear_key = random(15);
 
         sa_rights rights;
@@ -61,10 +61,10 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_SYMMETRIC_BYTES, clear_key.data(), clear_key.size(),
                 &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyImportTest, failsSymmetricBytesBadInLength513) {
+    TEST_F(SaKeyImportTest, failsSymmetricBytesInvalidInLength513) {
         auto clear_key = random(513);
 
         sa_rights rights;
@@ -76,7 +76,7 @@ namespace {
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_SYMMETRIC_BYTES, clear_key.data(), clear_key.size(),
                 &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyImportTest, failsSymmetricBytesNullParameters) {

@@ -167,8 +167,8 @@ static sa_status store_remove(
     }
 
     if (slot >= store->slot_count) {
-        ERROR("Bad slot");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid slot");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     bool is_shutting_down = (!caller_uuid);
@@ -195,7 +195,7 @@ static sa_status store_remove(
 
         if (store_object->object == NULL) {
             // empty slot, nothing to do
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -404,8 +404,8 @@ sa_status object_store_acquire(
     }
 
     if (slot >= store->slot_count) {
-        ERROR("Bad slot");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid slot");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (mtx_lock(&store->mutex) != thrd_success) {
@@ -430,7 +430,7 @@ sa_status object_store_acquire(
         *object = store_object->object;
         if (!*object) {
             ERROR("No object at specified slot");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -458,8 +458,8 @@ sa_status object_store_release(object_store_t* store, slot_t slot, void* object,
     }
 
     if (slot >= store->slot_count) {
-        ERROR("Bad slot");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid slot");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (object == NULL) {

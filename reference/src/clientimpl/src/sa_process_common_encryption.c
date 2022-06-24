@@ -33,7 +33,7 @@ sa_status sa_process_common_encryption(
 
     if (samples_length < 1) {
         ERROR("samples_length < 1");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     void* session = client_session();
@@ -63,8 +63,8 @@ sa_status sa_process_common_encryption(
             }
 
             if (samples[i].iv_length != AES_BLOCK_SIZE) {
-                ERROR("iv is bad size");
-                status = SA_STATUS_BAD_PARAMETER;
+                ERROR("iv is invalid size");
+                status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
 

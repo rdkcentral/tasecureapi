@@ -81,7 +81,7 @@ namespace {
 
         size_t out_length = 0;
         status = sa_key_digest(nullptr, &out_length, *key, SA_DIGEST_ALGORITHM_SHA256);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST(SaKeyDigestTest, failEc) {
@@ -97,7 +97,7 @@ namespace {
 
         size_t out_length = 0;
         status = sa_key_digest(nullptr, &out_length, *key, SA_DIGEST_ALGORITHM_SHA256);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST(SaKeyDigestTest, failRsa) {
@@ -114,6 +114,6 @@ namespace {
 
         size_t out_length = 0;
         status = sa_key_digest(nullptr, &out_length, *key, SA_DIGEST_ALGORITHM_SHA256);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

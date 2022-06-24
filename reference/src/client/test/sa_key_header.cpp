@@ -41,7 +41,7 @@ namespace {
     TEST_F(SaKeyHeaderTest, failsInvalidKey) {
         sa_header header;
         sa_status status = sa_key_header(&header, INVALID_HANDLE);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyHeaderTest, failsNullHeader) {

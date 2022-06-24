@@ -23,18 +23,19 @@
 #include <stdbool.h>
 
 sa_status sa_svp_buffer_write(
-        sa_svp_buffer svp_buffer,
-        size_t* offset,
+        sa_svp_buffer out,
         const void* in,
-        size_t in_length) {
-
-    if (offset == NULL) {
-        ERROR("NULL offset");
-        return SA_STATUS_NULL_PARAMETER;
-    }
+        size_t in_length,
+        sa_svp_offset* offsets,
+        size_t offsets_length) {
 
     if (in == NULL && in_length > 0) {
         ERROR("NULL in");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (offsets == NULL) {
+        ERROR("NULL offsets");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -46,6 +47,8 @@ sa_status sa_svp_buffer_write(
 
     sa_svp_buffer_write_s* svp_buffer_write = NULL;
     void* param1 = NULL;
+    void* param2 = NULL;
+    size_t param2_size;
     sa_status status;
     do {
         CREATE_COMMAND(sa_svp_buffer_write_s, svp_buffer_write);
@@ -56,9 +59,7 @@ sa_status sa_svp_buffer_write(
         }
 
         svp_buffer_write->api_version = API_VERSION;
-        svp_buffer_write->svp_buffer = svp_buffer;
-        svp_buffer_write->offset = *offset;
-
+        svp_buffer_write->out = out;
         size_t param1_size;
         ta_param_type param1_type;
         if (in != NULL) {
@@ -76,11 +77,14 @@ sa_status sa_svp_buffer_write(
             param1_type = TA_PARAM_NULL;
         }
 
+        param2_size = offsets_length * sizeof(sa_svp_offset);
+        CREATE_PARAM(param2, offsets, param2_size);
+
         // clang-format off
         ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{svp_buffer_write, sizeof(sa_svp_buffer_write_s)},
                                           {param1, param1_size},
-                                          {NULL, 0},
+                                          {param2, param2_size},
                                           {NULL, 0}};
         // clang-format on
         status = ta_invoke_command(session, SA_SVP_BUFFER_WRITE, param_types, params);
@@ -88,11 +92,10 @@ sa_status sa_svp_buffer_write(
             ERROR("ta_invoke_command failed: %d", status);
             break;
         }
-
-        *offset = svp_buffer_write->offset;
     } while (false);
 
     RELEASE_COMMAND(svp_buffer_write);
     RELEASE_PARAM(param1);
+    RELEASE_PARAM(param2);
     return status;
 }

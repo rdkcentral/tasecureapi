@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,10 +29,9 @@ namespace {
         auto buffer = create_sa_svp_buffer(1024);
         ASSERT_NE(buffer, nullptr);
         auto in = random(1024);
-        size_t out_offset = 0;
-        sa_status status = sa_svp_buffer_write(*buffer, &out_offset, in.data(), in.size());
+        sa_svp_offset offset = {0, 0, in.size()};
+        sa_status status = sa_svp_buffer_write(*buffer, in.data(), in.size(), &offset, 1);
         ASSERT_EQ(status, SA_STATUS_OK);
-        ASSERT_EQ(out_offset, in.size());
 
         size_t length = digest_length(digest);
         std::vector<uint8_t> hash(length);
@@ -41,32 +40,14 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
-    TEST_P(SaSvpBufferCheckTest, nominalWithOffset) {
-        auto digest = GetParam();
-        auto buffer = create_sa_svp_buffer(2048);
-        ASSERT_NE(buffer, nullptr);
-        auto in = random(1024);
-        size_t out_offset = 1024;
-        sa_status status = sa_svp_buffer_write(*buffer, &out_offset, in.data(), in.size());
-        ASSERT_EQ(status, SA_STATUS_OK);
-        ASSERT_EQ(out_offset, in.size() + 1024);
-
-        size_t length = digest_length(digest);
-        std::vector<uint8_t> hash(length);
-        ASSERT_TRUE(digest_openssl(hash, digest, in, {}, {}));
-        status = sa_svp_buffer_check(*buffer, 1024, 1024, digest, hash.data(), hash.size());
-        ASSERT_EQ(status, SA_STATUS_OK);
-    }
-
     TEST_P(SaSvpBufferCheckTest, failsHashMismatch) {
         auto digest = GetParam();
         auto buffer = create_sa_svp_buffer(1024);
         ASSERT_NE(buffer, nullptr);
         auto in = random(1024);
-        size_t out_offset = 0;
-        sa_status status = sa_svp_buffer_write(*buffer, &out_offset, in.data(), in.size());
+        sa_svp_offset offset = {0, 0, in.size()};
+        sa_status status = sa_svp_buffer_write(*buffer, in.data(), in.size(), &offset, 1);
         ASSERT_EQ(status, SA_STATUS_OK);
-        ASSERT_EQ(out_offset, in.size());
 
         size_t length = digest_length(digest);
         std::vector<uint8_t> hash(length);
@@ -82,7 +63,7 @@ namespace {
         std::vector<uint8_t> hash(SHA1_DIGEST_LENGTH);
         sa_status status = sa_svp_buffer_check(*buffer, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256, hash.data(),
                 hash.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaSvpBufferCheckTest, failsNullHash) {
@@ -98,7 +79,7 @@ namespace {
         sa_status status = sa_svp_buffer_check(INVALID_HANDLE, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
                 hash.data(),
                 hash.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaSvpBufferCheckTest, failsInvalidSize) {
@@ -107,6 +88,6 @@ namespace {
         std::vector<uint8_t> hash(SHA1_DIGEST_LENGTH);
         sa_status status = sa_svp_buffer_check(*buffer, 1, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256, hash.data(),
                 hash.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,13 +34,15 @@ class SaSvpBufferAllocTest : public SaSvpBase {};
 
 class SaSvpBufferCheckTest : public ::testing::WithParamInterface<sa_digest_algorithm>, public SaSvpBase {};
 
-class SaSvpBufferCopyTest : public SaSvpBase {};
+using SaSvpBufferTestType = std::tuple<long>;
+
+class SaSvpBufferCopyTest : public ::testing::WithParamInterface<SaSvpBufferTestType>, public SaSvpBase {};
 
 class SaSvpBufferCreateTest : public SaSvpBase {};
 
 class SaSvpBufferReleaseTest : public SaSvpBase {};
 
-class SaSvpBufferWriteTest : public SaSvpBase {};
+class SaSvpBufferWriteTest : public ::testing::WithParamInterface<SaSvpBufferTestType>, public SaSvpBase {};
 
 class SaSvpKeyCheckTest : public SaSvpBase {};
 

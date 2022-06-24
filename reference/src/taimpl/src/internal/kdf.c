@@ -64,7 +64,7 @@ bool kdf_hkdf_hmac(
 
     size_t hash_length = digest_length(parameters->digest_algorithm);
     if (hash_length > DIGEST_MAX_LENGTH) {
-        ERROR("Bad digest");
+        ERROR("Invalid digest");
         return false;
     }
 
@@ -113,7 +113,7 @@ bool kdf_hkdf_hmac(
         size_t remainder = parameters->key_length % hash_length;
         size_t r = parameters->key_length / hash_length + (remainder ? 1 : 0);
         if (r > 0xff) {
-            ERROR("Bad derived_length: %d", parameters->key_length);
+            ERROR("Invalid derived_length: %d", parameters->key_length);
             break;
         }
 
@@ -202,7 +202,7 @@ bool kdf_concat_kdf(
 
     size_t hash_length = digest_length(parameters->digest_algorithm);
     if (hash_length > DIGEST_MAX_LENGTH) {
-        ERROR("Bad digest");
+        ERROR("Invalid digest");
         return false;
     }
 
@@ -236,7 +236,7 @@ bool kdf_concat_kdf(
         size_t remainder = parameters->key_length % hash_length;
         size_t r = parameters->key_length / hash_length + (remainder ? 1 : 0);
         if (r > 0xff) {
-            ERROR("Bad derived_length: %d", parameters->key_length);
+            ERROR("Invalid derived_length: %d", parameters->key_length);
             break;
         }
 
@@ -321,7 +321,7 @@ bool kdf_ansi_x963(
 
     size_t hash_length = digest_length(parameters->digest_algorithm);
     if (hash_length > DIGEST_MAX_LENGTH) {
-        ERROR("Bad digest");
+        ERROR("Invalid digest");
         return false;
     }
 
@@ -355,7 +355,7 @@ bool kdf_ansi_x963(
         size_t remainder = parameters->key_length % hash_length;
         size_t r = parameters->key_length / hash_length + (remainder ? 1 : 0);
         if (r > 0xff) {
-            ERROR("Bad derived_length: %d", parameters->key_length);
+            ERROR("Invalid derived_length: %d", parameters->key_length);
             break;
         }
 
@@ -429,7 +429,7 @@ bool kdf_ctr_cmac(
     }
 
     if ((parameters->key_length % SYM_128_KEY_SIZE) != 0) {
-        ERROR("Bad key_length: %d", parameters->key_length);
+        ERROR("Invalid key_length: %d", parameters->key_length);
         return false;
     }
 
@@ -439,12 +439,12 @@ bool kdf_ctr_cmac(
     }
 
     if (parameters->counter < 1 || parameters->counter > 4) {
-        ERROR("Bad counter: %d", parameters->counter);
+        ERROR("Invalid counter: %d", parameters->counter);
         return false;
     }
 
     if (parameters->key_length / SYM_128_KEY_SIZE > (size_t) (5 - parameters->counter)) {
-        ERROR("Bad derived_length, counter combo: %d, %d", parameters->key_length, parameters->counter);
+        ERROR("Invalid derived_length, counter combo: %d, %d", parameters->key_length, parameters->counter);
         return false;
     }
 

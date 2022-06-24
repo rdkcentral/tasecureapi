@@ -205,7 +205,7 @@ namespace {
         ASSERT_NE(key, nullptr);
         status = sa_key_exchange(key.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_ECDH, *rsa_key,
                 other_public_key.data(), other_public_key.size(), nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_P(SaKeyExchangeEcdhTest, failsOtherPublicMismatch) {
@@ -230,6 +230,6 @@ namespace {
         auto key = create_uninitialized_sa_key();
         status = sa_key_exchange(key.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_ECDH, *ec_key,
                 other_public_key.data(), other_public_key.size(), nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

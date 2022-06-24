@@ -59,7 +59,7 @@ static sa_status ta_sa_crypto_sign_ecdsa(
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA384 &&
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA512) {
         ERROR("Unknown digest algorithm encountered");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -76,14 +76,14 @@ static sa_status ta_sa_crypto_sign_ecdsa(
                 header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P256 &&
                 header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P384 &&
                 header->type_parameters.curve != SA_ELLIPTIC_CURVE_NIST_P521) {
-            ERROR("Bad curve for ECDSA");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid curve for ECDSA");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         if (!key_type_supports_ec(header->type, header->type_parameters.curve, header->size)) {
             ERROR("key_type_supports_ec failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -94,8 +94,8 @@ static sa_status ta_sa_crypto_sign_ecdsa(
         }
 
         if (*out_length < header->size * 2) {
-            ERROR("Bad out_length");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid out_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -145,14 +145,14 @@ static sa_status ta_sa_crypto_sign_eddsa(
 
         if (header->type_parameters.curve != SA_ELLIPTIC_CURVE_ED25519 &&
                 header->type_parameters.curve != SA_ELLIPTIC_CURVE_ED448) {
-            ERROR("Bad curve for EDDSA");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid curve for EDDSA");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         if (!key_type_supports_ec(header->type, header->type_parameters.curve, header->size)) {
             ERROR("key_type_supports_ec failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -170,8 +170,8 @@ static sa_status ta_sa_crypto_sign_eddsa(
         }
 
         if (*out_length < key_size) {
-            ERROR("Bad out_length");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid out_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -220,7 +220,7 @@ static sa_status ta_sa_crypto_sign_rsa_pss(
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA384 &&
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA512) {
         ERROR("Unknown digest algorithm encountered");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->mgf1_digest_algorithm != SA_DIGEST_ALGORITHM_SHA1 &&
@@ -228,7 +228,7 @@ static sa_status ta_sa_crypto_sign_rsa_pss(
             parameters->mgf1_digest_algorithm != SA_DIGEST_ALGORITHM_SHA384 &&
             parameters->mgf1_digest_algorithm != SA_DIGEST_ALGORITHM_SHA512) {
         ERROR("Unknown mgf1 digest algorithm encountered");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -242,7 +242,7 @@ static sa_status ta_sa_crypto_sign_rsa_pss(
 
         if (!key_type_supports_rsa(header->type, header->size)) {
             ERROR("key_type_supports_rsa failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -253,22 +253,22 @@ static sa_status ta_sa_crypto_sign_rsa_pss(
         }
 
         if (*out_length < header->size) {
-            ERROR("Bad out_length");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid out_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         size_t digest_length_bytes = digest_length(parameters->digest_algorithm);
         if (digest_length_bytes == 0) {
-            ERROR("Bad digest");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid digest");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         size_t max_salt_length = header->size - digest_length_bytes - 2;
         if (parameters->salt_length > max_salt_length) {
-            ERROR("Bad salt_length");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid salt_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -318,7 +318,7 @@ static sa_status ta_sa_crypto_sign_rsa_pkcs1v15(
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA384 &&
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA512) {
         ERROR("Unknown digest algorithm encountered");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -332,7 +332,7 @@ static sa_status ta_sa_crypto_sign_rsa_pkcs1v15(
 
         if (!key_type_supports_rsa(header->type, header->size)) {
             ERROR("key_type_supports_rsa failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -343,8 +343,8 @@ static sa_status ta_sa_crypto_sign_rsa_pkcs1v15(
         }
 
         if (*out_length < header->size) {
-            ERROR("Bad out_length");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid out_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -381,8 +381,8 @@ sa_status ta_sa_crypto_sign(
             signature_algorithm != SA_SIGNATURE_ALGORITHM_EDDSA &&
             signature_algorithm != SA_SIGNATURE_ALGORITHM_RSA_PSS &&
             signature_algorithm != SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15) {
-        ERROR("Bad algorithm");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid algorithm");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (in == NULL && in_length > 0) {

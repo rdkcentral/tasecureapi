@@ -98,7 +98,7 @@ namespace {
                 SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
-    TEST_F(SaSvpKeyCheckTest, failInvalidExpected) {
+    TEST_F(SaSvpKeyCheckTest, failKeyCheck) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -148,7 +148,7 @@ namespace {
                 SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaSvpKeyCheckTest, failBadBytesToProcess) {
+    TEST_F(SaSvpKeyCheckTest, failInvalidBytesToProcess) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -164,10 +164,10 @@ namespace {
 
         auto encrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, encrypted);
         ASSERT_EQ(sa_svp_key_check(*key, encrypted_buffer.get(), clear.size() + 1, clear.data(), clear.size()),
-                SA_STATUS_BAD_PARAMETER);
+                SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaSvpKeyCheckTest, failBadExpected) {
+    TEST_F(SaSvpKeyCheckTest, failInvalidExpected) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -184,7 +184,7 @@ namespace {
 
         auto encrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, encrypted);
         ASSERT_EQ(sa_svp_key_check(*key, encrypted_buffer.get(), clear.size(), clear.data(), clear.size()),
-                SA_STATUS_BAD_PARAMETER);
+                SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaSvpKeyCheckTest, failKeyNoDecrypt) {
@@ -219,6 +219,6 @@ namespace {
         auto encrypted = std::vector<uint8_t>(clear.size());
         auto encrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, encrypted);
         ASSERT_EQ(sa_svp_key_check(*key, encrypted_buffer.get(), clear.size(), clear.data(), clear.size()),
-                SA_STATUS_BAD_KEY_TYPE);
+                SA_STATUS_INVALID_KEY_TYPE);
     }
 } // namespace

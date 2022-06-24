@@ -24,7 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaCryptoCipherWithoutSvpTest, failsChacha20BadInLength) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, failsChacha20InvalidInLength) {
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
@@ -48,6 +48,6 @@ namespace {
 
         nonce = random(CHACHA20_NONCE_LENGTH);
         status = sa_crypto_cipher_update_iv(*cipher, nonce.data(), nonce.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

@@ -100,7 +100,7 @@ static bool iso8601_to_epoch_time(
     }
 
     if (iso8601_size != 20) {
-        ERROR("Bad iso8601_size");
+        ERROR("Invalid iso8601_size");
         return false;
     }
 
@@ -145,27 +145,27 @@ static typej_unpacked_t* unpack_typej(
         unpacked->header_b64 = in_string;
         const char* header_b64_end = memchr(unpacked->header_b64, '.', in_string_end - unpacked->header_b64);
         if (header_b64_end == NULL) {
-            ERROR("Bad JWT structure encountered");
+            ERROR("Invalid JWT structure encountered");
             break;
         }
 
         unpacked->header_b64_length = header_b64_end - unpacked->header_b64;
         unpacked->payload_b64 = header_b64_end + 1;
         if (unpacked->payload_b64 >= in_string_end) {
-            ERROR("Bad JWT structure encountered");
+            ERROR("Invalid JWT structure encountered");
             break;
         }
 
         const char* payload_b64_end = memchr(unpacked->payload_b64, '.', in_string_end - unpacked->payload_b64);
         if (payload_b64_end == NULL) {
-            ERROR("Bad JWT structure encountered");
+            ERROR("Invalid JWT structure encountered");
             break;
         }
 
         unpacked->payload_b64_length = payload_b64_end - unpacked->payload_b64;
         unpacked->mac_b64 = payload_b64_end + 1;
         if (unpacked->mac_b64 >= in_string_end) {
-            ERROR("Bad JWT structure encountered");
+            ERROR("Invalid JWT structure encountered");
             break;
         }
 
@@ -230,7 +230,7 @@ static bool verify_mac(
     }
 
     if (mac_length != SHA256_DIGEST_LENGTH) {
-        ERROR("Bad mac_length");
+        ERROR("Invalid mac_length");
         return false;
     }
 
@@ -320,7 +320,7 @@ static sa_status content_key_rights_to_usage_flags(
 
             default:
                 ERROR("Unknown right encountered: %d", content_key_rights_bytes[i]);
-                return SA_STATUS_BAD_KEY_FORMAT;
+                return SA_STATUS_INVALID_KEY_FORMAT;
         }
     }
 
@@ -348,19 +348,19 @@ static sa_status fields_to_rights(
     const json_key_value_t* key_id_field = json_key_value_find("contentKeyId", fields, fields_count);
     if (key_id_field == NULL) {
         ERROR("json_key_value_find failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     size_t key_id_field_size = 0;
     const char* key_id_field_string = json_value_as_string(&key_id_field_size, key_id_field->value);
     if (key_id_field_string == NULL) {
         ERROR("json_value_as_string failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     if (key_id_field_size > (sizeof(rights->id) - 1)) {
-        ERROR("Bad contentKeyId length");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        ERROR("Invalid contentKeyId length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     strncpy(rights->id, key_id_field_string, sizeof(rights->id));
@@ -369,21 +369,21 @@ static sa_status fields_to_rights(
     const json_key_value_t* rights_field = json_key_value_find("contentKeyRights", fields, fields_count);
     if (rights_field == NULL) {
         ERROR("json_key_value_find failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     size_t rights_field_size = 0;
     const char* rights_field_string = json_value_as_string(&rights_field_size, rights_field->value);
     if (rights_field_string == NULL) {
         ERROR("json_value_as_string failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     size_t rights_count = b64_decoded_length(rights_field_size);
     uint8_t* rights_bytes = memory_internal_alloc(rights_count);
     if (!b64_decode(rights_bytes, &rights_count, rights_field_string, rights_field_size)) {
-        ERROR("Bad contentKeyRights");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        ERROR("Invalid contentKeyRights");
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     sa_status status = content_key_rights_to_usage_flags(&rights->usage_flags, rights_bytes, rights_count);
@@ -397,7 +397,7 @@ static sa_status fields_to_rights(
     const json_key_value_t* usage_field = json_key_value_find("contentKeyUsage", fields, fields_count);
     if (usage_field == NULL) {
         ERROR("json_key_value_find failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     long long usage = json_value_as_integer(usage_field->value);
@@ -411,26 +411,26 @@ static sa_status fields_to_rights(
     const json_key_value_t* not_before_field = json_key_value_find("contentKeyNotBefore", fields, fields_count);
     if (not_before_field == NULL) {
         ERROR("json_key_value_find failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     size_t not_before_field_size = 0;
     const char* not_before_field_string = json_value_as_string(&not_before_field_size, not_before_field->value);
     if (not_before_field_string == NULL) {
         ERROR("json_value_as_string failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     if (!iso8601_to_epoch_time(&rights->not_before, not_before_field_string, not_before_field_size)) {
         ERROR("iso8601_to_epoch_time failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     // read contentKeyNotOnOrAfter
     const json_key_value_t* not_on_or_after_field = json_key_value_find("contentKeyNotOnOrAfter", fields, fields_count);
     if (not_on_or_after_field == NULL) {
         ERROR("json_key_value_find failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     size_t not_on_or_after_field_size = 0;
@@ -438,19 +438,19 @@ static sa_status fields_to_rights(
             not_on_or_after_field->value);
     if (not_on_or_after_field_string == NULL) {
         ERROR("json_value_as_string failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     if (!iso8601_to_epoch_time(&rights->not_on_or_after, not_on_or_after_field_string, not_on_or_after_field_size)) {
         ERROR("iso8601_to_epoch_time failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     // read contentKeyCacheable
     const json_key_value_t* cacheable_field = json_key_value_find("contentKeyCacheable", fields, fields_count);
     if (cacheable_field == NULL) {
         ERROR("json_key_value_find failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     if (json_value_as_bool(cacheable_field->value)) {
@@ -472,7 +472,7 @@ static sa_status fields_to_rights(
         if (entitled_ta_ids_length > MAX_NUM_ALLOWED_TA_IDS) {
             memory_internal_free(entitled_ta_ids);
             ERROR("Invalid entitled_ta_ids_length");
-            return SA_STATUS_BAD_KEY_FORMAT;
+            return SA_STATUS_INVALID_KEY_FORMAT;
         }
 
         for (size_t i = 0; i < entitled_ta_ids_length; i++) {
@@ -481,7 +481,7 @@ static sa_status fields_to_rights(
             if (ta_id_length != UUID_LENGTH) {
                 memory_internal_free(entitled_ta_ids);
                 ERROR("Invalid ta_id");
-                return SA_STATUS_BAD_KEY_FORMAT;
+                return SA_STATUS_INVALID_KEY_FORMAT;
             }
 
             convert_uuid(ta_id, ta_id_length, &rights->allowed_tas[i]);
@@ -521,7 +521,7 @@ static sa_status unwrap_key_v1(
         const json_key_value_t* content_key_field = json_key_value_find("contentKey", fields, fields_count);
         if (content_key_field == NULL) {
             ERROR("json_key_value_find failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -529,21 +529,21 @@ static sa_status unwrap_key_v1(
         const char* content_key_b64 = json_value_as_string(&content_key_b64_size, content_key_field->value);
         if (content_key_b64 == NULL) {
             ERROR("json_value_as_string failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
         size_t content_key_size = b64_decoded_length(content_key_b64_size);
         content_key = memory_internal_alloc(content_key_size);
         if (!b64_decode(content_key, &content_key_size, content_key_b64, content_key_b64_size)) {
-            ERROR("Bad contentKey");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            ERROR("Invalid contentKey");
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
         if (content_key_size % SYM_128_KEY_SIZE) {
-            ERROR("Bad content_key_size");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            ERROR("Invalid content_key_size");
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -622,7 +622,7 @@ static sa_status unwrap_key_v2(
                 fields_count);
         if (algorithm_field == NULL) {
             ERROR("json_key_value_find failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -633,7 +633,7 @@ static sa_status unwrap_key_v2(
         const json_key_value_t* content_key_field = json_key_value_find("contentKey", fields, fields_count);
         if (content_key_field == NULL) {
             ERROR("json_key_value_find failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -641,7 +641,7 @@ static sa_status unwrap_key_v2(
         const char* content_key_b64 = json_value_as_string(&content_key_b64_size, content_key_field->value);
         if (content_key_b64 == NULL) {
             ERROR("json_value_as_string failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -649,7 +649,7 @@ static sa_status unwrap_key_v2(
         content_key = memory_internal_alloc(content_key_size);
         if (!b64_decode(content_key, &content_key_size, content_key_b64, content_key_b64_size)) {
             ERROR("json_key_value_find failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -657,7 +657,7 @@ static sa_status unwrap_key_v2(
                 fields, fields_count);
         if (content_key_length_field == NULL) {
             ERROR("json_key_value_find failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -676,7 +676,7 @@ static sa_status unwrap_key_v2(
             const json_key_value_t* iv_field = json_key_value_find("contentKeyTransportIv", fields, fields_count);
             if (iv_field == NULL) {
                 ERROR("json_key_value_find failed");
-                status = SA_STATUS_BAD_KEY_FORMAT;
+                status = SA_STATUS_INVALID_KEY_FORMAT;
                 break;
             }
 
@@ -684,15 +684,15 @@ static sa_status unwrap_key_v2(
             const char* iv_b64 = json_value_as_string(&iv_b64_size, iv_field->value);
             if (iv_b64 == NULL) {
                 ERROR("json_value_as_string failed");
-                status = SA_STATUS_BAD_KEY_FORMAT;
+                status = SA_STATUS_INVALID_KEY_FORMAT;
                 break;
             }
 
             size_t iv_size = b64_decoded_length(iv_b64_size);
             iv = memory_internal_alloc(iv_size);
             if (!b64_decode(iv, &iv_size, iv_b64, iv_b64_size) || iv_size != SYM_128_KEY_SIZE) {
-                ERROR("Bad contentKeyTransportIv");
-                status = SA_STATUS_BAD_KEY_FORMAT;
+                ERROR("Invalid contentKeyTransportIv");
+                status = SA_STATUS_INVALID_KEY_FORMAT;
                 break;
             }
 
@@ -704,14 +704,14 @@ static sa_status unwrap_key_v2(
                 break;
             }
         } else {
-            ERROR("Bad cipher_algorithm");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            ERROR("Invalid cipher_algorithm");
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
         if (stored_key_get_length(*stored_key) != content_key_length) {
-            ERROR("Bad key length");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            ERROR("Invalid key length");
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -770,21 +770,21 @@ sa_status typej_unwrap(
         unpacked = unpack_typej(in, in_length);
         if (unpacked == NULL) {
             ERROR("unpack_typej failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
         if (!verify_mac(unpacked->header_b64, unpacked->header_b64_length, unpacked->payload_b64,
                     unpacked->payload_b64_length, unpacked->mac, unpacked->mac_length, stored_key_mac)) {
             ERROR("verify_mac failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
         json_value = json_parse_bytes(unpacked->payload, unpacked->payload_length);
         if (json_value == NULL) {
             ERROR("json_parse_string failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -792,7 +792,7 @@ sa_status typej_unwrap(
         fields = json_value_as_map(&fields_count, json_value);
         if (fields == NULL) {
             ERROR("json_value_as_map failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -824,9 +824,9 @@ sa_status typej_unwrap(
                 break;
             }
         } else {
-            ERROR("Bad contentKeyContainerVersion encountered: %lld",
+            ERROR("Invalid contentKeyContainerVersion encountered: %lld",
                     version);
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 

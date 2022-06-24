@@ -24,7 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFailsBadInLength) {
+    TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFailsInvalidInLength) {
         sa_elliptic_curve curve = std::get<0>(GetParam());
         size_t key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
@@ -77,10 +77,10 @@ namespace {
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, key_size);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFailsBadOutLength) {
+    TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFailsInvalidOutLength) {
         sa_elliptic_curve curve = std::get<0>(GetParam());
         size_t key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
@@ -130,10 +130,10 @@ namespace {
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, key_size - 1);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFailsBadBufferType) {
+    TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFailsInvalidBufferType) {
         if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
 
@@ -186,6 +186,6 @@ namespace {
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, key_size - 1);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

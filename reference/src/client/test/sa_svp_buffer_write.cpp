@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,33 +24,29 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaSvpBufferWriteTest, nominal) {
+    TEST_P(SaSvpBufferWriteTest, nominal) {
+        auto offset_length = std::get<0>(GetParam());
+
         auto out_buffer = create_sa_svp_buffer(1024);
         ASSERT_NE(out_buffer, nullptr);
         auto in = random(1024);
-        size_t out_offset = 0;
-        sa_status status = sa_svp_buffer_write(*out_buffer, &out_offset, in.data(), in.size());
+        long chunk_size = offset_length > 1 ? (1024 / (2 * offset_length)) : 1024; // NOLINT
+        std::vector<uint8_t> digest_vector;
+        sa_svp_offset offsets[offset_length];
+        for (long i = 0; i < offset_length; i++) { // NOLINT
+            offsets[i].out_offset = i * chunk_size;
+            offsets[i].in_offset = i * 2 * chunk_size;
+            offsets[i].length = chunk_size;
+            std::copy(in.begin() + i * 2 * chunk_size, in.begin() + i * 2 * chunk_size + chunk_size,
+                    std::back_inserter(digest_vector));
+        }
+        sa_status status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), offsets, offset_length);
         ASSERT_EQ(status, SA_STATUS_OK);
-        ASSERT_EQ(out_offset, in.size());
 
         std::vector<uint8_t> hash(SHA256_DIGEST_LENGTH);
-        ASSERT_TRUE(digest_openssl(hash, SA_DIGEST_ALGORITHM_SHA256, in, {}, {}));
-        status = sa_svp_buffer_check(*out_buffer, 0, 1024, SA_DIGEST_ALGORITHM_SHA256, hash.data(), hash.size());
-        ASSERT_EQ(status, SA_STATUS_OK);
-    }
-
-    TEST_F(SaSvpBufferWriteTest, nominalWithOffset) {
-        auto out_buffer = create_sa_svp_buffer(2048);
-        ASSERT_NE(out_buffer, nullptr);
-        auto in = random(1024);
-        size_t out_offset = 1024;
-        sa_status status = sa_svp_buffer_write(*out_buffer, &out_offset, in.data(), in.size());
-        ASSERT_EQ(status, SA_STATUS_OK);
-        ASSERT_EQ(out_offset, in.size() + 1024);
-
-        std::vector<uint8_t> hash(SHA256_DIGEST_LENGTH);
-        ASSERT_TRUE(digest_openssl(hash, SA_DIGEST_ALGORITHM_SHA256, in, {}, {}));
-        status = sa_svp_buffer_check(*out_buffer, 1024, 1024, SA_DIGEST_ALGORITHM_SHA256, hash.data(), hash.size());
+        ASSERT_TRUE(digest_openssl(hash, SA_DIGEST_ALGORITHM_SHA256, digest_vector, {}, {}));
+        status = sa_svp_buffer_check(*out_buffer, 0, offset_length * chunk_size, SA_DIGEST_ALGORITHM_SHA256,
+                hash.data(), hash.size());
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
@@ -58,31 +54,31 @@ namespace {
         auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(out_buffer, nullptr);
         auto in = random(AES_BLOCK_SIZE);
-        size_t out_offset = 1;
-        sa_status status = sa_svp_buffer_write(*out_buffer, &out_offset, in.data(), in.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_SVP_BUFFER);
+        sa_svp_offset offset = {1, 0, in.size()};
+        sa_status status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &offset, 1);
+        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
     }
 
     TEST_F(SaSvpBufferWriteTest, failsNullOutOffset) {
         auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(out_buffer, nullptr);
         auto in = random(AES_BLOCK_SIZE);
-        sa_status status = sa_svp_buffer_write(*out_buffer, nullptr, in.data(), in.size());
+        sa_status status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), nullptr, 0);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
     TEST_F(SaSvpBufferWriteTest, failsInvalidOut) {
         auto in = random(AES_BLOCK_SIZE);
-        size_t out_offset = 0;
-        sa_status status = sa_svp_buffer_write(INVALID_HANDLE, &out_offset, in.data(), in.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        sa_svp_offset offset = {0, 0, in.size()};
+        sa_status status = sa_svp_buffer_write(INVALID_HANDLE, in.data(), in.size(), &offset, 1);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaSvpBufferWriteTest, failsNullIn) {
         auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(out_buffer, nullptr);
-        size_t out_offset = 0;
-        sa_status status = sa_svp_buffer_write(*out_buffer, &out_offset, nullptr, 0);
+        sa_svp_offset offset = {0, 0, 1};
+        sa_status status = sa_svp_buffer_write(*out_buffer, nullptr, 0, &offset, 1);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

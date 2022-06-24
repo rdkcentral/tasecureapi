@@ -132,7 +132,7 @@ sa_status cenc_process_sample(
         status = cipher_store_acquire_exclusive(&cipher, cipher_store, sample->context, caller_uuid);
         if (status != SA_STATUS_OK) {
             ERROR("cipher_store_acquire_exclusive failed");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 

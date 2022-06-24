@@ -124,7 +124,7 @@ static bool wrap_aes_cbc(
     }
 
     if (in_length % AES_BLOCK_SIZE) {
-        ERROR("Bad in_length");
+        ERROR("Invalid in_length");
         return false;
     }
 
@@ -139,7 +139,7 @@ static bool wrap_aes_cbc(
     }
 
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return false;
     }
 
@@ -295,7 +295,7 @@ bool unwrap_aes_ecb_internal(
     }
 
     if (in_length % AES_BLOCK_SIZE) {
-        ERROR("Bad in_length");
+        ERROR("Invalid in_length");
         return false;
     }
 
@@ -305,7 +305,7 @@ bool unwrap_aes_ecb_internal(
     }
 
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return false;
     }
 
@@ -373,7 +373,7 @@ bool unwrap_aes_cbc_internal(
     }
 
     if (in_length % AES_BLOCK_SIZE) {
-        ERROR("Bad in_length");
+        ERROR("Invalid in_length");
         return false;
     }
 
@@ -388,7 +388,7 @@ bool unwrap_aes_cbc_internal(
     }
 
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return false;
     }
 
@@ -467,7 +467,7 @@ bool unwrap_aes_gcm_internal(
     }
 
     if (iv_length != GCM_IV_LENGTH) {
-        ERROR("Bad iv_length");
+        ERROR("Invalid iv_length");
         return false;
     }
 
@@ -482,7 +482,7 @@ bool unwrap_aes_gcm_internal(
     }
 
     if (tag_length > AES_BLOCK_SIZE) {
-        ERROR("Bad tag_length");
+        ERROR("Invalid tag_length");
         return false;
     }
 
@@ -492,7 +492,7 @@ bool unwrap_aes_gcm_internal(
     }
 
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return false;
     }
 
@@ -701,7 +701,7 @@ bool otp_wrap_aes_cbc(
     }
 
     if (in_length % AES_BLOCK_SIZE) {
-        ERROR("Bad in_length");
+        ERROR("Invalid in_length");
         return false;
     }
 
@@ -765,7 +765,7 @@ bool otp_unwrap_aes_cbc(
     }
 
     if (wrapped_length % AES_BLOCK_SIZE) {
-        ERROR("Bad wrapped_length");
+        ERROR("Invalid wrapped_length");
         return false;
     }
 

@@ -24,7 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaKeyGetPublicTest, failsEcBadOutLength) {
+    TEST_F(SaKeyGetPublicTest, failsEcInvalidOutLength) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
@@ -38,6 +38,6 @@ namespace {
         auto out = std::vector<uint8_t>(key_size);
         size_t out_length = out.size() - 1;
         sa_status status = sa_key_get_public(out.data(), &out_length, *key);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

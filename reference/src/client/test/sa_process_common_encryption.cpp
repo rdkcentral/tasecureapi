@@ -133,7 +133,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidIvLength) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullSubsampleLengths) {
@@ -198,7 +198,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidSubsampleCount) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullOut) {
@@ -302,7 +302,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutSvpBuffer) {
     out.context.svp.offset = 0;
     sample.out = &out;
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullIn) {
@@ -406,7 +406,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullInSvpBuffer) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidSkipByteBlock) {
@@ -439,7 +439,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidSkipByteBlock) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipher) {
@@ -473,7 +473,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipher) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipherMode) {
@@ -507,7 +507,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipherMode) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutBufferType) {
@@ -541,7 +541,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutBufferType) {
     sample.out = &out;
     sample.out->buffer_type = static_cast<sa_buffer_type>(UINT8_MAX);
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidInBufferType) {
@@ -576,10 +576,10 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidInBufferType) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
-TEST_F(SaProcessCommonEncryptionNegativeTest, badCipherAlgorithm) {
+TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipherAlgorithm) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
@@ -610,7 +610,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, badCipherAlgorithm) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidBufferTypeCombo) {
@@ -647,7 +647,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidBufferTypeCombo) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTypeDisallowed) {
@@ -733,7 +733,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTooShort) {
     sample.out = sample_data.out.get();
     sample.out->context.clear.offset++;
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, inBufferTooShort) {
@@ -768,7 +768,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, inBufferTooShort) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, failClearBufferOverlap) {
@@ -801,7 +801,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, failClearBufferOverlap) {
 
     sample.out = sample_data.in.get();
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, failSvpBufferOverlap) {
@@ -836,5 +836,5 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, failSvpBufferOverlap) {
 
     sample.out = sample_data.in.get();
     sa_status status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }

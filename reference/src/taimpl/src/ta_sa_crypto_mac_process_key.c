@@ -69,7 +69,7 @@ sa_status ta_sa_crypto_mac_process_key(
 
         if (header->type != SA_KEY_TYPE_SYMMETRIC) {
             ERROR("key type is not symmetric");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -78,7 +78,7 @@ sa_status ta_sa_crypto_mac_process_key(
             hmac_context_t* hmac_context = mac_get_hmac_context(mac);
             if (hmac_context_done(hmac_context)) {
                 ERROR("hmac_context_done failed");
-                status = SA_STATUS_BAD_PARAMETER;
+                status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
 
@@ -91,7 +91,7 @@ sa_status ta_sa_crypto_mac_process_key(
             cmac_context_t* cmac_context = mac_get_cmac_context(mac);
             if (cmac_context_done(cmac_context)) {
                 ERROR("cmac_context_done failed");
-                status = SA_STATUS_BAD_PARAMETER;
+                status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
             if (!cmac_context_update_key(cmac_context, stored_key)) {
@@ -100,7 +100,7 @@ sa_status ta_sa_crypto_mac_process_key(
                 break;
             }
         } else {
-            ERROR("Bad mac context");
+            ERROR("Invalid mac context");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }

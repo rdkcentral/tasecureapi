@@ -25,7 +25,7 @@ using namespace client_test_helpers;
 
 namespace {
 
-    TEST_F(SaKeyGenerateTest, failsEcBadCurve) {
+    TEST_F(SaKeyGenerateTest, failsEcInvalidCurve) {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
@@ -35,7 +35,7 @@ namespace {
         sa_generate_parameters_ec parameters = {static_cast<sa_elliptic_curve>(UINT8_MAX)};
 
         sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyGenerateTest, failsEcNullParameters) {

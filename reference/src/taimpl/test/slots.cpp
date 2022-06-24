@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ namespace {
         ASSERT_NE(slots, nullptr);
     }
 
-    TEST(SlotsInit, badnumberOfSlots) {
+    TEST(SlotsInit, invalidnumberOfSlots) {
         size_t number_of_slots = 129;
         std::shared_ptr<slots_t> slots(slots_init(number_of_slots), slots_shutdown);
         ASSERT_EQ(slots, nullptr);

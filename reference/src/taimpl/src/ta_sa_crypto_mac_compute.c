@@ -78,13 +78,13 @@ sa_status ta_sa_crypto_mac_compute(
 
             if (hmac_context_done(hmac_context)) {
                 ERROR("hmac_context_done failed");
-                status = SA_STATUS_BAD_PARAMETER;
+                status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
 
             if (*out_length < required_length) {
-                ERROR("Bad out_length");
-                status = SA_STATUS_BAD_PARAMETER;
+                ERROR("Invalid out_length");
+                status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
             *out_length = required_length;
@@ -104,13 +104,13 @@ sa_status ta_sa_crypto_mac_compute(
             cmac_context_t* cmac_context = mac_get_cmac_context(mac);
             if (cmac_context_done(cmac_context)) {
                 ERROR("cmac_context_done failed");
-                status = SA_STATUS_BAD_PARAMETER;
+                status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
 
             if (*out_length < AES_BLOCK_SIZE) {
-                ERROR("Bad out_length");
-                status = SA_STATUS_BAD_PARAMETER;
+                ERROR("Invalid out_length");
+                status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
             *out_length = AES_BLOCK_SIZE;
@@ -121,7 +121,7 @@ sa_status ta_sa_crypto_mac_compute(
                 break;
             }
         } else {
-            ERROR("Bad mac context");
+            ERROR("Invalid mac context");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }

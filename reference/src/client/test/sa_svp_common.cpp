@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,3 +56,13 @@ INSTANTIATE_TEST_SUITE_P(
                 SA_DIGEST_ALGORITHM_SHA256,
                 SA_DIGEST_ALGORITHM_SHA384,
                 SA_DIGEST_ALGORITHM_SHA512));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaSvpBufferCopyTests,
+        SaSvpBufferCopyTest,
+        ::testing::Values(1, 3, 10));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaSvpBufferWriteTests,
+        SaSvpBufferWriteTest,
+        ::testing::Values(1, 3, 10));

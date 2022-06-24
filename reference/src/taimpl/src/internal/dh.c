@@ -97,7 +97,7 @@ bool dh_get_public(
         }
 
         if (*out_length < (size_t) length) {
-            ERROR("Bad out_length");
+            ERROR("Invalid out_length");
             break;
         }
 
@@ -178,7 +178,7 @@ sa_status dh_compute_shared_secret(
 
         if (EVP_PKEY_id(evp_pkey) != EVP_PKEY_id(other_evp_pkey)) {
             ERROR("Key type mismatch");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -279,13 +279,13 @@ bool dh_generate_key(
     }
 
     if (p_length > DH_MAX_MOD_SIZE || p_length == 0) {
-        ERROR("Bad length");
+        ERROR("Invalid length");
         return false;
     }
 
     if (g_length < 1 || g_length > p_length) {
-        ERROR("Bad p_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid p_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     bool status = false;

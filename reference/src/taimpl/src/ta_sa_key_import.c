@@ -70,8 +70,8 @@ static sa_status ta_sa_key_import_symmetric_bytes(
     }
 
     if (in_length < SYM_128_KEY_SIZE || in_length > SYM_MAX_KEY_SIZE) {
-        ERROR("Bad in_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid in_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -153,7 +153,7 @@ static sa_status ta_sa_key_import_ec_private_bytes(
         size_t key_size = ec_validate_private(parameters->curve, in, in_length);
         if (key_size == 0) {
             ERROR("ec_validate_private failed");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -225,14 +225,14 @@ static sa_status ta_sa_key_import_rsa_private_key_info(
         size_t key_size = rsa_validate_private(in, in_length);
         if (key_size == 0) {
             ERROR("rsa_validate_private failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
         if (key_size != RSA_1024_BYTE_LENGTH && key_size != RSA_2048_BYTE_LENGTH &&
                 key_size != RSA_3072_BYTE_LENGTH && key_size != RSA_4096_BYTE_LENGTH) {
-            ERROR("Bad key_size");
-            return SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid key_size");
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         sa_type_parameters type_parameters;
@@ -317,8 +317,8 @@ static sa_status ta_sa_key_import_soc(
     }
 
     if (in_length <= 0) {
-        ERROR("Bad in_length");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        ERROR("Invalid in_length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     if (client == NULL) {
@@ -414,7 +414,7 @@ static sa_status ta_sa_key_import_typej(
 
         if (!key_type_supports_hmac(mac_header->type, mac_header->size)) {
             ERROR("key_type_supports_hmac failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -439,7 +439,7 @@ static sa_status ta_sa_key_import_typej(
 
         if (!key_type_supports_aes(enc_header->type, enc_header->size)) {
             ERROR("key_type_supports_aes failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -485,8 +485,8 @@ sa_status ta_sa_key_import(
     if (key_format != SA_KEY_FORMAT_SYMMETRIC_BYTES && key_format != SA_KEY_FORMAT_EC_PRIVATE_BYTES &&
             key_format != SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO && key_format != SA_KEY_FORMAT_EXPORTED &&
             key_format != SA_KEY_FORMAT_SOC && key_format != SA_KEY_FORMAT_TYPEJ) {
-        ERROR("Bad format");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid format");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (in == NULL) {

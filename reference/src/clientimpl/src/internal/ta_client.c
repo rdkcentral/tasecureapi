@@ -52,12 +52,12 @@ sa_status ta_invoke_command(
         if ((params[i].mem_ref == NULL && param_types[i] != TA_PARAM_NULL) ||
                 (params[i].mem_ref != NULL && param_types[i] == TA_PARAM_NULL)) {
             ERROR("param_type[%d] was set to the wrong value", i);
-            return SA_STATUS_BAD_PARAMETER;
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         if (params[i].mem_ref == NULL && params[i].mem_ref_size != 0) {
             ERROR("mem_ref_size[%d] was set to the wrong value", i);
-            return SA_STATUS_BAD_PARAMETER;
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         checksums[i] = 0;
@@ -81,7 +81,7 @@ sa_status ta_invoke_command(
 
             if (checksum != checksums[i]) {
                 ERROR("param_type[%d] was set to the wrong value", i);
-                return SA_STATUS_BAD_PARAMETER;
+                return SA_STATUS_INVALID_PARAMETER;
             }
         }
     }

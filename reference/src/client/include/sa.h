@@ -73,7 +73,7 @@ sa_status sa_get_version(sa_version* version);
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - name_length is NULL.
- * + SA_STATUS_BAD_PARAMETER - name is not NULL and *name_length value is smaller than required to
+ * + SA_STATUS_INVALID_PARAMETER - name is not NULL and *name_length value is smaller than required to
  * store the name.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.

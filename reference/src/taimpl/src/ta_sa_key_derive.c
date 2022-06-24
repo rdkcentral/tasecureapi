@@ -67,8 +67,8 @@ static sa_status ta_sa_key_derive_root_key_ladder(
     }
 
     if (parameters->c1_length != SYM_128_KEY_SIZE) {
-        ERROR("Bad c1_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid c1_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->c2 == NULL) {
@@ -77,8 +77,8 @@ static sa_status ta_sa_key_derive_root_key_ladder(
     }
 
     if (parameters->c2_length != SYM_128_KEY_SIZE) {
-        ERROR("Bad c2_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid c2_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->c3 == NULL) {
@@ -87,8 +87,8 @@ static sa_status ta_sa_key_derive_root_key_ladder(
     }
 
     if (parameters->c3_length != SYM_128_KEY_SIZE) {
-        ERROR("Bad c3_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid c3_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->c4 == NULL) {
@@ -97,8 +97,8 @@ static sa_status ta_sa_key_derive_root_key_ladder(
     }
 
     if (parameters->c4_length != SYM_128_KEY_SIZE) {
-        ERROR("Bad c4_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid c4_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -163,16 +163,16 @@ static sa_status ta_sa_key_derive_ansi_x963(
     }
 
     if (parameters->key_length > SYM_MAX_KEY_SIZE) {
-        ERROR("Bad key_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid key_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA1 &&
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA256 &&
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA384 &&
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA512) {
-        ERROR("Bad digest");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid digest");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -201,7 +201,7 @@ static sa_status ta_sa_key_derive_ansi_x963(
 
         if (header->type != SA_KEY_TYPE_SYMMETRIC) {
             ERROR("Wrong key type");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -263,18 +263,18 @@ static sa_status ta_sa_key_derive_cmac(
     }
 
     if (parameters->counter < 1 || parameters->counter > 4) {
-        ERROR("Bad counter");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid counter");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if ((parameters->key_length % SYM_128_KEY_SIZE) != 0) {
-        ERROR("Bad key_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid key_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->key_length / SYM_128_KEY_SIZE > (size_t) (5 - parameters->counter)) {
-        ERROR("Bad key_length, ctr combination");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid key_length, ctr combination");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -303,13 +303,13 @@ static sa_status ta_sa_key_derive_cmac(
 
         if (header->type != SA_KEY_TYPE_SYMMETRIC) {
             ERROR("Wrong key type");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
         if (!key_type_supports_aes(header->type, header->size)) {
             ERROR("key_type_supports_aes failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -371,16 +371,16 @@ static sa_status ta_sa_key_derive_concat(
     }
 
     if (parameters->key_length > SYM_MAX_KEY_SIZE) {
-        ERROR("Bad key_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid key_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA1 &&
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA256 &&
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA384 &&
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA512) {
-        ERROR("Bad digest");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid digest");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -409,7 +409,7 @@ static sa_status ta_sa_key_derive_concat(
 
         if (header->type != SA_KEY_TYPE_SYMMETRIC) {
             ERROR("Wrong key type");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -476,16 +476,16 @@ static sa_status ta_sa_key_derive_hkdf(
     }
 
     if (parameters->key_length > SYM_MAX_KEY_SIZE) {
-        ERROR("Bad key_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid key_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA1 &&
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA256 &&
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA384 &&
             parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA512) {
-        ERROR("Bad digest");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid digest");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -514,13 +514,13 @@ static sa_status ta_sa_key_derive_hkdf(
 
         if (header->type != SA_KEY_TYPE_SYMMETRIC) {
             ERROR("Wrong key type");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
         if (!key_type_supports_hmac(header->type, header->size)) {
             ERROR("key_type_supports_hmac failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -603,7 +603,7 @@ static sa_status ta_sa_key_derive_netflix(
 
         if (enc_header->type != SA_KEY_TYPE_SYMMETRIC) {
             ERROR("Wrong key type");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -628,7 +628,7 @@ static sa_status ta_sa_key_derive_netflix(
 
         if (hmac_header->type != SA_KEY_TYPE_SYMMETRIC) {
             ERROR("Wrong key type");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -730,8 +730,8 @@ sa_status ta_sa_key_derive(
                 break;
             }
         } else {
-            ERROR("Bad algorithm");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid algorithm");
+            status = SA_STATUS_INVALID_PARAMETER;
         }
     } while (false);
 

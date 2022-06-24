@@ -119,7 +119,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyDeriveNetflixTest, failsUnknownHmacKey) {
@@ -139,7 +139,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyDeriveNetflixTest, failsEncKeyDisallowsDerive) {
@@ -220,7 +220,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_F(SaKeyDeriveNetflixTest, failsHmacKeyNotSymmetric) {
@@ -246,6 +246,6 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 } // namespace

@@ -58,7 +58,7 @@ cmac_context_t* cmac_context_create(const stored_key_t* stored_key) {
 
         size_t key_length = stored_key_get_length(stored_key);
         if (!key_type_supports_aes(SA_KEY_TYPE_SYMMETRIC, key_length)) {
-            ERROR("Bad key_length: %d", key_length);
+            ERROR("Invalid key_length: %d", key_length);
             break;
         }
 
@@ -108,7 +108,7 @@ cmac_context_t* cmac_context_create(const stored_key_t* stored_key) {
 
         size_t key_length = stored_key_get_length(stored_key);
         if (!key_type_supports_aes(SA_KEY_TYPE_SYMMETRIC, key_length)) {
-            ERROR("Bad key_length: %d", key_length);
+            ERROR("Invalid key_length: %d", key_length);
             break;
         }
 
@@ -328,7 +328,7 @@ bool cmac(
 
         size_t key_length = stored_key_get_length(stored_key);
         if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-            ERROR("Bad key_length: %d", key_length);
+            ERROR("Invalid key_length: %d", key_length);
             break;
         }
 
@@ -397,7 +397,7 @@ bool cmac(
 
         size_t key_length = stored_key_get_length(stored_key);
         if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-            ERROR("Bad key_length: %d", key_length);
+            ERROR("Invalid key_length: %d", key_length);
             break;
         }
 

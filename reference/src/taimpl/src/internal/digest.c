@@ -108,7 +108,7 @@ bool digest_sha(
     }
 
     if (*out_length < required_length) {
-        ERROR("Bad out_length");
+        ERROR("Invalid out_length");
         return false;
     }
     *out_length = required_length;
@@ -200,7 +200,7 @@ bool digest_key(
     }
 
     if (*out_length < required_length) {
-        ERROR("Bad out_length");
+        ERROR("Invalid out_length");
         return false;
     }
     *out_length = required_length;

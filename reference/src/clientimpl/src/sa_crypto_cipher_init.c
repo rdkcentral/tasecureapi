@@ -310,7 +310,7 @@ sa_status sa_crypto_cipher_init(
                 break;
 
             default:
-                status = SA_STATUS_BAD_PARAMETER;
+                status = SA_STATUS_INVALID_PARAMETER;
                 continue; // NOLINT
         }
 

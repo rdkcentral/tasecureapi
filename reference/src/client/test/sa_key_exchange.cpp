@@ -24,7 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaKeyExchangeTest, badAlgorithm) {
+    TEST_F(SaKeyExchangeTest, invalidAlgorithm) {
         auto dh_key = create_uninitialized_sa_key();
         ASSERT_NE(dh_key, nullptr);
 
@@ -53,6 +53,6 @@ namespace {
         ASSERT_NE(key, nullptr);
         status = sa_key_exchange(key.get(), &rights, static_cast<sa_key_exchange_algorithm>(UINT8_MAX), *dh_key,
                 dh_public_key.data(), dh_public_key_length, nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

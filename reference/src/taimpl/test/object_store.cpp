@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ namespace {
         ASSERT_NE(store, nullptr);
     }
 
-    TEST(ObjectStoreInit, failsOnBadNumSlots) {
+    TEST(ObjectStoreInit, failsOnInvalidNumSlots) {
         size_t num = 129;
         std::shared_ptr<object_store_t> store(object_store_init(noop, num), object_store_shutdown);
         ASSERT_EQ(store, nullptr);
@@ -93,7 +93,7 @@ namespace {
         ASSERT_NE(object, nullptr);
     }
 
-    TEST(ObjectStoreAcquire, failsWithBadUuid) {
+    TEST(ObjectStoreAcquire, failsWithInvalidUuid) {
         size_t num = 128;
         std::shared_ptr<object_store_t> store(object_store_init(noop, num), object_store_shutdown);
         ASSERT_NE(store, nullptr);

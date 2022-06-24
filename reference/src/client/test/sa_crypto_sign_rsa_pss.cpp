@@ -56,7 +56,7 @@ namespace {
                 parameters.salt_length, in, out));
     }
 
-    TEST(SaCryptoSign, failsRsaPssBadOutLength) {
+    TEST(SaCryptoSign, failsRsaPssInvalidOutLength) {
         auto clear_key = sample_rsa_2048_pkcs8();
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
         sa_digest_algorithm mgf1_digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
@@ -79,7 +79,7 @@ namespace {
         auto in = random(25);
         status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key, in.data(), in.size(),
                 &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST(SaCryptoSign, failsRsaPssNullParameters) {
@@ -99,7 +99,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST(SaCryptoSign, failsRsaPssBadSaltLength) {
+    TEST(SaCryptoSign, failsRsaPssInvalidSaltLength) {
         auto clear_key = sample_rsa_2048_pkcs8();
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
         sa_digest_algorithm mgf1_digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
@@ -117,6 +117,6 @@ namespace {
         auto in = random(25);
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key, in.data(),
                 in.size(), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

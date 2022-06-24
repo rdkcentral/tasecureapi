@@ -45,8 +45,8 @@ sa_status ta_sa_get_name(
     }
 
     if (*name_length < required_length) {
-        ERROR("Bad name_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid name_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     memcpy(name, implementation_name, required_length);

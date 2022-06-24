@@ -41,8 +41,8 @@ sa_status ta_sa_svp_buffer_check(
     size_t required_length = digest_length(digest_algorithm);
 
     if (hash_length != required_length) {
-        ERROR("Bad hash_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid hash_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;

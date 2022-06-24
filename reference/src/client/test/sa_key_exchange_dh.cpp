@@ -196,7 +196,7 @@ namespace {
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_exchange(key.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_DH, *rsa_key,
                 other_public_key.data(), other_public_key.size(), nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_F(SaKeyExchangeDhTest, failsOtherPublicMismatch) {
@@ -224,6 +224,6 @@ namespace {
         ASSERT_NE(key, nullptr);
         status = sa_key_exchange(key.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_DH, *dh_key,
                 other_public_key.data(), other_public_key.size(), nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

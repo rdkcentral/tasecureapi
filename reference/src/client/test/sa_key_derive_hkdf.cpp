@@ -177,10 +177,10 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveHkdfTest, failsBadDigest) {
+    TEST_F(SaKeyDeriveHkdfTest, failsInvalidDigest) {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
@@ -204,7 +204,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyDeriveHkdfTest, failsUnknownParent) {
@@ -225,7 +225,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyDeriveHkdfTest, failsNullSalt) {
@@ -332,6 +332,6 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 } // namespace

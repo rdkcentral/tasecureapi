@@ -101,9 +101,10 @@ bool svp_release_buffer(
 
 bool svp_write(
         svp_buffer_t* out_svp_buffer,
-        size_t out_svp_buffer_offset,
         const void* in,
-        size_t in_length) {
+        size_t in_length,
+        sa_svp_offset* offsets,
+        size_t offsets_length) {
 
     if (out_svp_buffer == NULL) {
         ERROR("NULL out_svp_buffer");
@@ -115,36 +116,58 @@ bool svp_write(
         return false;
     }
 
+    if (offsets == NULL) {
+        ERROR("NULL offsets");
+        return false;
+    }
+
     if (!svp_validate_buffer(out_svp_buffer)) {
         ERROR("svp_validate_buffer failed");
         return false;
     }
 
-    if ((out_svp_buffer_offset + in_length) > out_svp_buffer->size) {
-        ERROR("attempting to write outside the bounds of secure buffer");
-        return false;
+    for (size_t i = 0; i < offsets_length; i++) {
+        if ((offsets[i].out_offset + offsets[i].length) > out_svp_buffer->size) {
+            ERROR("attempting to write outside the bounds of output secure buffer");
+            return false;
+        }
+
+        if ((offsets[i].in_offset + offsets[i].length) > in_length) {
+            ERROR("attempting to read outside the bounds of input buffer");
+            return false;
+        }
     }
 
     uint8_t* out_bytes = (uint8_t*) out_svp_buffer->svp_memory;
-    memcpy(out_bytes + out_svp_buffer_offset, in, in_length);
+    for (size_t i = 0; i < offsets_length; i++)
+        memcpy(out_bytes + offsets[i].out_offset, in + offsets[i].in_offset, offsets[i].length);
 
     return true;
 }
 
 bool svp_copy(
         svp_buffer_t* out_svp_buffer,
-        size_t out_svp_buffer_offset,
         const svp_buffer_t* in_svp_buffer,
-        size_t in_svp_buffer_offset,
-        size_t copy_length) {
+        sa_svp_offset* offsets,
+        size_t offsets_length) {
 
-    if (!svp_validate_buffer(out_svp_buffer)) {
-        ERROR("svp_validate_buffer failed");
+    if (out_svp_buffer == NULL) {
+        ERROR("NULL out_svp_buffer");
         return false;
     }
 
-    if ((out_svp_buffer_offset + copy_length) > out_svp_buffer->size) {
-        ERROR("attempting to write outside the bounds of secure buffer");
+    if (in_svp_buffer == NULL) {
+        ERROR("NULL in_svp_buffer");
+        return false;
+    }
+
+    if (offsets == NULL) {
+        ERROR("NULL offsets");
+        return false;
+    }
+
+    if (!svp_validate_buffer(out_svp_buffer)) {
+        ERROR("svp_validate_buffer failed");
         return false;
     }
 
@@ -153,14 +176,22 @@ bool svp_copy(
         return false;
     }
 
-    if ((in_svp_buffer_offset + copy_length) > in_svp_buffer->size) {
-        ERROR("attempting to read outside the bounds of secure buffer");
-        return false;
+    for (size_t i = 0; i < offsets_length; i++) {
+        if ((offsets[i].out_offset + offsets[i].length) > out_svp_buffer->size) {
+            ERROR("attempting to write outside the bounds of output secure buffer");
+            return false;
+        }
+
+        if ((offsets[i].in_offset + offsets[i].length) > in_svp_buffer->size) {
+            ERROR("attempting to read outside the bounds of input secure buffer");
+            return false;
+        }
     }
 
-    uint8_t* in_bytes = (uint8_t*) in_svp_buffer->svp_memory;
     uint8_t* out_bytes = (uint8_t*) out_svp_buffer->svp_memory;
-    memcpy(out_bytes + out_svp_buffer_offset, in_bytes + in_svp_buffer_offset, copy_length);
+    uint8_t* in_bytes = (uint8_t*) out_svp_buffer->svp_memory;
+    for (size_t i = 0; i < offsets_length; i++)
+        memcpy(out_bytes + offsets[i].out_offset, in_bytes + offsets[i].in_offset, offsets[i].length);
 
     return true;
 }

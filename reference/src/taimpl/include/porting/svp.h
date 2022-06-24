@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,33 +73,33 @@ bool svp_release_buffer(
  * Write the specified data into a protected SVP buffer
  *
  * @param[out] out_svp_buffer the buffer into which the data should be written.
- * @param[in] out_svp_buffer_offset the offset into the output buffer.
  * @param[in] in the buffer from which to copy the data.
  * @param[in] in_length the length of the input data.
+ * @param[in] offsets the offsets to write.
+ * @param[in] offsets_length the number of offsets to write.
  * @return true if successful.
  */
 bool svp_write(
         svp_buffer_t* out_svp_buffer,
-        size_t out_svp_buffer_offset,
         const void* in,
-        size_t in_length);
+        size_t in_length,
+        sa_svp_offset* offsets,
+        size_t offsets_length);
 
 /**
  * Copy the specified data from one protected SVP buffer to another
  *
  * @param[out] out_svp_buffer the buffer into which the data should be written.
- * @param[in] out_svp_buffer_offset the offset into the output buffer.
  * @param[in] in_svp_buffer the buffer from which to copy the data.
- * @param[in] in_svp_buffer_offset the offset into the input buffer.
- * @param[in] copy_length the length of the data to copy.
+ * @param[in] offsets the offsets to write.
+ * @param[in] offsets_length the number of offsets to write.
  * @return true if successful.
  */
 bool svp_copy(
         svp_buffer_t* out_svp_buffer,
-        size_t out_svp_buffer_offset,
         const svp_buffer_t* in_svp_buffer,
-        size_t in_svp_buffer_offset,
-        size_t copy_length);
+        sa_svp_offset* offsets,
+        size_t offsets_length);
 
 /**
  * Perform a key check by decrypting input data with an AES ECB into restricted memory and comparing with reference

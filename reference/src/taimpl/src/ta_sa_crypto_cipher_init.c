@@ -54,7 +54,7 @@ static sa_status ta_sa_crypto_cipher_init_aes_ecb(
 
     if (!key_type_supports_aes(header->type, header->size)) {
         ERROR("key_type_supports_aes failed");
-        return SA_STATUS_BAD_KEY_TYPE;
+        return SA_STATUS_INVALID_KEY_TYPE;
     }
 
     if (client == NULL) {
@@ -92,7 +92,7 @@ static sa_status ta_sa_crypto_cipher_init_aes_ecb(
             }
         } else {
             ERROR("Unknown cipher mode encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -141,7 +141,7 @@ static sa_status ta_sa_crypto_cipher_init_aes_cbc(
 
     if (!key_type_supports_aes(header->type, header->size)) {
         ERROR("key_type_supports_aes failed");
-        return SA_STATUS_BAD_KEY_TYPE;
+        return SA_STATUS_INVALID_KEY_TYPE;
     }
 
     if (client == NULL) {
@@ -165,8 +165,8 @@ static sa_status ta_sa_crypto_cipher_init_aes_cbc(
     }
 
     if (parameters->iv_length != AES_BLOCK_SIZE) {
-        ERROR("Bad iv_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid iv_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -196,7 +196,7 @@ static sa_status ta_sa_crypto_cipher_init_aes_cbc(
             }
         } else {
             ERROR("Unknown cipher cipher_mode encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -244,7 +244,7 @@ static sa_status ta_sa_crypto_cipher_init_aes_ctr(
 
     if (!key_type_supports_aes(header->type, header->size)) {
         ERROR("key_type_supports_aes failed");
-        return SA_STATUS_BAD_KEY_TYPE;
+        return SA_STATUS_INVALID_KEY_TYPE;
     }
 
     if (client == NULL) {
@@ -268,8 +268,8 @@ static sa_status ta_sa_crypto_cipher_init_aes_ctr(
     }
 
     if (parameters->ctr_length != AES_BLOCK_SIZE) {
-        ERROR("Bad ctr_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid ctr_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -299,7 +299,7 @@ static sa_status ta_sa_crypto_cipher_init_aes_ctr(
             }
         } else {
             ERROR("Unknown cipher mode encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -347,7 +347,7 @@ static sa_status ta_sa_crypto_cipher_init_aes_gcm(
 
     if (!key_type_supports_aes(header->type, header->size)) {
         ERROR("key_type_supports_aes failed");
-        return SA_STATUS_BAD_KEY_TYPE;
+        return SA_STATUS_INVALID_KEY_TYPE;
     }
 
     if (client == NULL) {
@@ -371,8 +371,8 @@ static sa_status ta_sa_crypto_cipher_init_aes_gcm(
     }
 
     if (parameters->iv_length != GCM_IV_LENGTH) {
-        ERROR("Bad iv_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid iv_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->aad == NULL && parameters->aad_length > 0) {
@@ -407,7 +407,7 @@ static sa_status ta_sa_crypto_cipher_init_aes_gcm(
             }
         } else {
             ERROR("Unknown cipher mode encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -456,7 +456,7 @@ static sa_status ta_sa_crypto_cipher_init_chacha20(
 
     if (!key_type_supports_chacha20(header->type, header->size)) {
         ERROR("key_type_supports_chacha20 failed");
-        return SA_STATUS_BAD_KEY_TYPE;
+        return SA_STATUS_INVALID_KEY_TYPE;
     }
 
     if (client == NULL) {
@@ -480,8 +480,8 @@ static sa_status ta_sa_crypto_cipher_init_chacha20(
     }
 
     if (parameters->nonce_length != CHACHA20_NONCE_LENGTH) {
-        ERROR("Bad nonce_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid nonce_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->counter == NULL) {
@@ -490,8 +490,8 @@ static sa_status ta_sa_crypto_cipher_init_chacha20(
     }
 
     if (parameters->counter_length != CHACHA20_COUNTER_LENGTH) {
-        ERROR("Bad counter_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid counter_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -521,7 +521,7 @@ static sa_status ta_sa_crypto_cipher_init_chacha20(
             }
         } else {
             ERROR("Unknown cipher mode encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -567,7 +567,7 @@ static sa_status ta_sa_crypto_cipher_init_chacha20_poly1305(
 
     if (!key_type_supports_chacha20(header->type, header->size)) {
         ERROR("key_type_supports_chacha20 failed");
-        return SA_STATUS_BAD_KEY_TYPE;
+        return SA_STATUS_INVALID_KEY_TYPE;
     }
 
     if (client == NULL) {
@@ -591,8 +591,8 @@ static sa_status ta_sa_crypto_cipher_init_chacha20_poly1305(
     }
 
     if (parameters->nonce_length != CHACHA20_NONCE_LENGTH) {
-        ERROR("Bad nonce_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid nonce_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->aad == NULL && parameters->aad_length > 0) {
@@ -627,7 +627,7 @@ static sa_status ta_sa_crypto_cipher_init_chacha20_poly1305(
             }
         } else {
             ERROR("Unknown cipher mode encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -675,7 +675,7 @@ static sa_status ta_sa_crypto_cipher_init_rsa_pkcs1v15(
 
     if (!key_type_supports_rsa(header->type, header->size)) {
         ERROR("key_type_supports_rsa failed");
-        return SA_STATUS_BAD_KEY_TYPE;
+        return SA_STATUS_INVALID_KEY_TYPE;
     }
 
     if (client == NULL) {
@@ -689,8 +689,8 @@ static sa_status ta_sa_crypto_cipher_init_rsa_pkcs1v15(
     }
 
     if (cipher_mode != SA_CIPHER_MODE_DECRYPT) {
-        ERROR("Bad mode");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid mode");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -739,7 +739,7 @@ static sa_status ta_sa_crypto_cipher_init_rsa_oaep(
 
     if (parameters->label == NULL && parameters->label_length != 0) {
         ERROR("Invalid label_length");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     const sa_header* header = stored_key_get_header(stored_key);
@@ -750,7 +750,7 @@ static sa_status ta_sa_crypto_cipher_init_rsa_oaep(
 
     if (!key_type_supports_rsa(header->type, header->size)) {
         ERROR("key_type_supports_rsa failed");
-        return SA_STATUS_BAD_KEY_TYPE;
+        return SA_STATUS_INVALID_KEY_TYPE;
     }
 
     if (client == NULL) {
@@ -764,8 +764,8 @@ static sa_status ta_sa_crypto_cipher_init_rsa_oaep(
     }
 
     if (cipher_mode != SA_CIPHER_MODE_DECRYPT) {
-        ERROR("Bad mode");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid mode");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -831,7 +831,7 @@ static sa_status ta_sa_crypto_cipher_init_ec(
 
     if (!key_type_supports_ec(header->type, header->type_parameters.curve, header->size)) {
         ERROR("key_type_supports_ec failed");
-        return SA_STATUS_BAD_KEY_TYPE;
+        return SA_STATUS_INVALID_KEY_TYPE;
     }
 
     if (client == NULL) {
@@ -845,8 +845,8 @@ static sa_status ta_sa_crypto_cipher_init_ec(
     }
 
     if (cipher_mode != SA_CIPHER_MODE_DECRYPT) {
-        ERROR("Bad mode");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid mode");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -896,13 +896,13 @@ sa_status ta_sa_crypto_cipher_init(
             cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 &&
             cipher_algorithm != SA_CIPHER_ALGORITHM_RSA_PKCS1V15 && cipher_algorithm != SA_CIPHER_ALGORITHM_RSA_OAEP &&
             cipher_algorithm != SA_CIPHER_ALGORITHM_EC_ELGAMAL) {
-        ERROR("Bad algorithm");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid algorithm");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (cipher_mode != SA_CIPHER_MODE_ENCRYPT && cipher_mode != SA_CIPHER_MODE_DECRYPT) {
-        ERROR("Bad mode");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid mode");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -944,7 +944,7 @@ sa_status ta_sa_crypto_cipher_init(
             }
         } else {
             ERROR("Unknown cipher mode encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 

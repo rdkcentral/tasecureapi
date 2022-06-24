@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,10 +38,10 @@ namespace {
         sa_svp_memory_free(out);
     }
 
-    TEST_F(SaSvpBufferReleaseTest, failsBadSvpBuffer) {
+    TEST_F(SaSvpBufferReleaseTest, failsInvalidSvpBuffer) {
         void* out = nullptr;
         size_t out_length = 0;
         sa_status status = sa_svp_buffer_release(&out, &out_length, INVALID_HANDLE);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

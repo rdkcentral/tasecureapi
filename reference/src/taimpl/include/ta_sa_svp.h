@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,7 +67,7 @@ sa_status ta_sa_svp_supported(
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - No available SVP slots.
  * + SA_STATUS_NULL_PARAMETER - SVP_buffer or buffer is NULL.
- * + SA_STATUS_BAD_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
+ * + SA_STATUS_INVALID_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
@@ -104,27 +104,29 @@ sa_status ta_sa_svp_buffer_release(
 /**
  * Write a block of data into an SVP buffer.
  *
- * @param[in] svp_buffer Destination SVP buffer.
- * @param[in,out] offset Offset at which to write the data. Will be set to offset at which the written data ends on
- * function return.
- * @param[in] in Input data to write.
- * @param[in] in_length Size of input data in bytes.
+ * @param[in] out Destination SVP buffer.
+ * @param[in] in Source data to write.
+ * @param[in] in_length The length of the source data.
+ * @param[in] offsets a list of offsets into the source and destination of the block to copy and the length of the
+ * block.
+ * @param[in] offset_length Number of offset blocks to copy.
  * @param[in] client_slot the client slot ID.
  * @param[in] caller_uuid the UUID of the caller.
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - out, out_offset, or in is NULL.
- * + SA_STATUS_BAD_PARAMETER - Writing past the end of the SVP buffer detected.
- * + SA_STATUS_BAD_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
+ * + SA_STATUS_INVALID_PARAMETER - Writing past the end of the SVP buffer detected.
+ * + SA_STATUS_INVALID_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
  */
 sa_status ta_sa_svp_buffer_write(
-        sa_svp_buffer svp_buffer,
-        size_t* offset,
+        sa_svp_buffer out,
         const void* in,
         size_t in_length,
+        sa_svp_offset* offsets,
+        size_t offsets_length,
         ta_client client_slot,
         const sa_uuid* caller_uuid);
 
@@ -134,28 +136,26 @@ sa_status ta_sa_svp_buffer_write(
  * buffer. Input range is validated to be wholly contained within the input SVP buffer.
  *
  * @param[in] out Destination SVP buffer.
- * @param[in,out] out_offset Offset at which to write the data. Will be set to offset at which the written data ends.
- * @param[in] in Source SVP buffer.
- * @param[in,out] in_offset Source SVP buffer offset from which to copy the data. Will be set to offset at which the
- * read data ends.
- * @param[in] in_length Number of bytes to copy.
+ * @param[in] in Source data to write.
+ * @param[in] offsets a list of offsets into the source and destination of the block to copy and the length of the
+ * block.
+ * @param[in] offset_length Number of offset blocks to copy.
  * @param[in] client_slot the client slot ID.
  * @param[in] caller_uuid the UUID of the caller.
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - out, out_offset or in is NULL.
- * + SA_STATUS_BAD_PARAMETER - Reading or writing past the end of the SVP buffer detected.
- * + SA_STATUS_BAD_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
+ * + SA_STATUS_INVALID_PARAMETER - Reading or writing past the end of the SVP buffer detected.
+ * + SA_STATUS_INVALID_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
  */
 sa_status ta_sa_svp_buffer_copy(
         sa_svp_buffer out,
-        size_t* out_offset,
         sa_svp_buffer in,
-        size_t* in_offset,
-        size_t in_length,
+        sa_svp_offset* offsets,
+        size_t offsets_length,
         ta_client client_slot,
         const sa_uuid* caller_uuid);
 
@@ -173,7 +173,7 @@ sa_status ta_sa_svp_buffer_copy(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded. Key check passed.
  * + SA_STATUS_NULL_PARAMETER - key, in, or expected is NULL.
- * + SA_STATUS_BAD_PARAMETER - in_length or expected length are not 16.
+ * + SA_STATUS_INVALID_PARAMETER - in_length or expected length are not 16.
  * + SA_STATUS_OPERATION_NOT_ALLOWED - Key usage requirements are not met for the specified
  * operation.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
@@ -205,9 +205,9 @@ sa_status ta_sa_svp_key_check(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded. Key check passed.
  * + SA_STATUS_NULL_PARAMETER - hash is NULL.
- * + SA_STATUS_BAD_PARAMETER - offset or length is outside the buffer range.
+ * + SA_STATUS_INVALID_PARAMETER - offset or length is outside the buffer range.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
- * + SA_STATUS_BAD_SVP_BUFFER - invalid SVP buffer.
+ * + SA_STATUS_INVALID_SVP_BUFFER - invalid SVP buffer.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_VERIFICATION_FAILED - Computed value does not match the expected one.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.

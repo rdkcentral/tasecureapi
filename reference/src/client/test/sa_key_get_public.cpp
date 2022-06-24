@@ -99,10 +99,10 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyGetPublicTest, failsBadKey) {
+    TEST_F(SaKeyGetPublicTest, failsInvalidKey) {
         auto out = std::vector<uint8_t>(512);
         size_t out_length = out.size();
         sa_status status = sa_key_get_public(out.data(), &out_length, INVALID_HANDLE);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

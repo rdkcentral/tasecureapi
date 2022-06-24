@@ -101,7 +101,7 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, wrapping_parameters.get(), *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaKeyUnwrapAesCbcTest, failsNullAlgorithmParameters) {
@@ -167,7 +167,7 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, &unwrap_parameters_aes_cbc, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaKeyUnwrapAesCbcTest, failsUnknownWrappingKey) {
@@ -188,7 +188,7 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, wrapping_parameters.get(), INVALID_HANDLE,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaKeyUnwrapAesCbcTest, failsWrappingKeyDisallowsUnwrap) {
@@ -290,7 +290,7 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, &unwrap_parameters_aes_cbc, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_P(SaKeyUnwrapAesCbcTest, failsWrappingKeyNotValidAesSize) {
@@ -313,7 +313,7 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, &unwrap_parameters_aes_cbc, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_P(SaKeyUnwrapAesCbcTest, failAesCbcPkcsPadding) {
@@ -338,7 +338,7 @@ namespace {
             sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                     SA_CIPHER_ALGORITHM_AES_CBC_PKCS7, wrapping_parameters.get(), *wrapping_key,
                     wrapped_key.data(), wrapped_key.size());
-            ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+            ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
         }
     }
 } // namespace

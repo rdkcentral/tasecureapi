@@ -44,7 +44,7 @@ static sa_status ta_invoke_get_version(
 
     if (params[0].mem_ref_size != sizeof(sa_get_version_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_get_version_s* get_version = (sa_get_version_s*) params[0].mem_ref;
@@ -68,7 +68,7 @@ static sa_status ta_invoke_get_name(
 
     if (params[0].mem_ref_size != sizeof(sa_get_name_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_get_name_s* get_name = (sa_get_name_s*) params[0].mem_ref;
@@ -92,7 +92,7 @@ static sa_status ta_invoke_get_device_id(
 
     if (params[0].mem_ref_size != sizeof(sa_get_device_id_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_get_device_id_s* get_device_id = (sa_get_device_id_s*) params[0].mem_ref;
@@ -116,7 +116,7 @@ static sa_status ta_invoke_get_ta_uuid(
 
     if (params[0].mem_ref_size != sizeof(sa_get_ta_uuid_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_get_ta_uuid_s* get_ta_uuid = (sa_get_ta_uuid_s*) params[0].mem_ref;
@@ -140,7 +140,7 @@ static sa_status ta_invoke_key_generate(
 
     if (params[0].mem_ref_size != sizeof(sa_key_generate_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_key_generate_s* key_generate = (sa_key_generate_s*) params[0].mem_ref;
@@ -198,7 +198,7 @@ static sa_status ta_invoke_key_export(
 
     if (params[0].mem_ref_size != sizeof(sa_key_export_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_key_export_s* key_export = (sa_key_export_s*) params[0].mem_ref;
@@ -223,7 +223,7 @@ static sa_status ta_invoke_key_import(
 
     if (params[0].mem_ref_size != sizeof(sa_key_import_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_key_import_s* key_import = (sa_key_import_s*) params[0].mem_ref;
@@ -235,7 +235,7 @@ static sa_status ta_invoke_key_import(
         case SA_KEY_FORMAT_SYMMETRIC_BYTES:
             if (params[2].mem_ref_size != sizeof(sa_rights)) {
                 ERROR("params[2].mem_ref_size is invalid");
-                return SA_STATUS_BAD_PARAMETER;
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             parameters_symmetric.rights = params[2].mem_ref;
@@ -245,7 +245,7 @@ static sa_status ta_invoke_key_import(
         case SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO:
             if (params[2].mem_ref_size != sizeof(sa_rights)) {
                 ERROR("params[2].mem_ref_size is invalid");
-                return SA_STATUS_BAD_PARAMETER;
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             parameters_rsa.rights = params[2].mem_ref;
@@ -255,7 +255,7 @@ static sa_status ta_invoke_key_import(
         case SA_KEY_FORMAT_EC_PRIVATE_BYTES:
             if (params[2].mem_ref_size != sizeof(sa_rights)) {
                 ERROR("params[2].mem_ref_size is invalid");
-                return SA_STATUS_BAD_PARAMETER;
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             parameters_ec.rights = params[2].mem_ref;
@@ -270,7 +270,7 @@ static sa_status ta_invoke_key_import(
         case SA_KEY_FORMAT_TYPEJ:
             if (params[2].mem_ref_size != sizeof(sa_import_parameters_typej)) {
                 ERROR("params[2].mem_ref_size is invalid");
-                return SA_STATUS_BAD_PARAMETER;
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             parameters = params[2].mem_ref;
@@ -302,7 +302,7 @@ static sa_status ta_invoke_key_unwrap(
 
     if (params[0].mem_ref_size != sizeof(sa_key_unwrap_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_key_unwrap_s* key_unwrap = (sa_key_unwrap_s*) params[0].mem_ref;
@@ -330,8 +330,8 @@ static sa_status ta_invoke_key_unwrap(
             }
 
             if (params[2].mem_ref_size != sizeof(sa_unwrap_parameters_aes_iv_s)) {
-                ERROR("params[2].mem_ref is bad size");
-                return SA_STATUS_BAD_PARAMETER;
+                ERROR("params[2].mem_ref is invalid size");
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             sa_unwrap_parameters_aes_iv_s* params_cbc = (sa_unwrap_parameters_aes_iv_s*) params[2].mem_ref;
@@ -347,8 +347,8 @@ static sa_status ta_invoke_key_unwrap(
             }
 
             if (params[2].mem_ref_size != sizeof(sa_unwrap_parameters_aes_iv_s)) {
-                ERROR("params[2].mem_ref is bad size");
-                return SA_STATUS_BAD_PARAMETER;
+                ERROR("params[2].mem_ref is invalid size");
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             sa_unwrap_parameters_aes_iv_s* params_ctr = (sa_unwrap_parameters_aes_iv_s*) params[2].mem_ref;
@@ -364,8 +364,8 @@ static sa_status ta_invoke_key_unwrap(
             }
 
             if (params[2].mem_ref_size != sizeof(sa_unwrap_parameters_aes_gcm_s)) {
-                ERROR("params[2].mem_ref is bad size");
-                return SA_STATUS_BAD_PARAMETER;
+                ERROR("params[2].mem_ref is invalid size");
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             if (params[3].mem_ref == NULL) {
@@ -390,8 +390,8 @@ static sa_status ta_invoke_key_unwrap(
             }
 
             if (params[2].mem_ref_size != sizeof(sa_unwrap_parameters_chacha20_s)) {
-                ERROR("params[2].mem_ref is bad size");
-                return SA_STATUS_BAD_PARAMETER;
+                ERROR("params[2].mem_ref is invalid size");
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             sa_unwrap_parameters_chacha20_s* params_chacha20 = (sa_unwrap_parameters_chacha20_s*) params[2].mem_ref;
@@ -409,8 +409,8 @@ static sa_status ta_invoke_key_unwrap(
             }
 
             if (params[2].mem_ref_size != sizeof(sa_unwrap_parameters_chacha20_poly1305_s)) {
-                ERROR("params[2].mem_ref is bad size");
-                return SA_STATUS_BAD_PARAMETER;
+                ERROR("params[2].mem_ref is invalid size");
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             if (params[3].mem_ref == NULL) {
@@ -436,8 +436,8 @@ static sa_status ta_invoke_key_unwrap(
             }
 
             if (params[2].mem_ref_size != sizeof(sa_unwrap_parameters_ec_elgamal_s)) {
-                ERROR("params[2].mem_ref is bad size");
-                return SA_STATUS_BAD_PARAMETER;
+                ERROR("params[2].mem_ref is invalid size");
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             algorithm_parameters = params[2].mem_ref;
@@ -450,8 +450,8 @@ static sa_status ta_invoke_key_unwrap(
             }
 
             if (params[2].mem_ref_size != sizeof(sa_unwrap_parameters_rsa_oaep_s)) {
-                ERROR("params[2].mem_ref is bad size");
-                return SA_STATUS_BAD_PARAMETER;
+                ERROR("params[2].mem_ref is invalid size");
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             sa_unwrap_parameters_rsa_oaep_s* params_rsa_oaep =
@@ -490,7 +490,7 @@ static sa_status ta_invoke_key_get_public(
 
     if (params[0].mem_ref_size != sizeof(sa_key_get_public_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_key_get_public_s* key_get_public = (sa_key_get_public_s*) params[0].mem_ref;
@@ -515,7 +515,7 @@ static sa_status ta_invoke_key_derive(
 
     if (params[0].mem_ref_size != sizeof(sa_key_derive_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (params[1].mem_ref == NULL) {
@@ -593,7 +593,7 @@ static sa_status ta_invoke_key_derive(
             break;
         }
         default:
-            return SA_STATUS_BAD_PARAMETER;
+            return SA_STATUS_INVALID_PARAMETER;
     }
 
     return ta_sa_key_derive(&key_derive->key, &key_derive->rights, key_derive->kdf_algorithm, algorithm_parameters,
@@ -617,7 +617,7 @@ static sa_status ta_invoke_key_exchange(
 
     if (params[0].mem_ref_size != sizeof(sa_key_exchange_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_key_exchange_s* key_exchange = (sa_key_exchange_s*) params[0].mem_ref;
@@ -631,7 +631,7 @@ static sa_status ta_invoke_key_exchange(
 
         if (params[2].mem_ref_size != sizeof(sa_key_exchange_parameters_netflix_authenticated_dh_s)) {
             ERROR("params[0].mem_ref_size is invalid");
-            return SA_STATUS_BAD_PARAMETER;
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         sa_key_exchange_parameters_netflix_authenticated_dh_s* netflix_authenticated_dh_s =
@@ -666,7 +666,7 @@ static sa_status ta_invoke_key_release(
 
     if (params[0].mem_ref_size != sizeof(sa_key_release_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_key_release_s* key_release = (sa_key_release_s*) params[0].mem_ref;
@@ -690,7 +690,7 @@ static sa_status ta_invoke_key_header(
 
     if (params[0].mem_ref_size != sizeof(sa_key_header_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_key_header_s* key_header = (sa_key_header_s*) params[0].mem_ref;
@@ -714,7 +714,7 @@ static sa_status ta_invoke_key_digest(
 
     if (params[0].mem_ref_size != sizeof(sa_key_digest_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_key_digest_s* key_digest = (sa_key_digest_s*) params[0].mem_ref;
@@ -759,7 +759,7 @@ static sa_status ta_invoke_crypto_cipher_init(
 
     if (params[0].mem_ref_size != sizeof(sa_crypto_cipher_init_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_crypto_cipher_init_s* crypto_cipher_init = (sa_crypto_cipher_init_s*) params[0].mem_ref;
@@ -815,8 +815,8 @@ static sa_status ta_invoke_crypto_cipher_init(
             }
 
             if (params[1].mem_ref_size != sizeof(sa_cipher_parameters_rsa_oaep_s)) {
-                ERROR("params[1].mem_ref is bad size");
-                return SA_STATUS_BAD_PARAMETER;
+                ERROR("params[1].mem_ref is invalid size");
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             sa_cipher_parameters_rsa_oaep_s* params_rsa_oaep =
@@ -860,7 +860,7 @@ static sa_status ta_invoke_crypto_cipher_update_iv(
 
     if (params[0].mem_ref_size != sizeof(sa_crypto_cipher_update_iv_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_crypto_cipher_update_iv_s* cipher_update_iv = (sa_crypto_cipher_update_iv_s*) params[0].mem_ref;
@@ -886,7 +886,7 @@ static sa_status ta_invoke_crypto_cipher_process(
 
     if (params[0].mem_ref_size != sizeof(sa_crypto_cipher_process_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_crypto_cipher_process_s* cipher_process = (sa_crypto_cipher_process_s*) params[0].mem_ref;
@@ -960,7 +960,7 @@ static sa_status ta_invoke_crypto_cipher_release(
 
     if (params[0].mem_ref_size != sizeof(sa_crypto_cipher_release_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_crypto_cipher_release_s* cipher_release = (sa_crypto_cipher_release_s*) params[0].mem_ref;
@@ -984,7 +984,7 @@ static sa_status ta_invoke_crypto_mac_init(
 
     if (params[0].mem_ref_size != sizeof(sa_crypto_mac_init_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_crypto_mac_init_s* mac_init = (sa_crypto_mac_init_s*) params[0].mem_ref;
@@ -1018,7 +1018,7 @@ static sa_status ta_invoke_crypto_mac_process(
 
     if (params[0].mem_ref_size != sizeof(sa_crypto_mac_process_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_crypto_mac_process_s* mac_process = (sa_crypto_mac_process_s*) params[0].mem_ref;
@@ -1043,7 +1043,7 @@ static sa_status ta_invoke_crypto_mac_process_key(
 
     if (params[0].mem_ref_size != sizeof(sa_crypto_mac_process_key_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_crypto_mac_process_key_s* mac_process_key = (sa_crypto_mac_process_key_s*) params[0].mem_ref;
@@ -1067,7 +1067,7 @@ static sa_status ta_invoke_crypto_mac_compute(
 
     if (params[0].mem_ref_size != sizeof(sa_crypto_mac_compute_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_crypto_mac_compute_s* mac_compute = (sa_crypto_mac_compute_s*) params[0].mem_ref;
@@ -1092,7 +1092,7 @@ static sa_status ta_invoke_crypto_mac_release(
 
     if (params[0].mem_ref_size != sizeof(sa_crypto_mac_release_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_crypto_mac_release_s* mac_release = (sa_crypto_mac_release_s*) params[0].mem_ref;
@@ -1116,7 +1116,7 @@ static sa_status ta_invoke_crypto_sign(
 
     if (params[0].mem_ref_size != sizeof(sa_crypto_sign_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_crypto_sign_s* sign = (sa_crypto_sign_s*) params[0].mem_ref;
@@ -1163,7 +1163,7 @@ static sa_status ta_invoke_svp_buffer_create(
 
     if (params[0].mem_ref_size != sizeof(sa_svp_buffer_create_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_svp_buffer_create_s* svp_buffer_create = (sa_svp_buffer_create_s*) params[0].mem_ref;
@@ -1188,7 +1188,7 @@ static sa_status ta_invoke_svp_buffer_release(
 
     if (params[0].mem_ref_size != sizeof(sa_svp_buffer_release_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_svp_buffer_release_s* svp_buffer_release = (sa_svp_buffer_release_s*) params[0].mem_ref;
@@ -1213,12 +1213,12 @@ static sa_status ta_invoke_svp_buffer_write(
 
     if (params[0].mem_ref_size != sizeof(sa_svp_buffer_write_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_svp_buffer_write_s* svp_buffer_write = (sa_svp_buffer_write_s*) params[0].mem_ref;
-    return ta_sa_svp_buffer_write(svp_buffer_write->svp_buffer, &svp_buffer_write->offset, params[1].mem_ref,
-            params[1].mem_ref_size, context->client, uuid);
+    return ta_sa_svp_buffer_write(svp_buffer_write->out, params[1].mem_ref, params[1].mem_ref_size,
+            params[2].mem_ref, params[2].mem_ref_size / sizeof(sa_svp_offset), context->client, uuid);
 }
 
 static sa_status ta_invoke_svp_buffer_copy(
@@ -1238,13 +1238,12 @@ static sa_status ta_invoke_svp_buffer_copy(
 
     if (params[0].mem_ref_size != sizeof(sa_svp_buffer_copy_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_svp_buffer_copy_s* svp_buffer_copy = (sa_svp_buffer_copy_s*) params[0].mem_ref;
-    return ta_sa_svp_buffer_copy(svp_buffer_copy->out_svp_buffer, &svp_buffer_copy->out_offset,
-            svp_buffer_copy->in_svp_buffer, &svp_buffer_copy->in_offset, svp_buffer_copy->in_length, context->client,
-            uuid);
+    return ta_sa_svp_buffer_copy(svp_buffer_copy->out, svp_buffer_copy->in, params[1].mem_ref,
+            params[1].mem_ref_size / sizeof(sa_svp_offset), context->client, uuid);
 }
 
 static sa_status ta_invoke_svp_key_check(
@@ -1264,7 +1263,7 @@ static sa_status ta_invoke_svp_key_check(
 
     if (params[0].mem_ref_size != sizeof(sa_svp_key_check_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_svp_key_check_s* svp_key_check = (sa_svp_key_check_s*) params[0].mem_ref;
@@ -1304,7 +1303,7 @@ static sa_status ta_invoke_svp_buffer_check(
 
     if (params[0].mem_ref_size != sizeof(sa_svp_buffer_check_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_svp_buffer_check_s* svp_buffer_check = (sa_svp_buffer_check_s*) params[0].mem_ref;
@@ -1330,7 +1329,7 @@ static sa_status ta_invoke_process_common_encryption(
 
     if (params[0].mem_ref_size != sizeof(sa_process_common_encryption_s)) {
         ERROR("params[0].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (params[1].mem_ref == NULL) {
@@ -1341,7 +1340,7 @@ static sa_status ta_invoke_process_common_encryption(
     sa_process_common_encryption_s* process_common_encryption = (sa_process_common_encryption_s*) params[0].mem_ref;
     if (params[1].mem_ref_size != sizeof(sa_subsample_length) * process_common_encryption->subsample_count) {
         ERROR("params[1].mem_ref_size is invalid");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_buffer out;
@@ -1405,7 +1404,7 @@ sa_status ta_invoke_command_handler(
 
     if (((uint8_t*) params[0].mem_ref)[0] != API_VERSION) {
         ERROR("Invalid api_version");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -1571,7 +1570,7 @@ sa_status ta_invoke_command_handler(
 sa_status ta_open_session_handler(void** session_context) {
 
     if (session_context == NULL) {
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     ta_session_context* context = malloc(sizeof(ta_session_context));

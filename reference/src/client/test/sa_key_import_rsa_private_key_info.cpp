@@ -68,7 +68,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT);
     }
 
-    TEST_F(SaKeyImportTest, failsRsaPrivateKeyInfoBadKeySize) {
+    TEST_F(SaKeyImportTest, failsRsaPrivateKeyInfoInvalidKeySize) {
         auto clear_key = sample_rsa_6144_pkcs8();
 
         sa_rights rights;
@@ -81,10 +81,10 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, clear_key.data(),
                 clear_key.size(), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyImportTest, failsRsaPrivateKeyInfoBadPkcs8) {
+    TEST_F(SaKeyImportTest, failsRsaPrivateKeyInfoInvalidPkcs8) {
         auto clear_key = std::vector<uint8_t>(256);
 
         sa_rights rights;
@@ -97,7 +97,7 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, clear_key.data(),
                 clear_key.size(), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportTest, failsRsaPrivateKeyInfoNullParameters) {

@@ -128,13 +128,13 @@ namespace {
         ASSERT_TRUE(verify_decrypt(out_buffer.get(), clear));
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, updateIvFailsBadContext) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, updateIvFailsInvalidContext) {
         auto iv = random(AES_BLOCK_SIZE);
         sa_status status = sa_crypto_cipher_update_iv(INVALID_HANDLE, iv.data(), iv.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, updateIvFailsBadContext) {
+    TEST_P(SaCryptoCipherWithSvpTest, updateIvFailsInvalidContext) {
         sa_cipher_mode cipher_mode = std::get<1>(GetParam());
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_ECB;

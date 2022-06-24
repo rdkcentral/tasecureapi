@@ -39,6 +39,6 @@ namespace {
 
     TEST_F(SaKeyReleaseTest, failsInvalidKey) {
         sa_status status = sa_key_release(INVALID_HANDLE);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

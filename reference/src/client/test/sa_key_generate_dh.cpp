@@ -68,24 +68,24 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyGenerateTest, failsDhBadP) {
+    TEST_F(SaKeyGenerateTest, failsDhInvalidP) {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
-        std::vector<uint8_t> dhp_bad_4096 = sample_dh_bad_p_4096();
+        std::vector<uint8_t> dhp_invalid_4096 = sample_dh_invalid_p_4096();
         std::vector<uint8_t> dhg4096 = sample_dh_g_4096();
 
-        sa_generate_parameters_dh parameters = {dhp_bad_4096.data(), dhp_bad_4096.size(), dhg4096.data(),
+        sa_generate_parameters_dh parameters = {dhp_invalid_4096.data(), dhp_invalid_4096.size(), dhg4096.data(),
                 dhg4096.size()};
 
         sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyGenerateTest, failsDhBadPLengthZero) {
+    TEST_F(SaKeyGenerateTest, failsDhInvalidPLengthZero) {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
@@ -98,10 +98,10 @@ namespace {
         sa_generate_parameters_dh parameters = {dhp4096.data(), 0, dhg4096.data(), dhg4096.size()};
 
         sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyGenerateTest, failsDhBadGLengthZero) {
+    TEST_F(SaKeyGenerateTest, failsDhInvalidGLengthZero) {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
@@ -114,10 +114,10 @@ namespace {
         sa_generate_parameters_dh parameters = {dhp4096.data(), dhp4096.size(), dhg4096.data(), 0};
 
         sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyGenerateTest, failsDhBadPLengthMax) {
+    TEST_F(SaKeyGenerateTest, failsDhInvalidPLengthMax) {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
@@ -130,10 +130,10 @@ namespace {
         sa_generate_parameters_dh parameters = {dhp4096.data(), dhp4096.size(), dhg4096.data(), dhg4096.size()};
 
         sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyGenerateTest, failsDhBadGLength) {
+    TEST_F(SaKeyGenerateTest, failsDhInvalidGLength) {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
@@ -145,6 +145,6 @@ namespace {
         sa_generate_parameters_dh parameters = {dhp4096.data(), dhp4096.size(), dhg4096.data(), dhg4096.size()};
 
         sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

@@ -52,7 +52,7 @@ namespace {
         ASSERT_EQ(out, public_openssl);
     }
 
-    TEST_F(SaKeyGetPublicTest, failsRsaBadOutLength) {
+    TEST_F(SaKeyGetPublicTest, failsRsaInvalidOutLength) {
         auto clear_key = sample_rsa_1024_pkcs8();
 
         sa_rights rights;
@@ -68,7 +68,7 @@ namespace {
         auto out = std::vector<uint8_t>(out_length);
         out_length -= 1;
         status = sa_key_get_public(out.data(), &out_length, *key);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
         out.resize(out_length);
     }
 } // namespace

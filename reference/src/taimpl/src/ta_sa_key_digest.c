@@ -66,7 +66,7 @@ sa_status ta_sa_key_digest(
 
         if (header->type != SA_KEY_TYPE_SYMMETRIC) {
             ERROR("key type is not symmetric");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 

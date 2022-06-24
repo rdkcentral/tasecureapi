@@ -134,7 +134,7 @@ void slots_free(
     }
 
     if (slot >= slots->slot_count) {
-        ERROR("Bad slot");
+        ERROR("Invalid slot");
         return;
     }
 

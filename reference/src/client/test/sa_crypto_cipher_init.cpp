@@ -100,7 +100,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, initFailsBadAlgorithm) {
+    TEST_P(SaCryptoCipherWithSvpTest, initFailsInvalidAlgorithm) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -116,10 +116,10 @@ namespace {
                 SA_CIPHER_MODE_ENCRYPT, *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, initFailsBadMode) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initFailsInvalidMode) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -135,10 +135,10 @@ namespace {
                 static_cast<sa_cipher_mode>(UINT8_MAX), *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, initFailsBadKeySlot) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initFailsInvalidKeySlot) {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
@@ -146,10 +146,10 @@ namespace {
                 INVALID_HANDLE, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, initFailsBadRightsEncryptNotSet) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initFailsInvalidRightsEncryptNotSet) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -169,7 +169,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, initFailsBadRightsDecryptNotSet) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initFailsInvalidRightsDecryptNotSet) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -189,7 +189,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, initFailsBadRightsNotBefore) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initFailsInvalidRightsNotBefore) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -209,7 +209,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, initFailsBadRightsNotOnOrAfter) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initFailsInvalidRightsNotOnOrAfter) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;

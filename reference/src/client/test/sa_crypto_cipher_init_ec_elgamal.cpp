@@ -24,7 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_P(SaCryptoCipherElGamalTest, initEcElgamalFailsBadMode) {
+    TEST_P(SaCryptoCipherElGamalTest, initEcElgamalFailsInvalidMode) {
         sa_elliptic_curve curve = std::get<0>(GetParam());
         auto clear_key = ec_generate_key_bytes(curve);
 
@@ -42,10 +42,10 @@ namespace {
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherElGamalTest, initEcElgamalFailsBadKeyType) {
+    TEST_P(SaCryptoCipherElGamalTest, initEcElgamalFailsInvalidKeyType) {
         sa_elliptic_curve curve = std::get<0>(GetParam());
         auto clear_key = ec_generate_key_bytes(curve);
 
@@ -63,10 +63,10 @@ namespace {
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
-    TEST_P(SaCryptoCipherElGamalFailTest, initEcElgamalFailsBadCurve) {
+    TEST_P(SaCryptoCipherElGamalFailTest, initEcElgamalFailsInvalidCurve) {
         sa_elliptic_curve curve = std::get<0>(GetParam());
         auto clear_key = ec_generate_key_bytes(curve);
 

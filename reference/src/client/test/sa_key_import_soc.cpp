@@ -109,7 +109,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, invalidKeyUsage2) {
@@ -126,7 +126,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, invalidKeyUsage3) {
@@ -143,7 +143,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, invalidContainerVersion) {
@@ -160,7 +160,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), 0, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, missingIv) {
@@ -177,7 +177,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, missingC1) {
@@ -194,7 +194,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, missingC2) {
@@ -211,7 +211,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, missingC3) {
@@ -228,7 +228,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, unknownKeyType) {
@@ -245,7 +245,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, unknownKeyUsage1) {
@@ -262,7 +262,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, unknownKeyUsage2) {
@@ -279,7 +279,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, unknownDecryptedKeyUsage1) {
@@ -296,7 +296,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, unknownDecryptedKeyUsage2) {
@@ -313,7 +313,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportSocTest, failsDisallowedKey) {

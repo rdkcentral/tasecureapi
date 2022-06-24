@@ -163,7 +163,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyExportTest, failsBadMixinLength) {
+    TEST_F(SaKeyExportTest, failsInvalidMixinLength) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -176,12 +176,12 @@ namespace {
         auto out = std::vector<uint8_t>(4096);
         size_t out_length = out.size();
         sa_status status = sa_key_export(out.data(), &out_length, mixin.data(), mixin.size(), *key);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyExportTest, failsBadKey) {
+    TEST_F(SaKeyExportTest, failsInvalidKey) {
         size_t out_length = 0;
         sa_status status = sa_key_export(nullptr, &out_length, nullptr, 0, INVALID_HANDLE);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

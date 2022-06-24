@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,12 +113,12 @@ typedef struct {
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - samples, iv, subsample_lengths, out, or in is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + in.context.svp/clear.length + in.context.svp/clear.offset is not equal to the length of all of the
  *     bytes_of_clear_data and bytes_of_protected_data for all of the samples
  *   + Writing past the end of a clear or SVP buffer detected.
  *   + Context has already processed last chunk of data.
- * + SA_STATUS_BAD_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
+ * + SA_STATUS_INVALID_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.

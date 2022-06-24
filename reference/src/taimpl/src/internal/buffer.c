@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ sa_status convert_buffer(
         size_t out_length = svp_get_size(out_svp_buffer);
         if (buffer->context.svp.offset + bytes_to_process > out_length) {
             ERROR("buffer not large enough");
-            return SA_STATUS_BAD_PARAMETER;
+            return SA_STATUS_INVALID_PARAMETER;
         }
     } else {
         if (buffer->context.clear.buffer == NULL) {
@@ -56,7 +56,7 @@ sa_status convert_buffer(
 
         if (buffer->context.clear.offset + bytes_to_process > buffer->context.clear.length) {
             ERROR("buffer not large enough");
-            return SA_STATUS_BAD_PARAMETER;
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         *bytes = (uint8_t*) buffer->context.clear.buffer + buffer->context.clear.offset;

@@ -85,8 +85,8 @@ static sa_status ta_sa_crypto_cipher_process_symmetric(
                 cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB ||
                 cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7) &&
             (*bytes_to_process % AES_BLOCK_SIZE != 0)) {
-        ERROR("Bad bytes_to_process");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid bytes_to_process");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (out == NULL) {
@@ -170,8 +170,8 @@ static sa_status ta_sa_crypto_cipher_process_rsa_pkcs1v15(
     }
 
     if (*bytes_to_process != key_size) {
-        ERROR("Bad bytes_to_process");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid bytes_to_process");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (in == NULL) {
@@ -181,8 +181,8 @@ static sa_status ta_sa_crypto_cipher_process_rsa_pkcs1v15(
 
     sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
     if (cipher_mode != SA_CIPHER_MODE_DECRYPT) {
-        ERROR("Bad cipher mode");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid cipher mode");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     const sa_rights* rights = cipher_get_key_rights(cipher);
@@ -241,8 +241,8 @@ static sa_status ta_sa_crypto_cipher_process_rsa_oaep(
     }
 
     if (*bytes_to_process != key_size) {
-        ERROR("Bad bytes_to_process");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid bytes_to_process");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (out == NULL) {
@@ -257,8 +257,8 @@ static sa_status ta_sa_crypto_cipher_process_rsa_oaep(
 
     sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
     if (cipher_mode != SA_CIPHER_MODE_DECRYPT) {
-        ERROR("Bad cipher mode");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid cipher mode");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     const sa_rights* rights = cipher_get_key_rights(cipher);
@@ -327,8 +327,8 @@ static sa_status ta_sa_crypto_cipher_process_ec_elgamal(
     }
 
     if (*bytes_to_process != key_size * 4) {
-        ERROR("Bad bytes_to_process");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid bytes_to_process");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (in == NULL) {
@@ -338,8 +338,8 @@ static sa_status ta_sa_crypto_cipher_process_ec_elgamal(
 
     sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
     if (cipher_mode != SA_CIPHER_MODE_DECRYPT) {
-        ERROR("Bad cipher mode");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid cipher mode");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     const sa_rights* rights = cipher_get_key_rights(cipher);
@@ -410,7 +410,7 @@ sa_status ta_sa_crypto_cipher_process(
         status = cipher_store_acquire_exclusive(&cipher, cipher_store, context, caller_uuid);
         if (status != SA_STATUS_OK) {
             ERROR("cipher_store_acquire_exclusive failed");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -428,7 +428,7 @@ sa_status ta_sa_crypto_cipher_process(
         size_t required_length = get_required_length(cipher, *bytes_to_process,
                 !out && cipher_mode == SA_CIPHER_MODE_ENCRYPT, digest_algorithm, mgf1_digest_algorithm);
         if (required_length == 0) {
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -440,12 +440,12 @@ sa_status ta_sa_crypto_cipher_process(
 
         if (out->buffer_type != SA_BUFFER_TYPE_CLEAR && out->buffer_type != SA_BUFFER_TYPE_SVP) {
             ERROR("Invalid out buffer type");
-            return SA_STATUS_BAD_PARAMETER;
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         if (in->buffer_type != SA_BUFFER_TYPE_CLEAR && in->buffer_type != SA_BUFFER_TYPE_SVP) {
             ERROR("Invalid in buffer type");
-            return SA_STATUS_BAD_PARAMETER;
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         sa_cipher_algorithm cipher_algorithm = cipher_get_algorithm(cipher);
@@ -453,14 +453,14 @@ sa_status ta_sa_crypto_cipher_process(
                 (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP ||
                         cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15 ||
                         cipher_algorithm == SA_CIPHER_ALGORITHM_EC_ELGAMAL)) {
-            ERROR("Bad algorithm");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid algorithm");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         if (out->buffer_type == SA_BUFFER_TYPE_CLEAR && in->buffer_type != out->buffer_type) {
             ERROR("buffer_type mismatch");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -527,7 +527,7 @@ sa_status ta_sa_crypto_cipher_process(
             }
         } else {
             ERROR("Unknown algorithm encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 

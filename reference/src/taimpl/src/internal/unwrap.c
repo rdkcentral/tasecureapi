@@ -50,8 +50,8 @@ static sa_status import_key(
     }
 
     if (key_type != SA_KEY_TYPE_EC && key_type != SA_KEY_TYPE_SYMMETRIC && key_type != SA_KEY_TYPE_RSA) {
-        ERROR("Bad key_type");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid key_type");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (key_type == SA_KEY_TYPE_EC && parameters == NULL) {
@@ -155,7 +155,7 @@ sa_status unwrap_aes_ecb(
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7) {
             if (!pad_check_pkcs7(&pad_value, unwrapped_key + in_length - AES_BLOCK_SIZE)) {
                 ERROR("pad_check_pkcs7 failed");
-                status = SA_STATUS_BAD_KEY_FORMAT;
+                status = SA_STATUS_INVALID_KEY_FORMAT;
                 break;
             }
         }
@@ -246,7 +246,7 @@ sa_status unwrap_aes_cbc(
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7) {
             if (!pad_check_pkcs7(&pad_value, unwrapped_key + in_length - AES_BLOCK_SIZE)) {
                 ERROR("pad_check_pkcs7 failed");
-                status = SA_STATUS_BAD_KEY_FORMAT;
+                status = SA_STATUS_INVALID_KEY_FORMAT;
                 break;
             }
         }
@@ -789,14 +789,14 @@ sa_status unwrap_rsa(
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
             if (parameters == NULL) {
                 ERROR("NULL parameters");
-                status = SA_STATUS_BAD_PARAMETER;
+                status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
 
             sa_unwrap_parameters_rsa_oaep* oaep_parameters = (sa_unwrap_parameters_rsa_oaep*) parameters;
             if (oaep_parameters->label == NULL && oaep_parameters->label_length != 0) {
                 ERROR("Invalid label_length");
-                return SA_STATUS_BAD_PARAMETER;
+                return SA_STATUS_INVALID_PARAMETER;
             }
 
             if (!rsa_decrypt_oaep(unwrapped_key, &unwrapped_key_length, stored_key_wrapping,
@@ -891,20 +891,20 @@ sa_status unwrap_ec(
         }
 
         if (algorithm_parameters->key_length < SYM_128_KEY_SIZE) {
-            ERROR("Bad key_length");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid key_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         if ((algorithm_parameters->offset + algorithm_parameters->key_length) > unwrapped_key_length) {
-            ERROR("Bad offset and key_length combination");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid offset and key_length combination");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         if (in_length != unwrapped_key_length * 4) {
-            ERROR("Bad in_length");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid in_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
