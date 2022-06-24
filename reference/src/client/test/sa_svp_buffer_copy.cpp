@@ -62,7 +62,7 @@ namespace {
         ASSERT_NE(in_buffer, nullptr);
         sa_svp_offset offset = {1, 0, AES_BLOCK_SIZE};
         sa_status status = sa_svp_buffer_copy(*out_buffer, *in_buffer, &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_BAD_SVP_BUFFER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
     }
 
     TEST_F(SaSvpBufferCopyTest, failsInBufferTooSmall) {
@@ -72,7 +72,7 @@ namespace {
         ASSERT_NE(in_buffer, nullptr);
         sa_svp_offset offset = {0, 1, AES_BLOCK_SIZE};
         sa_status status = sa_svp_buffer_copy(*out_buffer, *in_buffer, &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_BAD_SVP_BUFFER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
     }
 
     TEST_F(SaSvpBufferCopyTest, failsNullOffset) {
@@ -90,7 +90,7 @@ namespace {
         ASSERT_NE(in_buffer, nullptr);
         sa_svp_offset offset = {0, 0, 1};
         sa_status status = sa_svp_buffer_copy(INVALID_HANDLE, *in_buffer, &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaSvpBufferCopyTest, failsInvalidIn) {
@@ -98,6 +98,6 @@ namespace {
         ASSERT_NE(out_buffer, nullptr);
         sa_svp_offset offset = {0, 0, 1};
         sa_status status = sa_svp_buffer_copy(*out_buffer, INVALID_HANDLE, &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

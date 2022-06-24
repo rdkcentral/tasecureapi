@@ -55,8 +55,8 @@ static sa_status ta_sa_key_generate_symmetric(
     }
 
     if (parameters->key_length < SYM_128_KEY_SIZE || parameters->key_length > SYM_MAX_KEY_SIZE) {
-        ERROR("Bad key_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid key_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -184,8 +184,8 @@ static sa_status ta_sa_key_generate_dh(
     }
 
     if (!key_type_supports_dh(SA_KEY_TYPE_DH, parameters->p_length)) {
-        ERROR("Bad p_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid p_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->g == NULL) {
@@ -194,8 +194,8 @@ static sa_status ta_sa_key_generate_dh(
     }
 
     if (parameters->g_length < 1 || parameters->g_length > parameters->p_length) {
-        ERROR("Bad g_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid g_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -204,7 +204,7 @@ static sa_status ta_sa_key_generate_dh(
         if (!dh_generate_key(&stored_key, rights, parameters->p, parameters->p_length, parameters->g,
                     parameters->g_length)) {
             ERROR("dh_generate_key failed");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -284,7 +284,7 @@ sa_status ta_sa_key_generate(
             }
         } else {
             ERROR("Unknown key type encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 

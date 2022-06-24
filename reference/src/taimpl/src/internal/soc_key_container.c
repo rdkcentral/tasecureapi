@@ -117,27 +117,27 @@ static soc_kc_unpacked_t* unpack_soc_kc(
         unpacked->header_b64 = in_string;
         const char* header_b64_end = memchr(unpacked->header_b64, '.', in_string_end - unpacked->header_b64);
         if (header_b64_end == NULL) {
-            ERROR("Bad JWT structure encountered");
+            ERROR("Invalid JWT structure encountered");
             break;
         }
 
         unpacked->header_b64_length = header_b64_end - unpacked->header_b64;
         unpacked->payload_b64 = header_b64_end + 1;
         if (unpacked->payload_b64 >= in_string_end) {
-            ERROR("Bad JWT structure encountered");
+            ERROR("Invalid JWT structure encountered");
             break;
         }
 
         const char* payload_b64_end = memchr(unpacked->payload_b64, '.', in_string_end - unpacked->payload_b64);
         if (payload_b64_end == NULL) {
-            ERROR("Bad JWT structure encountered");
+            ERROR("Invalid JWT structure encountered");
             break;
         }
 
         unpacked->payload_b64_length = payload_b64_end - unpacked->payload_b64;
         unpacked->mac_b64 = payload_b64_end + 1;
         if (unpacked->mac_b64 >= in_string_end) {
-            ERROR("Bad JWT structure encountered");
+            ERROR("Invalid JWT structure encountered");
             break;
         }
 
@@ -224,7 +224,7 @@ static sa_status fields_to_rights(
     // Populate allowed TA UUIDs
     if (payload->entitled_ta_ids_length > MAX_NUM_ALLOWED_TA_IDS) {
         ERROR("Invalid entitled_ta_ids_length");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     if (payload->entitled_ta_ids_length == 0) {
@@ -246,25 +246,25 @@ static sa_status parse_header(
 
     if (fields == NULL) {
         ERROR("fields NULL");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     if (header == NULL) {
         ERROR("header NULL");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     // read alg
     const json_key_value_t* alg_field = json_key_value_find("alg", fields, fields_count);
     if (alg_field == NULL) {
         ERROR("json_key_value_find failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     header->alg = json_value_as_string(&header->alg_size, alg_field->value);
     if (header->alg == NULL) {
-        ERROR("Bad alg value value");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        ERROR("Invalid alg value value");
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     return SA_STATUS_OK;
@@ -277,19 +277,19 @@ static sa_status parse_payload(
 
     if (fields == NULL) {
         ERROR("fields NULL");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     if (payload == NULL) {
         ERROR("payload NULL");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     // read container version
     const json_key_value_t* container_version_field = json_key_value_find("containerVersion", fields, fields_count);
     if (container_version_field == NULL) {
         ERROR("json_key_value_find failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     payload->container_version = json_value_as_integer(container_version_field->value);
@@ -298,20 +298,20 @@ static sa_status parse_payload(
     const json_key_value_t* key_type_field = json_key_value_find("keyType", fields, fields_count);
     if (key_type_field == NULL) {
         ERROR("json_key_value_find failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     payload->key_type_string = json_value_as_string(&payload->key_type_string_length, key_type_field->value);
     if (payload->key_type_string == NULL) {
         ERROR("Missing keyType");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     // read encrypted key
     const json_key_value_t* encrypted_key_field = json_key_value_find("encryptedKey", fields, fields_count);
     if (encrypted_key_field == NULL) {
         ERROR("json_key_value_find failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     size_t b64_encrypted_key_length;
@@ -320,19 +320,19 @@ static sa_status parse_payload(
     payload->encrypted_key = memory_internal_alloc(payload->encrypted_key_length);
     if (payload->encrypted_key == NULL) {
         ERROR("memory_internal_alloc failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     if (!b64_decode(payload->encrypted_key, &payload->encrypted_key_length, encrypted_key, b64_encrypted_key_length)) {
         ERROR("b64_decode failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     // read iv
     const json_key_value_t* iv_field = json_key_value_find("iv", fields, fields_count);
     if (iv_field == NULL) {
         ERROR("json_key_value_find failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     size_t b64_iv_length;
@@ -340,14 +340,14 @@ static sa_status parse_payload(
     size_t iv_length = b64_decoded_length(b64_iv_length);
     if (!b64_decode(payload->iv, &iv_length, iv, b64_iv_length) && iv_length != GCM_IV_LENGTH) {
         ERROR("b64_decode failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     // read key usage
     const json_key_value_t* key_usage_field = json_key_value_find("keyUsage", fields, fields_count);
     if (key_usage_field == NULL) {
         ERROR("json_key_value_find failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     payload->key_usage = json_value_as_integer(key_usage_field->value);
@@ -358,7 +358,7 @@ static sa_status parse_payload(
                 fields_count);
         if (decrypted_key_usage_field == NULL) {
             ERROR("json_key_value_find failed");
-            return SA_STATUS_BAD_KEY_FORMAT;
+            return SA_STATUS_INVALID_KEY_FORMAT;
         }
 
         payload->decrypted_key_usage = json_value_as_integer(decrypted_key_usage_field->value);
@@ -379,7 +379,7 @@ static sa_status parse_payload(
             if (ta_id_length != UUID_LENGTH) {
                 memory_internal_free(entitled_ta_ids);
                 ERROR("Invalid ta_id");
-                return SA_STATUS_BAD_KEY_FORMAT;
+                return SA_STATUS_INVALID_KEY_FORMAT;
             }
 
             memcpy(payload->entitled_ta_ids[i].ta_id, ta_id, ta_id_length);
@@ -392,7 +392,7 @@ static sa_status parse_payload(
     const json_key_value_t* c1_field = json_key_value_find("c1", fields, fields_count);
     if (c1_field == NULL) {
         ERROR("Missing c1");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     size_t b64_c1_length;
@@ -400,14 +400,14 @@ static sa_status parse_payload(
     size_t c1_length = b64_decoded_length(b64_c1_length);
     if (!b64_decode(payload->key_ladder_inputs.c1, &c1_length, c1, b64_c1_length) && c1_length != AES_BLOCK_SIZE) {
         ERROR("b64_decode failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     // read c2
     const json_key_value_t* c2_field = json_key_value_find("c2", fields, fields_count);
     if (c2_field == NULL) {
         ERROR("Missing c2");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     size_t b64_c2_length;
@@ -415,14 +415,14 @@ static sa_status parse_payload(
     size_t c2_length = b64_decoded_length(b64_c2_length);
     if (!b64_decode(payload->key_ladder_inputs.c2, &c2_length, c2, b64_c2_length) && c2_length != AES_BLOCK_SIZE) {
         ERROR("b64_decode failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     // read c3
     const json_key_value_t* c3_field = json_key_value_find("c3", fields, fields_count);
     if (c3_field == NULL) {
         ERROR("Missing c3");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     size_t b64_c3_length;
@@ -430,7 +430,7 @@ static sa_status parse_payload(
     size_t c3_length = b64_decoded_length(b64_c3_length);
     if (!b64_decode(payload->key_ladder_inputs.c3, &c3_length, c3, b64_c3_length) && c3_length != AES_BLOCK_SIZE) {
         ERROR("b64_decode failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     return SA_STATUS_OK;
@@ -444,17 +444,17 @@ static size_t build_aad(
 
     if (aad == NULL) {
         ERROR("aad NULL");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     if (header == NULL) {
         ERROR("header NULL");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     if (payload == NULL) {
         ERROR("payload NULL");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     // alg
@@ -671,7 +671,7 @@ static sa_status decrypt_key_and_verify_mac(
     size_t aad_length = build_aad(aad, header, payload);
     if (aad_length == 0) {
         ERROR("build_aad failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     sa_key_type key_type;
@@ -680,7 +680,7 @@ static sa_status decrypt_key_and_verify_mac(
     if (!get_key_type_and_size(payload->key_type_string, payload->key_type_string_length, &key_type, &key_size,
                 &curve)) {
         ERROR("get_key_type_and_size failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     void* key = NULL;
@@ -698,7 +698,7 @@ static sa_status decrypt_key_and_verify_mac(
                 AES_BLOCK_SIZE);
         if (!status) {
             ERROR("otp_unwrap_aes_gcm failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -706,7 +706,7 @@ static sa_status decrypt_key_and_verify_mac(
         status = fields_to_rights(&rights, key_type, payload);
         if (status != SA_STATUS_OK) {
             ERROR("fields_to_rights failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -716,13 +716,13 @@ static sa_status decrypt_key_and_verify_mac(
             size_t rsa_key_size = rsa_validate_private(key, payload->encrypted_key_length);
             if (rsa_key_size == 0) {
                 ERROR("rsa_validate_private failed");
-                status = SA_STATUS_BAD_KEY_FORMAT;
+                status = SA_STATUS_INVALID_KEY_FORMAT;
                 break;
             }
 
             if (rsa_key_size != key_size) {
                 ERROR("Invalid RSA key size");
-                status = SA_STATUS_BAD_KEY_FORMAT;
+                status = SA_STATUS_INVALID_KEY_FORMAT;
                 break;
             }
         } else if (key_type == SA_KEY_TYPE_EC) {
@@ -734,7 +734,7 @@ static sa_status decrypt_key_and_verify_mac(
 
             if (ec_key_size != key_size) {
                 ERROR("Invalid EC key size");
-                status = SA_STATUS_BAD_KEY_FORMAT;
+                status = SA_STATUS_INVALID_KEY_FORMAT;
                 break;
             }
 
@@ -742,12 +742,12 @@ static sa_status decrypt_key_and_verify_mac(
         } else if (key_type == SA_KEY_TYPE_SYMMETRIC) {
             if (payload->encrypted_key_length != key_size) {
                 ERROR("Invalid key size");
-                status = SA_STATUS_BAD_KEY_FORMAT;
+                status = SA_STATUS_INVALID_KEY_FORMAT;
                 break;
             }
         } else {
             ERROR("Invalid key type");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -793,7 +793,7 @@ sa_status soc_kc_unwrap(
     soc_kc_payload_t payload;
 
     memset(&payload, 0, sizeof(soc_kc_unpacked_t));
-    sa_status status = SA_STATUS_BAD_KEY_FORMAT;
+    sa_status status = SA_STATUS_INVALID_KEY_FORMAT;
     do {
         unpacked = unpack_soc_kc(in, in_length);
         if (unpacked == NULL) {

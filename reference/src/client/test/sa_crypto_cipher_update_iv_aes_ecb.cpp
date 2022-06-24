@@ -45,6 +45,6 @@ namespace {
 
         auto iv = random(AES_BLOCK_SIZE);
         status = sa_crypto_cipher_update_iv(*cipher, iv.data(), iv.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

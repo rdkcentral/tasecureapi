@@ -79,7 +79,7 @@ namespace {
         ASSERT_TRUE(key_check(key_type, *unwrapped_key, clear_key));
     }
 
-    TEST(SaKeyUnwrapTest, failsBadAlgorithm) {
+    TEST(SaKeyUnwrapTest, failsInvalidAlgorithm) {
         auto clear_wrapping_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -95,6 +95,6 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 static_cast<sa_cipher_algorithm>(UINT8_MAX), nullptr, *wrapping_key, clear_key.data(),
                 clear_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

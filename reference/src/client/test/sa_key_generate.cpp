@@ -113,7 +113,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyGenerateTest, failsBadKeyType) {
+    TEST_F(SaKeyGenerateTest, failsInvalidKeyType) {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
@@ -123,6 +123,6 @@ namespace {
         sa_generate_parameters_symmetric parameters = {128};
 
         sa_status status = sa_key_generate(key.get(), &rights, static_cast<sa_key_type>(UINT8_MAX), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

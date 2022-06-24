@@ -53,7 +53,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
-    TEST_F(SaCryptoMacProcessKey, failsBadContext) {
+    TEST_F(SaCryptoMacProcessKey, failsInvalidContext) {
         auto clear_mac_key = random(SYM_128_KEY_SIZE);
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -61,10 +61,10 @@ namespace {
         ASSERT_NE(mac_key, nullptr);
 
         sa_status status = sa_crypto_mac_process_key(INVALID_HANDLE, *mac_key);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaCryptoMacProcessKey, failsBadKey) {
+    TEST_F(SaCryptoMacProcessKey, failsInvalidKey) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -83,7 +83,7 @@ namespace {
         auto mac_key = create_sa_key_symmetric(&rights, clear_mac_key);
         ASSERT_NE(mac_key, nullptr);
         status = sa_crypto_mac_process_key(*mac, INVALID_HANDLE);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaCryptoMacProcessKeyArgChecks, failsWithInvalidContext) {
@@ -109,10 +109,10 @@ namespace {
         auto mac_key = create_sa_key_symmetric(&rights, clear_mac_key);
         ASSERT_NE(mac_key, nullptr);
         status = sa_crypto_mac_process_key(INVALID_HANDLE, *mac_key);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoMacProcessKeyArgChecks, failsBadContextAlreadyUsed) {
+    TEST_P(SaCryptoMacProcessKeyArgChecks, failsInvalidContextAlreadyUsed) {
         sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
         int key_size = std::get<2>(GetParam());
@@ -146,7 +146,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         status = sa_crypto_mac_process_key(*mac, *mac_key);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaCryptoMacProcessKey, failDh) {
@@ -173,7 +173,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         status = sa_crypto_mac_process_key(*mac, *key);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaCryptoMacProcessKey, failEc) {
@@ -198,7 +198,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         status = sa_crypto_mac_process_key(*mac, *key);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaCryptoMacProcessKey, failRsa) {
@@ -224,6 +224,6 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         status = sa_crypto_mac_process_key(*mac, *key);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

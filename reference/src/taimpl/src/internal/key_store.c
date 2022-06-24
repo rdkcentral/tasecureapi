@@ -190,7 +190,7 @@ static stored_key_t* unwrap(
 
     if (cipher_parameters->ciphertext_length < AES_BLOCK_SIZE ||
             cipher_parameters->ciphertext_length % AES_BLOCK_SIZE != 0) {
-        ERROR("Bad ciphertext_length");
+        ERROR("Invalid ciphertext_length");
         return NULL;
     }
 
@@ -405,12 +405,12 @@ sa_status key_store_import_stored_key(
     const sa_header* header = stored_key_get_header(stored_key);
     if (header == NULL) {
         ERROR("stored_key_get_header failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     if (!validate_header_format(header)) {
         ERROR("validate_header_format failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
@@ -475,8 +475,8 @@ sa_status key_store_import_exported(
     size_t min_exported_length = AES_BLOCK_SIZE + sizeof(sa_header) + sizeof(cipher_parameters_t) + AES_BLOCK_SIZE +
                                  sizeof(signature_t);
     if (exported_length < min_exported_length) {
-        ERROR("Bad exported_length");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        ERROR("Invalid exported_length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     const uint8_t* exported_bytes = (const uint8_t*) exported;
@@ -487,7 +487,7 @@ sa_status key_store_import_exported(
 
     if (!validate_header_format(header)) {
         ERROR("validate_header_format failed");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     const cipher_parameters_t* cipher_parameters = (const cipher_parameters_t*) (exported_bytes);
@@ -496,15 +496,15 @@ sa_status key_store_import_exported(
     if (cipher_parameters->ciphertext_length < AES_BLOCK_SIZE ||
             (cipher_parameters->ciphertext_length % AES_BLOCK_SIZE) != 0) {
 
-        ERROR("Bad ciphertext_length");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        ERROR("Invalid ciphertext_length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     size_t required_exported_length = AES_BLOCK_SIZE + sizeof(sa_header) + sizeof(cipher_parameters_t) +
                                       cipher_parameters->ciphertext_length + sizeof(signature_t);
     if (exported_length != required_exported_length) {
-        ERROR("Bad exported_length");
-        return SA_STATUS_BAD_KEY_FORMAT;
+        ERROR("Invalid exported_length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     const void* ciphertext = exported_bytes;
@@ -528,7 +528,7 @@ sa_status key_store_import_exported(
         stored_key = unwrap(&derivation_inputs, header, cipher_parameters, ciphertext, signature);
         if (stored_key == NULL) {
             ERROR("unwrap failed");
-            status = SA_STATUS_BAD_KEY_FORMAT;
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -563,8 +563,8 @@ sa_status key_store_unwrap(
     }
 
     if (key >= object_store_size(store)) {
-        ERROR("Bad id");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid id");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (caller_uuid == NULL) {
@@ -640,8 +640,8 @@ sa_status key_store_get_header(
     }
 
     if (key >= object_store_size(store)) {
-        ERROR("Bad id");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid id");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (caller_uuid == NULL) {
@@ -698,8 +698,8 @@ sa_status key_store_export(
     }
 
     if (key >= object_store_size(store)) {
-        ERROR("Bad key");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid key");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     static const uint8_t DEFAULT_MIXIN[AES_BLOCK_SIZE] = {
@@ -709,8 +709,8 @@ sa_status key_store_export(
     if (mixin == NULL) {
         mixin = DEFAULT_MIXIN;
     } else if (mixin_length != AES_BLOCK_SIZE) {
-        ERROR("Bad mixin_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid mixin_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (caller_uuid == NULL) {
@@ -749,8 +749,8 @@ sa_status key_store_export(
         }
 
         if (required_out_length > *out_length) {
-            ERROR("Bad out_length");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid out_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 

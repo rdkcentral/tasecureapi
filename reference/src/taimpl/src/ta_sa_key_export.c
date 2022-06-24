@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,8 +42,8 @@ sa_status ta_sa_key_export(
     }
 
     if (mixin && mixin_length != SYM_128_KEY_SIZE) {
-        ERROR("Bad mixin_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid mixin_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;

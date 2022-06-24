@@ -35,7 +35,7 @@ static sa_status verify_sample(
 
     if (sample->iv_length != AES_BLOCK_SIZE) {
         ERROR("Invalid iv_length");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (sample->subsample_lengths == NULL) {
@@ -45,7 +45,7 @@ static sa_status verify_sample(
 
     if (sample->subsample_count < 1) {
         ERROR("Invalid subsample_count");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (sample->out == NULL) {
@@ -60,7 +60,7 @@ static sa_status verify_sample(
 
     if (sample->crypt_byte_block == 0 && sample->skip_byte_block != 0) {
         ERROR("Invalid skip_byte_block");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -71,14 +71,14 @@ static sa_status verify_sample(
         status = cipher_store_acquire_exclusive(&cipher, cipher_store, sample->context, caller_uuid);
         if (status != SA_STATUS_OK) {
             ERROR("cipher_store_acquire_exclusive failed");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
         if (cipher_mode != SA_CIPHER_MODE_DECRYPT) {
             ERROR("cipher mode not decrypt");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -97,26 +97,26 @@ static sa_status verify_sample(
 
         if (sample->out->buffer_type != SA_BUFFER_TYPE_CLEAR && sample->out->buffer_type != SA_BUFFER_TYPE_SVP) {
             ERROR("Invalid out buffer type");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         if (sample->in->buffer_type != SA_BUFFER_TYPE_CLEAR && sample->in->buffer_type != SA_BUFFER_TYPE_SVP) {
             ERROR("Invalid in buffer type");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         sa_cipher_algorithm cipher_algorithm = cipher_get_algorithm(cipher);
         if (cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CTR && cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CBC) {
-            ERROR("Bad algorithm");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid algorithm");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         if (sample->out->buffer_type == SA_BUFFER_TYPE_CLEAR && sample->in->buffer_type != sample->out->buffer_type) {
             ERROR("buffer_type mismatch");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -152,13 +152,13 @@ static sa_status verify_sample(
             if ((out >= in && out <= in_end) || (out_end >= in && out_end <= in_end) || (in >= out && in <= out_end) ||
                     (in_end >= out && in_end <= out_end)) {
                 ERROR("Overlapping in and out buffers");
-                status = SA_STATUS_BAD_PARAMETER;
+                status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
         } else if (sample->out->buffer_type == SA_BUFFER_TYPE_SVP && sample->in->buffer_type == SA_BUFFER_TYPE_SVP &&
                    sample->out->context.svp.buffer == sample->in->context.svp.buffer) {
             ERROR("Overlapping in and out buffers");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
     } while (false);

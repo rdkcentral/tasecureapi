@@ -121,7 +121,7 @@ namespace {
         ASSERT_NE(unwrapped_key, nullptr);
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, cipher_algorithm,
                 wrapping_parameters.get(), INVALID_HANDLE, wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaKeyUnwrapRsaTest, failsWrappingKeyDisallowsUnwrap) {
@@ -227,7 +227,7 @@ namespace {
 
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, cipher_algorithm,
                 parameters, *wrapping_key, wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_P(SaKeyUnwrapRsaTest, failInvalidInLength) {
@@ -251,6 +251,6 @@ namespace {
 
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, cipher_algorithm,
                 parameters, *wrapping_key, wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

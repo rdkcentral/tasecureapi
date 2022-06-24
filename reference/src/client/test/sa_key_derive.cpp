@@ -24,7 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaKeyDeriveTest, badAlgorithm) {
+    TEST_F(SaKeyDeriveTest, invalidAlgorithm) {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
@@ -46,6 +46,6 @@ namespace {
                 .info_length = info.size()};
 
         status = sa_key_derive(key.get(), &rights, static_cast<sa_kdf_algorithm>(UINT8_MAX), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

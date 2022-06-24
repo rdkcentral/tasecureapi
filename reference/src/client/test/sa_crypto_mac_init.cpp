@@ -24,7 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaCryptoMacInit, failsBadAlgorithm) {
+    TEST_F(SaCryptoMacInit, failsInvalidAlgorithm) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -37,7 +37,7 @@ namespace {
         ASSERT_NE(mac, nullptr);
 
         sa_status status = sa_crypto_mac_init(mac.get(), static_cast<sa_mac_algorithm>(UINT8_MAX), *key, nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaCryptoMacInit, nominal) {
@@ -107,7 +107,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_P(SaCryptoMacInitArgChecks, failsBadAlgorithm) {
+    TEST_P(SaCryptoMacInitArgChecks, failsInvalidAlgorithm) {
         void* parameters = std::get<1>(GetParam());
         int key_size = std::get<2>(GetParam());
 
@@ -123,10 +123,10 @@ namespace {
         ASSERT_NE(mac, nullptr);
 
         sa_status status = sa_crypto_mac_init(mac.get(), static_cast<sa_mac_algorithm>(UINT8_MAX), *key, parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoMacInitArgChecks, failsBadKeySlot) {
+    TEST_P(SaCryptoMacInitArgChecks, failsInvalidKeySlot) {
         sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
 
@@ -134,10 +134,10 @@ namespace {
         ASSERT_NE(mac, nullptr);
 
         sa_status status = sa_crypto_mac_init(mac.get(), mac_algorithm, INVALID_HANDLE, parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoMacInitArgChecks, failsBadKeyType) {
+    TEST_P(SaCryptoMacInitArgChecks, failsInvalidKeyType) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
@@ -153,7 +153,7 @@ namespace {
         ASSERT_NE(mac, nullptr);
 
         sa_status status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_P(SaCryptoMacInitKeyRights, failsSignNotSet) {
@@ -219,7 +219,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
-    TEST_P(SaCryptoMacInitInvalidKeyLengths, failsWithBadKeyLengths) {
+    TEST_P(SaCryptoMacInitInvalidKeyLengths, failsWithInvalidKeyLengths) {
         sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
         int key_size = std::get<2>(GetParam());
@@ -236,10 +236,10 @@ namespace {
         ASSERT_NE(mac, nullptr);
 
         sa_status status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
-    TEST_P(SaCryptoMacInitHmacDigests, failsHmacBadDigestAlgorithm) {
+    TEST_P(SaCryptoMacInitHmacDigests, failsHmacInvalidDigestAlgorithm) {
         int key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
@@ -256,6 +256,6 @@ namespace {
         ASSERT_NE(mac, nullptr);
 
         sa_status status = sa_crypto_mac_init(mac.get(), SA_MAC_ALGORITHM_HMAC, *key, &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

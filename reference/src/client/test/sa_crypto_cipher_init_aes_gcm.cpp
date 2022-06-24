@@ -47,7 +47,7 @@ namespace {
         ASSERT_NE(cipher, nullptr);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, initAesGcmFailsBadKeySize48) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initAesGcmFailsInvalidKeySize48) {
         auto clear_key = random(48);
 
         sa_rights rights;
@@ -67,10 +67,10 @@ namespace {
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, initAesGcmFailsBadKeyType) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initAesGcmFailsInvalidKeyType) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         auto clear_key = ec_generate_key_bytes(curve);
 
@@ -91,7 +91,7 @@ namespace {
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_F(SaCryptoCipherWithoutSvpTest, initAesGcmFailsNullParameters) {
@@ -136,7 +136,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, initAesGcmFailsBadIvLength) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initAesGcmFailsInvalidIvLength) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -156,7 +156,7 @@ namespace {
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaCryptoCipherWithoutSvpTest, initAesGcmFailsNullAadNonZeroLength) {

@@ -124,7 +124,7 @@ sa_status sa_key_unwrap(
 
                 if (parameters_aes_cbc->iv_length != AES_BLOCK_SIZE) {
                     ERROR("iv_length is not 16");
-                    status = SA_STATUS_BAD_PARAMETER;
+                    status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
                 }
 
@@ -160,7 +160,7 @@ sa_status sa_key_unwrap(
 
                 if (parameters_aes_ctr->ctr_length != AES_BLOCK_SIZE) {
                     ERROR("iv_length is not 16");
-                    status = SA_STATUS_BAD_PARAMETER;
+                    status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
                 }
 
@@ -196,7 +196,7 @@ sa_status sa_key_unwrap(
 
                 if (parameters_aes_gcm->iv_length != GCM_IV_LENGTH) {
                     ERROR("iv_length is not 12");
-                    status = SA_STATUS_BAD_PARAMETER;
+                    status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
                 }
 
@@ -208,7 +208,7 @@ sa_status sa_key_unwrap(
 
                 if (parameters_aes_gcm->tag_length > AES_BLOCK_SIZE) {
                     ERROR("tag_length is too large");
-                    status = SA_STATUS_BAD_PARAMETER;
+                    status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
                 }
 
@@ -267,7 +267,7 @@ sa_status sa_key_unwrap(
 
                 if (parameters_chacha20->counter_length != CHACHA20_COUNTER_LENGTH) {
                     ERROR("counter_length is not 4");
-                    status = SA_STATUS_BAD_PARAMETER;
+                    status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
                 }
 
@@ -279,7 +279,7 @@ sa_status sa_key_unwrap(
 
                 if (parameters_chacha20->nonce_length != CHACHA20_NONCE_LENGTH) {
                     ERROR("nonce_length is not 12");
-                    status = SA_STATUS_BAD_PARAMETER;
+                    status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
                 }
 
@@ -321,7 +321,7 @@ sa_status sa_key_unwrap(
 
                 if (parameters_chacha20_poly1305->nonce_length != CHACHA20_NONCE_LENGTH) {
                     ERROR("nonce_length is not 12");
-                    status = SA_STATUS_BAD_PARAMETER;
+                    status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
                 }
 
@@ -333,7 +333,7 @@ sa_status sa_key_unwrap(
 
                 if (parameters_chacha20_poly1305->tag_length != AES_BLOCK_SIZE) {
                     ERROR("tag_length is not 16");
-                    status = SA_STATUS_BAD_PARAMETER;
+                    status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
                 }
 
@@ -461,7 +461,7 @@ sa_status sa_key_unwrap(
                 break;
 
             default:
-                status = SA_STATUS_BAD_PARAMETER;
+                status = SA_STATUS_INVALID_PARAMETER;
                 continue; // NOLINT
         }
 

@@ -63,8 +63,8 @@ sa_status ta_sa_crypto_cipher_update_iv(
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC || cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 ||
                 cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CTR) {
             if (iv_length != AES_BLOCK_SIZE) {
-                ERROR("Bad iv_length");
-                status = SA_STATUS_BAD_PARAMETER;
+                ERROR("Invalid iv_length");
+                status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
 
@@ -81,8 +81,8 @@ sa_status ta_sa_crypto_cipher_update_iv(
                 status = SA_STATUS_OK;
             }
         } else {
-            status = SA_STATUS_BAD_PARAMETER;
-            ERROR("Bad algorithm");
+            status = SA_STATUS_INVALID_PARAMETER;
+            ERROR("Invalid algorithm");
             break;
         }
     } while (false);

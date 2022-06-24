@@ -1523,7 +1523,7 @@ namespace client_test_helpers {
             0x02,
     };
 
-    static const uint8_t MODP_4096_P_BAD[] = {
+    static const uint8_t MODP_4096_P_INVALID[] = {
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xC9, 0x0F, 0xDA, 0xA2,
             0x21, 0x68, 0xC2, 0x34, 0xC4, 0xC6, 0x62, 0x8B, 0x80, 0xDC, 0x1C, 0xD1,
             0x29, 0x02, 0x4E, 0x08, 0x8A, 0x67, 0xCC, 0x74, 0x02, 0x0B, 0xBE, 0xA6,
@@ -2111,8 +2111,8 @@ namespace client_test_helpers {
         return {MODP_4096_G, MODP_4096_G + sizeof(MODP_4096_G)};
     }
 
-    std::vector<uint8_t> sample_dh_bad_p_4096() {
-        return {MODP_4096_P_BAD, MODP_4096_P_BAD + sizeof(MODP_4096_P_BAD)};
+    std::vector<uint8_t> sample_dh_invalid_p_4096() {
+        return {MODP_4096_P_INVALID, MODP_4096_P_INVALID + sizeof(MODP_4096_P_INVALID)};
     }
 
     std::vector<uint8_t> sample_rsa_1024_pkcs8() {
@@ -2836,7 +2836,7 @@ namespace client_test_helpers {
         size_t key_size = EVP_PKEY_bits(evp_pkey.get()) / 8;
         out.resize(key_size);
         if (in.size() > key_size - 2 * digest_len - 1) {
-            ERROR("Bad in.size()");
+            ERROR("Invalid in.size()");
             return false;
         }
 
@@ -2898,7 +2898,7 @@ namespace client_test_helpers {
         size_t key_size = EVP_PKEY_bits(evp_pkey.get()) / 8;
         out.resize(key_size);
         if (in.size() > key_size - RSA_PKCS1_PADDING_SIZE) {
-            ERROR("Bad in.size()");
+            ERROR("Invalid in.size()");
             return false;
         }
 
@@ -3047,12 +3047,12 @@ namespace client_test_helpers {
 
         size_t key_size = ec_get_key_size(curve);
         if (signature.size() != key_size * 2) {
-            ERROR("Bad signature length");
+            ERROR("Invalid signature length");
             return false;
         }
 
         if (curve == SA_ELLIPTIC_CURVE_ED25519 || curve == SA_ELLIPTIC_CURVE_ED448) {
-            ERROR("Bad curve for ECDSA");
+            ERROR("Invalid curve for ECDSA");
             return false;
         }
 
@@ -3121,12 +3121,12 @@ namespace client_test_helpers {
 
         size_t key_size = ec_get_key_size(curve);
         if (signature.size() != key_size * 2) {
-            ERROR("Bad signature length");
+            ERROR("Invalid signature length");
             return false;
         }
 
         if (curve != SA_ELLIPTIC_CURVE_ED25519 && curve != SA_ELLIPTIC_CURVE_ED448) {
-            ERROR("Bad curve for EDDSA");
+            ERROR("Invalid curve for EDDSA");
             return false;
         }
 
@@ -3174,7 +3174,7 @@ namespace client_test_helpers {
 
         int key_size = EC_KEY_SIZE(ec_group.get());
         if (in.size() != static_cast<size_t>(key_size)) {
-            ERROR("Bad in_length");
+            ERROR("Invalid in_length");
             return false;
         }
 
@@ -3305,12 +3305,12 @@ namespace client_test_helpers {
             bool pad) {
 
         if (!pad && (in.size() % 16 != 0)) {
-            ERROR("Bad in_length");
+            ERROR("Invalid in_length");
             return false;
         }
 
         if ((key.size() != SYM_128_KEY_SIZE && key.size() != SYM_256_KEY_SIZE)) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 
@@ -3385,12 +3385,12 @@ namespace client_test_helpers {
             bool pad) {
 
         if (in.size() % 16 != 0) {
-            ERROR("Bad in_length");
+            ERROR("Invalid in_length");
             return false;
         }
 
         if ((key.size() != SYM_128_KEY_SIZE && key.size() != SYM_256_KEY_SIZE)) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 
@@ -3461,12 +3461,12 @@ namespace client_test_helpers {
             bool pad) {
 
         if (!pad && (in.size() % 16 != 0)) {
-            ERROR("Bad in_length");
+            ERROR("Invalid in_length");
             return false;
         }
 
         if ((key.size() != SYM_128_KEY_SIZE && key.size() != SYM_256_KEY_SIZE)) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 
@@ -3540,12 +3540,12 @@ namespace client_test_helpers {
             bool pad) {
 
         if (in.size() % 16 != 0) {
-            ERROR("Bad in_length");
+            ERROR("Invalid in_length");
             return false;
         }
 
         if ((key.size() != SYM_128_KEY_SIZE && key.size() != SYM_256_KEY_SIZE)) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 
@@ -3617,7 +3617,7 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& key) {
 
         if (key.size() != SYM_128_KEY_SIZE && key.size() != SYM_256_KEY_SIZE) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 
@@ -3674,7 +3674,7 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& key) {
 
         if (key.size() != SYM_128_KEY_SIZE && key.size() != SYM_256_KEY_SIZE) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 
@@ -3733,12 +3733,12 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& key) {
 
         if (iv.size() != GCM_IV_LENGTH) {
-            ERROR("Bad iv_length");
+            ERROR("Invalid iv_length");
             return false;
         }
 
         if (key.size() != SYM_128_KEY_SIZE && key.size() != SYM_256_KEY_SIZE) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 
@@ -3830,17 +3830,17 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& key) {
 
         if (iv.size() != GCM_IV_LENGTH) {
-            ERROR("Bad iv_length");
+            ERROR("Invalid iv_length");
             return false;
         }
 
         if (tag.size() > AES_BLOCK_SIZE) {
-            ERROR("Bad tag_length");
+            ERROR("Invalid tag_length");
             return false;
         }
 
         if (key.size() != SYM_128_KEY_SIZE && key.size() != SYM_256_KEY_SIZE) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 
@@ -3937,17 +3937,17 @@ namespace client_test_helpers {
         return false;
 #else
         if (nonce.size() != CHACHA20_NONCE_LENGTH) {
-            ERROR("Bad nonce_length");
+            ERROR("Invalid nonce_length");
             return false;
         }
 
         if (counter.size() != CHACHA20_COUNTER_LENGTH) {
-            ERROR("Bad counter_length");
+            ERROR("Invalid counter_length");
             return false;
         }
 
         if (key.size() != SYM_256_KEY_SIZE) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 
@@ -4006,17 +4006,17 @@ namespace client_test_helpers {
         return false;
 #else
         if (nonce.size() != CHACHA20_NONCE_LENGTH) {
-            ERROR("Bad nonce_length");
+            ERROR("Invalid nonce_length");
             return false;
         }
 
         if (counter.size() != CHACHA20_COUNTER_LENGTH) {
-            ERROR("Bad counter_length");
+            ERROR("Invalid counter_length");
             return false;
         }
 
         if (key.size() != SYM_256_KEY_SIZE) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 
@@ -4076,12 +4076,12 @@ namespace client_test_helpers {
         return false;
 #else
         if (nonce.size() != CHACHA20_NONCE_LENGTH) {
-            ERROR("Bad nonce_length");
+            ERROR("Invalid nonce_length");
             return false;
         }
 
         if (key.size() != SYM_256_KEY_SIZE) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 
@@ -4171,22 +4171,22 @@ namespace client_test_helpers {
         return false;
 #else
         if (nonce.size() != CHACHA20_NONCE_LENGTH) {
-            ERROR("Bad nonce_length");
+            ERROR("Invalid nonce_length");
             return false;
         }
 
         if (key.size() != SYM_256_KEY_SIZE) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 
         if (!tag.empty() && tag.size() != CHACHA20_TAG_LENGTH) {
-            ERROR("Bad tag_length");
+            ERROR("Invalid tag_length");
             return false;
         }
 
         if (key.size() != SYM_256_KEY_SIZE) {
-            ERROR("Bad key_length");
+            ERROR("Invalid key_length");
             return false;
         }
 

@@ -66,7 +66,7 @@ sa_status ta_sa_svp_buffer_write(
         svp_buffer_t* out_svp_buffer = svp_get_buffer(out_svp);
         if (!svp_write(out_svp_buffer, in, in_length, offsets, offsets_length)) {
             ERROR("svp_write failed");
-            status = SA_STATUS_BAD_SVP_BUFFER;
+            status = SA_STATUS_INVALID_SVP_BUFFER;
             break;
         }
     } while (false);

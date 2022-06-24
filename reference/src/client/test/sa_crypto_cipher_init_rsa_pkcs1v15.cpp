@@ -24,7 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaCryptoCipherWithoutSvpTest, initRsaPkcs1v15FailsBadMode) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initRsaPkcs1v15FailsInvalidMode) {
         auto clear_key = sample_rsa_1024_pkcs8();
 
         sa_rights rights;
@@ -40,10 +40,10 @@ namespace {
                 *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, initRsaPkcs1v15FailsBadKeyType) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initRsaPkcs1v15FailsInvalidKeyType) {
         auto clear_key = random(128);
 
         sa_rights rights;
@@ -59,6 +59,6 @@ namespace {
                 *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 } // namespace

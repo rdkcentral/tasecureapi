@@ -47,7 +47,7 @@ extern "C" {
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - There are no available key slots.
  * + SA_STATUS_NULL_PARAMETER - key, rights, or parameters (if required) is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + Invalid key type specified.
  *   + Invalid type specific parameter value encountered.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
@@ -77,7 +77,7 @@ sa_status sa_key_generate(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - out_length or key is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + out is not NULL and *out_length is smaller than required for exported key container.
  *   + mixin is not NULL and mixin_length is not 16.
  * + SA_STATUS_OPERATION_NOT_ALLOWED - Key usage requirements are not met for the specified
@@ -110,9 +110,9 @@ sa_status sa_key_export(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - There are no available key slots.
- * + SA_STATUS_BAD_KEY_FORMAT - Input data failed the format validation.
+ * + SA_STATUS_INVALID_KEY_FORMAT - Input data failed the format validation.
  * + SA_STATUS_NULL_PARAMETER - key, in, or parameters (if required) is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + Invalid format value.
  *   + Invalid format specific parameter value encountered.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
@@ -152,11 +152,11 @@ sa_status sa_key_import(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - There are no available key slots.
- * + SA_STATUS_BAD_KEY_FORMAT - Input data failed the format validation.
- * + SA_STATUS_BAD_KEY_TYPE - Wrapping key type is not valid for the specified algorithm.
+ * + SA_STATUS_INVALID_KEY_FORMAT - Input data failed the format validation.
+ * + SA_STATUS_INVALID_KEY_TYPE - Wrapping key type is not valid for the specified algorithm.
  * + SA_STATUS_NULL_PARAMETER - key, rights, type_parameters (if required), algorithm_parameters (if
  * required), wrapping_key, or in is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + in_length is not valid for specified algorithm.
  *   + Invalid type value.
  *   + Invalid type specific parameter encountered.
@@ -167,7 +167,7 @@ sa_status sa_key_import(
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_VERIFICATION_FAILED
- *   + Bad padding value has been encountered.
+ *   + Invalid padding value has been encountered.
  *   + Tag verification has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
  */
@@ -196,9 +196,9 @@ sa_status sa_key_unwrap(
  * @param[in] key Private key handle.
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
- * + SA_STATUS_BAD_KEY_TYPE - Key type is not valid for the specified operation.
+ * + SA_STATUS_INVALID_KEY_TYPE - Key type is not valid for the specified operation.
  * + SA_STATUS_NULL_PARAMETER - out_length or key is NULL.
- * + SA_STATUS_BAD_PARAMETER - out is not NULL and *out_length is too small to store the public key.
+ * + SA_STATUS_INVALID_PARAMETER - out is not NULL and *out_length is too small to store the public key.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
@@ -222,9 +222,9 @@ sa_status sa_key_get_public(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - There are no available key slots.
- * + SA_STATUS_BAD_KEY_TYPE - Key type is not valid for the specified operation.
+ * + SA_STATUS_INVALID_KEY_TYPE - Key type is not valid for the specified operation.
  * + SA_STATUS_NULL_PARAMETER - key, rights, or parameters is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + Invalid algorithm value.
  *   + Invalid algorithm specific parameter value encountered.
  * + SA_STATUS_OPERATION_NOT_ALLOWED - Key usage requirements are not met for the specified
@@ -254,9 +254,9 @@ sa_status sa_key_derive(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - There are no available key slots.
- * + SA_STATUS_BAD_KEY_TYPE - Private key type is not valid for the specified operation.
+ * + SA_STATUS_INVALID_KEY_TYPE - Private key type is not valid for the specified operation.
  * + SA_STATUS_NULL_PARAMETER - key, rights, private_key, other_public, or parameters is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + Invalid algorithm value.
  *   + Invalid algorithm specific parameter value encountered.
  *   + other_public_length is not valid for specified algorithm and key.
@@ -282,7 +282,7 @@ sa_status sa_key_exchange(
  * @param[in] key Key to release
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
- * + SA_STATUS_BAD_PARAMETER - key handle is invalid.
+ * + SA_STATUS_INVALID_PARAMETER - key handle is invalid.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
@@ -296,7 +296,7 @@ sa_status sa_key_release(sa_key key);
  * @param[in] key Key handle.
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - header is null.
- * + SA_STATUS_BAD_PARAMETER - key handle is invalid.
+ * + SA_STATUS_INVALID_PARAMETER - key handle is invalid.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
@@ -316,7 +316,7 @@ sa_status sa_key_header(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - out_length or context is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + out is not NULL and *out_length value is too small to hold the result.
  *   + key is a DH key
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.

@@ -203,7 +203,7 @@ sa_status sa_key_import(
                 break;
 
             default:
-                status = SA_STATUS_BAD_PARAMETER;
+                status = SA_STATUS_INVALID_PARAMETER;
                 continue; // NOLINT
         }
 

@@ -24,7 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaKeyGetPublicTest, failsDhBadOutLength) {
+    TEST_F(SaKeyGetPublicTest, failsDhInvalidOutLength) {
         auto p = sample_dh_p_2048();
         auto g = sample_dh_g_2048();
 
@@ -46,6 +46,6 @@ namespace {
         auto out = std::vector<uint8_t>(out_length);
         out_length -= 1;
         status = sa_key_get_public(out.data(), &out_length, *key);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

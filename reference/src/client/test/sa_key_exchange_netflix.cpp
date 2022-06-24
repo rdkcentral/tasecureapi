@@ -349,7 +349,7 @@ namespace {
         auto kwrap = create_uninitialized_sa_key();
         sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
                 *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyExchangeNetflixTest, failsKwDisallowsDerive) {
@@ -434,7 +434,7 @@ namespace {
         auto kwrap = create_uninitialized_sa_key();
         status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
                 *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_F(SaKeyExchangeNetflixTest, failsUnknownKey) {
@@ -467,7 +467,7 @@ namespace {
         sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
                 INVALID_HANDLE, other_public_key.data(), other_public_key.size(),
                 &netflix_parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyExchangeNetflixTest, failsKeyDisallowsExchange) {
@@ -557,7 +557,7 @@ namespace {
         auto kwrap = create_uninitialized_sa_key();
         status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
                 *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_F(SaKeyExchangeNetflixTest, failsOtherPublicMismatch) {
@@ -592,6 +592,6 @@ namespace {
         auto kwrap = create_uninitialized_sa_key();
         sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
                 *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

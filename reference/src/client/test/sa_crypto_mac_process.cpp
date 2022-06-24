@@ -52,11 +52,11 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
-    TEST_F(SaCryptoMacProcess, failsBadContext) {
+    TEST_F(SaCryptoMacProcess, failsInvalidContext) {
         auto clear = random(SHA256_DIGEST_LENGTH);
 
         sa_status status = sa_crypto_mac_process(INVALID_HANDLE, clear.data(), clear.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaCryptoMacProcess, failsNullIn) {
@@ -102,10 +102,10 @@ namespace {
         auto in = random(SHA256_DIGEST_LENGTH);
 
         status = sa_crypto_mac_process(INVALID_HANDLE, in.data(), in.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoMacProcessArgChecks, failsBadContextAlreadyUsed) {
+    TEST_P(SaCryptoMacProcessArgChecks, failsInvalidContextAlreadyUsed) {
         sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
         int key_size = std::get<2>(GetParam());
@@ -138,7 +138,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         status = sa_crypto_mac_process(*mac, in.data(), in.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaCryptoMacProcessArgChecks, failsWithNullData) {

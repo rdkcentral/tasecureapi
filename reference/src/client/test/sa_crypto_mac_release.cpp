@@ -49,8 +49,8 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
-    TEST_P(SaCryptoMacReleaseArgChecks, failsWithBadContext) {
+    TEST_P(SaCryptoMacReleaseArgChecks, failsWithInvalidContext) {
         sa_status status = sa_crypto_mac_release(INVALID_HANDLE);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

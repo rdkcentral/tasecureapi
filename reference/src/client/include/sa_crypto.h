@@ -62,9 +62,9 @@ sa_status sa_crypto_random(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - No available cipher slots.
- * + SA_STATUS_BAD_KEY_TYPE - Key is not of correct type for specified algorithm.
+ * + SA_STATUS_INVALID_KEY_TYPE - Key is not of correct type for specified algorithm.
  * + SA_STATUS_NULL_PARAMETER - context, key, or parameters (if required) is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + Invalid algorithm specified.
  *   + Invalid mode specified.
  *   + Invalid algorithm specific parameter value encountered.
@@ -92,7 +92,7 @@ sa_status sa_crypto_cipher_init(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - iv is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + iv_length is different than 16.
  *   + Context has been initialized with a cipher that does not require an IV.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
@@ -118,7 +118,7 @@ sa_status sa_crypto_cipher_update_iv(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - in or bytes_to_process is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + out is not NULL and out.context.svp/clear.length is not large enough to hold the result.
  *   + in.context.svp/clear.length is not valid for specified cipher, mode, and/or key.
  *   + out.buffer_type or in.buffer_type is not allowed.
@@ -153,7 +153,7 @@ sa_status sa_crypto_cipher_process(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - in or bytes_to_process is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + out is not NULL and out.context.svp/clear.length is not large enough to hold the result.
  *   + in.context.svp/clear.length is not valid for specified cipher, mode, and/or key.
  *   + Context has already processed last data chunk.
@@ -165,7 +165,7 @@ sa_status sa_crypto_cipher_process(
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_VERIFICATION_FAILED
- *   + Bad padding value has been encountered.
+ *   + Invalid padding value has been encountered.
  *   + Tag verification has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
  */
@@ -200,9 +200,9 @@ sa_status sa_crypto_cipher_release(sa_crypto_cipher_context context);
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - No available MAC slots.
- * + SA_STATUS_BAD_KEY_TYPE - Key type is not valid for the specified operation.
+ * + SA_STATUS_INVALID_KEY_TYPE - Key type is not valid for the specified operation.
  * + SA_STATUS_NULL_PARAMETER - context, key, or parameters (if required) is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + Invalid algorithm value encountered.
  *   + Invalid algorithm specific parameter value encountered.
  * + SA_STATUS_OPERATION_NOT_ALLOWED - Key usage requirements are not met for the specified
@@ -226,7 +226,7 @@ sa_status sa_crypto_mac_init(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - context or in is NULL.
- * + SA_STATUS_BAD_PARAMETER - MAC value has already been generated on the context.
+ * + SA_STATUS_INVALID_PARAMETER - MAC value has already been generated on the context.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
@@ -244,7 +244,7 @@ sa_status sa_crypto_mac_process(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - context or in is NULL.
- * + SA_STATUS_BAD_PARAMETER - MAC value has already been generated on the context.
+ * + SA_STATUS_INVALID_PARAMETER - MAC value has already been generated on the context.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
@@ -262,7 +262,7 @@ sa_status sa_crypto_mac_process_key(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - out_length or context is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + out is not NULL and *out_length value is too small to hold the result.
  *   + MAC value has already been generated on the context.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
@@ -300,9 +300,9 @@ sa_status sa_crypto_mac_release(sa_crypto_mac_context context);
  * Use sa_sign_parameters_ecdsa with SA_SIGNATURE_ALGORITHM_ECDSA.
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
- * + SA_STATUS_BAD_KEY_TYPE - Key type is not valid for the specified operation.
+ * + SA_STATUS_INVALID_KEY_TYPE - Key type is not valid for the specified operation.
  * + SA_STATUS_NULL_PARAMETER - out_length, key, or parameters (if required) is NULL.
- * + SA_STATUS_BAD_PARAMETER
+ * + SA_STATUS_INVALID_PARAMETER
  *   + out is not NULL and *out_length is too small to hold the result.
  *   + Invalid algorithm specified.
  *   + Invalid digest specified.

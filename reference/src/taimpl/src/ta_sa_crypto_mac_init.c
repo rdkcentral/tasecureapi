@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@ static sa_status ta_sa_crypto_mac_init_hmac(
 
         if (!key_type_supports_hmac(header->type, header->size)) {
             ERROR("key_type_supports_hmac failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -86,8 +86,8 @@ static sa_status ta_sa_crypto_mac_init_hmac(
                 parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA256 &&
                 parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA384 &&
                 parameters->digest_algorithm != SA_DIGEST_ALGORITHM_SHA512) {
-            ERROR("Bad digest algorithm");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid digest algorithm");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -163,7 +163,7 @@ static sa_status ta_sa_crypto_mac_init_cmac(
 
         if (!key_type_supports_aes(header->type, header->size)) {
             ERROR("key_type_supports_aes failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -234,7 +234,7 @@ sa_status ta_sa_crypto_mac_init(
             }
         } else {
             ERROR("Unknown algorithm encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
     } while (false);

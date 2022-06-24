@@ -368,7 +368,7 @@ namespace {
         }
     }
 
-    TEST_F(SaKeyImportTypejTest, failsTypejBadKeyContainer) {
+    TEST_F(SaKeyImportTypejTest, failsTypejInvalidKeyContainer) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         auto macclear_key = random(SYM_128_KEY_SIZE);
@@ -396,10 +396,10 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, clear_key.data(),
                 clear_key.size(), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
-    TEST_F(SaKeyImportTypejTest, failsTypejBadSignature) {
+    TEST_F(SaKeyImportTypejTest, failsTypejInvalidSignature) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights key_rights;
@@ -433,7 +433,7 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
     TEST_F(SaKeyImportTypejTest, failsTypejNullParameters) {
@@ -469,7 +469,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyImportTypejTest, failsTypejBadKcipherHandle) {
+    TEST_F(SaKeyImportTypejTest, failsTypejInvalidKcipherHandle) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights key_rights;
@@ -497,10 +497,10 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyImportTypejTest, failsTypejBadKmacHandle) {
+    TEST_F(SaKeyImportTypejTest, failsTypejInvalidKmacHandle) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights key_rights;
@@ -528,7 +528,7 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyImportTypejTest, failsTypejKcipherNoUnwrapFlag) {

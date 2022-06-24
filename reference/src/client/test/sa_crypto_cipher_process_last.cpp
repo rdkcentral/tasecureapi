@@ -116,7 +116,7 @@ namespace {
         ASSERT_TRUE(verify_decrypt(out_buffer.get(), clear));
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processLastFailsBadOutLength) {
+    TEST_P(SaCryptoCipherWithSvpTest, processLastFailsInvalidOutLength) {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         sa_cipher_mode cipher_mode = std::get<1>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
@@ -143,10 +143,10 @@ namespace {
         auto out_buffer = buffer_alloc(buffer_type, bytes_to_process - 1);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process_last(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process, nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, processLastFailsBadContext) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, processLastFailsInvalidContext) {
         auto clear = random(AES_BLOCK_SIZE * 2);
 
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
@@ -156,7 +156,7 @@ namespace {
         size_t bytes_to_process = clear.size();
         sa_status status = sa_crypto_cipher_process_last(out_buffer.get(), INVALID_HANDLE, in_buffer.get(),
                 &bytes_to_process, nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaCryptoCipherWithoutSvpTest, processLastFailsNullIn) {

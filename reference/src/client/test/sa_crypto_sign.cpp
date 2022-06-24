@@ -164,7 +164,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST(SaCryptoSign, failsBadSignatureAlgorithm) {
+    TEST(SaCryptoSign, failsInvalidSignatureAlgorithm) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         sa_rights rights;
@@ -180,10 +180,10 @@ namespace {
         sa_sign_parameters_rsa_pss parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, false, 20};
         sa_status status = sa_crypto_sign(out.data(), &out_length, static_cast<sa_signature_algorithm>(UINT8_MAX),
                 *key, in.data(), in.size(), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST(SaCryptoSign, failsBadDigestAlgorithm) {
+    TEST(SaCryptoSign, failsInvalidDigestAlgorithm) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         sa_rights rights;
@@ -199,10 +199,10 @@ namespace {
         sa_sign_parameters_rsa_pss parameters = {static_cast<sa_digest_algorithm>(UINT8_MAX), SA_DIGEST_ALGORITHM_SHA1, false, 20};
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key, in.data(),
                 in.size(), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST(SaCryptoSign, failsBadMgf1DigestAlgorithm) {
+    TEST(SaCryptoSign, failsInvalidMgf1DigestAlgorithm) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         sa_rights rights;
@@ -219,10 +219,10 @@ namespace {
                 false, 20};
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key, in.data(),
                 in.size(), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST(SaCryptoSign, failsBadKey) {
+    TEST(SaCryptoSign, failsInvalidKey) {
         auto out = std::vector<uint8_t>(4096);
         size_t out_length = out.size();
         auto in = random(25);
@@ -230,7 +230,7 @@ namespace {
         sa_sign_parameters_rsa_pss parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, false, 20};
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, INVALID_HANDLE,
                 in.data(), in.size(), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST(SaCryptoSign, failsNotUsageFlagEcEcdsaSha256Ecp256) {

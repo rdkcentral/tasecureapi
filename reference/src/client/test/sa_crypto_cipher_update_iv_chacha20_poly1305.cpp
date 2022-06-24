@@ -48,6 +48,6 @@ namespace {
 
         nonce = random(CHACHA20_NONCE_LENGTH);
         status = sa_crypto_cipher_update_iv(*cipher, nonce.data(), nonce.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

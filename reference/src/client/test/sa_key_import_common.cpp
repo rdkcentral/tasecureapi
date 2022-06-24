@@ -118,7 +118,7 @@ std::string SaKeyImportTypejBase::generate_content_key(
         }
     } else {
         // not a valid cipher_algorithm
-        ERROR("Bad cipher_algorithm");
+        ERROR("Invalid cipher_algorithm");
         throw;
     }
 
@@ -133,7 +133,7 @@ std::string SaKeyImportTypejBase::generate_content_key_rights(const sa_rights* r
 
     if (SA_USAGE_BIT_TEST(rights->usage_flags, SA_USAGE_FLAG_ALLOWED_DIGITAL_UNPROTECTED)) {
         // invalid configuration for Type-J containers
-        ERROR("Bad usage_flags");
+        ERROR("Invalid usage_flags");
         throw;
     }
 
@@ -175,13 +175,13 @@ size_t SaKeyImportTypejBase::generate_content_key_usage(const sa_rights* rights)
 
     if ((decrypt && encrypt && sign && derive) != (decrypt || encrypt || sign || derive)) {
         // invalid set of flags for Type-J container
-        ERROR("Bad usage_flags");
+        ERROR("Invalid usage_flags");
         throw;
     }
 
     if (!unwrap && !decrypt) {
         // invalid set of flags for Type-J container
-        ERROR("Bad usage_flags");
+        ERROR("Invalid usage_flags");
         throw;
     }
 
@@ -240,7 +240,7 @@ const char* SaKeyImportTypejBase::typej_algorithm_string(sa_cipher_algorithm cip
             return "aesCbcPkcs5";
         default:
             // invalid cipher_algorithm
-            ERROR("Bad cipher_algorithm");
+            ERROR("Invalid cipher_algorithm");
             throw;
     }
 }
@@ -392,13 +392,13 @@ std::string SaKeyImportTypejBase::generate_typej_v1(
         const std::vector<uint8_t>& key,
         const std::vector<uint8_t>& mackey,
         const std::vector<uint8_t>& enckey,
-        bool good_signature) {
+        bool valid_signature) {
 
     std::string hdr = generate_header();
     std::string body = generate_body_v1(rights, key, enckey);
 
     std::vector<uint8_t> mac_bytes(SHA256_DIGEST_LENGTH);
-    if (good_signature) {
+    if (valid_signature) {
         std::vector<uint8_t> payload(hdr.data(), hdr.data() + hdr.size());
         payload.push_back(static_cast<uint8_t>('.'));
         payload.insert(payload.end(), body.begin(), body.end());
@@ -419,13 +419,13 @@ std::string SaKeyImportTypejBase::generate_typej_v2(
         const std::vector<uint8_t>& key,
         const std::vector<uint8_t>& mackey,
         const std::vector<uint8_t>& enckey,
-        bool good_signature) {
+        bool valid_signature) {
 
     std::string hdr = generate_header();
     std::string body = generate_body_v2(cipher_algorithm, rights, key, enckey);
 
     std::vector<uint8_t> mac_bytes(SHA256_DIGEST_LENGTH);
-    if (good_signature) {
+    if (valid_signature) {
         std::vector<uint8_t> payload(hdr.data(), hdr.data() + hdr.size());
         payload.push_back(static_cast<uint8_t>('.'));
         payload.insert(payload.end(), body.begin(), body.end());
@@ -447,13 +447,13 @@ std::string SaKeyImportTypejBase::generate_typej_v3(
         const std::vector<uint8_t>& key,
         const std::vector<uint8_t>& mackey,
         const std::vector<uint8_t>& enckey,
-        bool good_signature) {
+        bool valid_signature) {
 
     std::string hdr = generate_header();
     std::string body = generate_body_v3(cipher_algorithm, rights, entitled_ta_ids, key, enckey);
 
     std::vector<uint8_t> mac_bytes(SHA256_DIGEST_LENGTH);
-    if (good_signature) {
+    if (valid_signature) {
         std::vector<uint8_t> payload(hdr.data(), hdr.data() + hdr.size());
         payload.push_back(static_cast<uint8_t>('.'));
         payload.insert(payload.end(), body.begin(), body.end());

@@ -108,7 +108,7 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, wrapping_parameters.get(), *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaKeyUnwrapAesEcbTest, failsUnknownWrappingKey) {
@@ -129,7 +129,7 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, wrapping_parameters.get(), INVALID_HANDLE,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaKeyUnwrapAesEcbTest, failsWrappingKeyDisallowsUnwrap) {
@@ -211,7 +211,7 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, nullptr, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_P(SaKeyUnwrapAesEcbTest, failsWrappingKeyNotValidAesSize) {
@@ -229,7 +229,7 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, nullptr, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_P(SaKeyUnwrapAesEcbTest, failAesEcbPkcsPadding) {
@@ -249,7 +249,7 @@ namespace {
             sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                     SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, nullptr, *wrapping_key,
                     wrapped_key.data(), wrapped_key.size());
-            ASSERT_EQ(status, SA_STATUS_BAD_KEY_FORMAT);
+            ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
         }
     }
 } // namespace

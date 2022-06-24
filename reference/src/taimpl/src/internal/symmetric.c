@@ -115,7 +115,7 @@ symmetric_context_t* symmetric_create_aes_ecb_encrypt_context(const stored_key_t
 
     size_t key_length = stored_key_get_length(stored_key);
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return NULL;
     }
 
@@ -187,7 +187,7 @@ symmetric_context_t* symmetric_create_aes_cbc_encrypt_context(
 
     size_t key_length = stored_key_get_length(stored_key);
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return NULL;
     }
 
@@ -197,7 +197,7 @@ symmetric_context_t* symmetric_create_aes_cbc_encrypt_context(
     }
 
     if (iv_length != AES_BLOCK_SIZE) {
-        ERROR("Bad iv_length");
+        ERROR("Invalid iv_length");
         return NULL;
     }
 
@@ -269,7 +269,7 @@ symmetric_context_t* symmetric_create_aes_ctr_encrypt_context(
 
     size_t key_length = stored_key_get_length(stored_key);
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return NULL;
     }
 
@@ -279,7 +279,7 @@ symmetric_context_t* symmetric_create_aes_ctr_encrypt_context(
     }
 
     if (counter_length != AES_BLOCK_SIZE) {
-        ERROR("Bad counter_length");
+        ERROR("Invalid counter_length");
         return NULL;
     }
 
@@ -353,7 +353,7 @@ symmetric_context_t* symmetric_create_aes_gcm_encrypt_context(
 
     size_t key_length = stored_key_get_length(stored_key);
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return NULL;
     }
 
@@ -363,7 +363,7 @@ symmetric_context_t* symmetric_create_aes_gcm_encrypt_context(
     }
 
     if (iv_length != GCM_IV_LENGTH) {
-        ERROR("Bad iv_length");
+        ERROR("Invalid iv_length");
         return NULL;
     }
 
@@ -467,7 +467,7 @@ symmetric_context_t* symmetric_create_chacha20_encrypt_context(
 
     size_t key_length = stored_key_get_length(stored_key);
     if (key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return NULL;
     }
 
@@ -477,7 +477,7 @@ symmetric_context_t* symmetric_create_chacha20_encrypt_context(
     }
 
     if (counter_length != CHACHA20_COUNTER_LENGTH) {
-        ERROR("Bad counter_length");
+        ERROR("Invalid counter_length");
         return NULL;
     }
 
@@ -487,7 +487,7 @@ symmetric_context_t* symmetric_create_chacha20_encrypt_context(
     }
 
     if (nonce_length != CHACHA20_NONCE_LENGTH) {
-        ERROR("Bad nonce_length");
+        ERROR("Invalid nonce_length");
         return NULL;
     }
 
@@ -563,7 +563,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_encrypt_context(
 
     size_t key_length = stored_key_get_length(stored_key);
     if (key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return NULL;
     }
 
@@ -573,7 +573,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_encrypt_context(
     }
 
     if (nonce_length != CHACHA20_NONCE_LENGTH) {
-        ERROR("Bad nonce_length");
+        ERROR("Invalid nonce_length");
         return NULL;
     }
 
@@ -664,7 +664,7 @@ symmetric_context_t* symmetric_create_aes_ecb_decrypt_context(const stored_key_t
 
     size_t key_length = stored_key_get_length(stored_key);
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return NULL;
     }
 
@@ -736,7 +736,7 @@ symmetric_context_t* symmetric_create_aes_cbc_decrypt_context(
 
     size_t key_length = stored_key_get_length(stored_key);
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return NULL;
     }
 
@@ -746,7 +746,7 @@ symmetric_context_t* symmetric_create_aes_cbc_decrypt_context(
     }
 
     if (iv_length != AES_BLOCK_SIZE) {
-        ERROR("Bad iv_length");
+        ERROR("Invalid iv_length");
         return NULL;
     }
 
@@ -818,7 +818,7 @@ symmetric_context_t* symmetric_create_aes_ctr_decrypt_context(
 
     size_t key_length = stored_key_get_length(stored_key);
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return NULL;
     }
 
@@ -828,7 +828,7 @@ symmetric_context_t* symmetric_create_aes_ctr_decrypt_context(
     }
 
     if (counter_length != AES_BLOCK_SIZE) {
-        ERROR("Bad counter_length");
+        ERROR("Invalid counter_length");
         return NULL;
     }
 
@@ -902,7 +902,7 @@ symmetric_context_t* symmetric_create_aes_gcm_decrypt_context(
 
     size_t key_length = stored_key_get_length(stored_key);
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return NULL;
     }
 
@@ -912,7 +912,7 @@ symmetric_context_t* symmetric_create_aes_gcm_decrypt_context(
     }
 
     if (iv_length != GCM_IV_LENGTH) {
-        ERROR("Bad iv_length");
+        ERROR("Invalid iv_length");
         return NULL;
     }
 
@@ -1016,7 +1016,7 @@ symmetric_context_t* symmetric_create_chacha20_decrypt_context(
 
     size_t key_length = stored_key_get_length(stored_key);
     if (key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return NULL;
     }
 
@@ -1026,7 +1026,7 @@ symmetric_context_t* symmetric_create_chacha20_decrypt_context(
     }
 
     if (counter_length != CHACHA20_COUNTER_LENGTH) {
-        ERROR("Bad counter_length");
+        ERROR("Invalid counter_length");
         return NULL;
     }
 
@@ -1036,7 +1036,7 @@ symmetric_context_t* symmetric_create_chacha20_decrypt_context(
     }
 
     if (nonce_length != CHACHA20_NONCE_LENGTH) {
-        ERROR("Bad nonce_length");
+        ERROR("Invalid nonce_length");
         return NULL;
     }
 
@@ -1112,7 +1112,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_decrypt_context(
 
     size_t key_length = stored_key_get_length(stored_key);
     if (key_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return NULL;
     }
 
@@ -1122,7 +1122,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_decrypt_context(
     }
 
     if (nonce_length != CHACHA20_NONCE_LENGTH) {
-        ERROR("Bad nonce_length");
+        ERROR("Invalid nonce_length");
         return NULL;
     }
 
@@ -1211,7 +1211,7 @@ bool symmetric_context_encrypt(
     }
 
     if (context->cipher_mode != SA_CIPHER_MODE_ENCRYPT) {
-        ERROR("Bad cipher mode");
+        ERROR("Invalid cipher mode");
         return false;
     }
 
@@ -1230,7 +1230,7 @@ bool symmetric_context_encrypt(
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20 &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
         if (in_length % AES_BLOCK_SIZE != 0) {
-            ERROR("Bad in_length");
+            ERROR("Invalid in_length");
             return false;
         }
     }
@@ -1257,14 +1257,14 @@ bool symmetric_context_encrypt_last(
     }
 
     if (context->cipher_mode != SA_CIPHER_MODE_ENCRYPT) {
-        ERROR("Bad cipher mode");
+        ERROR("Invalid cipher mode");
         return false;
     }
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_GCM &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CTR &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
-        ERROR("Bad context algorithm");
+        ERROR("Invalid context algorithm");
         return false;
     }
 
@@ -1274,7 +1274,7 @@ bool symmetric_context_encrypt_last(
     }
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 && in_length > AES_BLOCK_SIZE) {
-        ERROR("Bad in_length");
+        ERROR("Invalid in_length");
         return false;
     }
 
@@ -1310,7 +1310,7 @@ bool symmetric_context_decrypt(
     }
 
     if (context->cipher_mode != SA_CIPHER_MODE_DECRYPT) {
-        ERROR("Bad cipher mode");
+        ERROR("Invalid cipher mode");
         return false;
     }
 
@@ -1329,7 +1329,7 @@ bool symmetric_context_decrypt(
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20 &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
         if (in_length % AES_BLOCK_SIZE != 0) {
-            ERROR("Bad in_length");
+            ERROR("Invalid in_length");
             return false;
         }
     }
@@ -1356,14 +1356,14 @@ bool symmetric_context_decrypt_last(
     }
 
     if (context->cipher_mode != SA_CIPHER_MODE_DECRYPT) {
-        ERROR("Bad cipher mode");
+        ERROR("Invalid cipher mode");
         return false;
     }
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_GCM &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CTR &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
-        ERROR("Bad context algorithm");
+        ERROR("Invalid context algorithm");
         return false;
     }
 
@@ -1373,7 +1373,7 @@ bool symmetric_context_decrypt_last(
     }
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 && in_length > AES_BLOCK_SIZE) {
-        ERROR("Bad in_length");
+        ERROR("Invalid in_length");
         return false;
     }
 
@@ -1416,11 +1416,11 @@ bool symmetric_context_set_iv(
             context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 ||
             context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CTR) {
         if (iv_length != AES_BLOCK_SIZE) {
-            ERROR("Bad iv_length");
+            ERROR("Invalid iv_length");
             return false;
         }
     } else {
-        ERROR("Bad cipher algorithm");
+        ERROR("Invalid cipher algorithm");
         return false;
     }
 
@@ -1435,7 +1435,7 @@ bool symmetric_context_set_iv(
             return false;
         }
     } else {
-        ERROR("Bad cipher mode");
+        ERROR("Invalid cipher mode");
         return false;
     }
 
@@ -1454,12 +1454,12 @@ bool symmetric_context_get_tag(
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_GCM &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
-        ERROR("Bad cipher algorithm");
+        ERROR("Invalid cipher algorithm");
         return false;
     }
 
     if (context->cipher_mode != SA_CIPHER_MODE_ENCRYPT) {
-        ERROR("Bad cipher mode");
+        ERROR("Invalid cipher mode");
         return false;
     }
 
@@ -1469,12 +1469,12 @@ bool symmetric_context_get_tag(
     }
 
     if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM && tag_length > AES_BLOCK_SIZE) {
-        ERROR("Bad tag_length");
+        ERROR("Invalid tag_length");
         return false;
     }
 
     if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 && tag_length != CHACHA20_TAG_LENGTH) {
-        ERROR("Bad tag_length");
+        ERROR("Invalid tag_length");
         return false;
     }
 
@@ -1512,12 +1512,12 @@ bool symmetric_context_check_tag(
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_GCM &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
-        ERROR("Bad cipher algorithm");
+        ERROR("Invalid cipher algorithm");
         return false;
     }
 
     if (context->cipher_mode != SA_CIPHER_MODE_DECRYPT) {
-        ERROR("Bad cipher mode");
+        ERROR("Invalid cipher mode");
         return false;
     }
 
@@ -1527,12 +1527,12 @@ bool symmetric_context_check_tag(
     }
 
     if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM && tag_length > AES_BLOCK_SIZE) {
-        ERROR("Bad tag_length");
+        ERROR("Invalid tag_length");
         return false;
     }
 
     if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 && tag_length != CHACHA20_TAG_LENGTH) {
-        ERROR("Bad tag_length");
+        ERROR("Invalid tag_length");
         return false;
     }
 

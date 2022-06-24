@@ -261,18 +261,18 @@ typedef enum {
     /** Operation failed due to no resource slots being available. */
     SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT,
     /** Operation failed during key format validation. */
-    SA_STATUS_BAD_KEY_FORMAT,
+    SA_STATUS_INVALID_KEY_FORMAT,
     /** Operation failed due to invalid key type used for specified algorithm. */
-    SA_STATUS_BAD_KEY_TYPE,
+    SA_STATUS_INVALID_KEY_TYPE,
     /** Operation failed due to NULL value for a required parameter. */
     SA_STATUS_NULL_PARAMETER,
     /** Operation failed due to invalid parameter value for specified algorithm. */
-    SA_STATUS_BAD_PARAMETER,
+    SA_STATUS_INVALID_PARAMETER,
     /** Operation failed due to key rights enforcement. One or more preconditions required by the
      * key rights were not met. */
     SA_STATUS_OPERATION_NOT_ALLOWED,
     /** Operation failed due to SVP buffer not being fully contained within secure SVP region. */
-    SA_STATUS_BAD_SVP_BUFFER,
+    SA_STATUS_INVALID_SVP_BUFFER,
     /** Operation failed due to the combination of parameters not being supported in the
      * implementation. */
     SA_STATUS_OPERATION_NOT_SUPPORTED,

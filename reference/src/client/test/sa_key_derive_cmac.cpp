@@ -132,10 +132,10 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveCmacTest, failsBadDigest) {
+    TEST_F(SaKeyDeriveCmacTest, failsInvalidDigest) {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
@@ -156,7 +156,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyDeriveCmacTest, failsUnknownParent) {
@@ -174,7 +174,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyDeriveCmacTest, failsNullOtherData) {
@@ -221,7 +221,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyDeriveCmacTest, fails5Counter) {
@@ -245,10 +245,10 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveCmacTest, failsBadLengthCtrCombination) {
+    TEST_F(SaKeyDeriveCmacTest, failsInvalidLengthCtrCombination) {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
@@ -269,7 +269,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyDeriveCmacTest, failsParentDisallowsDerive) {
@@ -318,7 +318,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_F(SaKeyDeriveCmacTest, failsParentNotAes) {
@@ -342,6 +342,6 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 } // namespace

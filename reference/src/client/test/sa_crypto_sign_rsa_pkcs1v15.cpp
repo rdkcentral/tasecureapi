@@ -54,7 +54,7 @@ namespace {
         ASSERT_TRUE(verify_rsa_pkcs1v15_openssl(rsa_key, digest_algorithm, in, out));
     }
 
-    TEST(SaCryptoSign, failsRsaPkcs1v15BadOutLength) {
+    TEST(SaCryptoSign, failsRsaPkcs1v15InvalidOutLength) {
         auto clear_key = sample_rsa_2048_pkcs8();
         sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
@@ -76,7 +76,7 @@ namespace {
         auto in = random(25);
         status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15, *key, in.data(),
                 in.size(), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST(SaCryptoSign, failsRsaPkcs1v15NullParameters) {

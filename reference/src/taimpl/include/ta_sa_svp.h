@@ -67,7 +67,7 @@ sa_status ta_sa_svp_supported(
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - No available SVP slots.
  * + SA_STATUS_NULL_PARAMETER - SVP_buffer or buffer is NULL.
- * + SA_STATUS_BAD_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
+ * + SA_STATUS_INVALID_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
@@ -115,8 +115,8 @@ sa_status ta_sa_svp_buffer_release(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - out, out_offset, or in is NULL.
- * + SA_STATUS_BAD_PARAMETER - Writing past the end of the SVP buffer detected.
- * + SA_STATUS_BAD_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
+ * + SA_STATUS_INVALID_PARAMETER - Writing past the end of the SVP buffer detected.
+ * + SA_STATUS_INVALID_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
@@ -145,8 +145,8 @@ sa_status ta_sa_svp_buffer_write(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - out, out_offset or in is NULL.
- * + SA_STATUS_BAD_PARAMETER - Reading or writing past the end of the SVP buffer detected.
- * + SA_STATUS_BAD_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
+ * + SA_STATUS_INVALID_PARAMETER - Reading or writing past the end of the SVP buffer detected.
+ * + SA_STATUS_INVALID_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
@@ -173,7 +173,7 @@ sa_status ta_sa_svp_buffer_copy(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded. Key check passed.
  * + SA_STATUS_NULL_PARAMETER - key, in, or expected is NULL.
- * + SA_STATUS_BAD_PARAMETER - in_length or expected length are not 16.
+ * + SA_STATUS_INVALID_PARAMETER - in_length or expected length are not 16.
  * + SA_STATUS_OPERATION_NOT_ALLOWED - Key usage requirements are not met for the specified
  * operation.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
@@ -205,9 +205,9 @@ sa_status ta_sa_svp_key_check(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded. Key check passed.
  * + SA_STATUS_NULL_PARAMETER - hash is NULL.
- * + SA_STATUS_BAD_PARAMETER - offset or length is outside the buffer range.
+ * + SA_STATUS_INVALID_PARAMETER - offset or length is outside the buffer range.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
- * + SA_STATUS_BAD_SVP_BUFFER - invalid SVP buffer.
+ * + SA_STATUS_INVALID_SVP_BUFFER - invalid SVP buffer.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_VERIFICATION_FAILED - Computed value does not match the expected one.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.

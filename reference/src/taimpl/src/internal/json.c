@@ -798,7 +798,7 @@ static int map_key_callback(
     }
 
     if (key_length > MAX_KEY_LENGTH) {
-        ERROR("Bad key_length");
+        ERROR("Invalid key_length");
         return 0;
     }
 
@@ -940,7 +940,7 @@ bool json_value_as_bool(const json_value_t* value) {
     }
 
     if (value->type != JSON_TYPE_BOOL) {
-        ERROR("Bad type: %d", value->type);
+        ERROR("Invalid type: %d", value->type);
         return false;
     }
 
@@ -959,7 +959,7 @@ double json_value_as_double(const json_value_t* value) {
     }
 
     if (value->type != JSON_TYPE_DOUBLE) {
-        ERROR("Bad type: %d", value->type);
+        ERROR("Invalid type: %d", value->type);
         return 0;
     }
 
@@ -981,7 +981,7 @@ json_value_t** json_value_as_array(
     }
 
     if (value->type != JSON_TYPE_ARRAY) {
-        ERROR("Bad type: %d", value->type);
+        ERROR("Invalid type: %d", value->type);
         return 0;
     }
 
@@ -1016,7 +1016,7 @@ json_key_value_t* json_value_as_map(
     }
 
     if (value->type != JSON_TYPE_MAP) {
-        ERROR("Bad type: %d", value->type);
+        ERROR("Invalid type: %d", value->type);
         return 0;
     }
 
@@ -1050,7 +1050,7 @@ int64_t json_value_as_integer(const json_value_t* value) {
     }
 
     if (value->type != JSON_TYPE_INT) {
-        ERROR("Bad type: %d", value->type);
+        ERROR("Invalid type: %d", value->type);
         return 0;
     }
 
@@ -1071,7 +1071,7 @@ const char* json_value_as_string(
     }
 
     if (value->type != JSON_TYPE_STRING) {
-        ERROR("Bad type: %d", value->type);
+        ERROR("Invalid type: %d", value->type);
         return NULL;
     }
 
@@ -1094,7 +1094,7 @@ const char* json_value_as_number(const json_value_t* value) {
     }
 
     if (value->type != JSON_TYPE_NUMBER) {
-        ERROR("Bad type: %d", value->type);
+        ERROR("Invalid type: %d", value->type);
         return NULL;
     }
 
@@ -1118,7 +1118,7 @@ const json_key_value_t* json_key_value_find(
 
     size_t key_length = strnlen(key, MAX_KEY_LENGTH + 1);
     if (key_length == (MAX_KEY_LENGTH + 1)) {
-        ERROR("Bad key");
+        ERROR("Invalid key");
         return NULL;
     }
 

@@ -56,7 +56,7 @@ namespace {
         auto in = random(AES_BLOCK_SIZE);
         sa_svp_offset offset = {1, 0, in.size()};
         sa_status status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_BAD_SVP_BUFFER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
     }
 
     TEST_F(SaSvpBufferWriteTest, failsNullOutOffset) {
@@ -71,7 +71,7 @@ namespace {
         auto in = random(AES_BLOCK_SIZE);
         sa_svp_offset offset = {0, 0, in.size()};
         sa_status status = sa_svp_buffer_write(INVALID_HANDLE, in.data(), in.size(), &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaSvpBufferWriteTest, failsNullIn) {

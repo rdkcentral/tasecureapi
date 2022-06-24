@@ -25,7 +25,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaCryptoCipherWithoutSvpTest, processRsaOaepFailsBadInLength) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, processRsaOaepFailsInvalidInLength) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         auto rsa = rsa_import_pkcs8(clear_key);
@@ -62,10 +62,10 @@ namespace {
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, EVP_PKEY_bits(rsa.get()) / 8);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, processRsaOaepBadOutLength) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, processRsaOaepInvalidOutLength) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         auto rsa = rsa_import_pkcs8(clear_key);
@@ -102,10 +102,10 @@ namespace {
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, EVP_PKEY_bits(rsa.get()) / 8 - 43);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, processRsaOaepBadInPadding) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, processRsaOaepInvalidInPadding) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         auto rsa = rsa_import_pkcs8(clear_key);
@@ -141,7 +141,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_VERIFICATION_FAILED);
     }
 
-    TEST_F(SaCryptoCipherSvpOnlyTest, processRsaOaepFailsBadBufferType) {
+    TEST_F(SaCryptoCipherSvpOnlyTest, processRsaOaepFailsInvalidBufferType) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         auto rsa = rsa_import_pkcs8(clear_key);
@@ -178,6 +178,6 @@ namespace {
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, EVP_PKEY_bits(rsa.get()) / 8);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

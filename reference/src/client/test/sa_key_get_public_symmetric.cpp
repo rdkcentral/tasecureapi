@@ -37,6 +37,6 @@ namespace {
         size_t out_length = out.size();
 
         sa_status status = sa_key_get_public(out.data(), &out_length, *key);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

@@ -166,7 +166,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_P(SaCryptoMacComputeArgChecks, failsWithBadContext) {
+    TEST_P(SaCryptoMacComputeArgChecks, failsWithInvalidContext) {
         sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
         int key_length = std::get<2>(GetParam());
@@ -196,7 +196,7 @@ namespace {
         auto out = std::vector<uint8_t>(out_length);
 
         status = sa_crypto_mac_compute(out.data(), &out_length, INVALID_HANDLE);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaCryptoMacComputeArgChecks, failsWhenProcessCalledAfterCompute) {
@@ -232,7 +232,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         status = sa_crypto_mac_process(*mac, clear.data(), clear.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaCryptoMacComputeArgChecks, failsWhenMultipleCompute) {
@@ -268,7 +268,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         status = sa_crypto_mac_compute(out.data(), &out_length, *mac);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaCryptoMacComputeArgChecks, failsWithNullOutLengthWithNonNullData) {
@@ -304,7 +304,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_P(SaCryptoMacComputeArgChecks, failsBadOutLength) {
+    TEST_P(SaCryptoMacComputeArgChecks, failsInvalidOutLength) {
         sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
         int key_length = std::get<2>(GetParam());
@@ -337,6 +337,6 @@ namespace {
         ASSERT_GT(out_length, 0);
         out_length--;
         status = sa_crypto_mac_compute(tag.data(), &out_length, *mac);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

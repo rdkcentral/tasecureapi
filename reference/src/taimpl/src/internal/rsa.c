@@ -89,7 +89,7 @@ bool rsa_get_public(
         }
 
         if (*out_length < (size_t) length) {
-            ERROR("Bad out_length");
+            ERROR("Invalid out_length");
             break;
         }
 
@@ -162,12 +162,12 @@ bool rsa_decrypt_pkcs1v15(
 
         size_t key_size = EVP_PKEY_bits(evp_pkey) / 8;
         if (*out_length < key_size) {
-            ERROR("Bad out_length");
+            ERROR("Invalid out_length");
             break;
         }
 
         if (in_length != key_size) {
-            ERROR("Bad in_length");
+            ERROR("Invalid in_length");
             break;
         }
 
@@ -250,12 +250,12 @@ bool rsa_decrypt_oaep(
 
         size_t key_size = EVP_PKEY_bits(evp_pkey) / 8;
         if (*out_length < key_size) {
-            ERROR("Bad out_length");
+            ERROR("Invalid out_length");
             break;
         }
 
         if (in_length != key_size) {
-            ERROR("Bad in_length");
+            ERROR("Invalid in_length");
             break;
         }
 
@@ -358,7 +358,7 @@ bool rsa_sign_pkcs1v15(
 
         size_t key_size = EVP_PKEY_bits(evp_pkey) / 8;
         if (*out_length < key_size) {
-            ERROR("Bad out_length");
+            ERROR("Invalid out_length");
             break;
         }
 
@@ -475,7 +475,7 @@ bool rsa_sign_pss(
 
         size_t key_size = EVP_PKEY_bits(evp_pkey) / 8;
         if (*out_length < key_size) {
-            ERROR("Bad out_length");
+            ERROR("Invalid out_length");
             break;
         }
 

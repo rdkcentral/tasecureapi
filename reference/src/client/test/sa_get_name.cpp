@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST(SaGetName, failsBadNameLength) {
+    TEST(SaGetName, failsInvalidNameLength) {
         size_t name_length = 0;
         sa_status status = sa_get_name(nullptr, &name_length);
         ASSERT_EQ(status, SA_STATUS_OK);
@@ -53,6 +53,6 @@ namespace {
         std::vector<char> name;
         name.resize(name_length);
         status = sa_get_name(name.data(), &name_length);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

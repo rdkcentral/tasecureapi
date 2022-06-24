@@ -94,7 +94,7 @@ namespace {
         ASSERT_TRUE(verify_decrypt(out_buffer.get(), clear));
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processChacha20FailsBadOutLength) {
+    TEST_P(SaCryptoCipherWithSvpTest, processChacha20FailsInvalidOutLength) {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         sa_cipher_mode cipher_mode = std::get<1>(GetParam());
         auto clear_key = random(SYM_256_KEY_SIZE);
@@ -126,10 +126,10 @@ namespace {
         size_t bytes_to_process = clear.size();
 
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaCryptoCipherSvpOnlyTest, initChacha20FailsDecryptBadRightsSvpOptionalNotSet) {
+    TEST_F(SaCryptoCipherSvpOnlyTest, initChacha20FailsDecryptInvalidRightsSvpOptionalNotSet) {
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;

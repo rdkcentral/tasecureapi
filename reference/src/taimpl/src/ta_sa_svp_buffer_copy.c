@@ -68,7 +68,7 @@ sa_status ta_sa_svp_buffer_copy(
         svp_buffer_t* in_svp_buffer = svp_get_buffer(in_svp);
         if (!svp_copy(out_svp_buffer, in_svp_buffer, offsets, offsets_length)) {
             ERROR("svp_copy failed");
-            status = SA_STATUS_BAD_SVP_BUFFER;
+            status = SA_STATUS_INVALID_SVP_BUFFER;
             break;
         }
     } while (false);

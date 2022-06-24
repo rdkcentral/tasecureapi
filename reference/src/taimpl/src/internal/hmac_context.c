@@ -256,7 +256,7 @@ bool hmac_context_compute(
     }
 
     if (*mac_length < digest_length(context->digest_algorithm)) {
-        ERROR("Bad mac_length");
+        ERROR("Invalid mac_length");
         return false;
     }
     *mac_length = digest_length(context->digest_algorithm);
@@ -331,7 +331,7 @@ bool hmac_internal(
     }
 
     if (*mac_length < hash_length) {
-        ERROR("Bad mac_length");
+        ERROR("Invalid mac_length");
         return false;
     }
 

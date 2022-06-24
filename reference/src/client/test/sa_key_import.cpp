@@ -64,7 +64,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyImportTest, failsBadFormat) {
+    TEST_F(SaKeyImportTest, failsInvalidFormat) {
         auto clear_key = random(AES_BLOCK_SIZE);
 
         sa_rights rights;
@@ -77,7 +77,7 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), static_cast<sa_key_format>(UINT8_MAX), clear_key.data(),
                 clear_key.size(), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyImportTest, failsNullIn) {

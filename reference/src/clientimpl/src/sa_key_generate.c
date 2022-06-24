@@ -114,7 +114,7 @@ sa_status sa_key_generate(
                 break;
             }
             default:
-                status = SA_STATUS_BAD_PARAMETER;
+                status = SA_STATUS_INVALID_PARAMETER;
                 continue; // NOLINT
         }
 

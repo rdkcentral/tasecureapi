@@ -24,7 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaCryptoCipherWithoutSvpTest, aesCbcPkcs7FailsBadInLength) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, aesCbcPkcs7FailsInvalidInLength) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -47,6 +47,6 @@ namespace {
 
         iv = random(8);
         status = sa_crypto_cipher_update_iv(*cipher, iv.data(), iv.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

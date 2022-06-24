@@ -249,7 +249,7 @@ static bool bn_export(
     size_t written = BN_num_bytes(bn);
 
     if (written > out_length) {
-        ERROR("Bad out_length");
+        ERROR("Invalid out_length");
         return false;
     }
 
@@ -381,7 +381,7 @@ bool ec_get_public(
         }
 
         if (*out_length < (size_t) length) {
-            ERROR("Bad out_length");
+            ERROR("Invalid out_length");
             break;
         }
 
@@ -482,12 +482,12 @@ sa_status ec_decrypt_elgamal(
         }
 
         if (*out_length < header->size) {
-            ERROR("Bad out_length");
+            ERROR("Invalid out_length");
             break;
         }
 
         if (in_length != point_length * 2) {
-            ERROR("Bad in_length");
+            ERROR("Invalid in_length");
             break;
         }
 
@@ -663,7 +663,7 @@ sa_status ec_compute_ecdh_shared_secret(
 
         if (EVP_PKEY_id(evp_pkey) != EVP_PKEY_id(other_evp_pkey)) {
             ERROR("Key type mismatch");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -787,8 +787,8 @@ sa_status ec_sign_ecdsa(
         }
 
         if (*signature_length < ec_signature_length) {
-            ERROR("Bad signature_length");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid signature_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
         *signature_length = ec_signature_length;
@@ -940,8 +940,8 @@ sa_status ec_sign_eddsa(
         }
 
         if (*signature_length < ec_signature_length) {
-            ERROR("Bad signature_length");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid signature_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -995,7 +995,7 @@ sa_status ec_generate_key(
     size_t key_size = ec_key_size_from_curve(parameters->curve);
     if (key_size == 0) {
         ERROR("Unknown curve");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;

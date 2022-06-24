@@ -67,7 +67,7 @@ namespace {
         sa_cipher_end_parameters_chacha20_poly1305 end_parameters = {parameters.tag.data(), parameters.tag.size()};
         status = sa_crypto_cipher_process_last(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process,
                 &end_parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305DecryptShortTag) {
@@ -120,10 +120,10 @@ namespace {
         sa_cipher_end_parameters_chacha20_poly1305 end_parameters = {parameters.tag.data(), parameters.tag.size()};
         status = sa_crypto_cipher_process_last(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process,
                 &end_parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305FailsBadOutLength) {
+    TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305FailsInvalidOutLength) {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         sa_cipher_mode cipher_mode = std::get<1>(GetParam());
         auto clear_key = random(SYM_256_KEY_SIZE);
@@ -159,10 +159,10 @@ namespace {
 
         status = sa_crypto_cipher_process_last(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process,
                 &end_parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305FailsBadInLength) {
+    TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305FailsInvalidInLength) {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         sa_cipher_mode cipher_mode = std::get<1>(GetParam());
         auto clear_key = random(SYM_256_KEY_SIZE);
@@ -198,7 +198,7 @@ namespace {
 
         status = sa_crypto_cipher_process_last(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process,
                 &end_parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305FailsNullParameters) {
@@ -274,7 +274,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305FailsBadTagLength) {
+    TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305FailsInvalidTagLength) {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         sa_cipher_mode cipher_mode = std::get<1>(GetParam());
         auto clear_key = random(SYM_256_KEY_SIZE);
@@ -310,6 +310,6 @@ namespace {
 
         status = sa_crypto_cipher_process_last(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process,
                 &end_parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

@@ -54,8 +54,8 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, releaseFailsBadContext) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, releaseFailsInvalidContext) {
         sa_status status = sa_crypto_cipher_release(INVALID_HANDLE);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

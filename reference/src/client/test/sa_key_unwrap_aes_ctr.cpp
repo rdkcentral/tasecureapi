@@ -143,7 +143,7 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_CTR, &unwrap_parameters_aes_ctr, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyUnwrapAesCtrTest, failsUnknownWrappingKey) {
@@ -164,7 +164,7 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_CTR, wrapping_parameters.get(), INVALID_HANDLE,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyUnwrapAesCtrTest, failsWrappingKeyDisallowsUnwrap) {
@@ -263,7 +263,7 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_CTR, &unwrap_parameters_aes_ctr, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_F(SaKeyUnwrapAesCtrTest, failsWrappingKeyNotValidAesSize) {
@@ -285,6 +285,6 @@ namespace {
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_CTR, &unwrap_parameters_aes_ctr, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 } // namespace

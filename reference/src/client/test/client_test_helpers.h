@@ -129,11 +129,11 @@ namespace client_test_helpers {
     std::vector<uint8_t> sample_dh_g_4096();
 
     /**
-     * Obtain a sample bad DH Prime - 4096.
+     * Obtain a sample invalid DH Prime - 4096.
      *
-     * @return bad DH Prime 512 bytes.
+     * @return invalid DH Prime 512 bytes.
      */
-    std::vector<uint8_t> sample_dh_bad_p_4096();
+    std::vector<uint8_t> sample_dh_invalid_p_4096();
 
     /**
      * Obtain a sample RSA 1024 key in PKCS8 format.

@@ -298,8 +298,8 @@ sa_status cipher_store_add_symmetric_context(
     }
 
     if (cipher_mode != SA_CIPHER_MODE_ENCRYPT && cipher_mode != SA_CIPHER_MODE_DECRYPT) {
-        ERROR("Bad mode");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid mode");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
@@ -370,7 +370,7 @@ sa_status cipher_store_add_asymmetric_key(
 
     if (cipher_mode != SA_CIPHER_MODE_DECRYPT) {
         ERROR("Invalid mode encountered");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (caller_uuid == NULL) {

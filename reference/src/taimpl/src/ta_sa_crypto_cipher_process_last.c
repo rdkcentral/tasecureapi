@@ -90,8 +90,8 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
     sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
     if (cipher_mode == SA_CIPHER_MODE_ENCRYPT) {
         if (*bytes_to_process >= AES_BLOCK_SIZE) {
-            ERROR("Bad bytes_to_process");
-            return SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid bytes_to_process");
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         if (!rights_allowed_encrypt(rights, SA_KEY_TYPE_SYMMETRIC)) {
@@ -113,8 +113,8 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
         *bytes_to_process = sizeof(padded_input);
     } else if (cipher_mode == SA_CIPHER_MODE_DECRYPT) {
         if (*bytes_to_process != AES_BLOCK_SIZE) {
-            ERROR("Bad bytes_to_process");
-            return SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid bytes_to_process");
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         if (!rights_allowed_decrypt(rights, SA_KEY_TYPE_SYMMETRIC)) {
@@ -160,8 +160,8 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_ctr(
     }
 
     if (*bytes_to_process > AES_BLOCK_SIZE) {
-        ERROR("Bad in_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid in_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (out == NULL) {
@@ -240,8 +240,8 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_gcm(
     }
 
     if (*bytes_to_process > AES_BLOCK_SIZE) {
-        ERROR("Bad bytes_to_process");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid bytes_to_process");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (out == NULL) {
@@ -277,8 +277,8 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_gcm(
     }
 
     if (parameters->tag_length > AES_BLOCK_SIZE) {
-        ERROR("Bad tag_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid tag_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
@@ -377,8 +377,8 @@ static sa_status ta_sa_crypto_cipher_process_last_chacha20_poly1305(
     }
 
     if (parameters->tag_length != CHACHA20_TAG_LENGTH) {
-        ERROR("Bad tag_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid tag_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
@@ -480,12 +480,12 @@ sa_status ta_sa_crypto_cipher_process_last(
 
         if (out->buffer_type != SA_BUFFER_TYPE_CLEAR && out->buffer_type != SA_BUFFER_TYPE_SVP) {
             ERROR("Invalid out buffer type");
-            return SA_STATUS_BAD_PARAMETER;
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         if (in->buffer_type != SA_BUFFER_TYPE_CLEAR && in->buffer_type != SA_BUFFER_TYPE_SVP) {
             ERROR("Invalid in buffer type");
-            return SA_STATUS_BAD_PARAMETER;
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         sa_cipher_algorithm cipher_algorithm = cipher_get_algorithm(cipher);
@@ -493,14 +493,14 @@ sa_status ta_sa_crypto_cipher_process_last(
                 (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP ||
                         cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15 ||
                         cipher_algorithm == SA_CIPHER_ALGORITHM_EC_ELGAMAL)) {
-            ERROR("Bad algorithm");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid algorithm");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         if (out->buffer_type == SA_BUFFER_TYPE_CLEAR && in->buffer_type != out->buffer_type) {
             ERROR("buffer_type mismatch");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -562,7 +562,7 @@ sa_status ta_sa_crypto_cipher_process_last(
                 break;
             }
         } else {
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             ERROR("Unknown algorithm encountered");
             break;
         }

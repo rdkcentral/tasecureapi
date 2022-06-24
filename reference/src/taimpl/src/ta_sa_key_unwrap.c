@@ -61,8 +61,8 @@ static sa_status ta_sa_key_unwrap_aes_ecb(
     }
 
     if (cipher_algorithm != SA_CIPHER_ALGORITHM_AES_ECB && cipher_algorithm != SA_CIPHER_ALGORITHM_AES_ECB_PKCS7) {
-        ERROR("Bad algorithm");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid algorithm");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (in == NULL) {
@@ -71,8 +71,8 @@ static sa_status ta_sa_key_unwrap_aes_ecb(
     }
 
     if (in_length % AES_BLOCK_SIZE != 0) {
-        ERROR("Bad in_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid in_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -101,7 +101,7 @@ static sa_status ta_sa_key_unwrap_aes_ecb(
 
         if (!key_type_supports_aes(header->type, header->size)) {
             ERROR("key_type_supports_aes failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -161,8 +161,8 @@ static sa_status ta_sa_key_unwrap_aes_cbc(
     }
 
     if (cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CBC && cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CBC_PKCS7) {
-        ERROR("Bad algorithm");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid algorithm");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (algorithm_parameters == NULL) {
@@ -176,8 +176,8 @@ static sa_status ta_sa_key_unwrap_aes_cbc(
     }
 
     if (algorithm_parameters->iv_length != AES_BLOCK_SIZE) {
-        ERROR("Bad iv_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid iv_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (in == NULL) {
@@ -186,8 +186,8 @@ static sa_status ta_sa_key_unwrap_aes_cbc(
     }
 
     if (in_length % AES_BLOCK_SIZE != 0) {
-        ERROR("Bad in_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid in_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -216,7 +216,7 @@ static sa_status ta_sa_key_unwrap_aes_cbc(
 
         if (!key_type_supports_aes(header->type, header->size)) {
             ERROR("key_type_supports_aes failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -285,8 +285,8 @@ static sa_status ta_sa_key_unwrap_aes_ctr(
     }
 
     if (algorithm_parameters->ctr_length != AES_BLOCK_SIZE) {
-        ERROR("Bad ctr_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid ctr_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (in == NULL) {
@@ -320,7 +320,7 @@ static sa_status ta_sa_key_unwrap_aes_ctr(
 
         if (!key_type_supports_aes(header->type, header->size)) {
             ERROR("key_type_supports_aes failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -388,8 +388,8 @@ static sa_status ta_sa_key_unwrap_aes_gcm(
     }
 
     if (algorithm_parameters->iv_length != GCM_IV_LENGTH) {
-        ERROR("Bad iv_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid iv_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (algorithm_parameters->aad == NULL && algorithm_parameters->aad_length > 0) {
@@ -403,8 +403,8 @@ static sa_status ta_sa_key_unwrap_aes_gcm(
     }
 
     if (algorithm_parameters->tag_length > AES_BLOCK_SIZE) {
-        ERROR("Bad tag_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid tag_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (in == NULL) {
@@ -438,7 +438,7 @@ static sa_status ta_sa_key_unwrap_aes_gcm(
 
         if (!key_type_supports_aes(header->type, header->size)) {
             ERROR("key_type_supports_aes failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -508,8 +508,8 @@ static sa_status ta_sa_key_unwrap_chacha20(
     }
 
     if (algorithm_parameters->counter_length != CHACHA20_COUNTER_LENGTH) {
-        ERROR("Bad counter_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid counter_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (algorithm_parameters->nonce == NULL) {
@@ -518,8 +518,8 @@ static sa_status ta_sa_key_unwrap_chacha20(
     }
 
     if (algorithm_parameters->nonce_length != CHACHA20_NONCE_LENGTH) {
-        ERROR("Bad nonce_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid nonce_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (in == NULL) {
@@ -553,7 +553,7 @@ static sa_status ta_sa_key_unwrap_chacha20(
 
         if (!key_type_supports_chacha20(header->type, header->size)) {
             ERROR("key_type_supports_chacha20 failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -621,8 +621,8 @@ static sa_status ta_sa_key_unwrap_chacha20_poly1305(
     }
 
     if (algorithm_parameters->nonce_length != CHACHA20_NONCE_LENGTH) {
-        ERROR("Bad nonce_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid nonce_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (algorithm_parameters->aad == NULL && algorithm_parameters->aad_length > 0) {
@@ -636,8 +636,8 @@ static sa_status ta_sa_key_unwrap_chacha20_poly1305(
     }
 
     if (algorithm_parameters->tag_length != CHACHA20_TAG_LENGTH) {
-        ERROR("Bad tag_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid tag_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (in == NULL) {
@@ -671,7 +671,7 @@ static sa_status ta_sa_key_unwrap_chacha20_poly1305(
 
         if (!key_type_supports_chacha20(header->type, header->size)) {
             ERROR("key_type_supports_chacha20 failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -731,13 +731,13 @@ static sa_status ta_sa_key_unwrap_rsa(
     }
 
     if (key_type != SA_KEY_TYPE_SYMMETRIC) {
-        ERROR("Bad type");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid type");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (cipher_algorithm != SA_CIPHER_ALGORITHM_RSA_OAEP && cipher_algorithm != SA_CIPHER_ALGORITHM_RSA_PKCS1V15) {
-        ERROR("Bad algorithm");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid algorithm");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (in == NULL) {
@@ -765,7 +765,7 @@ static sa_status ta_sa_key_unwrap_rsa(
 
         if (!key_type_supports_rsa(header->type, header->size)) {
             ERROR("key_type_supports_rsa failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -776,8 +776,8 @@ static sa_status ta_sa_key_unwrap_rsa(
         }
 
         if (in_length != header->size) {
-            ERROR("Bad in_length");
-            status = SA_STATUS_BAD_PARAMETER;
+            ERROR("Invalid in_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -835,8 +835,8 @@ static sa_status ta_sa_key_unwrap_ec(
     }
 
     if (key_type != SA_KEY_TYPE_SYMMETRIC) {
-        ERROR("Bad type");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid type");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (algorithm_parameters == NULL) {
@@ -875,7 +875,7 @@ static sa_status ta_sa_key_unwrap_ec(
 
         if (!key_type_supports_ec(header->type, header->type_parameters.curve, header->size)) {
             ERROR("key_type_supports_ec failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -1009,7 +1009,7 @@ sa_status ta_sa_key_unwrap(
             }
         } else {
             ERROR("Unknown algorithm encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
     } while (false);

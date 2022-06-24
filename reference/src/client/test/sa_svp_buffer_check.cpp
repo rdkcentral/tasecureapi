@@ -63,7 +63,7 @@ namespace {
         std::vector<uint8_t> hash(SHA1_DIGEST_LENGTH);
         sa_status status = sa_svp_buffer_check(*buffer, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256, hash.data(),
                 hash.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaSvpBufferCheckTest, failsNullHash) {
@@ -79,7 +79,7 @@ namespace {
         sa_status status = sa_svp_buffer_check(INVALID_HANDLE, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
                 hash.data(),
                 hash.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaSvpBufferCheckTest, failsInvalidSize) {
@@ -88,6 +88,6 @@ namespace {
         std::vector<uint8_t> hash(SHA1_DIGEST_LENGTH);
         sa_status status = sa_svp_buffer_check(*buffer, 1, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256, hash.data(),
                 hash.size());
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

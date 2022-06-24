@@ -23,7 +23,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST(SaCryptoSign, failsEcEddsaBadOutLengthEd25519) {
+    TEST(SaCryptoSign, failsEcEddsaInvalidOutLengthEd25519) {
         auto curve = SA_ELLIPTIC_CURVE_ED25519;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
@@ -46,10 +46,10 @@ namespace {
         auto in = random(25);
         status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(), in.size(),
                 nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST(SaCryptoSign, failsEcEddsaBadOutLengthEd448) {
+    TEST(SaCryptoSign, failsEcEddsaInvalidOutLengthEd448) {
         auto curve = SA_ELLIPTIC_CURVE_ED448;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
@@ -72,10 +72,10 @@ namespace {
         auto in = random(25);
         status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(), in.size(),
                 nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST(SaCryptoSign, failsEcEddsaBadCurveP256) {
+    TEST(SaCryptoSign, failsEcEddsaInvalidCurveP256) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
@@ -92,10 +92,10 @@ namespace {
         auto in = random(25);
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(),
                 in.size(), nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST(SaCryptoSign, failsEcEddsaBadCurveP384) {
+    TEST(SaCryptoSign, failsEcEddsaInvalidCurveP384) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P384;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
@@ -112,10 +112,10 @@ namespace {
         auto in = random(25);
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(),
                 in.size(), nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST(SaCryptoSign, failsEcEddsaBadCurveP521) {
+    TEST(SaCryptoSign, failsEcEddsaInvalidCurveP521) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P521;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
@@ -132,10 +132,10 @@ namespace {
         auto in = random(25);
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(),
                 in.size(), nullptr);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST(SaCryptoSign, failsEcEcdsaBadCurveX25519) {
+    TEST(SaCryptoSign, failsEcEcdsaInvalidCurveX25519) {
         auto curve = SA_ELLIPTIC_CURVE_X25519;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
@@ -154,10 +154,10 @@ namespace {
         sa_sign_parameters_ecdsa parameters = {digest_algorithm, false};
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(),
                 in.size(), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST(SaCryptoSign, failsEcEcdsaBadCurveX448) {
+    TEST(SaCryptoSign, failsEcEcdsaInvalidCurveX448) {
         auto curve = SA_ELLIPTIC_CURVE_X448;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
@@ -176,6 +176,6 @@ namespace {
         sa_sign_parameters_ecdsa parameters = {digest_algorithm, false};
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(),
                 in.size(), &parameters);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

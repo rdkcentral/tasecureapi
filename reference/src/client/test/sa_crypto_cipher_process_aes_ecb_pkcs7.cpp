@@ -24,7 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_P(SaCryptoCipherWithSvpTest, processAesEcbPkcs7FailsBadInLength) {
+    TEST_P(SaCryptoCipherWithSvpTest, processAesEcbPkcs7FailsInvalidInLength) {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         sa_cipher_mode cipher_mode = std::get<1>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
@@ -53,10 +53,10 @@ namespace {
         size_t bytes_to_process = clear.size();
 
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processAesEcbPkcs7BadOutLength) {
+    TEST_P(SaCryptoCipherWithSvpTest, processAesEcbPkcs7InvalidOutLength) {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         sa_cipher_mode cipher_mode = std::get<1>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
@@ -85,10 +85,10 @@ namespace {
         size_t bytes_to_process = clear.size();
 
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
-        ASSERT_EQ(status, SA_STATUS_BAD_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaCryptoCipherSvpOnlyTest, initAesEcbPkcs7FailsDecryptBadRightsSvpOptionalNotSet) {
+    TEST_F(SaCryptoCipherSvpOnlyTest, initAesEcbPkcs7FailsDecryptInvalidRightsSvpOptionalNotSet) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;

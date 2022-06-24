@@ -59,7 +59,7 @@ bool rights_validate_format(const sa_rights* rights) {
     }
 
     if (strnlen(rights->id, sizeof(rights->id)) == sizeof(rights->id)) {
-        ERROR("Bad id");
+        ERROR("Invalid id");
         return false;
     }
 
@@ -369,8 +369,8 @@ sa_status key_usage_to_usage_flags(
             break;
 
         default:
-            ERROR("Bad usage: %lld", key_usage);
-            return SA_STATUS_BAD_KEY_FORMAT;
+            ERROR("Invalid usage: %lld", key_usage);
+            return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
     return SA_STATUS_OK;

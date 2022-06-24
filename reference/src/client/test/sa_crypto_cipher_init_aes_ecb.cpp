@@ -24,7 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaCryptoCipherWithoutSvpTest, initAesEcbFailsBadKeySize48) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initAesEcbFailsInvalidKeySize48) {
         auto clear_key = random(48);
 
         sa_rights rights;
@@ -40,10 +40,10 @@ namespace {
                 *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
-    TEST_F(SaCryptoCipherWithoutSvpTest, initAesEcbFailsBadKeyType) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initAesEcbFailsInvalidKeyType) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         auto clear_key = ec_generate_key_bytes(curve);
 
@@ -60,6 +60,6 @@ namespace {
                 *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
-        ASSERT_EQ(status, SA_STATUS_BAD_KEY_TYPE);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 } // namespace

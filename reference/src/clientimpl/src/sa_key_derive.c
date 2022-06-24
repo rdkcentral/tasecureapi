@@ -85,8 +85,8 @@ sa_status sa_key_derive(
                 }
 
                 if (parameters_root_key_ladder->c1_length != AES_BLOCK_SIZE) {
-                    ERROR("c1 bad length");
-                    status = SA_STATUS_BAD_PARAMETER;
+                    ERROR("c1 invalid length");
+                    status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
                 }
 
@@ -97,8 +97,8 @@ sa_status sa_key_derive(
                 }
 
                 if (parameters_root_key_ladder->c2_length != AES_BLOCK_SIZE) {
-                    ERROR("c2 bad length");
-                    status = SA_STATUS_BAD_PARAMETER;
+                    ERROR("c2 invalid length");
+                    status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
                 }
 
@@ -109,8 +109,8 @@ sa_status sa_key_derive(
                 }
 
                 if (parameters_root_key_ladder->c3_length != AES_BLOCK_SIZE) {
-                    ERROR("c3 bad length");
-                    status = SA_STATUS_BAD_PARAMETER;
+                    ERROR("c3 invalid length");
+                    status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
                 }
 
@@ -121,8 +121,8 @@ sa_status sa_key_derive(
                 }
 
                 if (parameters_root_key_ladder->c4_length != AES_BLOCK_SIZE) {
-                    ERROR("c4 bad length");
-                    status = SA_STATUS_BAD_PARAMETER;
+                    ERROR("c4 invalid length");
+                    status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
                 }
 
@@ -382,7 +382,7 @@ sa_status sa_key_derive(
                 break;
 
             default:
-                status = SA_STATUS_BAD_PARAMETER;
+                status = SA_STATUS_INVALID_PARAMETER;
                 continue; // NOLINT
         }
 

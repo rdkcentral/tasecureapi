@@ -64,7 +64,7 @@ bool kdf_netflix_wrapping(
 
     size_t enc_length = stored_key_get_length(stored_key_enc);
     if (enc_length != SYM_128_KEY_SIZE) {
-        ERROR("Bad enc_length");
+        ERROR("Invalid enc_length");
         return false;
     }
 
@@ -76,7 +76,7 @@ bool kdf_netflix_wrapping(
 
     size_t hmac_length = stored_key_get_length(stored_key_hmac);
     if (hmac_length != SYM_256_KEY_SIZE) {
-        ERROR("Bad hmac_length");
+        ERROR("Invalid hmac_length");
         return false;
     }
 
@@ -194,7 +194,7 @@ bool kdf_netflix_shared_secret(
 
     size_t in_key_length = stored_key_get_length(stored_key_in);
     if (in_key_length != SYM_128_KEY_SIZE) {
-        ERROR("Bad in_key_length");
+        ERROR("Invalid in_key_length");
         return false;
     }
 

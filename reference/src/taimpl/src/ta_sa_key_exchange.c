@@ -88,7 +88,7 @@ static sa_status ta_sa_key_exchange_dh(
 
         if (!key_type_supports_dh(header->type, header->size)) {
             ERROR("key_type_supports_dh failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -96,7 +96,7 @@ static sa_status ta_sa_key_exchange_dh(
                 stored_key_private);
         if (status != SA_STATUS_OK) {
             ERROR("dh_compute failed");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -174,7 +174,7 @@ static sa_status ta_sa_key_exchange_ecdh(
 
         if (!key_type_supports_ec(header->type, header->type_parameters.curve, header->size)) {
             ERROR("key_type_supports_ec failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -287,8 +287,8 @@ static sa_status ta_sa_key_exchange_netflix_dh(
         }
 
         if (in_header->type != SA_KEY_TYPE_SYMMETRIC) {
-            ERROR("Bad key type");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            ERROR("Invalid key type");
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -313,7 +313,7 @@ static sa_status ta_sa_key_exchange_netflix_dh(
 
         if (!key_type_supports_dh(private_header->type, private_header->size)) {
             ERROR("key_type_supports_dh failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 
@@ -321,7 +321,7 @@ static sa_status ta_sa_key_exchange_netflix_dh(
                 other_public_length, stored_key_private);
         if (status != SA_STATUS_OK) {
             ERROR("dh_compute failed");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -455,7 +455,7 @@ sa_status ta_sa_key_exchange(
             }
         } else {
             ERROR("Unknown algorithm encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
     } while (false);

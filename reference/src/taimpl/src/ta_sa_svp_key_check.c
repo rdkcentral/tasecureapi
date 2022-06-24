@@ -40,8 +40,8 @@ sa_status ta_sa_svp_key_check(
     }
 
     if (bytes_to_process % AES_BLOCK_SIZE != 0) {
-        ERROR("Bad in_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid in_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (expected == NULL) {
@@ -50,8 +50,8 @@ sa_status ta_sa_svp_key_check(
     }
 
     if (expected_length != bytes_to_process) {
-        ERROR("Bad expected_length");
-        return SA_STATUS_BAD_PARAMETER;
+        ERROR("Invalid expected_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (caller_uuid == NULL) {
@@ -99,7 +99,7 @@ sa_status ta_sa_svp_key_check(
 
         if (!key_type_supports_aes(header->type, header->size)) {
             ERROR("key_type_supports_aes failed");
-            status = SA_STATUS_BAD_KEY_TYPE;
+            status = SA_STATUS_INVALID_KEY_TYPE;
             break;
         }
 

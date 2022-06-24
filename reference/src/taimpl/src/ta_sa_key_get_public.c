@@ -41,13 +41,13 @@ static sa_status ta_sa_key_get_public_ec(
     }
 
     if (header->type != SA_KEY_TYPE_EC) {
-        ERROR("Bad type");
-        return SA_STATUS_BAD_KEY_TYPE;
+        ERROR("Invalid type");
+        return SA_STATUS_INVALID_KEY_TYPE;
     }
 
     if (!ec_get_public(out, out_length, stored_key)) {
         ERROR("ec_get_public failed");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     return SA_STATUS_OK;
@@ -70,13 +70,13 @@ static sa_status ta_sa_key_get_public_dh(
     }
 
     if (header->type != SA_KEY_TYPE_DH) {
-        ERROR("Bad type");
-        return SA_STATUS_BAD_KEY_TYPE;
+        ERROR("Invalid type");
+        return SA_STATUS_INVALID_KEY_TYPE;
     }
 
     if (!dh_get_public(out, out_length, stored_key)) {
         ERROR("dh_get_public failed");
-        return SA_STATUS_BAD_PARAMETER;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     return SA_STATUS_OK;
@@ -99,15 +99,15 @@ static sa_status ta_sa_key_get_public_rsa(
     }
 
     if (header->type != SA_KEY_TYPE_RSA) {
-        ERROR("Bad type");
-        return SA_STATUS_BAD_KEY_TYPE;
+        ERROR("Invalid type");
+        return SA_STATUS_INVALID_KEY_TYPE;
     }
 
     sa_status status;
     do {
         if (!rsa_get_public(out, out_length, stored_key)) {
             ERROR("rsa_get_public failed");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -179,7 +179,7 @@ sa_status ta_sa_key_get_public(
             }
         } else {
             ERROR("Unexpected key type encountered");
-            status = SA_STATUS_BAD_PARAMETER;
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
     } while (false);

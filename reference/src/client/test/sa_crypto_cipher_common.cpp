@@ -432,7 +432,7 @@ bool SaCipherCryptoBase::ec_is_valid_x_coordinate(
         const std::vector<uint8_t>& coordinate) {
 
     if (coordinate.size() != static_cast<size_t>(EC_KEY_SIZE(ec_group.get()))) {
-        ERROR("Bad coordinate_length");
+        ERROR("Invalid coordinate_length");
         return false;
     }
 

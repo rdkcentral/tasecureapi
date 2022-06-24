@@ -105,7 +105,7 @@ protected:
             const std::vector<uint8_t>& key,
             const std::vector<uint8_t>& mackey,
             const std::vector<uint8_t>& enckey,
-            bool good_signature = true);
+            bool valid_signature = true);
 
     static std::string generate_typej_v2(
             sa_cipher_algorithm cipher_algorithm,
@@ -113,7 +113,7 @@ protected:
             const std::vector<uint8_t>& key,
             const std::vector<uint8_t>& mackey,
             const std::vector<uint8_t>& enckey,
-            bool good_signature = true);
+            bool valid_signature = true);
 
     static std::string generate_typej_v3(
             sa_cipher_algorithm cipher_algorithm,
@@ -122,7 +122,7 @@ protected:
             const std::vector<uint8_t>& key,
             const std::vector<uint8_t>& mackey,
             const std::vector<uint8_t>& enckey,
-            bool good_signature = true);
+            bool valid_signature = true);
 
     static void typej_rights_set_allow_all(sa_rights* rights);
 };
