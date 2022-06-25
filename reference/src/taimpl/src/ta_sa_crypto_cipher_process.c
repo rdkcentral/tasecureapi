@@ -427,7 +427,7 @@ sa_status ta_sa_crypto_cipher_process(
 
         size_t required_length = get_required_length(cipher, *bytes_to_process,
                 !out && cipher_mode == SA_CIPHER_MODE_ENCRYPT, digest_algorithm, mgf1_digest_algorithm);
-        if (required_length == 0) {
+        if (required_length == 0 && *bytes_to_process != 0) {
             status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
