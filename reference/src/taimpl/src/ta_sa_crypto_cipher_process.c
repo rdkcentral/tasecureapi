@@ -30,9 +30,7 @@
 static size_t get_required_length(
         cipher_t* cipher,
         size_t bytes_to_process,
-        bool apply_padding,
-        sa_digest_algorithm digest_algorithm,
-        sa_digest_algorithm mgf1_digest_algorithm) {
+        bool apply_padding) {
     sa_cipher_algorithm cipher_algorithm = cipher_get_algorithm(cipher);
 
     switch (cipher_algorithm) {
@@ -415,18 +413,8 @@ sa_status ta_sa_crypto_cipher_process(
         }
 
         sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
-        sa_digest_algorithm digest_algorithm;
-        sa_digest_algorithm mgf1_digest_algorithm;
-        const void* label;
-        size_t label_length;
-        status = cipher_get_oaep_parameters(cipher, &digest_algorithm, &mgf1_digest_algorithm, &label, &label_length);
-        if (status != SA_STATUS_OK) {
-            ERROR("cipher_get_oaep_parameters failed");
-            break;
-        }
-
         size_t required_length = get_required_length(cipher, *bytes_to_process,
-                !out && cipher_mode == SA_CIPHER_MODE_ENCRYPT, digest_algorithm, mgf1_digest_algorithm);
+                !out && cipher_mode == SA_CIPHER_MODE_ENCRYPT);
         if (required_length == 0 && *bytes_to_process != 0) {
             status = SA_STATUS_INVALID_PARAMETER;
             break;
