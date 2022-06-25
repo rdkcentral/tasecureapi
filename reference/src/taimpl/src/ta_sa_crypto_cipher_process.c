@@ -415,11 +415,6 @@ sa_status ta_sa_crypto_cipher_process(
         sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
         size_t required_length = get_required_length(cipher, *bytes_to_process,
                 !out && cipher_mode == SA_CIPHER_MODE_ENCRYPT);
-        if (required_length == 0 && *bytes_to_process != 0) {
-            status = SA_STATUS_INVALID_PARAMETER;
-            break;
-        }
-
         if (out == NULL) {
             *bytes_to_process = required_length;
             status = SA_STATUS_OK;
