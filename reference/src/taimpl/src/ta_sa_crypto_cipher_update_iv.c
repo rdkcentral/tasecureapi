@@ -71,14 +71,14 @@ sa_status ta_sa_crypto_cipher_update_iv(
             const symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
             if (symmetric_context == NULL) {
                 ERROR("cipher_get_symmetric_context failed");
-                return SA_STATUS_NULL_PARAMETER;
+                status = SA_STATUS_NULL_PARAMETER;
+                break;
             }
 
-            if (!symmetric_context_set_iv(symmetric_context, iv, iv_length)) {
+            status = symmetric_context_set_iv(symmetric_context, iv, iv_length);
+            if (status != SA_STATUS_OK) {
                 ERROR("symmetric_context_set_iv failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-            } else {
-                status = SA_STATUS_OK;
+                break;
             }
         } else {
             status = SA_STATUS_INVALID_PARAMETER;

@@ -331,22 +331,22 @@ size_t ec_validate_private(
     return result;
 }
 
-bool ec_get_public(
+sa_status ec_get_public(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key) {
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_PKEY* evp_pkey = NULL;
     do {
         const uint8_t* key = stored_key_get_key(stored_key);
@@ -376,12 +376,13 @@ bool ec_get_public(
 
         if (out == NULL) {
             *out_length = length;
-            status = true;
+            status = SA_STATUS_OK;
             break;
         }
 
         if (*out_length < (size_t) length) {
             ERROR("Invalid out_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -393,7 +394,7 @@ bool ec_get_public(
         }
 
         *out_length = length;
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_PKEY_free(evp_pkey);

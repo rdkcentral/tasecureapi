@@ -32,27 +32,27 @@ struct symmetric_context_s {
     EVP_CIPHER_CTX* evp_cipher;
 };
 
-bool symmetric_generate_key(
+sa_status symmetric_generate_key(
         stored_key_t** stored_key_generated,
         const sa_rights* rights,
         sa_generate_parameters_symmetric* parameters) {
 
     if (stored_key_generated == NULL) {
         ERROR("NULL stored_key_generated");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (rights == NULL) {
         ERROR("NULL rights");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (parameters == NULL) {
         ERROR("NULL parameters");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* generated = NULL;
     do {
         generated = memory_secure_alloc(parameters->key_length);
@@ -68,12 +68,13 @@ bool symmetric_generate_key(
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        status = stored_key_create(stored_key_generated, rights, NULL, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                parameters->key_length, generated, parameters->key_length);
-        if (!status) {
+        if (!stored_key_create(stored_key_generated, rights, NULL, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
+                    parameters->key_length, generated, parameters->key_length)) {
             ERROR("stored_key_create failed");
             break;
         }
+
+        status = SA_STATUS_OK;
     } while (false);
 
     if (generated != NULL) {
@@ -1199,7 +1200,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_decrypt_context(
 #endif
 }
 
-bool symmetric_context_encrypt(
+sa_status symmetric_context_encrypt(
         const symmetric_context_t* context,
         void* out,
         const void* in,
@@ -1207,22 +1208,22 @@ bool symmetric_context_encrypt(
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_mode != SA_CIPHER_MODE_ENCRYPT) {
         ERROR("Invalid cipher mode");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (out == NULL) {
         ERROR("NULL out");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in == NULL) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CTR &&
@@ -1231,20 +1232,20 @@ bool symmetric_context_encrypt(
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
         if (in_length % AES_BLOCK_SIZE != 0) {
             ERROR("Invalid in_length");
-            return false;
+            return SA_STATUS_INVALID_PARAMETER;
         }
     }
 
     int length = (int) in_length;
     if (EVP_EncryptUpdate(context->evp_cipher, out, &length, in, (int) in_length) != 1) {
         ERROR("EVP_EncryptUpdate failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 
-    return true;
+    return SA_STATUS_OK;
 }
 
-bool symmetric_context_encrypt_last(
+sa_status symmetric_context_encrypt_last(
         const symmetric_context_t* context,
         void* out,
         size_t* out_length,
@@ -1253,52 +1254,52 @@ bool symmetric_context_encrypt_last(
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_mode != SA_CIPHER_MODE_ENCRYPT) {
         ERROR("Invalid cipher mode");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_GCM &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CTR &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
         ERROR("Invalid context algorithm");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 && in_length > AES_BLOCK_SIZE) {
         ERROR("Invalid in_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (out == NULL) {
         *out_length = in_length;
-        return true;
+        return SA_STATUS_OK;
     }
 
     if (in == NULL) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     int length = (int) in_length;
     if (EVP_EncryptUpdate(context->evp_cipher, out, &length, in, (int) in_length) != 1) {
         ERROR("EVP_EncryptUpdate failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 
     *out_length = length;
-    return true;
+    return SA_STATUS_OK;
 }
 
-bool symmetric_context_decrypt(
+sa_status symmetric_context_decrypt(
         const symmetric_context_t* context,
         void* out,
         const void* in,
@@ -1306,22 +1307,22 @@ bool symmetric_context_decrypt(
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_mode != SA_CIPHER_MODE_DECRYPT) {
         ERROR("Invalid cipher mode");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (out == NULL) {
         ERROR("NULL out");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in == NULL) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CTR &&
@@ -1330,20 +1331,20 @@ bool symmetric_context_decrypt(
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
         if (in_length % AES_BLOCK_SIZE != 0) {
             ERROR("Invalid in_length");
-            return false;
+            return SA_STATUS_INVALID_PARAMETER;
         }
     }
 
     int length = (int) in_length;
     if (EVP_DecryptUpdate(context->evp_cipher, out, &length, in, (int) in_length) != 1) {
         ERROR("EVP_DecryptUpdate failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 
-    return true;
+    return SA_STATUS_OK;
 }
 
-bool symmetric_context_decrypt_last(
+sa_status symmetric_context_decrypt_last(
         const symmetric_context_t* context,
         void* out,
         size_t* out_length,
@@ -1352,64 +1353,64 @@ bool symmetric_context_decrypt_last(
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_mode != SA_CIPHER_MODE_DECRYPT) {
         ERROR("Invalid cipher mode");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_GCM &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CTR &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
         ERROR("Invalid context algorithm");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 && in_length > AES_BLOCK_SIZE) {
         ERROR("Invalid in_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (out == NULL) {
         *out_length = in_length;
-        return true;
+        return SA_STATUS_OK;
     }
 
     if (in == NULL) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     int length = (int) in_length;
     if (EVP_DecryptUpdate(context->evp_cipher, out, &length, in, (int) in_length) != 1) {
         ERROR("EVP_DecryptUpdate failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 
     *out_length = length;
-    return true;
+    return SA_STATUS_OK;
 }
 
-bool symmetric_context_set_iv(
+sa_status symmetric_context_set_iv(
         const symmetric_context_t* context,
         const void* iv,
         size_t iv_length) {
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (iv == NULL) {
         ERROR("NULL iv");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC ||
@@ -1417,71 +1418,71 @@ bool symmetric_context_set_iv(
             context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CTR) {
         if (iv_length != AES_BLOCK_SIZE) {
             ERROR("Invalid iv_length");
-            return false;
+            return SA_STATUS_INVALID_PARAMETER;
         }
     } else {
         ERROR("Invalid cipher algorithm");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (context->cipher_mode == SA_CIPHER_MODE_ENCRYPT) {
         if (EVP_EncryptInit_ex(context->evp_cipher, NULL, NULL, NULL, iv) != 1) {
             ERROR("EVP_EncryptInit_ex failed");
-            return false;
+            return SA_STATUS_INTERNAL_ERROR;
         }
     } else if (context->cipher_mode == SA_CIPHER_MODE_DECRYPT) {
         if (EVP_DecryptInit_ex(context->evp_cipher, NULL, NULL, NULL, iv) != 1) {
             ERROR("EVP_EncryptInit_ex failed");
-            return false;
+            return SA_STATUS_INTERNAL_ERROR;
         }
     } else {
         ERROR("Invalid cipher mode");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return true;
+    return SA_STATUS_OK;
 }
 
-bool symmetric_context_get_tag(
+sa_status symmetric_context_get_tag(
         const symmetric_context_t* context,
         void* tag,
         size_t tag_length) {
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_GCM &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
         ERROR("Invalid cipher algorithm");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (context->cipher_mode != SA_CIPHER_MODE_ENCRYPT) {
         ERROR("Invalid cipher mode");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (tag == NULL) {
         ERROR("NULL tag");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM && tag_length > AES_BLOCK_SIZE) {
         ERROR("Invalid tag_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 && tag_length != CHACHA20_TAG_LENGTH) {
         ERROR("Invalid tag_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     int length = 0;
     if (EVP_EncryptFinal_ex(context->evp_cipher, NULL, &length) != 1) {
         ERROR("EVP_EncryptFinal_ex failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 
     uint8_t local_tag[AES_BLOCK_SIZE];
@@ -1492,48 +1493,48 @@ bool symmetric_context_get_tag(
     if (EVP_CIPHER_CTX_ctrl(context->evp_cipher, EVP_CTRL_AEAD_GET_TAG, sizeof(local_tag), local_tag) != 1) {
 #endif
         ERROR("EVP_CIPHER_CTX_ctrl failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 
     memcpy(tag, local_tag, tag_length);
 
-    return true;
+    return SA_STATUS_OK;
 }
 
-bool symmetric_context_check_tag(
+sa_status symmetric_context_check_tag(
         const symmetric_context_t* context,
         const void* tag,
         size_t tag_length) {
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_GCM &&
             context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
         ERROR("Invalid cipher algorithm");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (context->cipher_mode != SA_CIPHER_MODE_DECRYPT) {
         ERROR("Invalid cipher mode");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (tag == NULL) {
         ERROR("NULL tag");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM && tag_length > AES_BLOCK_SIZE) {
         ERROR("Invalid tag_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 && tag_length != CHACHA20_TAG_LENGTH) {
         ERROR("Invalid tag_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
@@ -1542,16 +1543,16 @@ bool symmetric_context_check_tag(
     if (EVP_CIPHER_CTX_ctrl(context->evp_cipher, EVP_CTRL_AEAD_SET_TAG, (int) tag_length, (void*) tag) != 1) {
 #endif
         ERROR("EVP_CIPHER_CTX_ctrl failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 
     int length = 0;
     if (EVP_DecryptFinal_ex(context->evp_cipher, NULL, &length) != 1) {
         ERROR("EVP_DecryptFinal_ex failed");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return true;
+    return SA_STATUS_OK;
 }
 
 void symmetric_context_free(symmetric_context_t* context) {

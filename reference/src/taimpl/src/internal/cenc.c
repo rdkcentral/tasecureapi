@@ -33,7 +33,7 @@
 
 #define MIN(A, B) ((A) <= (B) ? (A) : (B))
 
-static bool decrypt(
+static sa_status decrypt(
         uint8_t* out_bytes,
         uint8_t* in_bytes,
         size_t bytes_to_process,
@@ -66,17 +66,20 @@ static bool decrypt(
 
             // Only update the IV on the first block if it is not a partial continuation block. Update it for all
             // subsequent blocks.
+            sa_status status;
             if (!first_block || remaining_in_block == AES_BLOCK_SIZE) {
-                if (!symmetric_context_set_iv(symmetric_context, iv, AES_BLOCK_SIZE)) {
+                status = symmetric_context_set_iv(symmetric_context, iv, AES_BLOCK_SIZE);
+                if (status != SA_STATUS_OK) {
                     ERROR("symmetric_context_set_iv failed");
-                    return false;
+                    return status;
                 }
             }
 
-            if (!symmetric_context_decrypt(symmetric_context, out_bytes + bytes_encrypted, in_bytes + bytes_encrypted,
-                        remaining_in_block)) {
+            status = symmetric_context_decrypt(symmetric_context, out_bytes + bytes_encrypted,
+                    in_bytes + bytes_encrypted, remaining_in_block);
+            if (status != SA_STATUS_OK) {
                 ERROR("symmetric_context_decrypt failed");
-                return false;
+                return status;
             }
 
             // Increment the IV after every full block.
@@ -89,10 +92,11 @@ static bool decrypt(
         } else {
             // The IV counter is not going to rollover or this is an AES-CBC CIPHER. Openssl and other implementations
             // handle this automatically.
-            if (!symmetric_context_decrypt(symmetric_context, out_bytes + bytes_encrypted, in_bytes + bytes_encrypted,
-                        bytes_to_process)) {
+            sa_status status = symmetric_context_decrypt(symmetric_context, out_bytes + bytes_encrypted,
+                    in_bytes + bytes_encrypted, bytes_to_process);
+            if (status != SA_STATUS_OK) {
                 ERROR("symmetric_context_decrypt failed");
-                return false;
+                return status;
             }
 
             (*counterBuffer) = htobe64(be64toh(*counterBuffer) + number_of_blocks);
@@ -103,7 +107,7 @@ static bool decrypt(
         first_block = false;
     }
 
-    return true;
+    return SA_STATUS_OK;
 }
 
 size_t cenc_get_required_length(
@@ -161,9 +165,9 @@ sa_status cenc_process_sample(
 
         uint8_t iv[AES_BLOCK_SIZE];
         memcpy(iv, sample->iv, sample->iv_length);
-        if (!symmetric_context_set_iv(symmetric_context, iv, AES_BLOCK_SIZE)) {
+        status = symmetric_context_set_iv(symmetric_context, iv, AES_BLOCK_SIZE);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_set_iv failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
@@ -195,10 +199,10 @@ sa_status cenc_process_sample(
                     }
 
                     // Decrypt the protected data into the output buffer.
-                    if (!decrypt(out_bytes + offset, in_bytes + offset, block, &enc_byte_count, iv, cipher_algorithm,
-                                symmetric_context)) {
+                    status = decrypt(out_bytes + offset, in_bytes + offset, block, &enc_byte_count, iv,
+                            cipher_algorithm, symmetric_context);
+                    if (status != SA_STATUS_OK) {
                         ERROR("decrypt failed");
-                        status = SA_STATUS_INTERNAL_ERROR;
                         break;
                     }
 
@@ -214,9 +218,9 @@ sa_status cenc_process_sample(
                     // CBCS mode resets IV on each subsample.
                     if (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC) {
                         memcpy(iv, sample->iv, sample->iv_length);
-                        if (!symmetric_context_set_iv(symmetric_context, iv, AES_BLOCK_SIZE)) {
+                        status = symmetric_context_set_iv(symmetric_context, iv, AES_BLOCK_SIZE);
+                        if (status != SA_STATUS_OK) {
                             ERROR("symmetric_context_set_iv failed");
-                            status = SA_STATUS_INTERNAL_ERROR;
                             break;
                         }
                     }
@@ -228,10 +232,10 @@ sa_status cenc_process_sample(
                         size_t block = MIN(sample->crypt_byte_block * AES_BLOCK_SIZE,
                                 (bytes_left / AES_BLOCK_SIZE) * AES_BLOCK_SIZE);
                         if (block > 0) {
-                            if (!decrypt(out_bytes + offset, in_bytes + offset, block, &enc_byte_count, iv,
-                                        cipher_algorithm, symmetric_context)) {
+                            status = decrypt(out_bytes + offset, in_bytes + offset, block, &enc_byte_count, iv,
+                                    cipher_algorithm, symmetric_context);
+                            if (status != SA_STATUS_OK) {
                                 ERROR("decrypt failed");
-                                status = SA_STATUS_INTERNAL_ERROR;
                                 break;
                             }
 

@@ -799,17 +799,17 @@ sa_status unwrap_rsa(
                 return SA_STATUS_INVALID_PARAMETER;
             }
 
-            if (!rsa_decrypt_oaep(unwrapped_key, &unwrapped_key_length, stored_key_wrapping,
-                        oaep_parameters->digest_algorithm, oaep_parameters->mgf1_digest_algorithm,
-                        oaep_parameters->label, oaep_parameters->label_length, in, in_length)) {
+            status = rsa_decrypt_oaep(unwrapped_key, &unwrapped_key_length, stored_key_wrapping,
+                    oaep_parameters->digest_algorithm, oaep_parameters->mgf1_digest_algorithm,
+                    oaep_parameters->label, oaep_parameters->label_length, in, in_length);
+            if (status != SA_STATUS_OK) {
                 ERROR("rsa_decrypt_oaep failed");
-                status = SA_STATUS_INTERNAL_ERROR;
                 break;
             }
         } else { // algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15
-            if (!rsa_decrypt_pkcs1v15(unwrapped_key, &unwrapped_key_length, stored_key_wrapping, in, in_length)) {
+            status = rsa_decrypt_pkcs1v15(unwrapped_key, &unwrapped_key_length, stored_key_wrapping, in, in_length);
+            if (status != SA_STATUS_OK) {
                 ERROR("rsa_decrypt_pkcs1v15 failed");
-                status = SA_STATUS_INTERNAL_ERROR;
                 break;
             }
         }
