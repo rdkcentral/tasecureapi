@@ -57,7 +57,7 @@ cmac_context_t* cmac_context_create(const stored_key_t* stored_key);
  * @param[in] in_length input data length.
  * @return status of the operation.
  */
-bool cmac_context_update(
+sa_status cmac_context_update(
         cmac_context_t* context,
         const void* in,
         size_t in_length);
@@ -69,7 +69,7 @@ bool cmac_context_update(
  * @param[in] stored_key the stored key in the mac.
  * @return status of the operation.
  */
-bool cmac_context_update_key(
+sa_status cmac_context_update_key(
         cmac_context_t* context,
         stored_key_t* stored_key);
 
@@ -80,7 +80,7 @@ bool cmac_context_update_key(
  * @param[in] context context.
  * @return status of the operation.
  */
-bool cmac_context_compute(
+sa_status cmac_context_compute(
         void* mac,
         cmac_context_t* context);
 

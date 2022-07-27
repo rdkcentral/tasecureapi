@@ -24,7 +24,7 @@
 #include "porting/memory.h"
 #include "stored_key_internal.h"
 
-bool kdf_netflix_wrapping(
+sa_status kdf_netflix_wrapping(
         stored_key_t** stored_key_wrap,
         const sa_rights* rights_wrap,
         const sa_rights* rights_parent,
@@ -33,54 +33,54 @@ bool kdf_netflix_wrapping(
 
     if (stored_key_wrap == NULL) {
         ERROR("NULL stored_key_wrap");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (rights_wrap == NULL) {
         ERROR("NULL rights_wrap");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (rights_parent == NULL) {
         ERROR("NULL rights_parent");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (stored_key_enc == NULL) {
         ERROR("NULL stored_key_enc");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (stored_key_hmac == NULL) {
         ERROR("NULL stored_key_hmac");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     const void* enc_key = stored_key_get_key(stored_key_enc);
     if (enc_key == NULL) {
         ERROR("stored_key_get_key failed");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     size_t enc_length = stored_key_get_length(stored_key_enc);
     if (enc_length != SYM_128_KEY_SIZE) {
         ERROR("Invalid enc_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     const void* hmac_key = stored_key_get_key(stored_key_hmac);
     if (hmac_key == NULL) {
         ERROR("stored_key_get_key failed");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     size_t hmac_length = stored_key_get_length(stored_key_hmac);
     if (hmac_length != SYM_256_KEY_SIZE) {
         ERROR("Invalid hmac_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = false;
+    bool status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* temp_key = NULL;
     size_t temp_key_length = SYM_256_KEY_SIZE;
     uint8_t* wrapping_key = NULL;
@@ -126,12 +126,13 @@ bool kdf_netflix_wrapping(
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        status = stored_key_create(stored_key_wrap, rights_wrap, rights_parent, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                AES_BLOCK_SIZE, wrapping_key, AES_BLOCK_SIZE);
-        if (!status) {
+        if (!stored_key_create(stored_key_wrap, rights_wrap, rights_parent, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
+                    AES_BLOCK_SIZE, wrapping_key, AES_BLOCK_SIZE)) {
             ERROR("stored_key_create failed");
             break;
         }
+
+        status = SA_STATUS_OK;
     } while (false);
 
     if (temp_key != NULL) {
@@ -147,7 +148,7 @@ bool kdf_netflix_wrapping(
     return status;
 }
 
-bool kdf_netflix_shared_secret(
+sa_status kdf_netflix_shared_secret(
         stored_key_t** stored_key_enc,
         const sa_rights* rights_enc,
         stored_key_t** stored_key_hmac,
@@ -157,53 +158,53 @@ bool kdf_netflix_shared_secret(
 
     if (stored_key_enc == NULL) {
         ERROR("NULL stored_key_enc");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (rights_enc == NULL) {
         ERROR("NULL rights_enc");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (stored_key_hmac == NULL) {
         ERROR("NULL stored_key_hmac");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (rights_hmac == NULL) {
         ERROR("NULL rights_hmac");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (stored_key_in == NULL) {
         ERROR("NULL stored_key_in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     const void* in_key = stored_key_get_key(stored_key_in);
     if (in_key == NULL) {
         ERROR("stored_key_get_key failed");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     const sa_header* in_key_header = stored_key_get_header(stored_key_in);
     if (in_key_header == NULL) {
         ERROR("stored_key_get_header failed");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     size_t in_key_length = stored_key_get_length(stored_key_in);
     if (in_key_length != SYM_128_KEY_SIZE) {
         ERROR("Invalid in_key_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (stored_key_shared_secret == NULL) {
         ERROR("NULL stored_key_shared_secret");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    bool status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* digest_bytes = NULL;
     size_t digest_bytes_length = SHA384_DIGEST_LENGTH;
     uint8_t* key_bytes = NULL;
@@ -265,19 +266,19 @@ bool kdf_netflix_shared_secret(
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        status = stored_key_create(stored_key_enc, rights_enc, &in_key_header->rights, SA_KEY_TYPE_SYMMETRIC,
-                &type_parameters, SYM_128_KEY_SIZE, key_bytes, SYM_128_KEY_SIZE);
-        if (!status) {
+        if (!stored_key_create(stored_key_enc, rights_enc, &in_key_header->rights, SA_KEY_TYPE_SYMMETRIC,
+                    &type_parameters, SYM_128_KEY_SIZE, key_bytes, SYM_128_KEY_SIZE)) {
             ERROR("stored_key_create failed");
             break;
         }
 
-        status = stored_key_create(stored_key_hmac, rights_hmac, &in_key_header->rights, SA_KEY_TYPE_SYMMETRIC,
-                &type_parameters, SYM_256_KEY_SIZE, key_bytes + SYM_128_KEY_SIZE, SHA256_DIGEST_LENGTH);
-        if (!status) {
+        if (!stored_key_create(stored_key_hmac, rights_hmac, &in_key_header->rights, SA_KEY_TYPE_SYMMETRIC,
+                    &type_parameters, SYM_256_KEY_SIZE, key_bytes + SYM_128_KEY_SIZE, SHA256_DIGEST_LENGTH)) {
             ERROR("stored_key_create failed");
             break;
         }
+
+        status = SA_STATUS_OK;
     } while (false);
 
     if (digest_bytes != NULL) {

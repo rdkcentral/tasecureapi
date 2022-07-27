@@ -182,7 +182,7 @@ bool digest_sha(
     return status;
 }
 
-bool digest_key(
+sa_status digest_key(
         void* out,
         size_t* out_length,
         sa_digest_algorithm digest_algorithm,
@@ -190,27 +190,27 @@ bool digest_key(
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     size_t required_length = digest_length(digest_algorithm);
     if (out == NULL) {
         *out_length = required_length;
-        return required_length != (size_t) -1;
+        return SA_STATUS_OK;
     }
 
     if (*out_length < required_length) {
         ERROR("Invalid out_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
     *out_length = required_length;
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_MD_CTX* context = NULL;
     do {
         const void* key = stored_key_get_key(stored_key);
@@ -249,7 +249,7 @@ bool digest_key(
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_MD_CTX_destroy(context);
