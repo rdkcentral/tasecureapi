@@ -70,13 +70,12 @@ sa_status ta_sa_key_digest(
             break;
         }
 
-        if (!digest_key(out, out_length, digest_algorithm, stored_key)) {
+        status = digest_key(out, out_length, digest_algorithm, stored_key);
+        if (status != SA_STATUS_OK) {
             ERROR("digest_key failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     stored_key_free(stored_key);

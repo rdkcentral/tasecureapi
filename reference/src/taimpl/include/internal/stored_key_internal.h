@@ -62,7 +62,7 @@ size_t stored_key_get_length(const stored_key_t* stored_key);
  * @param[in] in_length key payload length.
  * @return the creation status.
  */
-bool stored_key_create(
+sa_status stored_key_create(
         stored_key_t** stored_key,
         const sa_rights* rights,
         const sa_rights* parent_rights,

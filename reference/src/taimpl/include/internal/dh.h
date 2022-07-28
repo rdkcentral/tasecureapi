@@ -48,7 +48,7 @@ extern "C" {
  * @param[in] stored_key private key.
  * @return status of the operation.
  */
-bool dh_get_public(
+sa_status dh_get_public(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key);
@@ -81,7 +81,7 @@ sa_status dh_compute_shared_secret(
  * @param[in] g_length the length of g
  * @return status of the operation
  */
-bool dh_generate_key(
+sa_status dh_generate_key(
         stored_key_t** stored_key,
         const sa_rights* rights,
         const void* p,

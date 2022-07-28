@@ -48,7 +48,7 @@ extern "C" {
  * @param[in] stored_key_parent the parent key.
  * @return status of the operation
  */
-bool kdf_hkdf_hmac(
+sa_status kdf_hkdf_hmac(
         stored_key_t** stored_key_derived,
         const sa_rights* rights,
         sa_kdf_parameters_hkdf* parameters,
@@ -63,7 +63,7 @@ bool kdf_hkdf_hmac(
  * @param[in] stored_key_parent the parent key.
  * @return status of the operation
  */
-bool kdf_concat_kdf(
+sa_status kdf_concat_kdf(
         stored_key_t** stored_key_derived,
         const sa_rights* rights,
         sa_kdf_parameters_concat* parameters,
@@ -78,7 +78,7 @@ bool kdf_concat_kdf(
  * @param[in] stored_key_parent the parent key.
  * @return status of the operation
  */
-bool kdf_ansi_x963(
+sa_status kdf_ansi_x963(
         stored_key_t** stored_key_derived,
         const sa_rights* rights,
         sa_kdf_parameters_ansi_x963* parameters,
@@ -93,7 +93,7 @@ bool kdf_ansi_x963(
  * @param[in] stored_key_parent the parent key.
  * @return status of the operation
  */
-bool kdf_ctr_cmac(
+sa_status kdf_ctr_cmac(
         stored_key_t** stored_key_derived,
         const sa_rights* rights,
         sa_kdf_parameters_cmac* parameters,

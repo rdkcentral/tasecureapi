@@ -66,9 +66,9 @@ sa_status ta_sa_crypto_mac_process(
                 break;
             }
 
-            if (!hmac_context_update(hmac_context, in, in_length)) {
+            status = hmac_context_update(hmac_context, in, in_length);
+            if (status != SA_STATUS_OK) {
                 ERROR("hmac_context_update failed");
-                status = SA_STATUS_INTERNAL_ERROR;
                 break;
             }
         } else if (mac_algorithm == SA_MAC_ALGORITHM_CMAC) {
@@ -78,9 +78,10 @@ sa_status ta_sa_crypto_mac_process(
                 status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
-            if (!cmac_context_update(cmac_context, in, in_length)) {
+
+            status = cmac_context_update(cmac_context, in, in_length);
+            if (status != SA_STATUS_OK) {
                 ERROR("cmac_context_update failed");
-                status = SA_STATUS_INTERNAL_ERROR;
                 break;
             }
         } else {
@@ -88,8 +89,6 @@ sa_status ta_sa_crypto_mac_process(
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     if (mac != NULL)

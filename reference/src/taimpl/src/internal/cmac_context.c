@@ -142,66 +142,66 @@ cmac_context_t* cmac_context_create(const stored_key_t* stored_key) {
     return context;
 }
 
-bool cmac_context_update(
+sa_status cmac_context_update(
         cmac_context_t* context,
         const void* in,
         size_t in_length) {
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->done) {
         ERROR("Mac value has already been computed on this context");
-        return false;
+        return SA_STATUS_OPERATION_NOT_ALLOWED;
     }
 
     if (in == NULL && in_length > 0) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in_length > 0) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
         if (EVP_MAC_update(context->evp_mac_ctx, in, in_length) != 1) {
             ERROR("EVP_MAC_update failed");
-            return false;
+            return SA_STATUS_INTERNAL_ERROR;
         }
 #else
         if (CMAC_Update(context->openssl_context, in, in_length) != 1) {
             ERROR("CMAC_Update failed");
-            return false;
+            return SA_STATUS_INTERNAL_ERROR;
         }
 #endif
     }
 
-    return true;
+    return SA_STATUS_OK;
 }
 
-bool cmac_context_update_key(
+sa_status cmac_context_update_key(
         cmac_context_t* context,
         stored_key_t* stored_key) {
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->done) {
         ERROR("Mac value has already been computed on this context");
-        return false;
+        return SA_STATUS_OPERATION_NOT_ALLOWED;
     }
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     const void* key = stored_key_get_key(stored_key);
     if (key == NULL) {
         ERROR("stored_key_get_key failed");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     size_t key_length = stored_key_get_length(stored_key);
@@ -209,36 +209,36 @@ bool cmac_context_update_key(
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
         if (EVP_MAC_update(context->evp_mac_ctx, key, key_length) != 1) {
             ERROR("EVP_MAC_update failed");
-            return false;
+            return SA_STATUS_INTERNAL_ERROR;
         }
 #else
         if (CMAC_Update(context->openssl_context, key, key_length) != 1) {
             ERROR("CMAC_Update failed");
-            return false;
+            return SA_STATUS_INTERNAL_ERROR;
         }
 #endif
     }
 
-    return true;
+    return SA_STATUS_OK;
 }
 
-bool cmac_context_compute(
+sa_status cmac_context_compute(
         void* mac,
         cmac_context_t* context) {
 
     if (mac == NULL) {
         ERROR("NULL mac");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->done) {
         ERROR("Mac value has already been computed on this context");
-        return false;
+        return SA_STATUS_OPERATION_NOT_ALLOWED;
     }
 
     size_t length = AES_BLOCK_SIZE;
@@ -246,16 +246,16 @@ bool cmac_context_compute(
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
     if (EVP_MAC_final(context->evp_mac_ctx, mac, &length, length) != 1) {
         ERROR("EVP_MAC_final failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 #else
     if (CMAC_Final(context->openssl_context, (unsigned char*) mac, &length) != 1) {
         ERROR("CMAC_Final failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 #endif
 
-    return true;
+    return SA_STATUS_OK;
 }
 
 bool cmac_context_done(cmac_context_t* context) {

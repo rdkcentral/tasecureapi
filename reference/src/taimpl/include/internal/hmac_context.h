@@ -68,7 +68,7 @@ sa_digest_algorithm hmac_context_get_digest(const hmac_context_t* context);
  * @param[in] in_length input data length.
  * @return status of the operation.
  */
-bool hmac_context_update(
+sa_status hmac_context_update(
         hmac_context_t* context,
         const void* in,
         size_t in_length);
@@ -80,7 +80,7 @@ bool hmac_context_update(
  * @param[in] stored_key the stored key in the mac.
  * @return status of the operation.
  */
-bool hmac_context_update_key(
+sa_status hmac_context_update_key(
         hmac_context_t* context,
         stored_key_t* stored_key);
 
@@ -92,7 +92,7 @@ bool hmac_context_update_key(
  * @param[in] context context.
  * @return status of the operation.
  */
-bool hmac_context_compute(
+sa_status hmac_context_compute(
         void* mac,
         size_t* mac_length,
         hmac_context_t* context);

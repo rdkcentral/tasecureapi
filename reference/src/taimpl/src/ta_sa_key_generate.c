@@ -62,9 +62,9 @@ static sa_status ta_sa_key_generate_symmetric(
     sa_status status;
     stored_key_t* stored_key = NULL;
     do {
-        if (!symmetric_generate_key(&stored_key, rights, parameters)) {
+        status = symmetric_generate_key(&stored_key, rights, parameters);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_generate_key failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
@@ -201,10 +201,10 @@ static sa_status ta_sa_key_generate_dh(
     sa_status status;
     stored_key_t* stored_key = NULL;
     do {
-        if (!dh_generate_key(&stored_key, rights, parameters->p, parameters->p_length, parameters->g,
-                    parameters->g_length)) {
+        status = dh_generate_key(&stored_key, rights, parameters->p, parameters->p_length, parameters->g,
+                parameters->g_length);
+        if (status != SA_STATUS_OK) {
             ERROR("dh_generate_key failed");
-            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 

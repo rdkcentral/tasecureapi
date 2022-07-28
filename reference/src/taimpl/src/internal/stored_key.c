@@ -78,7 +78,7 @@ const sa_header* stored_key_get_header(const stored_key_t* stored_key) {
     return &stored_key->header;
 }
 
-bool stored_key_import(
+sa_status stored_key_import(
         stored_key_t** stored_key,
         const sa_rights* rights,
         sa_key_type key_type,
@@ -89,7 +89,7 @@ bool stored_key_import(
     return stored_key_create(stored_key, rights, NULL, key_type, type_parameters, size, in, in_length);
 }
 
-bool stored_key_create(
+sa_status stored_key_create(
         stored_key_t** stored_key,
         const sa_rights* rights,
         const sa_rights* parent_rights,
@@ -101,37 +101,36 @@ bool stored_key_create(
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
     *stored_key = NULL;
 
     if (rights == NULL) {
         ERROR("NULL rights");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in == NULL) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (!key_type_supports_any(key_type, type_parameters->curve, size)) {
         ERROR("key_type_supports_any failed");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (!rights_validate_format(rights)) {
         ERROR("rights_validate_format failed");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     stored_key_t* new_stored_key = NULL;
     do {
         new_stored_key = memory_secure_alloc(sizeof(stored_key_t));
         if (new_stored_key == NULL) {
             ERROR("memory_secure_alloc failed");
-            status = false;
             break;
         }
         memory_memset_unoptimizable(new_stored_key, 0, sizeof(stored_key_t));
@@ -140,7 +139,6 @@ bool stored_key_create(
         new_stored_key->key = memory_secure_alloc(in_length);
         if (new_stored_key->key == NULL) {
             ERROR("memory_secure_alloc failed");
-            status = false;
             break;
         }
         memcpy(new_stored_key->key, in, in_length);
@@ -158,7 +156,7 @@ bool stored_key_create(
 
         *stored_key = new_stored_key;
         new_stored_key = NULL;
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     stored_key_free(new_stored_key);

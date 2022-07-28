@@ -85,7 +85,7 @@ bool digest_sha(
  * @param[in] stored_key the stored key over which to compute the digest.
  * @return status of the operation
  */
-bool digest_key(
+sa_status digest_key(
         void* out,
         size_t* out_length,
         sa_digest_algorithm digest_algorithm,

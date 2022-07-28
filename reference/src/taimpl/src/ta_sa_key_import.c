@@ -79,10 +79,10 @@ static sa_status ta_sa_key_import_symmetric_bytes(
     do {
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        if (!stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters, in_length, in,
-                    in_length)) {
+        status = stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters, in_length, in,
+                in_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_import failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
@@ -160,10 +160,10 @@ static sa_status ta_sa_key_import_ec_private_bytes(
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
         type_parameters.curve = parameters->curve;
-        if (!stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_EC, &type_parameters, key_size, in,
-                    in_length)) {
+        status = stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_EC, &type_parameters, key_size, in,
+                in_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_import failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
@@ -237,10 +237,10 @@ static sa_status ta_sa_key_import_rsa_private_key_info(
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        if (!stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_RSA, &type_parameters, key_size, in,
-                    in_length)) {
+        status = stored_key_import(&stored_key, parameters->rights, SA_KEY_TYPE_RSA, &type_parameters, key_size, in,
+                in_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_import failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 

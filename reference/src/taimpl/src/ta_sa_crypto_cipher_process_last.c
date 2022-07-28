@@ -106,9 +106,10 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
             return SA_STATUS_VERIFICATION_FAILED;
         }
 
-        if (!symmetric_context_encrypt(symmetric_context, out, padded_input, sizeof(padded_input))) {
+        sa_status status = symmetric_context_encrypt(symmetric_context, out, padded_input, sizeof(padded_input));
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_encrypt failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
         *bytes_to_process = sizeof(padded_input);
     } else if (cipher_mode == SA_CIPHER_MODE_DECRYPT) {
@@ -122,9 +123,10 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
             return SA_STATUS_OPERATION_NOT_ALLOWED;
         }
 
-        if (!symmetric_context_decrypt(symmetric_context, out, in, *bytes_to_process)) {
+        sa_status status = symmetric_context_decrypt(symmetric_context, out,  in, *bytes_to_process);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_decrypt failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
 
         uint8_t pad_value = 0;
@@ -194,9 +196,10 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_ctr(
         }
 
         size_t out_length = *bytes_to_process;
-        if (!symmetric_context_encrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process)) {
+        sa_status status = symmetric_context_encrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_encrypt_last failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
 
         *bytes_to_process = out_length;
@@ -207,11 +210,11 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_ctr(
         }
 
         size_t out_length = *bytes_to_process;
-        if (!symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process)) {
+        sa_status status = symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_decrypt_last failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
-
         *bytes_to_process = out_length;
     } else {
         ERROR("Unknown mode encountered");
@@ -289,14 +292,16 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_gcm(
         }
 
         size_t out_length = *bytes_to_process;
-        if (!symmetric_context_encrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process)) {
+        sa_status status = symmetric_context_encrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_encrypt_last failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
 
-        if (!symmetric_context_get_tag(symmetric_context, parameters->tag, parameters->tag_length)) {
+        status = symmetric_context_get_tag(symmetric_context, parameters->tag, parameters->tag_length);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_get_tag failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
 
         *bytes_to_process = out_length;
@@ -307,14 +312,16 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_gcm(
         }
 
         size_t out_length = *bytes_to_process;
-        if (!symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process)) {
+        sa_status status = symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_decrypt_last failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
 
-        if (!symmetric_context_check_tag(symmetric_context, parameters->tag, parameters->tag_length)) {
+        status = symmetric_context_check_tag(symmetric_context, parameters->tag, parameters->tag_length);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_check_tag failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
 
         *bytes_to_process = out_length;
@@ -389,14 +396,16 @@ static sa_status ta_sa_crypto_cipher_process_last_chacha20_poly1305(
         }
 
         size_t out_length = *bytes_to_process;
-        if (!symmetric_context_encrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process)) {
+        sa_status status = symmetric_context_encrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_encrypt_last failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
 
-        if (!symmetric_context_get_tag(symmetric_context, parameters->tag, parameters->tag_length)) {
+        status = symmetric_context_get_tag(symmetric_context, parameters->tag, parameters->tag_length);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_get_tag failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
 
         *bytes_to_process = out_length;
@@ -407,14 +416,16 @@ static sa_status ta_sa_crypto_cipher_process_last_chacha20_poly1305(
         }
 
         size_t out_length = *bytes_to_process;
-        if (!symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process)) {
+        sa_status status = symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_decrypt_last failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
 
-        if (!symmetric_context_check_tag(symmetric_context, parameters->tag, parameters->tag_length)) {
+        status = symmetric_context_check_tag(symmetric_context, parameters->tag, parameters->tag_length);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_check_tag failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
 
         *bytes_to_process = out_length;

@@ -45,22 +45,22 @@ size_t rsa_validate_private(
     return key_size;
 }
 
-bool rsa_get_public(
+sa_status rsa_get_public(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key) {
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_PKEY* evp_pkey = NULL;
     do {
         const void* key = stored_key_get_key(stored_key);
@@ -84,12 +84,13 @@ bool rsa_get_public(
 
         if (out == NULL) {
             *out_length = length;
-            status = true;
+            status = SA_STATUS_OK;
             break;
         }
 
         if (*out_length < (size_t) length) {
             ERROR("Invalid out_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -101,7 +102,7 @@ bool rsa_get_public(
         }
 
         *out_length = length;
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_PKEY_free(evp_pkey);
@@ -116,7 +117,7 @@ sa_status rsa_verify_cipher(
     return SA_STATUS_OK;
 }
 
-bool rsa_decrypt_pkcs1v15(
+sa_status rsa_decrypt_pkcs1v15(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key,
@@ -125,25 +126,25 @@ bool rsa_decrypt_pkcs1v15(
 
     if (out == NULL) {
         ERROR("NULL out");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in == NULL) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_PKEY* evp_pkey = NULL;
     EVP_PKEY_CTX* evp_pkey_ctx = NULL;
     do {
@@ -188,11 +189,12 @@ bool rsa_decrypt_pkcs1v15(
         }
 
         if (EVP_PKEY_decrypt(evp_pkey_ctx, out, out_length, in, in_length) != 1) {
+            status = SA_STATUS_VERIFICATION_FAILED;
             ERROR("EVP_PKEY_decrypt failed");
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_PKEY_free(evp_pkey);
@@ -200,7 +202,7 @@ bool rsa_decrypt_pkcs1v15(
     return status;
 }
 
-bool rsa_decrypt_oaep(
+sa_status rsa_decrypt_oaep(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key,
@@ -213,25 +215,25 @@ bool rsa_decrypt_oaep(
 
     if (out == NULL) {
         ERROR("NULL out");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in == NULL) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_PKEY* evp_pkey = NULL;
     EVP_PKEY_CTX* evp_pkey_ctx = NULL;
     do {
@@ -289,7 +291,6 @@ bool rsa_decrypt_oaep(
             uint8_t* new_label = memory_secure_alloc(label_length);
             if (new_label == NULL) {
                 ERROR("memory_secure_alloc failed");
-                status = SA_STATUS_INTERNAL_ERROR;
                 break;
             }
 
@@ -303,10 +304,11 @@ bool rsa_decrypt_oaep(
 
         if (EVP_PKEY_decrypt(evp_pkey_ctx, out, out_length, in, in_length) != 1) {
             ERROR("EVP_PKEY_decrypt failed");
+            status = SA_STATUS_VERIFICATION_FAILED;
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_PKEY_free(evp_pkey);
@@ -314,7 +316,7 @@ bool rsa_decrypt_oaep(
     return status;
 }
 
-bool rsa_sign_pkcs1v15(
+sa_status rsa_sign_pkcs1v15(
         void* out,
         size_t* out_length,
         sa_digest_algorithm digest_algorithm,
@@ -325,20 +327,20 @@ bool rsa_sign_pkcs1v15(
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in == NULL && in_length > 0) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_MD_CTX* evp_md_ctx = NULL;
     EVP_PKEY* evp_pkey = NULL;
     EVP_PKEY_CTX* evp_pkey_ctx = NULL;
@@ -419,7 +421,7 @@ bool rsa_sign_pkcs1v15(
             }
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_MD_CTX_destroy(evp_md_ctx);
@@ -429,7 +431,7 @@ bool rsa_sign_pkcs1v15(
     return status;
 }
 
-bool rsa_sign_pss(
+sa_status rsa_sign_pss(
         void* out,
         size_t* out_length,
         sa_digest_algorithm digest_algorithm,
@@ -442,20 +444,20 @@ bool rsa_sign_pss(
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in == NULL && in_length > 0) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_OK;
     EVP_MD_CTX* evp_md_ctx = NULL;
     EVP_PKEY* evp_pkey = NULL;
     EVP_PKEY_CTX* evp_pkey_ctx = NULL;
@@ -556,7 +558,7 @@ bool rsa_sign_pss(
             }
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_MD_CTX_destroy(evp_md_ctx);

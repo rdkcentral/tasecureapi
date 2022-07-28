@@ -49,7 +49,7 @@ typedef struct symmetric_context_s symmetric_context_t;
  * @param[in] parameters the AES key parameters
  * @return the status of the operation.
  */
-bool symmetric_generate_key(
+sa_status symmetric_generate_key(
         stored_key_t** stored_key_generated,
         const sa_rights* rights,
         sa_generate_parameters_symmetric* parameters);
@@ -246,7 +246,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_decrypt_context(
  * @param[in] in_length input buffer length. Had to be a multiple of 16.
  * @return status of the operation.
  */
-bool symmetric_context_encrypt(
+sa_status symmetric_context_encrypt(
         const symmetric_context_t* context,
         void* out,
         const void* in,
@@ -262,7 +262,7 @@ bool symmetric_context_encrypt(
  * @param[in] in_length input buffer length. Had to be less then or equal to 16.
  * @return status of the operation.
  */
-bool symmetric_context_encrypt_last(
+sa_status symmetric_context_encrypt_last(
         const symmetric_context_t* context,
         void* out,
         size_t* out_length,
@@ -278,7 +278,7 @@ bool symmetric_context_encrypt_last(
  * @param[in] in_length input buffer length. Had to be a multiple of 16.
  * @return status of the operation.
  */
-bool symmetric_context_decrypt(
+sa_status symmetric_context_decrypt(
         const symmetric_context_t* context,
         void* out,
         const void* in,
@@ -294,7 +294,7 @@ bool symmetric_context_decrypt(
  * @param[in] in_length input buffer length. Had to be less then or equal to  16.
  * @return status of the operation.
  */
-bool symmetric_context_decrypt_last(
+sa_status symmetric_context_decrypt_last(
         const symmetric_context_t* context,
         void* out,
         size_t* out_length,
@@ -309,7 +309,7 @@ bool symmetric_context_decrypt_last(
  * @param[in] iv_length initialization vector length.
  * @return status of the operation.
  */
-bool symmetric_context_set_iv(
+sa_status symmetric_context_set_iv(
         const symmetric_context_t* context,
         const void* iv,
         size_t iv_length);
@@ -321,7 +321,7 @@ bool symmetric_context_set_iv(
  * @param[out] tag authentication tag.
  * @param[in] tag_length authentication tag length. Has to be less then or equal to 16.
  */
-bool symmetric_context_get_tag(
+sa_status symmetric_context_get_tag(
         const symmetric_context_t* context,
         void* tag,
         size_t tag_length);
@@ -334,7 +334,7 @@ bool symmetric_context_get_tag(
  * @param[in] tag_length authentication tag length. Has to be less then or equal to 16.
  * @return status of the operation.
  */
-bool symmetric_context_check_tag(
+sa_status symmetric_context_check_tag(
         const symmetric_context_t* context,
         const void* tag,
         size_t tag_length);

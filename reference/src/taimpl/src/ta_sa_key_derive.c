@@ -205,9 +205,9 @@ static sa_status ta_sa_key_derive_ansi_x963(
             break;
         }
 
-        if (!kdf_ansi_x963(&stored_key_derived, rights, parameters, stored_key_parent)) {
+        status = kdf_ansi_x963(&stored_key_derived, rights, parameters, stored_key_parent);
+        if (status != SA_STATUS_OK) {
             ERROR("kdf_ansi_x963 failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
@@ -313,9 +313,9 @@ static sa_status ta_sa_key_derive_cmac(
             break;
         }
 
-        if (!kdf_ctr_cmac(&stored_key_derived, rights, parameters, stored_key_parent)) {
+        status = kdf_ctr_cmac(&stored_key_derived, rights, parameters, stored_key_parent);
+        if (status != SA_STATUS_OK) {
             ERROR("kdf_ctr_cmac failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
@@ -413,9 +413,9 @@ static sa_status ta_sa_key_derive_concat(
             break;
         }
 
-        if (!kdf_concat_kdf(&stored_key_derived, rights, parameters, stored_key_parent)) {
+        status = kdf_concat_kdf(&stored_key_derived, rights, parameters, stored_key_parent);
+        if (status != SA_STATUS_OK) {
             ERROR("kdf_concat_kdf failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
@@ -524,9 +524,9 @@ static sa_status ta_sa_key_derive_hkdf(
             break;
         }
 
-        if (!kdf_hkdf_hmac(&stored_key_derived, rights, parameters, stored_key_parent)) {
+        status = kdf_hkdf_hmac(&stored_key_derived, rights, parameters, stored_key_parent);
+        if (status != SA_STATUS_OK) {
             ERROR("kdf_hkdf_hmac failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
@@ -632,9 +632,9 @@ static sa_status ta_sa_key_derive_netflix(
             break;
         }
 
-        if (!kdf_netflix_wrapping(&stored_key_derived, rights, &enc_header->rights, stored_key_enc, stored_key_hmac)) {
+        status = kdf_netflix_wrapping(&stored_key_derived, rights, &enc_header->rights, stored_key_enc, stored_key_hmac);
+        if (status != SA_STATUS_OK) {
             ERROR("kdf_netflix_wrapping_key failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
