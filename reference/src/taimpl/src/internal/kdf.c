@@ -143,8 +143,9 @@ sa_status kdf_hkdf_hmac(
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        if (!stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                    parameters->key_length, derived, parameters->key_length)) {
+        status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
+                parameters->key_length, derived, parameters->key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
@@ -268,13 +269,12 @@ sa_status kdf_concat_kdf(
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        if (!stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                    parameters->key_length, derived, parameters->key_length)) {
+        status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
+                    parameters->key_length, derived, parameters->key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     if (hash != NULL) {
@@ -388,13 +388,12 @@ sa_status kdf_ansi_x963(
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        if (!stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                    parameters->key_length, derived, parameters->key_length)) {
+        status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
+                    parameters->key_length, derived, parameters->key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     if (hash != NULL) {
@@ -497,13 +496,12 @@ sa_status kdf_ctr_cmac(
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        if (!stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                    parameters->key_length, derived, parameters->key_length)) {
+        status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
+                    parameters->key_length, derived, parameters->key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     if (full_key != NULL) {

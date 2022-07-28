@@ -751,14 +751,12 @@ static sa_status decrypt_key_and_verify_mac(
             break;
         }
 
-        if (!stored_key_create(stored_key, &rights, NULL, key_type, &type_parameters, key_size,
-                    key, payload->encrypted_key_length)) {
+        status = stored_key_create(stored_key, &rights, NULL, key_type, &type_parameters, key_size,
+                    key, payload->encrypted_key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     if (key != NULL) {

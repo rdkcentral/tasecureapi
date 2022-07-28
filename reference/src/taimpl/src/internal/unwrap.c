@@ -86,13 +86,12 @@ static sa_status import_key(
             }
         }
 
-        if (!stored_key_create(stored_key_unwrapped, rights, wrapping_key_rights, key_type, &type_parameters,
-                    key_size, in, in_length)) {
+        status = stored_key_create(stored_key_unwrapped, rights, wrapping_key_rights, key_type, &type_parameters,
+                    key_size, in, in_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     return status;

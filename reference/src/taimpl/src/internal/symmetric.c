@@ -68,13 +68,12 @@ sa_status symmetric_generate_key(
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        if (!stored_key_create(stored_key_generated, rights, NULL, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                    parameters->key_length, generated, parameters->key_length)) {
+        status = stored_key_create(stored_key_generated, rights, NULL, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
+                parameters->key_length, generated, parameters->key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     if (generated != NULL) {

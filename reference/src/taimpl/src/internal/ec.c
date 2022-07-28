@@ -702,13 +702,12 @@ sa_status ec_compute_ecdh_shared_secret(
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        if (!stored_key_create(stored_key_shared_secret, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC,
-                    &type_parameters, shared_secret_length, shared_secret, shared_secret_length)) {
+        status = stored_key_create(stored_key_shared_secret, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC,
+                &type_parameters, shared_secret_length, shared_secret, shared_secret_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     if (shared_secret != NULL) {
@@ -1078,12 +1077,12 @@ sa_status ec_generate_key(
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(type_parameters));
         type_parameters.curve = parameters->curve;
-        if (!stored_key_create(stored_key, rights, NULL, SA_KEY_TYPE_EC, &type_parameters, key_size, key, key_length)) {
+        status = stored_key_create(stored_key, rights, NULL, SA_KEY_TYPE_EC, &type_parameters, key_size, key,
+                key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     if (key != NULL) {
