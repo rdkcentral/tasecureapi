@@ -103,7 +103,7 @@ sa_status unwrap_aes_ecb(
         size_t in_length,
         const sa_rights* rights,
         sa_key_type key_type,
-        void* parameters,
+        void* type_parameters,
         sa_cipher_algorithm cipher_algorithm,
         const stored_key_t* stored_key_wrapping) {
 
@@ -166,7 +166,7 @@ sa_status unwrap_aes_ecb(
             break;
         }
 
-        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, parameters, unwrapped_key,
+        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, type_parameters, unwrapped_key,
                 in_length - pad_value);
         if (status != SA_STATUS_OK) {
             ERROR("import_key failed");
@@ -188,7 +188,7 @@ sa_status unwrap_aes_cbc(
         size_t in_length,
         const sa_rights* rights,
         sa_key_type key_type,
-        void* parameters,
+        void* type_parameters,
         sa_cipher_algorithm cipher_algorithm,
         const void* iv,
         const stored_key_t* stored_key_wrapping) {
@@ -257,7 +257,7 @@ sa_status unwrap_aes_cbc(
             break;
         }
 
-        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, parameters, unwrapped_key,
+        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, type_parameters, unwrapped_key,
                 in_length - pad_value);
         if (status != SA_STATUS_OK) {
             ERROR("import_key failed");
@@ -279,7 +279,7 @@ sa_status unwrap_aes_ctr(
         size_t in_length,
         const sa_rights* rights,
         sa_key_type key_type,
-        void* parameters,
+        void* type_parameters,
         const void* ctr,
         const stored_key_t* stored_key_wrapping) {
 
@@ -372,7 +372,7 @@ sa_status unwrap_aes_ctr(
             break;
         }
 
-        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, parameters, unwrapped_key,
+        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, type_parameters, unwrapped_key,
                 in_length);
         if (status != SA_STATUS_OK) {
             ERROR("import_key failed");
@@ -395,7 +395,7 @@ sa_status unwrap_aes_gcm(
         size_t in_length,
         const sa_rights* rights,
         sa_key_type key_type,
-        void* parameters,
+        void* type_parameters,
         const sa_unwrap_parameters_aes_gcm* algorithm_parameters,
         const stored_key_t* stored_key_wrapping) {
 
@@ -458,7 +458,7 @@ sa_status unwrap_aes_gcm(
             break;
         }
 
-        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, parameters, unwrapped_key,
+        status = import_key(stored_key_unwrapped, rights, &header->rights, key_type, type_parameters, unwrapped_key,
                 in_length);
         if (status != SA_STATUS_OK) {
             ERROR("import_key failed");
@@ -745,7 +745,7 @@ sa_status unwrap_rsa(
         const sa_rights* rights,
         sa_key_type key_type,
         sa_cipher_algorithm cipher_algorithm,
-        void* parameters,
+        void* algorithm_parameters,
         const stored_key_t* stored_key_wrapping) {
 
     if (stored_key_unwrapped == NULL) {
@@ -786,13 +786,13 @@ sa_status unwrap_rsa(
 
         size_t unwrapped_key_length = in_length;
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
-            if (parameters == NULL) {
+            if (algorithm_parameters == NULL) {
                 ERROR("NULL parameters");
                 status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
 
-            sa_unwrap_parameters_rsa_oaep* oaep_parameters = (sa_unwrap_parameters_rsa_oaep*) parameters;
+            sa_unwrap_parameters_rsa_oaep* oaep_parameters = (sa_unwrap_parameters_rsa_oaep*) algorithm_parameters;
             if (oaep_parameters->label == NULL && oaep_parameters->label_length != 0) {
                 ERROR("Invalid label_length");
                 return SA_STATUS_INVALID_PARAMETER;

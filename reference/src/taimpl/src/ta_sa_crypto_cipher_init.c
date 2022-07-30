@@ -695,7 +695,7 @@ static sa_status ta_sa_crypto_cipher_init_rsa_pkcs1v15(
 
     sa_status status;
     do {
-        status = rsa_verify_cipher(SA_CIPHER_ALGORITHM_RSA_PKCS1V15, cipher_mode, stored_key);
+        status = rsa_verify_cipher(SA_CIPHER_ALGORITHM_RSA_PKCS1V15, cipher_mode, NULL, stored_key);
         if (status != SA_STATUS_OK) {
             ERROR("rsa_verify_cipher failed");
             break;
@@ -772,7 +772,7 @@ static sa_status ta_sa_crypto_cipher_init_rsa_oaep(
     cipher_store_t* cipher_store = client_get_cipher_store(client);
     cipher_t* cipher = NULL;
     do {
-        status = rsa_verify_cipher(SA_CIPHER_ALGORITHM_RSA_OAEP, cipher_mode, stored_key);
+        status = rsa_verify_cipher(SA_CIPHER_ALGORITHM_RSA_OAEP, cipher_mode, parameters, stored_key);
         if (status != SA_STATUS_OK) {
             ERROR("rsa_verify_cipher failed");
             break;

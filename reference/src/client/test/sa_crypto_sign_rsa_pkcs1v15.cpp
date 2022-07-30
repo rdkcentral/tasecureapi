@@ -32,11 +32,16 @@ namespace {
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         size_t out_length = 0;
         sa_sign_parameters_rsa_pkcs1v15 parameters = {digest_algorithm, false};
         sa_status status = sa_crypto_sign(nullptr, &out_length, SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15, *key,
                 nullptr, 0, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_EQ(out_length, 256);
 
@@ -44,6 +49,9 @@ namespace {
         auto in = std::vector<uint8_t>(0);
         status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15, *key, in.data(),
                 in.size(), &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_OK);
         out.resize(out_length);
 
@@ -63,11 +71,16 @@ namespace {
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         size_t out_length = 0;
         sa_sign_parameters_rsa_pkcs1v15 parameters = {digest_algorithm, false};
         sa_status status = sa_crypto_sign(nullptr, &out_length, SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15, *key,
                 nullptr, 0, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_EQ(out_length, 256);
 
@@ -76,6 +89,9 @@ namespace {
         auto in = random(25);
         status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15, *key, in.data(),
                 in.size(), &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -87,12 +103,17 @@ namespace {
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         auto out = std::vector<uint8_t>(512);
         size_t out_length = out.size();
         auto in = random(25);
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15, *key, in.data(),
                 in.size(), nullptr);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

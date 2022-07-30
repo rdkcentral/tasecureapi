@@ -40,7 +40,7 @@ using namespace client_test_helpers;
 std::vector<uint8_t> SaKeyBase::root_key;
 
 bool SaKeyBase::get_root_key(std::vector<uint8_t>& key) {
-    bool status = false;
+    bool status;
     if (root_key.empty()) {
         uint8_t name[16];
         size_t name_length = 16;
@@ -403,6 +403,10 @@ sa_status SaKeyBase::execute_ecdh(
         return status;
 
     std::shared_ptr<EVP_PKEY> other_public_key(sa_get_public_key(*other_private_key), EVP_PKEY_free);
+    if (other_public_key.get() == nullptr)  {
+        ERROR("other_public_key failed");
+        return status;
+    }
 
     std::shared_ptr<EVP_PKEY> private_key;
     std::vector<uint8_t> public_key;

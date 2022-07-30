@@ -34,6 +34,8 @@ namespace {
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         auto out = std::vector<uint8_t>(key_size);
         size_t out_length = out.size() - 1;

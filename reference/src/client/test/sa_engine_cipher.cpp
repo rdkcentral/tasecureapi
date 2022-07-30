@@ -24,6 +24,34 @@
 
 using namespace client_test_helpers;
 
+static sa_status check_algorithm_supported(
+        int nid,
+        std::shared_ptr<sa_key>& key) {
+
+    sa_status status = SA_STATUS_OK;
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+    // Check for algorithm support.
+    if (nid == NID_chacha20) {
+        auto cipher_context = create_uninitialized_sa_crypto_cipher_context();
+        auto nonce = random(CHACHA20_NONCE_LENGTH);
+        auto counter = random(CHACHA20_COUNTER_LENGTH);
+        sa_cipher_parameters_chacha20 parameters = {counter.data(), counter.size(), nonce.data(),
+                nonce.size()};
+        status = sa_crypto_cipher_init(cipher_context.get(), SA_CIPHER_ALGORITHM_CHACHA20,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
+    } else if (nid == NID_chacha20_poly1305) {
+        auto cipher_context = create_uninitialized_sa_crypto_cipher_context();
+        auto nonce = random(CHACHA20_NONCE_LENGTH);
+        auto aad = random(CHACHA20_COUNTER_LENGTH);
+        sa_cipher_parameters_chacha20_poly1305 parameters = {nonce.data(), nonce.size(), aad.data(), aad.size()};
+        status = sa_crypto_cipher_init(cipher_context.get(), SA_CIPHER_ALGORITHM_CHACHA20_POLY1305,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
+    }
+#endif
+
+    return status;
+}
 TEST_P(SaEngineCipherTest, encryptTest) {
     int nid = std::get<0>(GetParam());
     int padded = std::get<1>(GetParam());
@@ -44,6 +72,9 @@ TEST_P(SaEngineCipherTest, encryptTest) {
     sa_rights rights;
     sa_rights_set_allow_all(&rights);
     auto key = create_sa_key_symmetric(&rights, clear_key);
+    if (check_algorithm_supported(nid, key) == SA_STATUS_OPERATION_NOT_SUPPORTED)
+        GTEST_SKIP() << "algorithm not supported";
+
     auto data = random(16);
     auto iv = random(iv_length);
     auto aad = include_aad ? random(256) : std::vector<uint8_t>(0);
@@ -96,6 +127,9 @@ TEST_P(SaEngineCipherTest, decryptTest) {
     sa_rights rights;
     sa_rights_set_allow_all(&rights);
     auto key = create_sa_key_symmetric(&rights, clear_key);
+    if (check_algorithm_supported(nid, key) == SA_STATUS_OPERATION_NOT_SUPPORTED)
+        GTEST_SKIP() << "algorithm not supported";
+
     auto data = random(16);
     auto iv = random(iv_length);
     auto aad = include_aad ? random(256) : std::vector<uint8_t>(0);

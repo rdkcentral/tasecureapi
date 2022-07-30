@@ -41,6 +41,8 @@ namespace {
                 .oaep_label_length = 0};
 
         ASSERT_TRUE(import_key(parameters, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE));
+        if (*parameters.key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
@@ -88,6 +90,8 @@ namespace {
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
 
         ASSERT_TRUE(import_key(parameters, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE));
+        if (*parameters.key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
@@ -140,6 +144,8 @@ namespace {
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
 
         ASSERT_TRUE(import_key(parameters, SA_KEY_TYPE_SYMMETRIC, SYM_256_KEY_SIZE));
+        if (*parameters.key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
@@ -187,6 +193,8 @@ namespace {
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
 
         ASSERT_TRUE(import_key(parameters, SA_KEY_TYPE_SYMMETRIC, SYM_256_KEY_SIZE));
+        if (*parameters.key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);

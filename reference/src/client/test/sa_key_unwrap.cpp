@@ -59,8 +59,13 @@ namespace {
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
-        ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters, wrapping_key_size,
-                clear_key, wrapping_algorithm, oaep_digest_algorithm, oaep_mgf1_digest_algorithm, oaep_label_length));
+        sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
+                wrapping_key_size, clear_key, wrapping_algorithm, oaep_digest_algorithm, oaep_mgf1_digest_algorithm,
+                oaep_label_length);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type not supported";
+
+        ASSERT_EQ(status, SA_STATUS_OK);
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -69,7 +74,7 @@ namespace {
         ASSERT_NE(unwrapped_key, nullptr);
 
         sa_unwrap_type_parameters_ec unwrap_type_parameters_ec = {curve};
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, key_type,
+        status = sa_key_unwrap(unwrapped_key.get(), &rights, key_type,
                 (key_type == SA_KEY_TYPE_EC) ? &unwrap_type_parameters_ec : nullptr, wrapping_algorithm,
                 wrapping_parameters.get(), *wrapping_key, wrapped_key.data(), wrapped_key.size());
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)

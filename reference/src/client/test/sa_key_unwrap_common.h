@@ -35,9 +35,9 @@ protected:
      * @param[in] wrapping_key_size the size of the wrapping key.
      * @param[in] clear_key the key to wrap.
      * @param[in] wrapping_algorithm the wrapping algorithm to use.
-     * @return true if the key was successfully wrapped.
+     * @return the status of the operation.
      */
-    static bool wrap_key(
+    static sa_status wrap_key(
             std::shared_ptr<sa_key>& wrapping_key,
             std::vector<uint8_t>& clear_wrapping_key,
             std::vector<uint8_t>& wrapped_key,
@@ -50,7 +50,7 @@ protected:
             size_t oaep_label_length);
 
 private:
-    static bool wrap_key_aes_cbc(
+    static sa_status wrap_key_aes_cbc(
             std::shared_ptr<sa_key>& wrapping_key,
             std::vector<uint8_t>& clear_wrapping_key,
             std::vector<uint8_t>& wrapped_key,
@@ -59,7 +59,7 @@ private:
             const std::vector<uint8_t>& clear_key,
             sa_cipher_algorithm wrapping_algorithm);
 
-    static bool wrap_key_aes_ecb(
+    static sa_status wrap_key_aes_ecb(
             std::shared_ptr<sa_key>& wrapping_key,
             std::vector<uint8_t>& clear_wrapping_key,
             std::vector<uint8_t>& wrapped_key,
@@ -68,7 +68,7 @@ private:
             const std::vector<uint8_t>& clear_key,
             sa_cipher_algorithm wrapping_algorithm);
 
-    static bool wrap_key_aes_ctr(
+    static sa_status wrap_key_aes_ctr(
             std::shared_ptr<sa_key>& wrapping_key,
             std::vector<uint8_t>& clear_wrapping_key,
             std::vector<uint8_t>& wrapped_key,
@@ -76,7 +76,7 @@ private:
             size_t wrapping_key_size,
             const std::vector<uint8_t>& clear_key);
 
-    static bool wrap_key_aes_gcm(
+    static sa_status wrap_key_aes_gcm(
             std::shared_ptr<sa_key>& wrapping_key,
             std::vector<uint8_t>& clear_wrapping_key,
             std::vector<uint8_t>& wrapped_key,
@@ -84,7 +84,7 @@ private:
             size_t wrapping_key_size,
             const std::vector<uint8_t>& clear_key);
 
-    static bool wrap_key_chacha20(
+    static sa_status wrap_key_chacha20(
             std::shared_ptr<sa_key>& wrapping_key,
             std::vector<uint8_t>& clear_wrapping_key,
             std::vector<uint8_t>& wrapped_key,
@@ -92,7 +92,7 @@ private:
             size_t wrapping_key_size,
             const std::vector<uint8_t>& clear_key);
 
-    static bool wrap_key_chacha20_poly1305(
+    static sa_status wrap_key_chacha20_poly1305(
             std::shared_ptr<sa_key>& wrapping_key,
             std::vector<uint8_t>& clear_wrapping_key,
             std::vector<uint8_t>& wrapped_key,
@@ -100,7 +100,7 @@ private:
             size_t wrapping_key_size,
             const std::vector<uint8_t>& clear_key);
 
-    static bool wrap_key_rsa(
+    static sa_status wrap_key_rsa(
             std::shared_ptr<sa_key>& wrapping_key,
             std::vector<uint8_t>& clear_wrapping_key,
             std::vector<uint8_t>& wrapped_key,
@@ -112,7 +112,7 @@ private:
             sa_digest_algorithm mgf1_digest_algorithm,
             size_t label_length);
 
-    static bool wrap_key_el_gamal(
+    static sa_status wrap_key_el_gamal(
             std::shared_ptr<sa_key>& wrapping_key,
             std::vector<uint8_t>& clear_wrapping_key,
             std::vector<uint8_t>& wrapped_key,

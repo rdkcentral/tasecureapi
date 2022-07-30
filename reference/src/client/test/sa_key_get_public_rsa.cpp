@@ -32,6 +32,8 @@ namespace {
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         size_t out_length = 0;
         sa_status status = sa_key_get_public(nullptr, &out_length, *key);
@@ -60,6 +62,8 @@ namespace {
 
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         size_t out_length = 0;
         sa_status status = sa_key_get_public(nullptr, &out_length, *key);

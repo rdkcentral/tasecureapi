@@ -109,6 +109,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -126,6 +129,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -143,6 +149,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -160,6 +169,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), 0, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -177,6 +189,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -194,6 +209,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -211,6 +229,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -228,6 +249,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -245,6 +269,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -262,6 +289,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -279,6 +309,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -296,6 +329,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -313,6 +349,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
@@ -371,6 +410,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, entitled_ta_ids, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Curve not supported";
+
         if (count > MAX_NUM_ALLOWED_TA_IDS) {
             ASSERT_NE(status, SA_STATUS_OK);
         } else {
