@@ -1548,6 +1548,7 @@ sa_status symmetric_context_check_tag(
     int length = 0;
     if (EVP_DecryptFinal_ex(context->evp_cipher, NULL, &length) != 1) {
         ERROR("EVP_DecryptFinal_ex failed");
+        // Failed the tag check, so the tag is invalid.
         return SA_STATUS_INVALID_PARAMETER;
     }
 
