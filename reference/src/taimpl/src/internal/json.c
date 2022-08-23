@@ -1140,15 +1140,11 @@ bool b64_decode(
         void* out,
         size_t* out_length,
         const void* in,
-        size_t in_length) {
+        size_t in_length,
+        bool url_decode) {
 
     if (out == NULL) {
         ERROR("NULL out");
-        return false;
-    }
-
-    if (*out_length != (in_length * 3) / 4) {
-        ERROR("Invalid out_length");
         return false;
     }
 
@@ -1158,10 +1154,35 @@ bool b64_decode(
     }
 
     bool status = false;
-
+    size_t data_length = (in_length / 4 + (in_length % 4 > 0 ? 1 : 0)) * 4;
+    uint8_t* data = NULL;
     BIO* bio = NULL;
     BIO* b64 = NULL;
     do {
+        if (*out_length != (data_length * 3) / 4) {
+            ERROR("Invalid out_length");
+            break;
+        }
+
+        data = memory_secure_alloc(data_length);
+        if (data == NULL) {
+            ERROR("memory_secure_alloc failed");
+            break;
+        }
+
+        memcpy(data, in, in_length);
+        if (url_decode) {
+            for(size_t i = 0; i < in_length; i++) {
+                if (data[i] == '-')
+                    data[i] = '+';
+                else if (data[i] == '_')
+                    data[i] = '/';
+            }
+
+            if (data_length != in_length)
+                memset(data + in_length, '=', data_length - in_length);
+        }
+
         b64 = BIO_new(BIO_f_base64());
         if (b64 == NULL) {
             ERROR("BIO_new failed");
@@ -1169,7 +1190,7 @@ bool b64_decode(
         }
         BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
 
-        bio = BIO_new_mem_buf((void*) in, (int) in_length);
+        bio = BIO_new_mem_buf((void*) data, (int) data_length);
         if (bio == NULL) {
             ERROR("BIO_new_mem_buf failed");
             break;
@@ -1190,9 +1211,9 @@ bool b64_decode(
 
     BIO_free_all(b64);
     BIO_free_all(bio);
-
-    if (!status) {
-        memory_internal_free(out);
+    if (data != NULL) {
+        memory_memset_unoptimizable(data, 0, data_length);
+        memory_internal_free(data);
     }
 
     return status;

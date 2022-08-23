@@ -151,7 +151,7 @@ static soc_kc_unpacked_t* unpack_soc_kc(
         }
 
         if (!b64_decode(unpacked->header, &unpacked->header_length, unpacked->header_b64,
-                    unpacked->header_b64_length)) {
+                    unpacked->header_b64_length, true)) {
             ERROR("b64_decode failed");
             break;
         }
@@ -164,13 +164,13 @@ static soc_kc_unpacked_t* unpack_soc_kc(
         }
 
         if (!b64_decode(unpacked->payload, &unpacked->payload_length, unpacked->payload_b64,
-                    unpacked->payload_b64_length)) {
+                    unpacked->payload_b64_length, true)) {
             ERROR("b64_decode failed");
             break;
         }
 
         unpacked->mac_length = b64_decoded_length(unpacked->mac_b64_length);
-        if (!b64_decode(unpacked->mac, &unpacked->mac_length, unpacked->mac_b64, unpacked->mac_b64_length) &&
+        if (!b64_decode(unpacked->mac, &unpacked->mac_length, unpacked->mac_b64, unpacked->mac_b64_length, true) &&
                 unpacked->mac_length != AES_BLOCK_SIZE) {
             ERROR("b64_decode failed");
             break;
@@ -323,8 +323,10 @@ static sa_status parse_payload(
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
-    if (!b64_decode(payload->encrypted_key, &payload->encrypted_key_length, encrypted_key, b64_encrypted_key_length)) {
+    if (!b64_decode(payload->encrypted_key, &payload->encrypted_key_length, encrypted_key, b64_encrypted_key_length,
+                false)) {
         ERROR("b64_decode failed");
+        memory_internal_free(payload->encrypted_key);
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
@@ -338,7 +340,7 @@ static sa_status parse_payload(
     size_t b64_iv_length;
     const char* iv = json_value_as_string(&b64_iv_length, iv_field->value);
     size_t iv_length = b64_decoded_length(b64_iv_length);
-    if (!b64_decode(payload->iv, &iv_length, iv, b64_iv_length) && iv_length != GCM_IV_LENGTH) {
+    if (!b64_decode(payload->iv, &iv_length, iv, b64_iv_length, false) && iv_length != GCM_IV_LENGTH) {
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
@@ -398,7 +400,8 @@ static sa_status parse_payload(
     size_t b64_c1_length;
     const char* c1 = json_value_as_string(&b64_c1_length, c1_field->value);
     size_t c1_length = b64_decoded_length(b64_c1_length);
-    if (!b64_decode(payload->key_ladder_inputs.c1, &c1_length, c1, b64_c1_length) && c1_length != AES_BLOCK_SIZE) {
+    if (!b64_decode(payload->key_ladder_inputs.c1, &c1_length, c1, b64_c1_length, false) &&
+            c1_length != AES_BLOCK_SIZE) {
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
@@ -413,7 +416,8 @@ static sa_status parse_payload(
     size_t b64_c2_length;
     const char* c2 = json_value_as_string(&b64_c2_length, c2_field->value);
     size_t c2_length = b64_decoded_length(b64_c2_length);
-    if (!b64_decode(payload->key_ladder_inputs.c2, &c2_length, c2, b64_c2_length) && c2_length != AES_BLOCK_SIZE) {
+    if (!b64_decode(payload->key_ladder_inputs.c2, &c2_length, c2, b64_c2_length, true) &&
+            c2_length != AES_BLOCK_SIZE) {
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
@@ -428,7 +432,8 @@ static sa_status parse_payload(
     size_t b64_c3_length;
     const char* c3 = json_value_as_string(&b64_c3_length, c3_field->value);
     size_t c3_length = b64_decoded_length(b64_c3_length);
-    if (!b64_decode(payload->key_ladder_inputs.c3, &c3_length, c3, b64_c3_length) && c3_length != AES_BLOCK_SIZE) {
+    if (!b64_decode(payload->key_ladder_inputs.c3, &c3_length, c3, b64_c3_length, false) &&
+            c3_length != AES_BLOCK_SIZE) {
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }

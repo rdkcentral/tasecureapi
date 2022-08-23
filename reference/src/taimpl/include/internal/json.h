@@ -39,7 +39,7 @@ extern "C" {
 #endif
 
 // clang-format off
-#define b64_decoded_length(x) ((x) * 3 / 4)
+#define b64_decoded_length(x) ((x / 4 + (x % 4 > 0 ? 1 : 0)) * 3)
 // clang-format on
 
 typedef enum {
@@ -171,13 +171,15 @@ const char* json_value_as_number(const json_value_t* value);
  * @param[in/out] out_length the length of the out buffer and will return the number of bytes written.
  * @param[in] in the buffer containing the encoded string.
  * @param[in] in_length the length of the encoded string.
+ * @param[in] url_decode use base64url decoding.
  * @return true if the decode was successful.
  */
 bool b64_decode(
         void* out,
         size_t* out_length,
         const void* in,
-        size_t in_length);
+        size_t in_length,
+        bool url_decode);
 
 /**
  * Converts a string from upper case to lower case.
