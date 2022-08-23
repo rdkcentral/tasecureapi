@@ -34,7 +34,7 @@ namespace {
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_sign_parameters_rsa_pss parameters = {digest_algorithm, mgf1_digest_algorithm, false, 32};
         size_t out_length = 0;
@@ -75,7 +75,7 @@ namespace {
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_sign_parameters_rsa_pss parameters = {digest_algorithm, mgf1_digest_algorithm, false, 32};
         size_t out_length = 0;
@@ -107,7 +107,7 @@ namespace {
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto out = std::vector<uint8_t>(512);
         size_t out_length = out.size();
@@ -131,7 +131,7 @@ namespace {
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         // max salt length is mod_length - digest_length - 2 = 222
         sa_sign_parameters_rsa_pss parameters = {digest_algorithm, mgf1_digest_algorithm, false, 223};

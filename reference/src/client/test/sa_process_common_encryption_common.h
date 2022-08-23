@@ -25,8 +25,6 @@
 #include <memory>
 #include <vector>
 
-#define SUBSAMPLE_SIZE 256UL
-
 typedef struct {
     std::vector<uint8_t> clear;
     std::shared_ptr<sa_buffer> in;
@@ -37,6 +35,7 @@ typedef struct {
 class SaProcessCommonEncryptionBase : public SaCipherCryptoBase {
 protected:
     static bool build_samples(
+            size_t sample_size,
             size_t crypt_byte_block,
             size_t skip_byte_block,
             size_t subsample_count,
@@ -69,8 +68,10 @@ private:
             sa_cipher_algorithm cipher_algorithm);
 };
 
-using SaProcessCommonEncryptionType =
-        std::tuple<size_t, size_t, size_t, size_t, sa_cipher_algorithm, std::tuple<sa_buffer_type, sa_buffer_type>>;
+// clang-format off
+using SaProcessCommonEncryptionType = std::tuple<std::tuple<size_t, size_t>, size_t, size_t, size_t,
+        sa_cipher_algorithm, std::tuple<sa_buffer_type, sa_buffer_type>>;
+// clang-format on
 
 class SaProcessCommonEncryptionTest : public ::testing::TestWithParam<SaProcessCommonEncryptionType>,
                                       public SaProcessCommonEncryptionBase {
@@ -79,5 +80,7 @@ protected:
 };
 
 class SaProcessCommonEncryptionNegativeTest : public ::testing::Test, public SaProcessCommonEncryptionBase {};
+
+class SaProcessCommonEncryptionAlternativeTest : public ::testing::Test, public SaProcessCommonEncryptionBase {};
 
 #endif // SA_PROCESS_COMMON_ENCRYPTION_COMMON_H

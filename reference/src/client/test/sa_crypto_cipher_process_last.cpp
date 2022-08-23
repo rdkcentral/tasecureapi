@@ -27,6 +27,7 @@ namespace {
     TEST_P(SaCryptoCipherProcessLastTest, processNominalEncrypt) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
+        parameters.svp_required = false;
         sa_key_type key_type = std::get<1>(GetParam());
         size_t key_size = std::get<2>(GetParam());
         sa_buffer_type buffer_type = std::get<3>(GetParam());
@@ -72,6 +73,7 @@ namespace {
     TEST_P(SaCryptoCipherProcessLastTest, processNominalDecrypt) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
+        parameters.svp_required = false;
         sa_key_type key_type = std::get<1>(GetParam());
         size_t key_size = std::get<2>(GetParam());
         sa_buffer_type buffer_type = std::get<3>(GetParam());

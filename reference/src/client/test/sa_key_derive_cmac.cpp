@@ -35,7 +35,7 @@ namespace {
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
         ASSERT_NE(parent_key, nullptr);
         if (*parent_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto other_data = random(other_data_size);
         sa_kdf_parameters_cmac kdf_parameters_cmac = {
@@ -63,7 +63,7 @@ namespace {
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
         ASSERT_NE(parent_key, nullptr);
         if (*parent_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto other_data = random(AES_BLOCK_SIZE);
         sa_kdf_parameters_cmac kdf_parameters_cmac = {
@@ -85,7 +85,7 @@ namespace {
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
         ASSERT_NE(parent_key, nullptr);
         if (*parent_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto other_data = random(AES_BLOCK_SIZE);
         sa_kdf_parameters_cmac kdf_parameters_cmac = {
@@ -119,7 +119,7 @@ namespace {
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
         ASSERT_NE(parent_key, nullptr);
         if (*parent_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto other_data = random(AES_BLOCK_SIZE);
         sa_kdf_parameters_cmac kdf_parameters_cmac = {
@@ -143,7 +143,7 @@ namespace {
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
         ASSERT_NE(parent_key, nullptr);
         if (*parent_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto other_data = random(AES_BLOCK_SIZE);
         sa_kdf_parameters_cmac kdf_parameters_cmac = {
@@ -185,7 +185,7 @@ namespace {
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
         ASSERT_NE(parent_key, nullptr);
         if (*parent_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_kdf_parameters_cmac kdf_parameters_cmac = {
                 .key_length = SYM_128_KEY_SIZE,
@@ -208,7 +208,7 @@ namespace {
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
         ASSERT_NE(parent_key, nullptr);
         if (*parent_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto other_data = random(AES_BLOCK_SIZE);
         sa_kdf_parameters_cmac kdf_parameters_cmac = {
@@ -232,7 +232,7 @@ namespace {
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
         ASSERT_NE(parent_key, nullptr);
         if (*parent_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto other_data = random(AES_BLOCK_SIZE);
         sa_kdf_parameters_cmac kdf_parameters_cmac = {
@@ -256,7 +256,7 @@ namespace {
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
         ASSERT_NE(parent_key, nullptr);
         if (*parent_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto other_data = random(AES_BLOCK_SIZE);
         sa_kdf_parameters_cmac kdf_parameters_cmac = {
@@ -281,7 +281,7 @@ namespace {
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
         ASSERT_NE(parent_key, nullptr);
         if (*parent_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto other_data = random(AES_BLOCK_SIZE);
         sa_kdf_parameters_cmac kdf_parameters_cmac = {
@@ -305,7 +305,7 @@ namespace {
         auto parent_key = create_sa_key_rsa(&rights, rsa_key);
         ASSERT_NE(parent_key, nullptr);
         if (*parent_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto other_data = random(AES_BLOCK_SIZE);
         sa_kdf_parameters_cmac kdf_parameters_cmac = {
@@ -329,7 +329,7 @@ namespace {
         auto parent_key = create_sa_key_symmetric(&rights, symmetric_key);
         ASSERT_NE(parent_key, nullptr);
         if (*parent_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto other_data = random(AES_BLOCK_SIZE);
         sa_kdf_parameters_cmac kdf_parameters_cmac = {

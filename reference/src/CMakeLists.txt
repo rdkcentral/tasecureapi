@@ -39,6 +39,11 @@ if (DEFINED ENABLE_SOC_KEY_TESTS)
     set(CMAKE_C_FLAGS "-DENABLE_SOC_KEY_TESTS ${CMAKE_C_FLAGS}")
 endif ()
 
+if (DEFINED DISABLE_CENC_TIMING)
+    set(CMAKE_CXX_FLAGS "-DDISABLE_CENC_TIMING ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "-DDISABLE_CENC_TIMING ${CMAKE_C_FLAGS}")
+endif ()
+
 add_subdirectory(client)
 add_subdirectory(clientimpl)
 add_subdirectory(taimpl)

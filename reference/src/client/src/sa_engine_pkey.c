@@ -1073,7 +1073,7 @@ static int pkey_pderive(
         sa_status status = sa_key_exchange((void*) shared_secret_key, &rights, key_exchange_algorithm,
                 data->private_key, other_public, other_public_length, NULL);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
-            ERROR("sa_crypto_cipher_init operation not supported");
+            ERROR("sa_key_exchange operation not supported");
             result = OPENSSL_NOT_SUPPORTED;
             break;
         }
@@ -1398,7 +1398,8 @@ static EVP_PKEY* fixup_openssl3_key(EVP_PKEY* evp_pkey) {
                 EVP_PKEY_free(evp_pkey);
                 break;
             }
-        } else if (type == EVP_PKEY_ED25519 || type == EVP_PKEY_ED448 || type == EVP_PKEY_X25519 || type == EVP_PKEY_X448) {
+        } else if (type == EVP_PKEY_ED25519 || type == EVP_PKEY_ED448 || type == EVP_PKEY_X25519 ||
+                   type == EVP_PKEY_X448) {
             size_t public_key_length = 0;
             if (EVP_PKEY_get_raw_public_key(evp_pkey, NULL, &public_key_length) != 1) {
                 ERROR("EVP_PKEY_get_raw_public_key failed");

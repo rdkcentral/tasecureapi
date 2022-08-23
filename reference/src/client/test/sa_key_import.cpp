@@ -36,7 +36,7 @@ namespace {
         auto key = create_sa_key(key_type, key_length, clear_key, curve);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_type_parameters type_parameters;
         memset(&type_parameters, 0, sizeof(sa_type_parameters));

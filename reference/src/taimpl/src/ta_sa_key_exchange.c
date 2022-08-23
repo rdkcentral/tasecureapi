@@ -325,8 +325,8 @@ static sa_status ta_sa_key_exchange_netflix_dh(
             break;
         }
 
-        status = kdf_netflix_shared_secret(&stored_key_enc, parameters->rights_ke, &stored_key_hmac, parameters->rights_kh,
-                stored_key_in, stored_key_shared_secret);
+        status = kdf_netflix_shared_secret(&stored_key_enc, parameters->rights_ke, &stored_key_hmac,
+                parameters->rights_kh, stored_key_in, stored_key_shared_secret);
         if (status != SA_STATUS_OK) {
             ERROR("kdf_netflix_shared_secret failed");
             break;

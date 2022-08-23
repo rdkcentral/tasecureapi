@@ -215,7 +215,7 @@ namespace {
         auto key = create_sa_key_ec(&rights, SA_ELLIPTIC_CURVE_NIST_P256, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto clear = random(AES_BLOCK_SIZE);
         auto encrypted = std::vector<uint8_t>(clear.size());

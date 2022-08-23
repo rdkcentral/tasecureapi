@@ -37,7 +37,7 @@ TEST_P(SaEnginePkeyMacTest, digestSignWithUpdateFinalTest) {
     auto key = create_sa_key(key_type, key_length, clear_key, curve);
     ASSERT_NE(key, nullptr);
     if (*key == UNSUPPORTED_KEY)
-        GTEST_SKIP() << "key type not supported";
+        GTEST_SKIP() << "key type, key size, or curve not supported";
 
     auto data = random(256);
     std::vector<uint8_t> mac;
@@ -84,7 +84,7 @@ TEST_P(SaEnginePkeyMacTest, digestSignNoUpdateFinalTest) {
     auto key = create_sa_key(key_type, key_length, clear_key, curve);
     ASSERT_NE(key, nullptr);
     if (*key == UNSUPPORTED_KEY)
-        GTEST_SKIP() << "key type not supported";
+        GTEST_SKIP() << "key type, key size, or curve not supported";
 
     auto data = random(256);
     std::vector<uint8_t> mac;

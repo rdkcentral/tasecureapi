@@ -37,7 +37,7 @@ namespace {
         auto key = create_sa_key(key_type, key_length, clear_key, curve);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         size_t out_length = 0;
         status = sa_key_get_public(nullptr, &out_length, *key);
@@ -93,7 +93,7 @@ namespace {
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto out = std::vector<uint8_t>(512);
 

@@ -182,3 +182,10 @@ implementation. The full 4 number version can be retrieved using the sa_get_vers
 SoC vendors are expected to provide memory allocation and de-allocation functions for secure heap if
 available on the target platform (memory_secure_alloc, memory_secure_realloc, memory_secure_free).
 The secure heap shall be used for storing unencrypted key material while in use.
+
+## Coding Standards
+
+The clang-format library is used to format all code according to the settings in the associated 
+.clang-format file. All attempts were used to use descriptive variable names and predefined
+constants instead of magic numbers. When the OpenSSL library is used, standard OpenSSL usage
+convention is followed by testing return values against the value 1 which represents success.

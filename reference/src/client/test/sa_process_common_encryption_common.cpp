@@ -215,6 +215,7 @@ bool SaProcessCommonEncryptionBase::encrypt_samples(
 }
 
 bool SaProcessCommonEncryptionBase::build_samples(
+        size_t sample_size,
         size_t crypt_byte_block,
         size_t skip_byte_block,
         size_t subsample_count,
@@ -227,7 +228,8 @@ bool SaProcessCommonEncryptionBase::build_samples(
         std::vector<sa_sample>& samples) {
 
     size_t sample_count = samples.size();
-    sample_data.clear = random(SUBSAMPLE_SIZE * subsample_count * sample_count);
+    size_t subsample_size = sample_size / subsample_count;
+    sample_data.clear = random(subsample_size * subsample_count * sample_count);
     sample_data.out = buffer_alloc(out_buffer_type, sample_data.clear.size());
     if (sample_data.out == nullptr)
         return false;
@@ -244,8 +246,10 @@ bool SaProcessCommonEncryptionBase::build_samples(
 
         sample->subsample_lengths = &sample_data.subsample_lengths[i * subsample_count];
         for (size_t j = 0; j < subsample_count; j++) {
-            sample->subsample_lengths[j].bytes_of_clear_data = bytes_of_clear_data;
-            sample->subsample_lengths[j].bytes_of_protected_data = SUBSAMPLE_SIZE - bytes_of_clear_data;
+            sample->subsample_lengths[j].bytes_of_clear_data =
+                    bytes_of_clear_data == UINT32_MAX ? subsample_size : bytes_of_clear_data;
+            sample->subsample_lengths[j].bytes_of_protected_data =
+                    subsample_size - sample->subsample_lengths[j].bytes_of_clear_data;
         }
 
         sample->context = *cipher;
@@ -280,15 +284,18 @@ void SaProcessCommonEncryptionTest::SetUp() {
     }
 }
 
+// clang-format off
 INSTANTIATE_TEST_SUITE_P(
         SaProcessCommonEncryptionTests,
         SaProcessCommonEncryptionTest,
         ::testing::Combine(
-                ::testing::Values(0UL, 1UL, 2UL, 5UL, 9UL),         // crypt_byte_block
-                ::testing::Values(1UL, 2UL, 5UL, 10UL),             // subsample_size
-                ::testing::Values(0UL, 16UL, 20UL, SUBSAMPLE_SIZE), // bytes_of_clear_data
-                ::testing::Values(1UL, 2UL, 5UL, 10UL),             // number_samples
+                ::testing::Values(std::make_tuple(1000, 1), std::make_tuple(10000, 2), std::make_tuple(100000, 5),
+                        std::make_tuple(1000000, 10)),          // Sample size and time
+                ::testing::Values(0UL, 1UL, 5UL, 9UL),          // crypt_byte_block
+                ::testing::Values(1UL, 2UL, 5UL, 10UL),         // subsample_size
+                ::testing::Values(0UL, 16UL, 20UL, UINT32_MAX), // bytes_of_clear_data
                 ::testing::Values(SA_CIPHER_ALGORITHM_AES_CTR, SA_CIPHER_ALGORITHM_AES_CBC),
                 ::testing::Values(std::make_tuple(SA_BUFFER_TYPE_CLEAR, SA_BUFFER_TYPE_CLEAR),
                         std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_CLEAR),
                         std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_SVP))));
+// clang-format on

@@ -24,6 +24,7 @@ namespace {
     TEST_P(SaCryptoCipherEncryptTest, releaseNominal) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
+        parameters.svp_required = false;
         sa_key_type key_type = std::get<1>(GetParam());
         size_t key_size = std::get<2>(GetParam());
 
@@ -39,6 +40,7 @@ namespace {
     TEST_P(SaCryptoCipherDecryptTest, releaseNominal) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
+        parameters.svp_required = false;
         sa_key_type key_type = std::get<1>(GetParam());
         size_t key_size = std::get<2>(GetParam());
         parameters.oaep_digest_algorithm = std::get<4>(GetParam());

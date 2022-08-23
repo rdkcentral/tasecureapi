@@ -33,6 +33,7 @@ namespace {
     TEST_P(SaCryptoCipherEncryptTest, updateIvNominal) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
+        parameters.svp_required = false;
         sa_key_type key_type = std::get<1>(GetParam());
         size_t key_size = std::get<2>(GetParam());
         sa_buffer_type buffer_type = std::get<3>(GetParam());
@@ -83,6 +84,7 @@ namespace {
         parameters.oaep_digest_algorithm = std::get<4>(GetParam());
         parameters.oaep_mgf1_digest_algorithm = std::get<5>(GetParam());
         parameters.oaep_label_length = std::get<6>(GetParam());
+        parameters.svp_required = false;
 
         if (!supports_update_iv(parameters.cipher_algorithm))
             return;
@@ -138,6 +140,7 @@ namespace {
         sa_cipher_mode cipher_mode = std::get<1>(GetParam());
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_ECB;
+        parameters.svp_required = false;
 
         auto cipher = initialize_cipher(cipher_mode, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
         ASSERT_NE(cipher, nullptr);

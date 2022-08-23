@@ -91,7 +91,7 @@ namespace {
 
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         size_t out_length = 0;
         sa_status status = sa_crypto_sign(nullptr, &out_length, signature_algorithm, *key, nullptr, 0, sign_parameters);
@@ -161,7 +161,7 @@ namespace {
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto out = std::vector<uint8_t>(4096);
         auto in = random(25);
@@ -184,7 +184,7 @@ namespace {
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto out = std::vector<uint8_t>(4096);
         size_t out_length = out.size();
@@ -208,13 +208,14 @@ namespace {
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto out = std::vector<uint8_t>(4096);
         size_t out_length = out.size();
         auto in = random(25);
 
-        sa_sign_parameters_rsa_pss parameters = {static_cast<sa_digest_algorithm>(UINT8_MAX), SA_DIGEST_ALGORITHM_SHA1, false, 20};
+        sa_sign_parameters_rsa_pss parameters =
+                {static_cast<sa_digest_algorithm>(UINT8_MAX), SA_DIGEST_ALGORITHM_SHA1, false, 20};
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key, in.data(),
                 in.size(), &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
@@ -232,7 +233,7 @@ namespace {
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto out = std::vector<uint8_t>(4096);
         size_t out_length = out.size();
@@ -274,7 +275,7 @@ namespace {
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto out = std::vector<uint8_t>(4096);
         size_t out_length = out.size();
@@ -300,7 +301,7 @@ namespace {
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto out = std::vector<uint8_t>(4096);
         size_t out_length = out.size();
@@ -326,7 +327,7 @@ namespace {
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto out = std::vector<uint8_t>(4096);
         size_t out_length = out.size();
@@ -349,7 +350,7 @@ namespace {
         auto key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto out = std::vector<uint8_t>(4096);
 

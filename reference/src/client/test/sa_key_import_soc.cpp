@@ -46,7 +46,7 @@ namespace {
             key_size = ec_get_key_size(curve);
             clear_key = ec_generate_key_bytes(curve);
             if (clear_key.empty())
-                GTEST_SKIP() << "Curve not supported";
+                GTEST_SKIP() << "key type, key size, or curve not supported";
         } else if (key_type == SA_KEY_TYPE_SYMMETRIC) {
             clear_key = random(key_size);
         } else if (key_type == SA_KEY_TYPE_RSA) {
@@ -59,7 +59,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type_string, key_type, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -110,7 +110,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -130,7 +130,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -150,7 +150,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -170,7 +170,7 @@ namespace {
         sa_status status = import_key(key.get(), 0, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -190,7 +190,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -210,7 +210,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -230,7 +230,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -250,7 +250,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -270,7 +270,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -290,7 +290,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -310,7 +310,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -330,7 +330,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -350,7 +350,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -372,7 +372,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, entitled_ta_ids, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -411,7 +411,7 @@ namespace {
         sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, clear_key, iv,
                 key_usage, decrypted_key_usage, entitled_ta_ids, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         if (count > MAX_NUM_ALLOWED_TA_IDS) {
             ASSERT_NE(status, SA_STATUS_OK);

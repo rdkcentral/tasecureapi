@@ -18,21 +18,27 @@
 
 #include "client_test_helpers.h"
 #include "sa_process_common_encryption_common.h"
+#include <chrono>
+
+#define SUBSAMPLE_SIZE 256UL
 
 using namespace client_test_helpers;
 
 TEST_P(SaProcessCommonEncryptionTest, nominal) {
-    size_t crypt_byte_block = std::get<0>(GetParam());
+    auto sample_size_and_time = std::get<0>(GetParam());
+    size_t sample_size = std::get<0>(sample_size_and_time);
+    size_t sample_time = std::get<1>(sample_size_and_time);
+    size_t crypt_byte_block = std::get<1>(GetParam());
     size_t skip_byte_block = (10 - crypt_byte_block) % 10;
-    size_t subsample_count = std::get<1>(GetParam());
-    size_t bytes_of_clear_data = std::get<2>(GetParam());
-    size_t number_samples = std::get<3>(GetParam());
+    size_t subsample_count = std::get<2>(GetParam());
+    size_t bytes_of_clear_data = std::get<3>(GetParam());
 
     cipher_parameters parameters;
     parameters.cipher_algorithm = std::get<4>(GetParam());
     auto buffer_types = std::get<5>(GetParam());
     sa_buffer_type out_buffer_type = std::get<0>(buffer_types);
     sa_buffer_type in_buffer_type = std::get<1>(buffer_types);
+    parameters.svp_required = (out_buffer_type == SA_BUFFER_TYPE_SVP && in_buffer_type == SA_BUFFER_TYPE_SVP);
 
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
@@ -44,9 +50,165 @@ TEST_P(SaProcessCommonEncryptionTest, nominal) {
     parameters.iv[15] = 0xfe;
 
     sample_data sample_data;
-    std::vector<sa_sample> samples(number_samples);
-    ASSERT_TRUE(build_samples(crypt_byte_block, skip_byte_block, subsample_count, bytes_of_clear_data,
+    std::vector<sa_sample> samples(1);
+    ASSERT_TRUE(build_samples(sample_size, crypt_byte_block, skip_byte_block, subsample_count, bytes_of_clear_data,
             parameters, out_buffer_type, in_buffer_type, cipher, sample_data, samples));
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+    sa_status status = sa_process_common_encryption(samples.size(), samples.data());
+    auto end_time = std::chrono::high_resolution_clock::now();
+    ASSERT_EQ(status, SA_STATUS_OK);
+    std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    INFO("sa_process_common_encryption ((%d, %d), %d, %d, %d, %d, (%d, %d)) execution time: %lld ms", sample_size,
+            sample_time, crypt_byte_block, subsample_count, bytes_of_clear_data, parameters.cipher_algorithm,
+            out_buffer_type, in_buffer_type, duration.count());
+#ifndef DISABLE_CENC_TIMING
+    ASSERT_LE(duration.count(), sample_time);
+#endif
+
+    if (out_buffer_type == SA_BUFFER_TYPE_CLEAR) {
+        int result = memcmp(sample_data.out->context.clear.buffer, sample_data.clear.data(), sample_data.clear.size());
+        ASSERT_EQ(result, 0);
+    } else {
+        std::vector<uint8_t> digest;
+        ASSERT_TRUE(digest_openssl(digest, SA_DIGEST_ALGORITHM_SHA256, sample_data.clear, {}, {}));
+        status = sa_svp_buffer_check(sample_data.out->context.svp.buffer, 0, sample_data.clear.size(),
+                SA_DIGEST_ALGORITHM_SHA256, digest.data(), digest.size());
+        ASSERT_EQ(status, SA_STATUS_OK);
+    }
+}
+
+TEST_F(SaProcessCommonEncryptionAlternativeTest, multipleSamples) {
+    cipher_parameters parameters;
+    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
+    parameters.svp_required = false;
+    sa_buffer_type out_buffer_type =
+            sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED ? SA_BUFFER_TYPE_CLEAR : SA_BUFFER_TYPE_SVP;
+    sa_buffer_type in_buffer_type = SA_BUFFER_TYPE_CLEAR;
+
+    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
+    ASSERT_NE(cipher, nullptr);
+    if (*cipher == UNSUPPORTED_CIPHER)
+        GTEST_SKIP() << "Cipher algorithm not supported";
+
+    // Set lower 8 bytes of IV to FFFFFFFFFFFFFFFF to test rollover condition.
+    memset(&parameters.iv[8], 0xff, 8);
+
+    sample_data sample_data;
+    std::vector<sa_sample> samples(5);
+    ASSERT_TRUE(build_samples(5000, 0, 0, 5, 20, parameters, out_buffer_type, in_buffer_type, cipher, sample_data,
+            samples));
+
+    sa_status status = sa_process_common_encryption(samples.size(), samples.data());
+    ASSERT_EQ(status, SA_STATUS_OK);
+
+    if (out_buffer_type == SA_BUFFER_TYPE_CLEAR) {
+        int result = memcmp(sample_data.out->context.clear.buffer, sample_data.clear.data(), sample_data.clear.size());
+        ASSERT_EQ(result, 0);
+    } else {
+        std::vector<uint8_t> digest;
+        ASSERT_TRUE(digest_openssl(digest, SA_DIGEST_ALGORITHM_SHA256, sample_data.clear, {}, {}));
+        status = sa_svp_buffer_check(sample_data.out->context.svp.buffer, 0, sample_data.clear.size(),
+                SA_DIGEST_ALGORITHM_SHA256, digest.data(), digest.size());
+        ASSERT_EQ(status, SA_STATUS_OK);
+    }
+}
+
+TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest) {
+    cipher_parameters parameters;
+    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
+    parameters.svp_required = false;
+    sa_buffer_type out_buffer_type =
+            sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED ? SA_BUFFER_TYPE_CLEAR : SA_BUFFER_TYPE_SVP;
+    sa_buffer_type in_buffer_type = SA_BUFFER_TYPE_CLEAR;
+
+    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
+    ASSERT_NE(cipher, nullptr);
+    if (*cipher == UNSUPPORTED_CIPHER)
+        GTEST_SKIP() << "Cipher algorithm not supported";
+
+    // Set lower 8 bytes of IV to FFFFFFFFFFFFFFFD to test rollover condition.
+    memset(&parameters.iv[8], 0xff, 7);
+    parameters.iv[15] = 0xfd;
+
+    sample_data sample_data;
+    std::vector<sa_sample> samples(1);
+    ASSERT_TRUE(build_samples(100, 0, 0, 5, 0, parameters, out_buffer_type, in_buffer_type, cipher, sample_data,
+            samples));
+
+    sa_status status = sa_process_common_encryption(samples.size(), samples.data());
+    ASSERT_EQ(status, SA_STATUS_OK);
+
+    if (out_buffer_type == SA_BUFFER_TYPE_CLEAR) {
+        int result = memcmp(sample_data.out->context.clear.buffer, sample_data.clear.data(), sample_data.clear.size());
+        ASSERT_EQ(result, 0);
+    } else {
+        std::vector<uint8_t> digest;
+        ASSERT_TRUE(digest_openssl(digest, SA_DIGEST_ALGORITHM_SHA256, sample_data.clear, {}, {}));
+        status = sa_svp_buffer_check(sample_data.out->context.svp.buffer, 0, sample_data.clear.size(),
+                SA_DIGEST_ALGORITHM_SHA256, digest.data(), digest.size());
+        ASSERT_EQ(status, SA_STATUS_OK);
+    }
+}
+
+TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest2) {
+    cipher_parameters parameters;
+    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
+    parameters.svp_required = false;
+    sa_buffer_type out_buffer_type =
+            sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED ? SA_BUFFER_TYPE_CLEAR : SA_BUFFER_TYPE_SVP;
+    sa_buffer_type in_buffer_type = SA_BUFFER_TYPE_CLEAR;
+
+    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
+    ASSERT_NE(cipher, nullptr);
+    if (*cipher == UNSUPPORTED_CIPHER)
+        GTEST_SKIP() << "Cipher algorithm not supported";
+
+    // Set lower 8 bytes of IV to FFFFFFFFFFFFFFFD to test rollover condition.
+    memset(&parameters.iv[8], 0xff, 7);
+    parameters.iv[15] = 0xfd;
+
+    sample_data sample_data;
+    std::vector<sa_sample> samples(1);
+    ASSERT_TRUE(build_samples(180, 0, 0, 5, 0, parameters, out_buffer_type, in_buffer_type, cipher, sample_data,
+            samples));
+
+    sa_status status = sa_process_common_encryption(samples.size(), samples.data());
+    ASSERT_EQ(status, SA_STATUS_OK);
+
+    if (out_buffer_type == SA_BUFFER_TYPE_CLEAR) {
+        int result = memcmp(sample_data.out->context.clear.buffer, sample_data.clear.data(), sample_data.clear.size());
+        ASSERT_EQ(result, 0);
+    } else {
+        std::vector<uint8_t> digest;
+        ASSERT_TRUE(digest_openssl(digest, SA_DIGEST_ALGORITHM_SHA256, sample_data.clear, {}, {}));
+        status = sa_svp_buffer_check(sample_data.out->context.svp.buffer, 0, sample_data.clear.size(),
+                SA_DIGEST_ALGORITHM_SHA256, digest.data(), digest.size());
+        ASSERT_EQ(status, SA_STATUS_OK);
+    }
+}
+
+TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest3) {
+    cipher_parameters parameters;
+    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
+    parameters.svp_required = false;
+    sa_buffer_type out_buffer_type =
+            sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED ? SA_BUFFER_TYPE_CLEAR : SA_BUFFER_TYPE_SVP;
+    sa_buffer_type in_buffer_type = SA_BUFFER_TYPE_CLEAR;
+
+    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
+    ASSERT_NE(cipher, nullptr);
+    if (*cipher == UNSUPPORTED_CIPHER)
+        GTEST_SKIP() << "Cipher algorithm not supported";
+
+    // Set lower 8 bytes of IV to FFFFFFFFFFFFFFFD to test rollover condition.
+    memset(&parameters.iv[8], 0xff, 7);
+    parameters.iv[15] = 0xfc;
+
+    sample_data sample_data;
+    std::vector<sa_sample> samples(1);
+    ASSERT_TRUE(build_samples(180, 0, 0, 5, 0, parameters, out_buffer_type, in_buffer_type, cipher, sample_data,
+            samples));
 
     sa_status status = sa_process_common_encryption(samples.size(), samples.data());
     ASSERT_EQ(status, SA_STATUS_OK);
@@ -71,6 +233,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullSamples) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullIv) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -105,6 +268,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullIv) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidIvLength) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -139,6 +303,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidIvLength) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullSubsampleLengths) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -170,6 +335,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullSubsampleLengths) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidSubsampleCount) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -204,6 +370,8 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidSubsampleCount) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullOut) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -236,6 +404,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullOut) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullOutBuffer) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -272,6 +441,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutSvpBuffer) {
 
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -308,6 +478,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutSvpBuffer) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullIn) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -340,6 +511,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullIn) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullInBuffer) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -378,6 +550,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullInSvpBuffer) {
 
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -412,6 +585,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullInSvpBuffer) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidSkipByteBlock) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -445,6 +619,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidSkipByteBlock) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipher) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_ENCRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -479,6 +654,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipher) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipherMode) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_ENCRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -513,6 +689,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipherMode) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutBufferType) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -547,6 +724,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutBufferType) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidInBufferType) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -582,6 +760,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidInBufferType) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipherAlgorithm) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -619,6 +798,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidBufferTypeCombo) {
 
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -704,6 +884,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTypeDisallowed) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTooShort) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -739,6 +920,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTooShort) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, inBufferTooShort) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -774,6 +956,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, inBufferTooShort) {
 TEST_F(SaProcessCommonEncryptionNegativeTest, failClearBufferOverlap) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)
@@ -810,6 +993,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, failSvpBufferOverlap) {
 
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
     ASSERT_NE(cipher, nullptr);
     if (*cipher == UNSUPPORTED_CIPHER)

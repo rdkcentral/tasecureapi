@@ -34,7 +34,7 @@ namespace {
         sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
                 SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -57,7 +57,7 @@ namespace {
         sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
                 SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -79,7 +79,7 @@ namespace {
         sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
                 SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -104,7 +104,7 @@ namespace {
         sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
                 SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -131,7 +131,7 @@ namespace {
         sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
                 SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -201,7 +201,7 @@ namespace {
         sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
                 SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -305,7 +305,7 @@ namespace {
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_ec(&rights, curve, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
         if (*wrapping_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         std::vector<uint8_t> iv = random(AES_BLOCK_SIZE);
         sa_unwrap_parameters_aes_cbc unwrap_parameters_aes_cbc = {
@@ -357,7 +357,7 @@ namespace {
                     SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_CBC, SA_DIGEST_ALGORITHM_SHA1,
                     SA_DIGEST_ALGORITHM_SHA1, 0);
             if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-                GTEST_SKIP() << "key type not supported";
+                GTEST_SKIP() << "key type, key size, or curve not supported";
 
             ASSERT_EQ(status, SA_STATUS_OK);
 

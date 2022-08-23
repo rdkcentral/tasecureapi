@@ -36,7 +36,7 @@ namespace {
                 SYM_256_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_CHACHA20, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -59,7 +59,7 @@ namespace {
                 SYM_256_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_CHACHA20, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -81,7 +81,7 @@ namespace {
                 SYM_256_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_CHACHA20, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -106,7 +106,7 @@ namespace {
                 SYM_256_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_CHACHA20, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -229,7 +229,7 @@ namespace {
                 SYM_256_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_CHACHA20, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -339,7 +339,7 @@ namespace {
                 clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
         if (*wrapping_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         std::vector<uint8_t> counter = {0, 0, 0, 0};
         std::vector<uint8_t> nonce = random(CHACHA20_NONCE_LENGTH);

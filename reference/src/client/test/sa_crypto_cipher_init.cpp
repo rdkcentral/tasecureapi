@@ -45,6 +45,7 @@ namespace {
         parameters.oaep_digest_algorithm = std::get<4>(GetParam());
         parameters.oaep_mgf1_digest_algorithm = std::get<5>(GetParam());
         parameters.oaep_label_length = std::get<6>(GetParam());
+        parameters.svp_required = false;
 
         auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, key_type, key_size, parameters);
         ASSERT_NE(cipher, nullptr);
@@ -60,10 +61,11 @@ namespace {
         parameters.oaep_digest_algorithm = std::get<4>(GetParam());
         parameters.oaep_mgf1_digest_algorithm = std::get<5>(GetParam());
         parameters.oaep_label_length = std::get<6>(GetParam());
+        parameters.svp_required = false;
 
         ASSERT_TRUE(import_key(parameters, key_type, key_size));
         if (*parameters.key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         std::vector<std::shared_ptr<sa_crypto_cipher_context>> ciphers;
         size_t i = 0;
