@@ -69,7 +69,7 @@ size_t ec_validate_private(
  * @param[in] stored_key private key.
  * @return status of the operation.
  */
-bool ec_get_public(
+sa_status ec_get_public(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key);

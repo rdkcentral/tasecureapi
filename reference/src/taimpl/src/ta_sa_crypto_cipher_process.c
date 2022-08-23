@@ -116,9 +116,10 @@ static sa_status ta_sa_crypto_cipher_process_symmetric(
             return SA_STATUS_OPERATION_NOT_ALLOWED;
         }
 
-        if (!symmetric_context_encrypt(symmetric_context, out, in, *bytes_to_process)) {
+        sa_status status = symmetric_context_encrypt(symmetric_context, out, in, *bytes_to_process);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_encrypt failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
     } else if (cipher_mode == SA_CIPHER_MODE_DECRYPT) {
         if (!rights_allowed_decrypt(rights, SA_KEY_TYPE_SYMMETRIC)) {
@@ -126,9 +127,10 @@ static sa_status ta_sa_crypto_cipher_process_symmetric(
             return SA_STATUS_OPERATION_NOT_ALLOWED;
         }
 
-        if (!symmetric_context_decrypt(symmetric_context, out, in, *bytes_to_process)) {
+        sa_status status = symmetric_context_decrypt(symmetric_context, out, in, *bytes_to_process);
+        if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_decrypt failed");
-            return SA_STATUS_VERIFICATION_FAILED;
+            return status;
         }
     } else {
         ERROR("Unknown mode encountered");
@@ -200,13 +202,14 @@ static sa_status ta_sa_crypto_cipher_process_rsa_pkcs1v15(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (!rsa_decrypt_pkcs1v15(out, &out_length, stored_key, in, *bytes_to_process)) {
+    sa_status status = rsa_decrypt_pkcs1v15(out, &out_length, stored_key, in, *bytes_to_process);
+    if (status != SA_STATUS_OK) {
         ERROR("rsa_decrypt_pkcs1v15 failed");
-        return SA_STATUS_VERIFICATION_FAILED;
+        return status;
     }
 
     *bytes_to_process = out_length;
-    return SA_STATUS_OK;
+    return status;
 }
 
 static sa_status ta_sa_crypto_cipher_process_rsa_oaep(
@@ -286,14 +289,15 @@ static sa_status ta_sa_crypto_cipher_process_rsa_oaep(
         return SA_STATUS_INTERNAL_ERROR;
     }
 
-    if (!rsa_decrypt_oaep(out, &out_length, stored_key, digest_algorithm, mgf1_digest_algorithm, label, label_length,
-                in, *bytes_to_process)) {
+    sa_status status = rsa_decrypt_oaep(out, &out_length, stored_key, digest_algorithm, mgf1_digest_algorithm, label,
+            label_length, in, *bytes_to_process);
+    if (status != SA_STATUS_OK) {
         ERROR("rsa_decrypt_oaep failed");
-        return SA_STATUS_VERIFICATION_FAILED;
+        return status;
     }
 
     *bytes_to_process = out_length;
-    return SA_STATUS_OK;
+    return status;
 }
 
 static sa_status ta_sa_crypto_cipher_process_ec_elgamal(

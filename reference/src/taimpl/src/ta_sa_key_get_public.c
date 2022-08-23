@@ -45,12 +45,13 @@ static sa_status ta_sa_key_get_public_ec(
         return SA_STATUS_INVALID_KEY_TYPE;
     }
 
-    if (!ec_get_public(out, out_length, stored_key)) {
+    sa_status status = ec_get_public(out, out_length, stored_key);
+    if (status != SA_STATUS_OK) {
         ERROR("ec_get_public failed");
-        return SA_STATUS_INVALID_PARAMETER;
+        return status;
     }
 
-    return SA_STATUS_OK;
+    return status;
 }
 
 static sa_status ta_sa_key_get_public_dh(
@@ -74,12 +75,13 @@ static sa_status ta_sa_key_get_public_dh(
         return SA_STATUS_INVALID_KEY_TYPE;
     }
 
-    if (!dh_get_public(out, out_length, stored_key)) {
+    sa_status status = dh_get_public(out, out_length, stored_key);
+    if (status != SA_STATUS_OK) {
         ERROR("dh_get_public failed");
-        return SA_STATUS_INVALID_PARAMETER;
+        return status;
     }
 
-    return SA_STATUS_OK;
+    return status;
 }
 
 static sa_status ta_sa_key_get_public_rsa(
@@ -105,13 +107,11 @@ static sa_status ta_sa_key_get_public_rsa(
 
     sa_status status;
     do {
-        if (!rsa_get_public(out, out_length, stored_key)) {
+        status = rsa_get_public(out, out_length, stored_key);
+        if (status != SA_STATUS_OK) {
             ERROR("rsa_get_public failed");
-            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     return status;

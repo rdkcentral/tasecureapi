@@ -56,7 +56,7 @@ const sa_header* stored_key_get_header(const stored_key_t* stored_key);
  * @param[in] in_length key payload length.
  * @return the creation status.
  */
-bool stored_key_import(
+sa_status stored_key_import(
         stored_key_t** stored_key,
         const sa_rights* rights,
         sa_key_type key_type,

@@ -331,22 +331,22 @@ size_t ec_validate_private(
     return result;
 }
 
-bool ec_get_public(
+sa_status ec_get_public(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key) {
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_PKEY* evp_pkey = NULL;
     do {
         const uint8_t* key = stored_key_get_key(stored_key);
@@ -376,12 +376,13 @@ bool ec_get_public(
 
         if (out == NULL) {
             *out_length = length;
-            status = true;
+            status = SA_STATUS_OK;
             break;
         }
 
         if (*out_length < (size_t) length) {
             ERROR("Invalid out_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -393,7 +394,7 @@ bool ec_get_public(
         }
 
         *out_length = length;
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_PKEY_free(evp_pkey);
@@ -701,13 +702,12 @@ sa_status ec_compute_ecdh_shared_secret(
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        if (!stored_key_create(stored_key_shared_secret, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC,
-                    &type_parameters, shared_secret_length, shared_secret, shared_secret_length)) {
+        status = stored_key_create(stored_key_shared_secret, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC,
+                &type_parameters, shared_secret_length, shared_secret, shared_secret_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     if (shared_secret != NULL) {
@@ -1077,12 +1077,12 @@ sa_status ec_generate_key(
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(type_parameters));
         type_parameters.curve = parameters->curve;
-        if (!stored_key_create(stored_key, rights, NULL, SA_KEY_TYPE_EC, &type_parameters, key_size, key, key_length)) {
+        status = stored_key_create(stored_key, rights, NULL, SA_KEY_TYPE_EC, &type_parameters, key_size, key,
+                key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     if (key != NULL) {

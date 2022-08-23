@@ -157,113 +157,113 @@ sa_digest_algorithm hmac_context_get_digest(const hmac_context_t* context) {
     return context->digest_algorithm;
 }
 
-bool hmac_context_update(
+sa_status hmac_context_update(
         hmac_context_t* context,
         const void* in,
         size_t in_length) {
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->done) {
         ERROR("Mac value has already been computed on this context");
-        return false;
+        return SA_STATUS_OPERATION_NOT_ALLOWED;
     }
 
     if (in == NULL && in_length > 0) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in_length > 0) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
         if (EVP_MAC_update(context->evp_mac_ctx, in, in_length) != 1) {
             ERROR("EVP_MAC_update failed");
-            return false;
+            return SA_STATUS_INTERNAL_ERROR;
         }
 #else
         if (EVP_DigestSignUpdate(context->openssl_context, in, in_length) != 1) {
             ERROR("EVP_DigestSignUpdate failed");
-            return false;
+            return SA_STATUS_INTERNAL_ERROR;
         }
 #endif
     }
 
-    return true;
+    return SA_STATUS_OK;
 }
 
-bool hmac_context_update_key(
+sa_status hmac_context_update_key(
         hmac_context_t* context,
         stored_key_t* stored_key) {
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (context->done) {
         ERROR("Mac value has already been computed on this context");
-        return false;
+        return SA_STATUS_OPERATION_NOT_ALLOWED;
     }
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     const void* key = stored_key_get_key(stored_key);
     if (key == NULL) {
         ERROR("stored_key_get_key failed");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     size_t key_length = stored_key_get_length(stored_key);
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
     if (EVP_MAC_update(context->evp_mac_ctx, key, key_length) != 1) {
         ERROR("EVP_MAC_update failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 #else
     if (EVP_DigestSignUpdate(context->openssl_context, key, key_length) != 1) {
         ERROR("EVP_DigestSignUpdate failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 #endif
 
-    return true;
+    return SA_STATUS_OK;
 }
 
-bool hmac_context_compute(
+sa_status hmac_context_compute(
         void* mac,
         size_t* mac_length,
         hmac_context_t* context) {
 
     if (context == NULL) {
         ERROR("NULL context");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (mac_length == NULL) {
         ERROR("NULL mac_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (mac == NULL) {
         *mac_length = digest_length(context->digest_algorithm);
-        return true;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (*mac_length < digest_length(context->digest_algorithm)) {
         ERROR("Invalid mac_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
     *mac_length = digest_length(context->digest_algorithm);
 
     if (context->done) {
         ERROR("Mac value has already been computed on this context");
-        return false;
+        return SA_STATUS_OPERATION_NOT_ALLOWED;
     }
 
     size_t length = *mac_length;
@@ -271,16 +271,16 @@ bool hmac_context_compute(
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
     if (EVP_MAC_final(context->evp_mac_ctx, mac, &length, *mac_length) != 1) {
         ERROR("EVP_MAC_final failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 #else
     if (EVP_DigestSignFinal(context->openssl_context, (unsigned char*) mac, &length) != 1) {
         ERROR("EVP_DigestSignFinal failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 #endif
 
-    return true;
+    return SA_STATUS_OK;
 }
 
 bool hmac_context_done(

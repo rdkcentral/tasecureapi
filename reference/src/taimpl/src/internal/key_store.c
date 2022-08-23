@@ -231,8 +231,8 @@ static stored_key_t* unwrap(
             break;
         }
 
-        if (!stored_key_create(&stored_key, &header->rights, NULL, header->type, &header->type_parameters,
-                    header->size, cleartext, cipher_parameters->ciphertext_length - pad_value)) {
+        if (stored_key_create(&stored_key, &header->rights, NULL, header->type, &header->type_parameters,
+                    header->size, cleartext, cipher_parameters->ciphertext_length - pad_value) != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }

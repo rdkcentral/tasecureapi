@@ -42,8 +42,15 @@ extern "C" {
 /**
  * Perform Netflix key derivation.
  * https://github.com/Netflix/msl/wiki/Pre-shared-Keys-or-Model-Group-Keys-Entity-Authentication
+ *
+ * @param[out] stored_key_wrap the wrap key result from the derivation.
+ * @param[in] rights_wrap the rights for the wrap key.
+ * @param[in] rights_parent the parent rights.
+ * @param[in] stored_key_enc the enc key to use in the derivation.
+ * @param[in] stored_key_hmac the mac key to use in the derivation.
+ * @return the status of the operation.
  */
-bool kdf_netflix_wrapping(
+sa_status kdf_netflix_wrapping(
         stored_key_t** stored_key_wrap,
         const sa_rights* rights_wrap,
         const sa_rights* rights_parent,
@@ -53,8 +60,16 @@ bool kdf_netflix_wrapping(
 /**
  * Perform shared secret Netflix key derivation.
  * https://github.com/Netflix/msl/wiki/Authenticated-Diffie-Hellman-Key-Exchange
+ *
+ * @param[out] stored_key_enc the generated enc key.
+ * @param[in] rights_enc the rights for the enc key.
+ * @param[out] stored_key_hmac the generated hmac key.
+ * @param[in] rights_hmac the rights for the hmac key.
+ * @param[in] stored_key_in the key to use in the generation.
+ * @param[in] stored_key_shared_secret the resulting shared secret.
+ * @return the status of the operation.
  */
-bool kdf_netflix_shared_secret(
+sa_status kdf_netflix_shared_secret(
         stored_key_t** stored_key_enc,
         const sa_rights* rights_enc,
         stored_key_t** stored_key_hmac,

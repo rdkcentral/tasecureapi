@@ -272,14 +272,13 @@ static sa_status ta_sa_crypto_sign_rsa_pss(
             break;
         }
 
-        if (!rsa_sign_pss(out, out_length, parameters->digest_algorithm, stored_key, parameters->mgf1_digest_algorithm,
-                    parameters->salt_length, in, in_length, parameters->precomputed_digest)) {
+        status = rsa_sign_pss(out, out_length, parameters->digest_algorithm, stored_key,
+                parameters->mgf1_digest_algorithm, parameters->salt_length, in, in_length,
+                parameters->precomputed_digest);
+        if (status != SA_STATUS_OK) {
             ERROR("rsa_sign_pss failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     return status;
@@ -348,14 +347,12 @@ static sa_status ta_sa_crypto_sign_rsa_pkcs1v15(
             break;
         }
 
-        if (!rsa_sign_pkcs1v15(out, out_length, parameters->digest_algorithm, stored_key, in, in_length,
-                    parameters->precomputed_digest)) {
+        status = rsa_sign_pkcs1v15(out, out_length, parameters->digest_algorithm, stored_key, in, in_length,
+                parameters->precomputed_digest);
+        if (status != SA_STATUS_OK) {
             ERROR("rsa_sign_pkcs1v15 failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     return status;

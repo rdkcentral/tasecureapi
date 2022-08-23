@@ -58,7 +58,7 @@ size_t rsa_validate_private(
  * @param[in] stored_key private key.
  * @return status of the operation.
  */
-bool rsa_get_public(
+sa_status rsa_get_public(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key);
@@ -86,7 +86,7 @@ sa_status rsa_verify_cipher(
  * @param[in] in_length input data length.
  * @return status of the operation.
  */
-bool rsa_decrypt_pkcs1v15(
+sa_status rsa_decrypt_pkcs1v15(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key,
@@ -107,7 +107,7 @@ bool rsa_decrypt_pkcs1v15(
  * @param[in] in_length input data length.
  * @return status of the operation.
  */
-bool rsa_decrypt_oaep(
+sa_status rsa_decrypt_oaep(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key,
@@ -130,7 +130,7 @@ bool rsa_decrypt_oaep(
  * @param[in] precomputed_digest indicates if in contains the digest.
  * @return status of the operation.
  */
-bool rsa_sign_pkcs1v15(
+sa_status rsa_sign_pkcs1v15(
         void* out,
         size_t* out_length,
         sa_digest_algorithm digest_algorithm,
@@ -153,7 +153,7 @@ bool rsa_sign_pkcs1v15(
  * @param[in] precomputed_digest indicates if in contains the digest.
  * @return status of the operation.
  */
-bool rsa_sign_pss(
+sa_status rsa_sign_pss(
         void* out,
         size_t* out_length,
         sa_digest_algorithm digest_algorithm,

@@ -325,10 +325,10 @@ static sa_status ta_sa_key_exchange_netflix_dh(
             break;
         }
 
-        if (!kdf_netflix_shared_secret(&stored_key_enc, parameters->rights_ke, &stored_key_hmac, parameters->rights_kh,
-                    stored_key_in, stored_key_shared_secret)) {
+        status = kdf_netflix_shared_secret(&stored_key_enc, parameters->rights_ke, &stored_key_hmac, parameters->rights_kh,
+                stored_key_in, stored_key_shared_secret);
+        if (status != SA_STATUS_OK) {
             ERROR("kdf_netflix_shared_secret failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
@@ -344,9 +344,9 @@ static sa_status ta_sa_key_exchange_netflix_dh(
             break;
         }
 
-        if (!kdf_netflix_wrapping(&stored_key_wrap, rights, &in_header->rights, stored_key_enc, stored_key_hmac)) {
+        status = kdf_netflix_wrapping(&stored_key_wrap, rights, &in_header->rights, stored_key_enc, stored_key_hmac);
+        if (status != SA_STATUS_OK) {
             ERROR("kdf_netflix_wrapping failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 

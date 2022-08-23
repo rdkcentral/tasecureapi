@@ -26,9 +26,9 @@
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
 #include <openssl/core_names.h>
 #else
+#include <memory.h>
 #include <openssl/dh.h>
 #endif
-#include <memory.h>
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
 static void swap_native_binary(
@@ -53,22 +53,22 @@ static void swap_native_binary(
 }
 #endif
 
-bool dh_get_public(
+sa_status dh_get_public(
         void* out,
         size_t* out_length,
         const stored_key_t* stored_key) {
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_PKEY* evp_pkey = NULL;
     do {
         const uint8_t* key = stored_key_get_key(stored_key);
@@ -92,12 +92,13 @@ bool dh_get_public(
 
         if (out == NULL) {
             *out_length = length;
-            status = true;
+            status = SA_STATUS_OK;
             break;
         }
 
         if (*out_length < (size_t) length) {
             ERROR("Invalid out_length");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -109,7 +110,7 @@ bool dh_get_public(
         }
 
         *out_length = length;
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_PKEY_free(evp_pkey);
@@ -230,13 +231,12 @@ sa_status dh_compute_shared_secret(
 #endif
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        if (!stored_key_create(stored_key_shared_secret, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC,
-                    &type_parameters, shared_secret_length, shared_secret, shared_secret_length)) {
+        status = stored_key_create(stored_key_shared_secret, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC,
+                &type_parameters, shared_secret_length, shared_secret, shared_secret_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     if (shared_secret != NULL) {
@@ -250,7 +250,7 @@ sa_status dh_compute_shared_secret(
     return status;
 }
 
-bool dh_generate_key(
+sa_status dh_generate_key(
         stored_key_t** stored_key,
         const sa_rights* rights,
         const void* p,
@@ -260,27 +260,27 @@ bool dh_generate_key(
 
     if (stored_key == NULL) {
         ERROR("NULL key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (rights == NULL) {
         ERROR("NULL rights");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (p == NULL) {
         ERROR("NULL p");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (g == NULL) {
         ERROR("NULL g");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (p_length > DH_MAX_MOD_SIZE || p_length == 0) {
         ERROR("Invalid length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (g_length < 1 || g_length > p_length) {
@@ -288,7 +288,7 @@ bool dh_generate_key(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* key = NULL;
     size_t key_length;
     EVP_PKEY* evp_pkey = NULL;
@@ -358,6 +358,7 @@ bool dh_generate_key(
 
         if (EVP_PKEY_generate(evp_pkey_ctx, &evp_pkey) != 1) {
             ERROR("EVP_PKEY_generate failed");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -397,6 +398,7 @@ bool dh_generate_key(
 
         if (!DH_generate_key(dh)) {
             ERROR("DH_generate_key failed");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -437,7 +439,7 @@ bool dh_generate_key(
         type_parameters.dh_parameters.g_length = g_length;
         status = stored_key_create(stored_key, rights, NULL, SA_KEY_TYPE_DH, &type_parameters, p_length, key,
                 key_length);
-        if (!status) {
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }

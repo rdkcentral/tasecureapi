@@ -89,9 +89,9 @@ sa_status ta_sa_crypto_mac_compute(
             }
             *out_length = required_length;
 
-            if (!hmac_context_compute(out, out_length, hmac_context)) {
+            status = hmac_context_compute(out, out_length, hmac_context);
+            if (status != SA_STATUS_OK) {
                 ERROR("hmac_context_compute failed");
-                status = SA_STATUS_INTERNAL_ERROR;
                 break;
             }
         } else if (mac_algorithm == SA_MAC_ALGORITHM_CMAC) {
@@ -115,9 +115,9 @@ sa_status ta_sa_crypto_mac_compute(
             }
             *out_length = AES_BLOCK_SIZE;
 
-            if (!cmac_context_compute(out, cmac_context)) {
+            status = cmac_context_compute(out, cmac_context);
+            if (status != SA_STATUS_OK) {
                 ERROR("cmac_context_compute failed");
-                status = SA_STATUS_INTERNAL_ERROR;
                 break;
             }
         } else {
@@ -125,8 +125,6 @@ sa_status ta_sa_crypto_mac_compute(
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
-
-        status = SA_STATUS_OK;
     } while (false);
 
     if (mac != NULL)

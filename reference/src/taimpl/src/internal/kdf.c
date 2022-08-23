@@ -26,7 +26,7 @@
 #include "stored_key_internal.h"
 #include <memory.h>
 
-bool kdf_hkdf_hmac(
+sa_status kdf_hkdf_hmac(
         stored_key_t** stored_key_derived,
         const sa_rights* rights,
         sa_kdf_parameters_hkdf* parameters,
@@ -34,41 +34,41 @@ bool kdf_hkdf_hmac(
 
     if (stored_key_derived == NULL) {
         ERROR("NULL stored_key_derived");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (rights == NULL) {
         ERROR("NULL rights");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (parameters == NULL) {
         ERROR("NULL parameters");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (parameters->salt == NULL && parameters->salt_length > 0) {
         ERROR("NULL salt");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (parameters->info == NULL && parameters->info_length > 0) {
         ERROR("NULL info");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (stored_key_parent == NULL) {
         ERROR("NULL stored_key_parent");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     size_t hash_length = digest_length(parameters->digest_algorithm);
     if (hash_length > DIGEST_MAX_LENGTH) {
         ERROR("Invalid digest");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = false;
+    bool status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* derived = NULL;
     uint8_t* prk = NULL;
     size_t prk_length = DIGEST_MAX_LENGTH;
@@ -145,10 +145,12 @@ bool kdf_hkdf_hmac(
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
         status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
                 parameters->key_length, derived, parameters->key_length);
-        if (!status) {
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
+
+        status = SA_STATUS_OK;
     } while (false);
 
     if (prk != NULL) {
@@ -169,7 +171,7 @@ bool kdf_hkdf_hmac(
     return status;
 }
 
-bool kdf_concat_kdf(
+sa_status kdf_concat_kdf(
         stored_key_t** stored_key_derived,
         const sa_rights* rights,
         sa_kdf_parameters_concat* parameters,
@@ -177,36 +179,36 @@ bool kdf_concat_kdf(
 
     if (stored_key_derived == NULL) {
         ERROR("NULL derived");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (rights == NULL) {
         ERROR("NULL rights");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (parameters == NULL) {
         ERROR("NULL parameters");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (parameters->info == NULL && parameters->info_length > 0) {
         ERROR("NULL info");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (stored_key_parent == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     size_t hash_length = digest_length(parameters->digest_algorithm);
     if (hash_length > DIGEST_MAX_LENGTH) {
         ERROR("Invalid digest");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = false;
+    bool status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* derived = NULL;
     uint8_t* hash = NULL;
     do {
@@ -268,8 +270,8 @@ bool kdf_concat_kdf(
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
         status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                parameters->key_length, derived, parameters->key_length);
-        if (!status) {
+                    parameters->key_length, derived, parameters->key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
@@ -288,7 +290,7 @@ bool kdf_concat_kdf(
     return status;
 }
 
-bool kdf_ansi_x963(
+sa_status kdf_ansi_x963(
         stored_key_t** stored_key_derived,
         const sa_rights* rights,
         sa_kdf_parameters_ansi_x963* parameters,
@@ -296,36 +298,36 @@ bool kdf_ansi_x963(
 
     if (stored_key_derived == NULL) {
         ERROR("NULL stored_key_derived");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (rights == NULL) {
         ERROR("NULL rights");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (parameters == NULL) {
         ERROR("NULL parameters");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (parameters->info == NULL && parameters->info_length > 0) {
         ERROR("NULL info");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (stored_key_parent == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     size_t hash_length = digest_length(parameters->digest_algorithm);
     if (hash_length > DIGEST_MAX_LENGTH) {
         ERROR("Invalid digest");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = false;
+    bool status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* derived = NULL;
     uint8_t* hash = NULL;
     do {
@@ -387,8 +389,8 @@ bool kdf_ansi_x963(
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
         status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                parameters->key_length, derived, parameters->key_length);
-        if (!status) {
+                    parameters->key_length, derived, parameters->key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
@@ -407,7 +409,7 @@ bool kdf_ansi_x963(
     return status;
 }
 
-bool kdf_ctr_cmac(
+sa_status kdf_ctr_cmac(
         stored_key_t** stored_key_derived,
         const sa_rights* rights,
         sa_kdf_parameters_cmac* parameters,
@@ -415,45 +417,45 @@ bool kdf_ctr_cmac(
 
     if (stored_key_derived == NULL) {
         ERROR("NULL derived");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (rights == NULL) {
         ERROR("NULL rights");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (parameters == NULL) {
         ERROR("NULL parameters");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if ((parameters->key_length % SYM_128_KEY_SIZE) != 0) {
         ERROR("Invalid key_length: %d", parameters->key_length);
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->other_data == NULL && parameters->other_data_length > 0) {
         ERROR("NULL other_data");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (parameters->counter < 1 || parameters->counter > 4) {
         ERROR("Invalid counter: %d", parameters->counter);
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (parameters->key_length / SYM_128_KEY_SIZE > (size_t) (5 - parameters->counter)) {
         ERROR("Invalid derived_length, counter combo: %d, %d", parameters->key_length, parameters->counter);
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (stored_key_parent == NULL) {
         ERROR("NULL stored_key_parent");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    bool status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* full_key = NULL;
     size_t full_key_length = 4 * (size_t) AES_BLOCK_SIZE;
     uint8_t* derived = NULL;
@@ -495,8 +497,8 @@ bool kdf_ctr_cmac(
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
         status = stored_key_create(stored_key_derived, rights, &header->rights, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                parameters->key_length, derived, parameters->key_length);
-        if (!status) {
+                    parameters->key_length, derived, parameters->key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
