@@ -952,7 +952,7 @@ static int pkey_decrypt(
     status = sa_crypto_cipher_process(out == NULL ? NULL : &out_buffer, cipher_context, &in_buffer, &bytes_to_process);
     if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
         ERROR("sa_crypto_cipher_process operation not supported");
-        return -2;
+        return OPENSSL_NOT_SUPPORTED;
     }
 
     if (status != SA_STATUS_OK) {
@@ -1074,7 +1074,7 @@ static int pkey_pderive(
                 data->private_key, other_public, other_public_length, NULL);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
             ERROR("sa_crypto_cipher_init operation not supported");
-            result = -2;
+            result = OPENSSL_NOT_SUPPORTED;
             break;
         }
 
@@ -1260,7 +1260,7 @@ static int pkey_ctrl(
             break;
 
         default:
-            return -2;
+            return OPENSSL_NOT_SUPPORTED;
     }
 
     return 1;

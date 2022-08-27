@@ -118,6 +118,8 @@
 extern "C" {
 #endif
 
+#define OPENSSL_NOT_SUPPORTED -2
+
 /**
  * Returns the SecApi3 engine and initializes it if it hasn't been created.2s
  *
