@@ -21,6 +21,7 @@
 
 #include "sa.h"
 #include "sa_public_key.h"
+#include "sa_engine.h"
 #include <openssl/engine.h>
 #include <threads.h>
 

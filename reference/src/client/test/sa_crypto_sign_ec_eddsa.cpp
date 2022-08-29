@@ -46,6 +46,9 @@ namespace {
         auto in = random(25);
         status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(), in.size(),
                 nullptr);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -64,6 +67,9 @@ namespace {
         size_t out_length = 0;
         sa_status status = sa_crypto_sign(nullptr, &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, nullptr, 0,
                 nullptr);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_EQ(out_length, key_size * 2);
 
@@ -72,6 +78,9 @@ namespace {
         auto in = random(25);
         status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(), in.size(),
                 nullptr);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -92,6 +101,9 @@ namespace {
         auto in = random(25);
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(),
                 in.size(), nullptr);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -112,6 +124,9 @@ namespace {
         auto in = random(25);
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(),
                 in.size(), nullptr);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -132,6 +147,9 @@ namespace {
         auto in = random(25);
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(),
                 in.size(), nullptr);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -154,6 +172,9 @@ namespace {
         sa_sign_parameters_ecdsa parameters = {digest_algorithm, false};
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(),
                 in.size(), &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -176,6 +197,9 @@ namespace {
         sa_sign_parameters_ecdsa parameters = {digest_algorithm, false};
         sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_EDDSA, *key, in.data(),
                 in.size(), &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Unsupported signature algorithm";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

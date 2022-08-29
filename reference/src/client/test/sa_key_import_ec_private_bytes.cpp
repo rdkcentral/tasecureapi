@@ -42,6 +42,9 @@ namespace {
 
             status = sa_key_import(key.get(), SA_KEY_FORMAT_EC_PRIVATE_BYTES, clear_key.data(), clear_key.size(),
                     &parameters);
+            if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+                GTEST_SKIP() << "key type not supported";
+
             ASSERT_LE(i++, MAX_NUM_SLOTS);
             keys.push_back(key);
         } while (status == SA_STATUS_OK);
@@ -58,6 +61,9 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_EC_PRIVATE_BYTES, clear_key.data(), clear_key.size(),
                 nullptr);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type not supported";
+
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -72,6 +78,9 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_EC_PRIVATE_BYTES, clear_key.data(), clear_key.size(),
                 &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type not supported";
+
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -89,6 +98,9 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_EC_PRIVATE_BYTES, clear_key.data(), clear_key.size(),
                 &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type not supported";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

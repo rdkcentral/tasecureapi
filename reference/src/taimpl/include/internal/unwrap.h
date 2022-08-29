@@ -192,7 +192,7 @@ sa_status unwrap_chacha20_poly1305(
  * @param[in] rights the key rights.
  * @param[in] key_type the key type.
  * @param[in] cipher_algorithm the unwrap algorithm.
- * @param[in] parameters the unwrap parameters.
+ * @param[in] algorithm_parameters the unwrap parameters.
  * @param[in] stored_key_wrapping the unwrapping key.
  * @return status of the operation.
  */
@@ -203,7 +203,7 @@ sa_status unwrap_rsa(
         const sa_rights* rights,
         sa_key_type key_type,
         sa_cipher_algorithm cipher_algorithm,
-        void* parameters,
+        void* algorithm_parameters,
         const stored_key_t* stored_key_wrapping);
 
 /**
@@ -214,7 +214,7 @@ sa_status unwrap_rsa(
  * @param[in] in_length ciphertext length.
  * @param[in] rights the key rights.
  * @param[in] key_type the key type.
- * @param[in] parameters the unwrap parameters.
+ * @param[in] algorithm_parameters the unwrap parameters.
  * @param[in] stored_key_wrapping the unwrapping key.
  * @return status of the operation.
  */
@@ -224,7 +224,7 @@ sa_status unwrap_ec(
         size_t in_length,
         const sa_rights* rights,
         sa_key_type key_type,
-        sa_unwrap_parameters_ec_elgamal* parameters,
+        sa_unwrap_parameters_ec_elgamal* algorithm_parameters,
         const stored_key_t* stored_key_wrapping);
 
 #ifdef __cplusplus

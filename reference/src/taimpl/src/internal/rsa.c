@@ -112,7 +112,15 @@ sa_status rsa_get_public(
 sa_status rsa_verify_cipher(
         sa_cipher_algorithm cipher_algorithm,
         sa_cipher_mode cipher_mode,
+        void* parameters,
         const stored_key_t* stored_key) {
+
+    if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
+        if (parameters == NULL) {
+            ERROR("NULL parameters");
+            return SA_STATUS_NULL_PARAMETER;
+        }
+    }
 
     return SA_STATUS_OK;
 }

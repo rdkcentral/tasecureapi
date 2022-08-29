@@ -66,14 +66,16 @@ sa_status rsa_get_public(
 /**
  * Verifies that the RSA cipher operation can be performed.
  *
- * @param cipher_algorithm the cipher algorithm.
- * @param cipher_mode the cipher mode.
- * @param stored_key the stored key to use in the cipher.
+ * @param[in] cipher_algorithm the cipher algorithm.
+ * @param[in] cipher_mode the cipher mode.
+ * @param[in] parameters the parameters to the operation.
+ * @param[in] stored_key the stored key to use in the cipher.
  * @return the status of the cipher operation.
  */
 sa_status rsa_verify_cipher(
         sa_cipher_algorithm cipher_algorithm,
         sa_cipher_mode cipher_mode,
+        void* parameters,
         const stored_key_t* stored_key);
 
 /**

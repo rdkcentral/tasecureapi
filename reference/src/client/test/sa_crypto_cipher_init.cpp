@@ -62,6 +62,8 @@ namespace {
         parameters.oaep_label_length = std::get<6>(GetParam());
 
         ASSERT_TRUE(import_key(parameters, key_type, key_size));
+        if (*parameters.key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         std::vector<std::shared_ptr<sa_crypto_cipher_context>> ciphers;
         size_t i = 0;
@@ -76,6 +78,7 @@ namespace {
                     *parameters.key, parameters.parameters.get());
             if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
                 GTEST_SKIP() << "Cipher algorithm not supported";
+
             ASSERT_LE(i++, MAX_NUM_SLOTS);
             ciphers.push_back(cipher);
         } while (status == SA_STATUS_OK);

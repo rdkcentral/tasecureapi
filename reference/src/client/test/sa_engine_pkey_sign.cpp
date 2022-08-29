@@ -137,7 +137,11 @@ TEST_P(SaEnginePkeySignTest, signTest) {
     ASSERT_EQ(EVP_PKEY_CTX_set_signature_md(evp_pkey_sign_ctx.get(), evp_md), 1);
     ASSERT_EQ(EVP_PKEY_sign(evp_pkey_sign_ctx.get(), nullptr, &signature_length, digest, digest_length), 1);
     signature.resize(signature_length);
-    ASSERT_EQ(EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest, digest_length), 1);
+    int result = EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest, digest_length);
+    if (result == -2)
+        GTEST_SKIP() << "Operation not supported";
+
+    ASSERT_EQ(result, 1);
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
@@ -208,7 +212,11 @@ TEST(SaEnginePkeySignTest, defaultPaddingTest) {
     ASSERT_EQ(EVP_PKEY_CTX_set_signature_md(evp_pkey_sign_ctx.get(), evp_md), 1);
     ASSERT_EQ(EVP_PKEY_sign(evp_pkey_sign_ctx.get(), nullptr, &signature_length, digest, digest_length), 1);
     signature.resize(signature_length);
-    ASSERT_EQ(EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest, digest_length), 1);
+    int result = EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest, digest_length);
+    if (result == -2)
+        GTEST_SKIP() << "Operation not supported";
+
+    ASSERT_EQ(result, 1);
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
@@ -271,7 +279,11 @@ TEST(SaEnginePkeySignTest, defaultSaltTest) {
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(evp_pkey_sign_ctx.get(), padding), 1);
     ASSERT_EQ(EVP_PKEY_sign(evp_pkey_sign_ctx.get(), nullptr, &signature_length, digest, digest_length), 1);
     signature.resize(signature_length);
-    ASSERT_EQ(EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest, digest_length), 1);
+    int result = EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest, digest_length);
+    if (result == -2)
+        GTEST_SKIP() << "Operation not supported";
+
+    ASSERT_EQ(result, 1);
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
@@ -337,7 +349,11 @@ TEST(SaEnginePkeySignTest, defaultMgf1DigestTest) {
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_pss_saltlen(evp_pkey_sign_ctx.get(), RSA_PSS_SALTLEN_AUTO), 1);
     ASSERT_EQ(EVP_PKEY_sign(evp_pkey_sign_ctx.get(), nullptr, &signature_length, digest, digest_length), 1);
     signature.resize(signature_length);
-    ASSERT_EQ(EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest, digest_length), 1);
+    int result = EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest, digest_length);
+    if (result == -2)
+        GTEST_SKIP() << "Operation not supported";
+
+    ASSERT_EQ(result, 1);
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify

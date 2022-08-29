@@ -240,6 +240,11 @@ std::shared_ptr<sa_crypto_cipher_context> SaCipherCryptoBase::initialize_cipher(
         return nullptr;
     }
 
+    if (*parameters.key == UNSUPPORTED_KEY) {
+        *cipher = UNSUPPORTED_CIPHER;
+        return cipher;
+    }
+
     if (!get_cipher_parameters(parameters)) {
         ERROR("get_cipher_parameters failed");
         return nullptr;

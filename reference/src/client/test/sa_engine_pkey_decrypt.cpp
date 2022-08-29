@@ -91,6 +91,9 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
     std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     int result = EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), encrypted_data.data(), &encrypted_data_length, data.data(),
             data.size());
+    if (result == OPENSSL_NOT_SUPPORTED)
+        GTEST_SKIP() << "Operation not supported";
+
     ASSERT_EQ(result, 1);
 
     std::vector<uint8_t> decrypted_data;
@@ -132,6 +135,9 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
     decrypted_data.resize(decrypted_data_length);
     result = EVP_PKEY_decrypt(decrypt_pkey_ctx.get(), decrypted_data.data(), &decrypted_data_length,
             encrypted_data.data(), encrypted_data.size());
+    if (result == OPENSSL_NOT_SUPPORTED)
+        GTEST_SKIP() << "Operation not supported";
+
     ASSERT_EQ(result, 1);
     decrypted_data.resize(decrypted_data_length);
     ASSERT_EQ(decrypted_data, data);
@@ -166,6 +172,9 @@ TEST_F(SaEnginePkeyEncryptTest, defaultPaddingTest) {
     std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     int result = EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), encrypted_data.data(), &encrypted_data_length, data.data(),
             data.size());
+    if (result == OPENSSL_NOT_SUPPORTED)
+        GTEST_SKIP() << "Operation not supported";
+
     ASSERT_EQ(result, 1);
 
     std::vector<uint8_t> decrypted_data;
@@ -176,6 +185,9 @@ TEST_F(SaEnginePkeyEncryptTest, defaultPaddingTest) {
     size_t decrypted_data_length = 0;
     result = EVP_PKEY_decrypt(decrypt_pkey_ctx.get(), nullptr, &decrypted_data_length, encrypted_data.data(),
             encrypted_data.size());
+    if (result == OPENSSL_NOT_SUPPORTED)
+        GTEST_SKIP() << "Operation not supported";
+
     ASSERT_EQ(result, 1);
     decrypted_data.resize(decrypted_data_length);
     result = EVP_PKEY_decrypt(decrypt_pkey_ctx.get(), decrypted_data.data(), &decrypted_data_length,

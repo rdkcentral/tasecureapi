@@ -936,6 +936,11 @@ static int pkey_decrypt(
     sa_crypto_cipher_context cipher_context;
     sa_status status = sa_crypto_cipher_init(&cipher_context, cipher_algorithm, SA_CIPHER_MODE_DECRYPT,
             data->private_key, parameters);
+    if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
+        ERROR("sa_crypto_cipher_init operation not supported");
+        return -2;
+    }
+
     if (status != SA_STATUS_OK) {
         ERROR("sa_crypto_cipher_init failed");
         return 0;
@@ -945,6 +950,11 @@ static int pkey_decrypt(
     sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, .context.clear = {(void*) in, in_length, 0}};
     size_t bytes_to_process = in_length;
     status = sa_crypto_cipher_process(out == NULL ? NULL : &out_buffer, cipher_context, &in_buffer, &bytes_to_process);
+    if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
+        ERROR("sa_crypto_cipher_process operation not supported");
+        return OPENSSL_NOT_SUPPORTED;
+    }
+
     if (status != SA_STATUS_OK) {
         ERROR("sa_crypto_cipher_process failed");
         return 0;
@@ -1062,6 +1072,12 @@ static int pkey_pderive(
         sa_rights_set_allow_all(&rights);
         sa_status status = sa_key_exchange((void*) shared_secret_key, &rights, key_exchange_algorithm,
                 data->private_key, other_public, other_public_length, NULL);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
+            ERROR("sa_crypto_cipher_init operation not supported");
+            result = OPENSSL_NOT_SUPPORTED;
+            break;
+        }
+
         if (status != SA_STATUS_OK) {
             ERROR("sa_key_exchange failed");
             break;
@@ -1244,7 +1260,7 @@ static int pkey_ctrl(
             break;
 
         default:
-            return -2;
+            return OPENSSL_NOT_SUPPORTED;
     }
 
     return 1;

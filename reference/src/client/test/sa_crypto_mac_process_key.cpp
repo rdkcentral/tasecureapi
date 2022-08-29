@@ -209,6 +209,9 @@ namespace {
         sa_import_parameters_rsa_private_key_info rsa_parameters = {&rights};
         auto key = create_sa_key_rsa(&rights, rsa_key);
         ASSERT_NE(key, nullptr);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
+
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, rsa_key.data(),
                 rsa_key.size(), &rsa_parameters);
         ASSERT_EQ(status, SA_STATUS_OK);

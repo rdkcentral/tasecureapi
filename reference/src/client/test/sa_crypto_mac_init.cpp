@@ -148,6 +148,8 @@ namespace {
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
         ASSERT_NE(key, nullptr);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         auto mac = create_uninitialized_sa_crypto_mac_context();
         ASSERT_NE(mac, nullptr);

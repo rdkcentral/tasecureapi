@@ -38,13 +38,17 @@ namespace {
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
-        ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0));
+        sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
+                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type not supported";
+
+        ASSERT_EQ(status, SA_STATUS_OK);
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
-        sa_status status = sa_key_unwrap(nullptr, &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        status = sa_key_unwrap(nullptr, &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, wrapping_parameters.get(), *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
@@ -57,12 +61,16 @@ namespace {
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
-        ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0));
+        sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
+                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type not supported";
+
+        ASSERT_EQ(status, SA_STATUS_OK);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), nullptr, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        status = sa_key_unwrap(unwrapped_key.get(), nullptr, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, wrapping_parameters.get(), *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
@@ -75,15 +83,19 @@ namespace {
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
-        ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0));
+        sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
+                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type not supported";
+
+        ASSERT_EQ(status, SA_STATUS_OK);
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, wrapping_parameters.get(), *wrapping_key,
                 nullptr, 0);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
@@ -96,8 +108,13 @@ namespace {
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
-        ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0));
+        sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
+                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type not supported";
+
+        ASSERT_EQ(status, SA_STATUS_OK);
+
         wrapped_key = random(AES_BLOCK_SIZE + 1);
 
         sa_rights rights;
@@ -105,7 +122,7 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, wrapping_parameters.get(), *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
@@ -118,15 +135,19 @@ namespace {
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
         std::vector<uint8_t> wrapped_key;
-        ASSERT_TRUE(wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
-                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0));
+        sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
+                SYM_128_KEY_SIZE, clear_key, cipher_algorithm, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, 0);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type not supported";
+
+        ASSERT_EQ(status, SA_STATUS_OK);
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 cipher_algorithm, wrapping_parameters.get(), INVALID_HANDLE,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
@@ -205,6 +226,8 @@ namespace {
         std::vector<uint8_t> clear_wrapping_key = ec_generate_key_bytes(curve);
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_ec(&rights, curve, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
+        if (*wrapping_key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "key type not supported";
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);

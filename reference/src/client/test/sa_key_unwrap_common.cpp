@@ -22,7 +22,7 @@
 
 using namespace client_test_helpers;
 
-bool SaKeyUnwrapBase::wrap_key(
+sa_status SaKeyUnwrapBase::wrap_key(
         std::shared_ptr<sa_key>& wrapping_key,
         std::vector<uint8_t>& clear_wrapping_key,
         std::vector<uint8_t>& wrapped_key,
@@ -80,17 +80,17 @@ bool SaKeyUnwrapBase::wrap_key(
             else if (wrapping_key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P521))
                 curve = SA_ELLIPTIC_CURVE_NIST_P521;
             else
-                return false;
+                return SA_STATUS_INVALID_PARAMETER;
 
             return wrap_key_el_gamal(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
                     wrapping_key_size, clear_key, curve);
 
         default:
-            return false;
+            return SA_STATUS_INVALID_PARAMETER;
     }
 }
 
-bool SaKeyUnwrapBase::wrap_key_aes_cbc(
+sa_status SaKeyUnwrapBase::wrap_key_aes_cbc(
         std::shared_ptr<sa_key>& wrapping_key,
         std::vector<uint8_t>& clear_wrapping_key,
         std::vector<uint8_t>& wrapped_key,
@@ -106,7 +106,7 @@ bool SaKeyUnwrapBase::wrap_key_aes_cbc(
     auto iv = random(AES_BLOCK_SIZE);
     if (!encrypt_aes_cbc_openssl(wrapped_key, clear_key, iv, clear_wrapping_key,
                 wrapping_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7))
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
 
     auto* unwrap_parameters_aes_cbc = new sa_unwrap_parameters_aes_cbc;
     unwrap_parameters_aes_cbc->iv = new uint8_t[iv.size()];
@@ -122,10 +122,16 @@ bool SaKeyUnwrapBase::wrap_key_aes_cbc(
     wrapping_parameters = std::shared_ptr<sa_unwrap_parameters_aes_cbc>(unwrap_parameters_aes_cbc, deleter);
 
     wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
-    return wrapping_key != nullptr;
+    if (*wrapping_key == UNSUPPORTED_KEY)
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+
+    if (wrapping_key == nullptr)
+        return SA_STATUS_INTERNAL_ERROR;
+
+    return SA_STATUS_OK;
 }
 
-bool SaKeyUnwrapBase::wrap_key_aes_ecb(
+sa_status SaKeyUnwrapBase::wrap_key_aes_ecb(
         std::shared_ptr<sa_key>& wrapping_key,
         std::vector<uint8_t>& clear_wrapping_key,
         std::vector<uint8_t>& wrapped_key,
@@ -140,15 +146,21 @@ bool SaKeyUnwrapBase::wrap_key_aes_ecb(
     clear_wrapping_key = random(wrapping_key_size);
     if (!encrypt_aes_ecb_openssl(wrapped_key, clear_key, clear_wrapping_key,
                 wrapping_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7))
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
 
     wrapping_parameters = std::shared_ptr<void>();
 
     wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
-    return wrapping_key != nullptr;
+    if (*wrapping_key == UNSUPPORTED_KEY)
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+
+    if (wrapping_key == nullptr)
+        return SA_STATUS_INTERNAL_ERROR;
+
+    return SA_STATUS_OK;
 }
 
-bool SaKeyUnwrapBase::wrap_key_aes_ctr(
+sa_status SaKeyUnwrapBase::wrap_key_aes_ctr(
         std::shared_ptr<sa_key>& wrapping_key,
         std::vector<uint8_t>& clear_wrapping_key,
         std::vector<uint8_t>& wrapped_key,
@@ -162,7 +174,7 @@ bool SaKeyUnwrapBase::wrap_key_aes_ctr(
     clear_wrapping_key = random(wrapping_key_size);
     auto ctr = random(AES_BLOCK_SIZE);
     if (!encrypt_aes_ctr_openssl(wrapped_key, clear_key, ctr, clear_wrapping_key))
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
 
     auto* unwrap_parameters_aes_ctr = new sa_unwrap_parameters_aes_ctr;
     unwrap_parameters_aes_ctr->ctr = new uint8_t[ctr.size()];
@@ -177,10 +189,16 @@ bool SaKeyUnwrapBase::wrap_key_aes_ctr(
     wrapping_parameters = std::shared_ptr<sa_unwrap_parameters_aes_ctr>(unwrap_parameters_aes_ctr, deleter);
 
     wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
-    return wrapping_key != nullptr;
+    if (*wrapping_key == UNSUPPORTED_KEY)
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+
+    if (wrapping_key == nullptr)
+        return SA_STATUS_INTERNAL_ERROR;
+
+    return SA_STATUS_OK;
 }
 
-bool SaKeyUnwrapBase::wrap_key_aes_gcm(
+sa_status SaKeyUnwrapBase::wrap_key_aes_gcm(
         std::shared_ptr<sa_key>& wrapping_key,
         std::vector<uint8_t>& clear_wrapping_key,
         std::vector<uint8_t>& wrapped_key,
@@ -195,7 +213,7 @@ bool SaKeyUnwrapBase::wrap_key_aes_gcm(
     auto aad = random(1024);
     std::vector<uint8_t> tag(AES_BLOCK_SIZE);
     if (!encrypt_aes_gcm_openssl(wrapped_key, clear_key, iv, aad, tag, clear_wrapping_key))
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
 
     auto* unwrap_parameters_aes_gcm = new sa_unwrap_parameters_aes_gcm;
     unwrap_parameters_aes_gcm->iv = new uint8_t[iv.size()];
@@ -218,10 +236,16 @@ bool SaKeyUnwrapBase::wrap_key_aes_gcm(
     wrapping_parameters = std::shared_ptr<sa_unwrap_parameters_aes_gcm>(unwrap_parameters_aes_gcm, deleter);
 
     wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
-    return wrapping_key != nullptr;
+    if (*wrapping_key == UNSUPPORTED_KEY)
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+
+    if (wrapping_key == nullptr)
+        return SA_STATUS_INTERNAL_ERROR;
+
+    return SA_STATUS_OK;
 }
 
-bool SaKeyUnwrapBase::wrap_key_chacha20(
+sa_status SaKeyUnwrapBase::wrap_key_chacha20(
         std::shared_ptr<sa_key>& wrapping_key,
         std::vector<uint8_t>& clear_wrapping_key,
         std::vector<uint8_t>& wrapped_key,
@@ -236,7 +260,7 @@ bool SaKeyUnwrapBase::wrap_key_chacha20(
     std::vector<uint8_t> counter = {0, 0, 0, 0};
     auto nonce = random(CHACHA20_NONCE_LENGTH);
     if (!encrypt_chacha20_openssl(wrapped_key, clear_key, counter, nonce, clear_wrapping_key))
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
 
     auto* unwrap_parameters_chacha20 = new sa_unwrap_parameters_chacha20;
     unwrap_parameters_chacha20->counter = new uint8_t[counter.size()];
@@ -255,10 +279,16 @@ bool SaKeyUnwrapBase::wrap_key_chacha20(
     wrapping_parameters = std::shared_ptr<sa_unwrap_parameters_chacha20>(unwrap_parameters_chacha20, deleter);
 
     wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
-    return wrapping_key != nullptr;
+    if (*wrapping_key == UNSUPPORTED_KEY)
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+
+    if (wrapping_key == nullptr)
+        return SA_STATUS_INTERNAL_ERROR;
+
+    return SA_STATUS_OK;
 }
 
-bool SaKeyUnwrapBase::wrap_key_chacha20_poly1305(
+sa_status SaKeyUnwrapBase::wrap_key_chacha20_poly1305(
         std::shared_ptr<sa_key>& wrapping_key,
         std::vector<uint8_t>& clear_wrapping_key,
         std::vector<uint8_t>& wrapped_key,
@@ -273,7 +303,7 @@ bool SaKeyUnwrapBase::wrap_key_chacha20_poly1305(
     auto aad = random(1024);
     std::vector<uint8_t> tag(AES_BLOCK_SIZE);
     if (!encrypt_chacha20_poly1305_openssl(wrapped_key, clear_key, nonce, aad, tag, clear_wrapping_key))
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
 
     auto* unwrap_parameters_chacha20_poly1305 = new sa_unwrap_parameters_chacha20_poly1305;
     unwrap_parameters_chacha20_poly1305->nonce = new uint8_t[nonce.size()];
@@ -297,10 +327,16 @@ bool SaKeyUnwrapBase::wrap_key_chacha20_poly1305(
             std::shared_ptr<sa_unwrap_parameters_chacha20_poly1305>(unwrap_parameters_chacha20_poly1305, deleter);
 
     wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
-    return wrapping_key != nullptr;
+    if (*wrapping_key == UNSUPPORTED_KEY)
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+
+    if (wrapping_key == nullptr)
+        return SA_STATUS_INTERNAL_ERROR;
+
+    return SA_STATUS_OK;
 }
 
-bool SaKeyUnwrapBase::wrap_key_rsa(
+sa_status SaKeyUnwrapBase::wrap_key_rsa(
         std::shared_ptr<sa_key>& wrapping_key,
         std::vector<uint8_t>& clear_wrapping_key,
         std::vector<uint8_t>& wrapped_key,
@@ -321,7 +357,7 @@ bool SaKeyUnwrapBase::wrap_key_rsa(
     if (wrapping_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15) {
         wrapping_parameters = std::shared_ptr<void>();
         if (!encrypt_rsa_pkcs1v15_openssl(wrapped_key, clear_key, rsa))
-            return false;
+            return SA_STATUS_INTERNAL_ERROR;
     } else {
         auto label = label_length != 0 ? random(label_length) : std::vector<uint8_t>(0);
 
@@ -340,14 +376,20 @@ bool SaKeyUnwrapBase::wrap_key_rsa(
 
         wrapping_parameters = std::shared_ptr<sa_unwrap_parameters_rsa_oaep>(unwrap_parameters_rsa_oaep, deleter);
         if (!encrypt_rsa_oaep_openssl(wrapped_key, clear_key, rsa, digest_algorithm, mgf1_digest_algorithm, label))
-            return false;
+            return SA_STATUS_INTERNAL_ERROR;
     }
 
     wrapping_key = create_sa_key_rsa(&rights, clear_wrapping_key);
-    return wrapping_key != nullptr;
+    if (*wrapping_key == UNSUPPORTED_KEY)
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+
+    if (wrapping_key == nullptr)
+        return SA_STATUS_INTERNAL_ERROR;
+
+    return SA_STATUS_OK;
 }
 
-bool SaKeyUnwrapBase::wrap_key_el_gamal(
+sa_status SaKeyUnwrapBase::wrap_key_el_gamal(
         std::shared_ptr<sa_key>& wrapping_key,
         std::vector<uint8_t>& clear_wrapping_key,
         std::vector<uint8_t>& wrapped_key,
@@ -360,14 +402,14 @@ bool SaKeyUnwrapBase::wrap_key_el_gamal(
     sa_rights_set_allow_all(&rights);
     // Can only be used with AES_128 keys.
     if (clear_key.size() != SYM_128_KEY_SIZE)
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
 
     clear_wrapping_key = ec_generate_key_bytes(curve);
 
     auto ec_group = std::shared_ptr<EC_GROUP>(EC_GROUP_new_by_curve_name(ec_get_nid(curve)), EC_GROUP_free);
     if (ec_group == nullptr) {
         ERROR("ec_group_from_curve failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 
     // Copy the key into temp beginning at offset. Leave the rest of the bytes unset. The last 4 bytes of temp
@@ -379,11 +421,11 @@ bool SaKeyUnwrapBase::wrap_key_el_gamal(
     auto evp_pkey = ec_import_private(curve, clear_wrapping_key);
     if (evp_pkey == nullptr) {
         ERROR("ec_import_private failed");
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
     }
 
     if (!encrypt_ec_elgamal_openssl(wrapped_key, temp, curve, evp_pkey))
-        return false;
+        return SA_STATUS_INTERNAL_ERROR;
 
     auto* unwrap_parameters_ec_elgamal = new sa_unwrap_parameters_ec_elgamal;
     unwrap_parameters_ec_elgamal->offset = offset;
@@ -392,7 +434,13 @@ bool SaKeyUnwrapBase::wrap_key_el_gamal(
     wrapping_parameters = std::shared_ptr<sa_unwrap_parameters_ec_elgamal>(unwrap_parameters_ec_elgamal);
 
     wrapping_key = create_sa_key_ec(&rights, curve, clear_wrapping_key);
-    return wrapping_key != nullptr;
+    if (*wrapping_key == UNSUPPORTED_KEY)
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+
+    if (wrapping_key == nullptr)
+        return SA_STATUS_INTERNAL_ERROR;
+
+    return SA_STATUS_OK;
 }
 
 // clang-format off

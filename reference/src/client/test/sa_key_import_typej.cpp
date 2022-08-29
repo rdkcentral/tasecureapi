@@ -57,6 +57,9 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type not supported";
+
         ASSERT_EQ(status, SA_STATUS_OK);
 
         sa_type_parameters type_parameters;
@@ -113,6 +116,9 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type not supported";
+
         ASSERT_EQ(status, SA_STATUS_OK);
 
         sa_type_parameters type_parameters;
@@ -198,6 +204,9 @@ namespace {
 
         sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type not supported";
+
         ASSERT_EQ(status, SA_STATUS_OK);
 
         sa_type_parameters type_parameters;
