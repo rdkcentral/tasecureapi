@@ -85,7 +85,7 @@ bool SaKeyImportBase::convert_uuid(
 
 std::string SaKeyImportTypejBase::generate_header() {
     std::string hdr = R"({"alg":"HS256","kid":"sessionid"})";
-    return b64_encode(hdr.data(), hdr.size());
+    return b64_encode(hdr.data(), hdr.size(), true);
 }
 
 std::string SaKeyImportTypejBase::generate_content_key(
@@ -122,7 +122,7 @@ std::string SaKeyImportTypejBase::generate_content_key(
         throw;
     }
 
-    return b64_encode(wrapped.data(), wrapped.size());
+    return b64_encode(wrapped.data(), wrapped.size(), false);
 }
 
 std::string SaKeyImportTypejBase::generate_content_key_rights(const sa_rights* rights) {
@@ -163,7 +163,7 @@ std::string SaKeyImportTypejBase::generate_content_key_rights(const sa_rights* r
         bytes[idx++] = RIGHT_CGMSA_REQUIRED;
     }
 
-    return b64_encode(bytes.data(), bytes.size());
+    return b64_encode(bytes.data(), bytes.size(), false);
 }
 
 size_t SaKeyImportTypejBase::generate_content_key_usage(const sa_rights* rights) {
@@ -225,7 +225,7 @@ std::string SaKeyImportTypejBase::generate_body_v1(
             contentKeyUsage, contentKeyNotBefore.c_str(), contentKeyNotOnOrAfter.c_str(),
             contentKeyCacheable);
 
-    return b64_encode(body, strlen(body));
+    return b64_encode(body, strlen(body), true);
 }
 
 const char* SaKeyImportTypejBase::typej_algorithm_string(sa_cipher_algorithm cipher_algorithm) {
@@ -281,7 +281,7 @@ std::string SaKeyImportTypejBase::generate_body_v2(
     auto contentKeyContainerVersion = 2;
     const auto* contentKeyTransportAlgorithm = typej_algorithm_string(cipher_algorithm);
     auto iv = random(AES_BLOCK_SIZE);
-    auto contentKeyTransportIv = b64_encode(iv.data(), iv.size());
+    auto contentKeyTransportIv = b64_encode(iv.data(), iv.size(), false);
     auto contentKeyLength = key.size();
     auto contentKey = generate_content_key(cipher_algorithm, key, iv, enckey);
     const auto* contentKeyId = rights->id;
@@ -305,7 +305,7 @@ std::string SaKeyImportTypejBase::generate_body_v2(
                 contentKeyCacheable);
     }
 
-    return b64_encode(body, strlen(body));
+    return b64_encode(body, strlen(body), true);
 }
 
 std::string SaKeyImportTypejBase::generate_body_v3(
@@ -347,7 +347,7 @@ std::string SaKeyImportTypejBase::generate_body_v3(
     auto contentKeyContainerVersion = 3;
     const auto* contentKeyTransportAlgorithm = typej_algorithm_string(cipher_algorithm);
     auto iv = random(AES_BLOCK_SIZE);
-    auto contentKeyTransportIv = b64_encode(iv.data(), iv.size());
+    auto contentKeyTransportIv = b64_encode(iv.data(), iv.size(), false);
     auto contentKeyLength = key.size();
     auto contentKey = generate_content_key(cipher_algorithm, key, iv, enckey);
     const auto* contentKeyId = rights->id;
@@ -384,7 +384,7 @@ std::string SaKeyImportTypejBase::generate_body_v3(
                 contentKeyCacheable, entitled_ta_ids_str.c_str());
     }
 
-    return b64_encode(body, strlen(body));
+    return b64_encode(body, strlen(body), true);
 }
 
 std::string SaKeyImportTypejBase::generate_typej_v1(
@@ -408,7 +408,7 @@ std::string SaKeyImportTypejBase::generate_typej_v1(
             throw;
         }
     }
-    std::string mac = b64_encode(mac_bytes.data(), mac_bytes.size());
+    std::string mac = b64_encode(mac_bytes.data(), mac_bytes.size(), true);
 
     return hdr + "." + body + "." + mac;
 }
@@ -435,7 +435,7 @@ std::string SaKeyImportTypejBase::generate_typej_v2(
             throw;
         }
     }
-    std::string mac = b64_encode(mac_bytes.data(), mac_bytes.size());
+    std::string mac = b64_encode(mac_bytes.data(), mac_bytes.size(), true);
 
     return hdr + "." + body + "." + mac;
 }
@@ -463,7 +463,7 @@ std::string SaKeyImportTypejBase::generate_typej_v3(
             throw;
         }
     }
-    std::string mac = b64_encode(mac_bytes.data(), mac_bytes.size());
+    std::string mac = b64_encode(mac_bytes.data(), mac_bytes.size(), true);
 
     return hdr + "." + body + "." + mac;
 }
@@ -527,12 +527,12 @@ std::string SaKeyImportSocBase::generate_encrypted_key(
     if (!encrypt_aes_gcm_openssl(encrypted_key, key, iv, aad, tag, *derived_key))
         return "";
 
-    return b64_encode(encrypted_key.data(), encrypted_key.size());
+    return b64_encode(encrypted_key.data(), encrypted_key.size(), false);
 }
 
 std::string SaKeyImportSocBase::generate_header() {
     std::string hdr = R"({"alg": "A128GCM"})";
-    return b64_encode(hdr.data(), hdr.size());
+    return b64_encode(hdr.data(), hdr.size(), true);
 }
 
 std::string SaKeyImportSocBase::generate_payload(
@@ -562,7 +562,7 @@ std::string SaKeyImportSocBase::generate_payload(
     oss << R"(, "encryptedKey": ")" << encrypted_key << "\"";
 
     if (!iv.empty())
-        oss << R"(, "iv": ")" << b64_encode(iv.data(), iv.size()) << "\"";
+        oss << R"(, "iv": ")" << b64_encode(iv.data(), iv.size(), false) << "\"";
 
     oss << R"(, "keyUsage": )" << static_cast<int>(key_usage);
 
@@ -582,17 +582,17 @@ std::string SaKeyImportSocBase::generate_payload(
     }
 
     if (!c1.empty())
-        oss << R"(, "c1": ")" << b64_encode(c1.data(), c1.size()) << "\"";
+        oss << R"(, "c1": ")" << b64_encode(c1.data(), c1.size(), false) << "\"";
 
     if (!c2.empty())
-        oss << R"(, "c2": ")" << b64_encode(c2.data(), c2.size()) << "\"";
+        oss << R"(, "c2": ")" << b64_encode(c2.data(), c2.size(), false) << "\"";
 
     if (!c3.empty())
-        oss << R"(, "c3": ")" << b64_encode(c3.data(), c3.size()) << "\"";
+        oss << R"(, "c3": ")" << b64_encode(c3.data(), c3.size(), false) << "\"";
 
     oss << "}";
 
-    return b64_encode(oss.str().data(), oss.str().size());
+    return b64_encode(oss.str().data(), oss.str().size(), true);
 }
 
 void SaKeyImportSocBase::set_key_usage_flags(
@@ -691,7 +691,7 @@ sa_status SaKeyImportSocBase::import_key(
     auto jwt_header = generate_header();
     auto jwt_payload = generate_payload(container_version, key_type, clear_key, iv, key_usage, decrypted_key_usage,
             entitled_ta_ids, c1, c2, c3, tag);
-    std::string key_container = jwt_header + "." + jwt_payload + "." + b64_encode(tag.data(), tag.size());
+    std::string key_container = jwt_header + "." + jwt_payload + "." + b64_encode(tag.data(), tag.size(), true);
 
     sa_rights_set_allow_all(&key_rights);
     set_key_usage_flags(key_usage, decrypted_key_usage, key_rights, clear_key_type);

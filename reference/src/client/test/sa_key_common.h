@@ -105,7 +105,8 @@ protected:
 
     static std::string b64_encode(
             const void* in,
-            size_t in_length);
+            size_t in_length,
+            bool url_encode);
 
     static bool key_check(
             sa_key_type key_type,

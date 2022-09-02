@@ -735,7 +735,8 @@ bool SaKeyBase::netflix_wrapping_key_kdf(
 
 std::string SaKeyBase::b64_encode(
         const void* in,
-        size_t in_length) {
+        size_t in_length,
+        bool url_encode) {
 
     if (in == nullptr) {
         ERROR("NULL in");
@@ -764,9 +765,23 @@ std::string SaKeyBase::b64_encode(
     }
 
     char* encoded;
-    const size_t len = BIO_get_mem_data(sink, &encoded); // NOLINT
+    size_t length = BIO_get_mem_data(sink, &encoded);
 
-    return {encoded, len};
+    if (url_encode) {
+        size_t pad = 0;
+        for(size_t i = 0; i < length; i++) {
+            if (encoded[i] == '+')
+                encoded[i] = '-';
+            else if (encoded[i] == '/')
+                encoded[i] = '_';
+            else if (encoded[i] == '=')
+                pad++;
+        }
+
+        length -= pad;
+    }
+
+    return {encoded, length};
 }
 
 bool SaKeyBase::key_check(
