@@ -38,11 +38,12 @@ namespace {
                 .curve = SA_ELLIPTIC_CURVE_NIST_P256,
                 .oaep_digest_algorithm = SA_DIGEST_ALGORITHM_SHA1,
                 .oaep_mgf1_digest_algorithm = SA_DIGEST_ALGORITHM_SHA1,
-                .oaep_label_length = 0};
+                .oaep_label_length = 0,
+                .svp_required = false};
 
         ASSERT_TRUE(import_key(parameters, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE));
         if (*parameters.key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
@@ -88,10 +89,11 @@ namespace {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
+        parameters.svp_required = false;
 
         ASSERT_TRUE(import_key(parameters, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE));
         if (*parameters.key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
@@ -142,10 +144,11 @@ namespace {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
+        parameters.svp_required = false;
 
         ASSERT_TRUE(import_key(parameters, SA_KEY_TYPE_SYMMETRIC, SYM_256_KEY_SIZE));
         if (*parameters.key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
@@ -191,10 +194,11 @@ namespace {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
+        parameters.svp_required = false;
 
         ASSERT_TRUE(import_key(parameters, SA_KEY_TYPE_SYMMETRIC, SYM_256_KEY_SIZE));
         if (*parameters.key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
@@ -245,6 +249,7 @@ namespace {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
+        parameters.svp_required = false;
         sa_key_type key_type = SA_KEY_TYPE_SYMMETRIC;
         size_t key_size = SYM_128_KEY_SIZE;
 
@@ -278,6 +283,7 @@ namespace {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
+        parameters.svp_required = false;
         sa_key_type key_type = SA_KEY_TYPE_SYMMETRIC;
         size_t key_size = SYM_128_KEY_SIZE;
 

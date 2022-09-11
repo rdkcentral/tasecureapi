@@ -25,7 +25,7 @@ static const char* LOG_LEVEL_STRING[] = {
         "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
 
 #ifndef SA_LOG_LEVEL
-#define SA_LOG_LEVEL LOG_LEVEL_ERROR
+#define SA_LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
 static struct {
@@ -64,6 +64,6 @@ void log_entry(
     va_list args;
     va_start(args, format);
     vfprintf(stderr, new_format, args);
-    va_end(args);
     fflush(stderr);
+    va_end(args);
 }

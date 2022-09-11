@@ -32,13 +32,13 @@ namespace {
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);
         ASSERT_NE(encryption_key, nullptr);
         if (*encryption_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto clear_hmac_key = random(SYM_256_KEY_SIZE);
         auto hmac_key = create_sa_key_symmetric(&rights, clear_hmac_key);
         ASSERT_NE(hmac_key, nullptr);
         if (*hmac_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_kdf_parameters_netflix kdf_parameters_netflix = {
                 .kenc = *encryption_key,
@@ -62,7 +62,7 @@ namespace {
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);
         ASSERT_NE(encryption_key, nullptr);
         if (*encryption_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_kdf_parameters_netflix kdf_parameters_netflix = {
                 .kenc = *encryption_key,
@@ -80,7 +80,7 @@ namespace {
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);
         ASSERT_NE(encryption_key, nullptr);
         if (*encryption_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_kdf_parameters_netflix kdf_parameters_netflix = {
                 .kenc = *encryption_key,
@@ -110,7 +110,7 @@ namespace {
         auto hmac_key = create_sa_key_symmetric(&rights, clear_hmac_key);
         ASSERT_NE(hmac_key, nullptr);
         if (*hmac_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_kdf_parameters_netflix kdf_parameters_netflix = {
                 .kenc = INVALID_HANDLE,
@@ -130,7 +130,7 @@ namespace {
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);
         ASSERT_NE(encryption_key, nullptr);
         if (*encryption_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_kdf_parameters_netflix kdf_parameters_netflix = {
                 .kenc = *encryption_key,
@@ -151,14 +151,14 @@ namespace {
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);
         ASSERT_NE(encryption_key, nullptr);
         if (*encryption_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         SA_USAGE_BIT_SET(rights.usage_flags, SA_USAGE_FLAG_DERIVE);
         auto clear_hmac_key = random(SYM_256_KEY_SIZE);
         auto hmac_key = create_sa_key_symmetric(&rights, clear_hmac_key);
         ASSERT_NE(hmac_key, nullptr);
         if (*hmac_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_kdf_parameters_netflix kdf_parameters_netflix = {
                 .kenc = *encryption_key,
@@ -178,14 +178,14 @@ namespace {
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);
         ASSERT_NE(encryption_key, nullptr);
         if (*encryption_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_DERIVE);
         auto clear_hmac_key = random(SYM_256_KEY_SIZE);
         auto hmac_key = create_sa_key_symmetric(&rights, clear_hmac_key);
         ASSERT_NE(hmac_key, nullptr);
         if (*hmac_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_kdf_parameters_netflix kdf_parameters_netflix = {
                 .kenc = *encryption_key,
@@ -205,13 +205,13 @@ namespace {
         auto encryption_key = create_sa_key_rsa(&rights, rsa_key);
         ASSERT_NE(encryption_key, nullptr);
         if (*encryption_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto clear_hmac_key = random(SYM_256_KEY_SIZE);
         auto hmac_key = create_sa_key_symmetric(&rights, clear_hmac_key);
         ASSERT_NE(hmac_key, nullptr);
         if (*hmac_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_kdf_parameters_netflix kdf_parameters_netflix = {
                 .kenc = *encryption_key,
@@ -231,13 +231,13 @@ namespace {
         auto encryption_key = create_sa_key_symmetric(&rights, clear_encryption_key);
         ASSERT_NE(encryption_key, nullptr);
         if (*encryption_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto rsa_key = sample_rsa_2048_pkcs8();
         auto hmac_key = create_sa_key_rsa(&rights, rsa_key);
         ASSERT_NE(hmac_key, nullptr);
         if (*hmac_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         sa_kdf_parameters_netflix kdf_parameters_netflix = {
                 .kenc = *encryption_key,

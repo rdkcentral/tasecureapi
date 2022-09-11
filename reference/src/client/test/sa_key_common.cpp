@@ -403,7 +403,7 @@ sa_status SaKeyBase::execute_ecdh(
         return status;
 
     std::shared_ptr<EVP_PKEY> other_public_key(sa_get_public_key(*other_private_key), EVP_PKEY_free);
-    if (other_public_key.get() == nullptr)  {
+    if (other_public_key == nullptr) {
         ERROR("other_public_key failed");
         return status;
     }
@@ -765,11 +765,11 @@ std::string SaKeyBase::b64_encode(
     }
 
     char* encoded;
-    size_t length = BIO_get_mem_data(sink, &encoded);
+    size_t length = BIO_get_mem_data(sink, &encoded); // NOLINT
 
     if (url_encode) {
         size_t pad = 0;
-        for(size_t i = 0; i < length; i++) {
+        for (size_t i = 0; i < length; i++) {
             if (encoded[i] == '+')
                 encoded[i] = '-';
             else if (encoded[i] == '/')

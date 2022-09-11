@@ -37,7 +37,7 @@ namespace {
         auto key = create_sa_key(key_type, key_length, clear_key, curve);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         size_t exported_key_length = 0;
         status = sa_key_export(nullptr, &exported_key_length, nullptr, 0, *key);
@@ -91,7 +91,7 @@ namespace {
         auto key = create_sa_key(key_type, key_length, clear_key, curve);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         auto mixin = random(AES_BLOCK_SIZE);
         size_t exported_key_length = 0;

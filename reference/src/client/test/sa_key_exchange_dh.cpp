@@ -187,7 +187,7 @@ namespace {
         auto rsa_key = create_sa_key_rsa(&rights, rsa_2048);
         ASSERT_NE(rsa_key, nullptr);
         if (*rsa_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         std::shared_ptr<EVP_PKEY> other_dh;
         std::vector<uint8_t> other_public_key;

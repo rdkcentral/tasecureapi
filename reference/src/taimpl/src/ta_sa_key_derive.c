@@ -632,9 +632,10 @@ static sa_status ta_sa_key_derive_netflix(
             break;
         }
 
-        status = kdf_netflix_wrapping(&stored_key_derived, rights, &enc_header->rights, stored_key_enc, stored_key_hmac);
+        status = kdf_netflix_wrapping(&stored_key_derived, rights, &enc_header->rights, stored_key_enc,
+                stored_key_hmac);
         if (status != SA_STATUS_OK) {
-            ERROR("kdf_netflix_wrapping_key failed");
+            ERROR("kdf_netflix_wrapping failed");
             break;
         }
 

@@ -36,7 +36,7 @@ namespace {
         sa_generate_parameters_ec parameters = {curve};
         sa_status status = sa_key_generate(ec_key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
         std::shared_ptr<EVP_PKEY> ec_public_key(sa_get_public_key(*ec_key), EVP_PKEY_free);
@@ -45,7 +45,7 @@ namespace {
         std::vector<uint8_t> other_public_key;
         status = ec_generate_key(curve, other_ec, other_public_key);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
         auto shared_secret = create_uninitialized_sa_key();
@@ -85,7 +85,7 @@ namespace {
         sa_generate_parameters_ec parameters = {curve};
         sa_status status = sa_key_generate(ec_key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -93,7 +93,7 @@ namespace {
         std::vector<uint8_t> other_public_key;
         status = ec_generate_key(curve, other_ec, other_public_key);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
         status = sa_key_exchange(nullptr, &rights, SA_KEY_EXCHANGE_ALGORITHM_ECDH, *ec_key,
@@ -112,7 +112,7 @@ namespace {
         sa_generate_parameters_ec parameters = {curve};
         sa_status status = sa_key_generate(ec_key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -120,7 +120,7 @@ namespace {
         std::vector<uint8_t> other_public_key;
         status = ec_generate_key(curve, other_ec, other_public_key);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
         auto key = create_uninitialized_sa_key();
@@ -141,7 +141,7 @@ namespace {
         sa_generate_parameters_ec parameters = {curve};
         sa_status status = sa_key_generate(ec_key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -164,7 +164,7 @@ namespace {
         sa_generate_parameters_ec parameters = {curve};
         sa_status status = sa_key_generate(ec_key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -172,7 +172,7 @@ namespace {
         std::vector<uint8_t> other_public_key;
         status = ec_generate_key(curve, other_ec, other_public_key);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
         auto key = create_uninitialized_sa_key();
@@ -191,13 +191,13 @@ namespace {
         auto rsa_key = create_sa_key_rsa(&rights, rsa_2048);
         ASSERT_NE(rsa_key, nullptr);
         if (*rsa_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         std::shared_ptr<EVP_PKEY> other_ec;
         std::vector<uint8_t> other_public_key;
         sa_status status = ec_generate_key(curve, other_ec, other_public_key);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
@@ -219,7 +219,7 @@ namespace {
         sa_generate_parameters_ec parameters = {curve};
         sa_status status = sa_key_generate(ec_key.get(), &rights, SA_KEY_TYPE_EC, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Curve not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 

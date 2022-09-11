@@ -44,7 +44,7 @@ namespace {
                 curve = static_cast<sa_elliptic_curve>(key_size);
                 clear_key = ec_generate_key_bytes(curve);
                 if (clear_key.empty())
-                    GTEST_SKIP() << "Curve not supported";
+                    GTEST_SKIP() << "key type, key size, or curve not supported";
                 break;
 
             case SA_KEY_TYPE_RSA:
@@ -63,7 +63,7 @@ namespace {
                 wrapping_key_size, clear_key, wrapping_algorithm, oaep_digest_algorithm, oaep_mgf1_digest_algorithm,
                 oaep_label_length);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 

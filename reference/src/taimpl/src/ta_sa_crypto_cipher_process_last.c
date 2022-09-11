@@ -123,7 +123,7 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
             return SA_STATUS_OPERATION_NOT_ALLOWED;
         }
 
-        sa_status status = symmetric_context_decrypt(symmetric_context, out,  in, *bytes_to_process);
+        sa_status status = symmetric_context_decrypt(symmetric_context, out, in, *bytes_to_process);
         if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_decrypt failed");
             return status;

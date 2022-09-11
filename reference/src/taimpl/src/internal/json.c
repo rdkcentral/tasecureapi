@@ -1172,7 +1172,7 @@ bool b64_decode(
 
         memcpy(data, in, in_length);
         if (url_decode) {
-            for(size_t i = 0; i < in_length; i++) {
+            for (size_t i = 0; i < in_length; i++) {
                 if (data[i] == '-')
                     data[i] = '+';
                 else if (data[i] == '_')

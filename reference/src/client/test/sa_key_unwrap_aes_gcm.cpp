@@ -34,10 +34,9 @@ namespace {
                 SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_GCM, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
-
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -58,10 +57,9 @@ namespace {
                 SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_GCM, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
-
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
@@ -81,10 +79,9 @@ namespace {
                 SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_GCM, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
-
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -107,10 +104,9 @@ namespace {
                 SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_GCM, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
-
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -270,10 +266,9 @@ namespace {
                 SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_GCM, SA_DIGEST_ALGORITHM_SHA1,
                 SA_DIGEST_ALGORITHM_SHA1, 0);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
-
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -389,7 +384,7 @@ namespace {
         std::shared_ptr<sa_key> wrapping_key = create_sa_key_ec(&rights, curve, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
         if (*wrapping_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
         std::vector<uint8_t> aad = random(1024);

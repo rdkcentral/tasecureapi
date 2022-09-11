@@ -28,6 +28,7 @@ namespace {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
+        parameters.svp_required = false;
         sa_key_type key_type = SA_KEY_TYPE_SYMMETRIC;
         size_t key_size = SYM_128_KEY_SIZE;
 
@@ -61,6 +62,7 @@ namespace {
         sa_buffer_type buffer_type = std::get<0>(GetParam());
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
+        parameters.svp_required = false;
         sa_key_type key_type = SA_KEY_TYPE_SYMMETRIC;
         size_t key_size = SYM_128_KEY_SIZE;
 

@@ -27,6 +27,7 @@ namespace {
     TEST_P(SaCryptoCipherEncryptTest, processNominal) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
+        parameters.svp_required = false;
         sa_key_type key_type = std::get<1>(GetParam());
         size_t key_size = std::get<2>(GetParam());
         sa_buffer_type buffer_type = std::get<3>(GetParam());
@@ -70,6 +71,7 @@ namespace {
         parameters.oaep_digest_algorithm = std::get<4>(GetParam());
         parameters.oaep_mgf1_digest_algorithm = std::get<5>(GetParam());
         parameters.oaep_label_length = std::get<6>(GetParam());
+        parameters.svp_required = false;
 
         auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, key_type, key_size, parameters);
         ASSERT_NE(cipher, nullptr);

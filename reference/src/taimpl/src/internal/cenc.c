@@ -46,65 +46,79 @@ static sa_status decrypt(
     // treat all 16 bytes as a counter. This code accounts for the rollover condition.
 
     // Determine if the iv will rollover. If not, decrypt the whole block.
-    uint64_t* counterBuffer = (uint64_t*) (iv + 8);
-    size_t initial_block_size = AES_BLOCK_SIZE - *enc_byte_count % AES_BLOCK_SIZE;
-    size_t number_of_blocks = (bytes_to_process - initial_block_size) / AES_BLOCK_SIZE +
-                              (initial_block_size == AES_BLOCK_SIZE ? 1 : 0);
-    bool counter_rollover = (*counterBuffer + number_of_blocks) < *counterBuffer;
+    size_t leading_partial_block_size =
+            *enc_byte_count % AES_BLOCK_SIZE == 0 ? 0 : AES_BLOCK_SIZE - *enc_byte_count % AES_BLOCK_SIZE;
+    size_t number_of_full_blocks = (bytes_to_process - leading_partial_block_size) / AES_BLOCK_SIZE;
+    uint64_t* counter_buffer = (uint64_t*) (iv + 8);
+    size_t num_blocks_before_rollover = UINT64_MAX - be64toh(*counter_buffer) + 1;
+    bool counter_rollover =
+            num_blocks_before_rollover <= (number_of_full_blocks + (leading_partial_block_size > 0 ? 1 : 0));
 
-    bool first_block = true;
     for (size_t bytes_encrypted = 0; bytes_to_process > bytes_encrypted;) {
-        if (!counter_rollover && cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CTR) {
-            // This is an AES-CTR cipher and the counter portion of the IV is going to rollover, so encrypt each block
-            // individually and manually increment the IV between each block.
+        if (counter_rollover && cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CTR) {
+            // This is an AES-CTR cipher and the counter portion of the IV is going to rollover, so encrypt all blocks
+            // up to the rollover block and manually increment the IV.
+            if (leading_partial_block_size > 0) {
+                sa_status status = symmetric_context_decrypt(symmetric_context, out_bytes + bytes_encrypted,
+                        in_bytes + bytes_encrypted, leading_partial_block_size);
+                if (status != SA_STATUS_OK) {
+                    ERROR("symmetric_context_decrypt failed");
+                    return status;
+                }
 
-            // The very first block can be a partial block which is a continuation of the previous partial block from
-            // the previous sub-sample. The last block can also be a partial block. All of the blocks in between are
-            // 16 bytes.
-            size_t remaining_in_block = MIN(AES_BLOCK_SIZE - *enc_byte_count % AES_BLOCK_SIZE,
-                    bytes_to_process - bytes_encrypted);
-
-            // Only update the IV on the first block if it is not a partial continuation block. Update it for all
-            // subsequent blocks.
-            sa_status status;
-            if (!first_block || remaining_in_block == AES_BLOCK_SIZE) {
+                // Increment the IV by the number of full blocks just decrypted.
+                (*counter_buffer) = htobe64(be64toh(*counter_buffer) + 1);
                 status = symmetric_context_set_iv(symmetric_context, iv, AES_BLOCK_SIZE);
                 if (status != SA_STATUS_OK) {
                     ERROR("symmetric_context_set_iv failed");
                     return status;
                 }
+
+                *enc_byte_count += leading_partial_block_size;
+                bytes_encrypted += leading_partial_block_size;
+                leading_partial_block_size = 0;
             }
 
-            status = symmetric_context_decrypt(symmetric_context, out_bytes + bytes_encrypted,
-                    in_bytes + bytes_encrypted, remaining_in_block);
-            if (status != SA_STATUS_OK) {
-                ERROR("symmetric_context_decrypt failed");
-                return status;
+            size_t full_blocks_to_encrypt = MIN(num_blocks_before_rollover, number_of_full_blocks);
+            if (full_blocks_to_encrypt > 0) {
+                sa_status status = symmetric_context_decrypt(symmetric_context, out_bytes + bytes_encrypted,
+                        in_bytes + bytes_encrypted, full_blocks_to_encrypt * AES_BLOCK_SIZE);
+                if (status != SA_STATUS_OK) {
+                    ERROR("symmetric_context_decrypt failed");
+                    return status;
+                }
+
+                // Increment the IV by the number of full blocks just decrypted.
+                (*counter_buffer) = htobe64(be64toh(*counter_buffer) + full_blocks_to_encrypt);
+                status = symmetric_context_set_iv(symmetric_context, iv, AES_BLOCK_SIZE);
+                if (status != SA_STATUS_OK) {
+                    ERROR("symmetric_context_set_iv failed");
+                    return status;
+                }
+
+                *enc_byte_count += full_blocks_to_encrypt * AES_BLOCK_SIZE;
+                bytes_encrypted += full_blocks_to_encrypt * AES_BLOCK_SIZE;
+                number_of_full_blocks -= full_blocks_to_encrypt;
+                num_blocks_before_rollover = 0;
             }
 
-            // Increment the IV after every full block.
-            if ((*enc_byte_count + remaining_in_block) % AES_BLOCK_SIZE == 0) {
-                (*counterBuffer) = htobe64(be64toh(*counterBuffer) + 1);
-            }
-
-            bytes_encrypted += remaining_in_block;
-            *enc_byte_count += remaining_in_block;
+            counter_rollover = false;
         } else {
             // The IV counter is not going to rollover or this is an AES-CBC CIPHER. Openssl and other implementations
             // handle this automatically.
             sa_status status = symmetric_context_decrypt(symmetric_context, out_bytes + bytes_encrypted,
-                    in_bytes + bytes_encrypted, bytes_to_process);
+                    in_bytes + bytes_encrypted, bytes_to_process - bytes_encrypted);
             if (status != SA_STATUS_OK) {
                 ERROR("symmetric_context_decrypt failed");
                 return status;
             }
 
-            (*counterBuffer) = htobe64(be64toh(*counterBuffer) + number_of_blocks);
-            bytes_encrypted += bytes_to_process;
-            *enc_byte_count += bytes_to_process;
+            uint64_t new_iv = be64toh(*counter_buffer);
+            new_iv += number_of_full_blocks + (leading_partial_block_size > 0 ? 1 : 0);
+            (*counter_buffer) = htobe64(new_iv);
+            *enc_byte_count += (bytes_to_process - bytes_encrypted);
+            bytes_encrypted = bytes_to_process;
         }
-
-        first_block = false;
     }
 
     return SA_STATUS_OK;

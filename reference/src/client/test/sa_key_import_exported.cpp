@@ -66,7 +66,7 @@ namespace {
         auto imported_key = create_sa_key_rsa(&rights, clear_key);
         ASSERT_NE(imported_key, nullptr);
         if (*imported_key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         std::vector<uint8_t> mixin = {};
 

@@ -68,7 +68,7 @@ namespace {
 
         sa_status status = sa_key_generate(key.get(), &rights, key_type, parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "key type not supported";
+            GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
 

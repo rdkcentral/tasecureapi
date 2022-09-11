@@ -37,6 +37,7 @@ typedef struct { // NOLINT
     sa_digest_algorithm oaep_digest_algorithm;
     sa_digest_algorithm oaep_mgf1_digest_algorithm;
     size_t oaep_label_length;
+    bool svp_required;
 } cipher_parameters;
 
 #define UNSUPPORTED_CIPHER (sa_crypto_cipher_context)(INVALID_HANDLE - 1)

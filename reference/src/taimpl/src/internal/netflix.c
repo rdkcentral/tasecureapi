@@ -127,7 +127,7 @@ sa_status kdf_netflix_wrapping(
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
         status = stored_key_create(stored_key_wrap, rights_wrap, rights_parent, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                    AES_BLOCK_SIZE, wrapping_key, AES_BLOCK_SIZE);
+                AES_BLOCK_SIZE, wrapping_key, AES_BLOCK_SIZE);
         if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
@@ -266,14 +266,14 @@ sa_status kdf_netflix_shared_secret(
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
         status = stored_key_create(stored_key_enc, rights_enc, &in_key_header->rights, SA_KEY_TYPE_SYMMETRIC,
-                    &type_parameters, SYM_128_KEY_SIZE, key_bytes, SYM_128_KEY_SIZE);
+                &type_parameters, SYM_128_KEY_SIZE, key_bytes, SYM_128_KEY_SIZE);
         if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
 
         status = stored_key_create(stored_key_hmac, rights_hmac, &in_key_header->rights, SA_KEY_TYPE_SYMMETRIC,
-                    &type_parameters, SYM_256_KEY_SIZE, key_bytes + SYM_128_KEY_SIZE, SHA256_DIGEST_LENGTH);
+                &type_parameters, SYM_256_KEY_SIZE, key_bytes + SYM_128_KEY_SIZE, SHA256_DIGEST_LENGTH);
         if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
