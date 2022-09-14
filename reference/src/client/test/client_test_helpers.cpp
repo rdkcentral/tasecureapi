@@ -2000,6 +2000,7 @@ namespace client_test_helpers {
     }
 
     static bool key_check_ec_elgamal_unwrap(sa_key key) {
+        const int COUNTER_SIZE = 4;
         auto header = key_header(key);
         auto curve = header->type_parameters.curve;
 
@@ -2008,8 +2009,13 @@ namespace client_test_helpers {
         std::vector<uint8_t> clear(key_size);
         std::vector<uint8_t> in(128);
 
+        // Calculates an offset that is always a multiple of 8. Some SecApi 3 implementations require the offset to
+        // always be a multiple of 8. For P192, the offset will be 0 due to the key size. All others will be non-zero to
+        // vary the test. encrypt_ec_elgamal_openssl uses the last 32 bits of the clear data as a counter to allow
+        // multiple tries to find a valid point when performing the El Gamal encrypt algorithm.
+        size_t offset = ((key_size - COUNTER_SIZE - SYM_128_KEY_SIZE) / 8) * 8;
         clear.assign(clear.size(), 0);
-        memcpy(clear.data() + 4, clear_key.data(), clear_key.size());
+        memcpy(clear.data() + offset, clear_key.data(), clear_key.size());
         auto ec = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
         if (ec == nullptr) {
             ERROR("sa_get_public_key failed");
@@ -2030,7 +2036,7 @@ namespace client_test_helpers {
             return false;
         }
 
-        sa_unwrap_parameters_ec_elgamal params = {4, clear_key.size()};
+        sa_unwrap_parameters_ec_elgamal params = {offset, clear_key.size()};
         sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_EC_ELGAMAL, &params, key, in.data(), in.size());
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
