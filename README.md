@@ -152,10 +152,9 @@ The API provides the following SVP capabilities:
 * Protected buffer operations, including buffer allocation, deallocation, writes, and copies.
 * AES cipher operations on data in protected buffers using CBC and CTR mode.
 
-The initialization and configuration of the SVP is out of scope for the API. This is the
-responsibility of an SVP TA, for example. The device must provide a mechanism to the SecAPI TA to
-determine whether an SVP is enforced. The device must provide a mechanism to the SecAPI TA to
-determine whether an SVP buffer is wholly contained within the restricted SVP memory region.
+The device must provide a mechanism to the SecAPI TA to determine whether an SVP is enforced. The
+device must provide a mechanism to the SecAPI TA to determine whether an SVP buffer is wholly
+contained within the restricted SVP memory region.
 
 The control of HDCP and other outputs is out of scope for the API. This is the responsibility of an
 HDCP TA, for example. The device must provide a mechanism to the SecAPI TA to determine what video
@@ -180,7 +179,7 @@ The diagram below presents an overview of the role of the SecAPI TA in key provi
 1. A provisioning client application obtains a key container from the key provisioning service.
 1. The provisioning application writes the key container to REE memory.
 1. The SecAPI TA copies the key container into the TEE.
-1. The SecAPI TA use the root key ladder to derive the SecAPI key that is used to encrypt the key in
+1. The SecAPI TA uses the root key ladder to derive the SecAPI key that is used to encrypt the key in
    the key container. The SecAPI TA decrypts the key and verifies the container authentication
    data.
 1. The SecAPI generates an export key container and returns the export key container to the calling
