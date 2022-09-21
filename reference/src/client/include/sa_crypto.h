@@ -24,6 +24,7 @@
  */
 
 #ifndef SA_CRYPTO_H
+#define SA_CRYPTO_H
 
 #include "sa_types.h"
 

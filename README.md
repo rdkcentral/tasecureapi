@@ -158,7 +158,7 @@ The API provides the following SVP capabilities:
 * Protected buffer operations, including buffer allocation, deallocation, writes, and copies.
 * AES cipher operations on data in protected buffers using CBC and CTR mode.
 
-The SVP implementation must provide a mechanism to the SecAPI TA to determine whether SVP is 
+The SVP implementation must provide a mechanism to the SecAPI TA to determine whether SVP is
 enforced. The SVP implementation must provide a mechanism to the SecAPI TA to determine whether an
 SVP buffer is wholly contained within the restricted SVP memory region.
 
