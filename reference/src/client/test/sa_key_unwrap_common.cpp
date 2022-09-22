@@ -398,6 +398,7 @@ sa_status SaKeyUnwrapBase::wrap_key_el_gamal(
         const std::vector<uint8_t>& clear_key,
         sa_elliptic_curve curve) {
 
+    const size_t COUNTER_SIZE = 4;
     sa_rights rights;
     sa_rights_set_allow_all(&rights);
     // Can only be used with AES_128 keys.
@@ -412,11 +413,13 @@ sa_status SaKeyUnwrapBase::wrap_key_el_gamal(
         return SA_STATUS_INTERNAL_ERROR;
     }
 
-    // Copy the key into temp beginning at offset. Leave the rest of the bytes unset. The last 4 bytes of temp
-    // are used as a counter so we can make several tries to find a valid point.
-    int64_t offset = 4;
+    // Calculates an offset that is always a multiple of 8. Some SecApi 3 implementations require the offset to
+    // always be a multiple of 8. For P192, the offset will be 0 due to the key size. All others will be non-zero to
+    // vary the test. encrypt_ec_elgamal_openssl uses the last 32 bits of the clear data as a counter to allow
+    // multiple tries to find a valid point when performing the El Gamal encrypt algorithm.
+    size_t offset = ((ec_get_key_size(curve) - COUNTER_SIZE - SYM_128_KEY_SIZE) / 8) * 8;
     auto temp = random(wrapping_key_size);
-    std::copy(clear_key.begin(), clear_key.end(), temp.begin() + offset);
+    std::copy(clear_key.begin(), clear_key.end(), temp.begin() + static_cast<int64_t>(offset));
 
     auto evp_pkey = ec_import_private(curve, clear_wrapping_key);
     if (evp_pkey == nullptr) {

@@ -24,6 +24,7 @@ The processing environment for applications includes two environments: a Rich Ex
 The API may be invoked from client applications running in the REE or from other TAs that are
 running in the TEE. The API is expected to support in-field provisioning of device credentials and
 keys, including credentials and keys required for:
+
 * Device activation and authentication (on X1 as well as for OTT partners, e.g. Netflix).
 * Secure communication (e.g. TLS).
 * DRM individualization (e.g. Widevine).
@@ -31,6 +32,7 @@ keys, including credentials and keys required for:
 ## Terms and Definitions
 
 The following terms are used:
+
 * `Client Application` An application running outside the TEE making use of the TEE API to access
   facilities and functions provided by Trusted Applications inside the TEE.
 * `Client Key` A key that may be used by client applications using the SecAPI. Client keys are
@@ -89,6 +91,7 @@ The SecAPI is a blocking API. That is, the API blocks while waiting for underlyi
 before returning execution control to the calling client application or TA.
 
 The API exposes an interface to provide:
+
 * [Key Management](#key-management)
 * [Cryptographic Operations](#cryptographic-operations)
 * [SVP Operations](#svp-operations)
@@ -96,6 +99,7 @@ The API exposes an interface to provide:
 ### Key Management
 
 The API provides the following key management capabilities:
+
 * Key generation.
 * Key agreement.
 * Key derivation.
@@ -134,6 +138,7 @@ container as well as authenticate the container.
 ### Cryptographic Operations
 
 The API provides the following cryptographic capabilities:
+
 * AES cipher algorithm using ECB, CBC, and CTR mode.
 * AES GCM authenticated encryption and decryption.
 * RSA decryption using PKCS and OAEP padding.
@@ -149,13 +154,13 @@ API since digest operations do not require access to keys.
 ### SVP Operations
 
 The API provides the following SVP capabilities:
+
 * Protected buffer operations, including buffer allocation, deallocation, writes, and copies.
 * AES cipher operations on data in protected buffers using CBC and CTR mode.
 
-The initialization and configuration of the SVP is out of scope for the API. This is the
-responsibility of an SVP TA, for example. The device must provide a mechanism to the SecAPI TA to
-determine whether an SVP is enforced. The device must provide a mechanism to the SecAPI TA to
-determine whether an SVP buffer is wholly contained within the restricted SVP memory region.
+The SVP implementation must provide a mechanism to the SecAPI TA to determine whether SVP is 
+enforced. The SVP implementation must provide a mechanism to the SecAPI TA to determine whether an
+SVP buffer is wholly contained within the restricted SVP memory region.
 
 The control of HDCP and other outputs is out of scope for the API. This is the responsibility of an
 HDCP TA, for example. The device must provide a mechanism to the SecAPI TA to determine what video
@@ -180,7 +185,7 @@ The diagram below presents an overview of the role of the SecAPI TA in key provi
 1. A provisioning client application obtains a key container from the key provisioning service.
 1. The provisioning application writes the key container to REE memory.
 1. The SecAPI TA copies the key container into the TEE.
-1. The SecAPI TA use the root key ladder to derive the SecAPI key that is used to encrypt the key in
+1. The SecAPI TA uses the root key ladder to derive the SecAPI key that is used to encrypt the key in
    the key container. The SecAPI TA decrypts the key and verifies the container authentication
    data.
 1. The SecAPI generates an export key container and returns the export key container to the calling
@@ -222,6 +227,7 @@ export the content key for storage in the REE.
 ## Robustness Rules
 
 Implementations of this API must conform to the following:
+
 * SecAPI keys must be derived from a secret OTP root key. SecAPI keys must be derived by the SoC's
   hardware key ladder, or derived in the SecAPI TA.
 * Derived, generated and unwrapped keys must not be observable or modifiable by access outside the
