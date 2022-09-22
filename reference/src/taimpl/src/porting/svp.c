@@ -189,7 +189,7 @@ bool svp_copy(
     }
 
     uint8_t* out_bytes = (uint8_t*) out_svp_buffer->svp_memory;
-    uint8_t* in_bytes = (uint8_t*) out_svp_buffer->svp_memory;
+    uint8_t* in_bytes = (uint8_t*) in_svp_buffer->svp_memory;
     for (size_t i = 0; i < offsets_length; i++)
         memcpy(out_bytes + offsets[i].out_offset, in_bytes + offsets[i].in_offset, offsets[i].length);
 

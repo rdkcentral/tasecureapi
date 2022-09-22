@@ -33,7 +33,7 @@ namespace {
         ASSERT_NE(in_buffer, nullptr);
         auto in = random(1024);
         sa_svp_offset write_offset = {0, 0, 1024};
-        sa_status status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &write_offset, 1);
+        sa_status status = sa_svp_buffer_write(*in_buffer, in.data(), in.size(), &write_offset, 1);
         ASSERT_EQ(status, SA_STATUS_OK);
         long chunk_size = offset_length > 1 ? (1024 / (2 * offset_length)) : 1024; // NOLINT
         std::vector<uint8_t> digest_vector;
