@@ -158,9 +158,9 @@ The API provides the following SVP capabilities:
 * Protected buffer operations, including buffer allocation, deallocation, writes, and copies.
 * AES cipher operations on data in protected buffers using CBC and CTR mode.
 
-The device must provide a mechanism to the SecAPI TA to determine whether an SVP is enforced. The
-device must provide a mechanism to the SecAPI TA to determine whether an SVP buffer is wholly
-contained within the restricted SVP memory region.
+The SVP implementation must provide a mechanism to the SecAPI TA to determine whether SVP is 
+enforced. The SVP implementation must provide a mechanism to the SecAPI TA to determine whether an
+SVP buffer is wholly contained within the restricted SVP memory region.
 
 The control of HDCP and other outputs is out of scope for the API. This is the responsibility of an
 HDCP TA, for example. The device must provide a mechanism to the SecAPI TA to determine what video
