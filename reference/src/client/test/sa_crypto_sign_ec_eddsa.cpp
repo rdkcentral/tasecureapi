@@ -32,6 +32,7 @@ namespace {
         sa_rights_set_allow_all(&rights);
 
         auto key = create_sa_key_ec(&rights, curve, clear_key);
+        ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 

@@ -17,10 +17,10 @@
  */
 
 /** @section Description
-* @file pkcs8.h
-*
-* This file contains the functions and structures providing PKCS8 processing.
-*/
+ * @file pkcs8.h
+ *
+ * This file contains the functions and structures providing PKCS8 processing.
+ */
 
 #ifndef PKCS8_H
 #define PKCS8_H

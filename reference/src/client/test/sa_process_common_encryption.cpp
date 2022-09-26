@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * SPDX-License-Identifier: Apache-2.0
-*/
+ */
 
 #include "client_test_helpers.h"
 #include "sa_process_common_encryption_common.h"

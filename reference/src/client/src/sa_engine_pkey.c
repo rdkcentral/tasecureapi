@@ -320,8 +320,14 @@ static int pkey_sign(
 
     uint8_t local_signature[MAX_SIGNATURE_LENGTH];
     size_t local_signature_length = MAX_SIGNATURE_LENGTH;
-    if (sa_crypto_sign(signature != NULL ? local_signature : NULL, &local_signature_length, signature_algorithm,
-                data->private_key, in, in_length, parameters) != SA_STATUS_OK) {
+    sa_status status = sa_crypto_sign(signature != NULL ? local_signature : NULL, &local_signature_length,
+            signature_algorithm, data->private_key, in, in_length, parameters);
+    if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
+        ERROR("sa_crypto_sign operation not supported");
+        return -2;
+    }
+
+    if (status != SA_STATUS_OK) {
         ERROR("sa_crypto_sign failed");
         return 0;
     }
@@ -505,8 +511,14 @@ static int pkey_digestsign(
     }
 
     sa_signature_algorithm signature_algorithm = SA_SIGNATURE_ALGORITHM_EDDSA;
-    if (sa_crypto_sign(signature, signature_length, signature_algorithm, data->private_key, in, in_length,
-                NULL) != SA_STATUS_OK) {
+    sa_status status = sa_crypto_sign(signature, signature_length, signature_algorithm, data->private_key, in,
+            in_length, NULL);
+    if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
+        ERROR("sa_crypto_sign operation not supported");
+        return -2;
+    }
+
+    if (status != SA_STATUS_OK) {
         ERROR("sa_crypto_sign failed");
         return 0;
     }
