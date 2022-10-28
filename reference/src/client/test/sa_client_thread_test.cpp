@@ -52,14 +52,14 @@ sa_status client_thread_verify(
 
     status = sa_crypto_mac_process(mac_context, in_buffer.data(), in_buffer.size());
     if (status != SA_STATUS_INVALID_PARAMETER) {
-        ERROR("cipher %d was found in a thread different from the one it was created in", mac_context);
+        ERROR("mac %d was found in a thread different from the one it was created in", mac_context);
         return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_svp_offset offsets = {0, 0, in_buffer.size()};
     status = sa_svp_buffer_write(svp_buffer, in_buffer.data(), in_buffer.size(), &offsets, 1);
     if (status != SA_STATUS_INVALID_PARAMETER) {
-        ERROR("cipher %d was found in a thread different from the one it was created in", svp_buffer);
+        ERROR("svp %d was found in a thread different from the one it was created in", svp_buffer);
         return SA_STATUS_INVALID_PARAMETER;
     }
 
