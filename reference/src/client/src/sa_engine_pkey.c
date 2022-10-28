@@ -946,8 +946,8 @@ static int pkey_decrypt(
         return 0;
     }
 
-    sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, .context.clear = {out, *out_length, 0}};
-    sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, .context.clear = {(void*) in, in_length, 0}};
+    sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out, *out_length, 0}}};
+    sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {(void*) in, in_length, 0}}};
     size_t bytes_to_process = in_length;
     status = sa_crypto_cipher_process(out == NULL ? NULL : &out_buffer, cipher_context, &in_buffer, &bytes_to_process);
     if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {

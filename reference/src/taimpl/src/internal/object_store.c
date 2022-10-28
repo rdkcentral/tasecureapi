@@ -416,21 +416,27 @@ sa_status object_store_acquire(
     sa_status status = SA_STATUS_INTERNAL_ERROR;
     store_object_t* store_object = &store->objects[slot];
     do {
+        if (store_object == NULL) {
+            ERROR("No object at specified slot");
+            status = SA_STATUS_NULL_PARAMETER;
+            break;
+        }
+
         if (store->is_shutting_down) {
             ERROR("Store is shutting down");
+            break;
+        }
+
+        *object = store_object->object;
+        if (*object == NULL) {
+            ERROR("No object at specified slot");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
         if (memory_memcmp_constant(&store_object->owner_uuid, caller_uuid, sizeof(sa_uuid)) != 0) {
             ERROR("TA UUID does not match");
             status = SA_STATUS_OPERATION_NOT_ALLOWED;
-            break;
-        }
-
-        *object = store_object->object;
-        if (!*object) {
-            ERROR("No object at specified slot");
-            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 

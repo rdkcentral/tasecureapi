@@ -20,18 +20,12 @@
 #include "sa.h"
 #include "sa_crypto_cipher_common.h"
 #include "gtest/gtest.h"
-
+#include <future>
 using namespace client_test_helpers;
 
-typedef struct {
-    pthread_t thread_id;
-    int thread_num;
-} thread_info;
-
-void* SaCryptoCipherMultipleThread::process_multiple_threads(void* args) {
-    auto* thread_data = static_cast<thread_info*>(args);
-    for (size_t i = 0; i < 100 && args != nullptr; i++) {
-        INFO("Thread %d-Iteration %zu", thread_data->thread_num, i);
+sa_status SaCryptoCipherMultipleThread::process_multiple_threads(size_t id) {
+    for (size_t i = 0; i < 100; i++) {
+        INFO("Thread %d-Iteration %zu", id, i);
 
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
@@ -43,72 +37,64 @@ void* SaCryptoCipherMultipleThread::process_multiple_threads(void* args) {
         auto cipher = initialize_cipher(SA_CIPHER_MODE_ENCRYPT, key_type, key_size, parameters);
         if (cipher == nullptr || *cipher == UNSUPPORTED_CIPHER) {
             ERROR("initialize_cipher failed");
-            return reinterpret_cast<void*>(1);
+            return SA_STATUS_OPERATION_NOT_SUPPORTED;
         }
 
         auto clear = random(AES_BLOCK_SIZE * 2);
         auto in_buffer = buffer_alloc(buffer_type, clear);
         if (in_buffer == nullptr) {
-            return reinterpret_cast<void*>(1);
+            return SA_STATUS_NULL_PARAMETER;
         }
 
         // get out_length
         size_t bytes_to_process = clear.size();
-        if (sa_crypto_cipher_process(nullptr, *cipher, in_buffer.get(), &bytes_to_process) != SA_STATUS_OK) {
+        sa_status status = sa_crypto_cipher_process(nullptr, *cipher, in_buffer.get(), &bytes_to_process);
+        if (status != SA_STATUS_OK) {
             ERROR("sa_crypto_cipher_process failed");
-            return reinterpret_cast<void*>(1);
+            return status;
         }
 
         if (get_required_length(parameters.cipher_algorithm, key_size, clear.size(), true,
                     parameters.oaep_digest_algorithm, parameters.oaep_mgf1_digest_algorithm) != bytes_to_process) {
             ERROR("bytes_to_process failed");
-            return reinterpret_cast<void*>(1);
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         // encrypt using SecApi
         auto out_buffer = buffer_alloc(buffer_type, bytes_to_process);
         if (out_buffer == nullptr) {
-            return reinterpret_cast<void*>(1);
+            return SA_STATUS_NULL_PARAMETER;
         }
 
         bytes_to_process = clear.size();
-        if (sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process) != SA_STATUS_OK) {
+        status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
+        if (status != SA_STATUS_OK) {
             ERROR("sa_crypto_cipher_process failed");
-            return reinterpret_cast<void*>(1);
+            return status;
         }
 
         if (bytes_to_process != clear.size()) {
             ERROR("bytes_to_process not correct");
-            return reinterpret_cast<void*>(1);
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         // Verify the encryption.
         if (!verify_encrypt(out_buffer.get(), clear, parameters, false)) {
             ERROR("verify_encrypt failed");
-            return reinterpret_cast<void*>(1);
+            return SA_STATUS_INVALID_PARAMETER;
         }
     }
 
-    return nullptr;
+    return SA_STATUS_OK;
 }
 
 namespace {
     TEST(SaCryptoCipherMultipleThread, processMultipleThread) {
-        thread_info threads[255];
-        int i = 0;
-        for (auto& thread : threads) {
-            thread.thread_num = i++;
-            int result = pthread_create(&thread.thread_id, nullptr,
-                    SaCryptoCipherMultipleThread::process_multiple_threads, &thread);
-            ASSERT_EQ(result, 0);
-        }
+        std::vector<std::future<sa_status>> futures(255);
+        for (size_t i = 0; i < futures.size(); i++)
+            futures[i] = std::async(SaCryptoCipherMultipleThread::process_multiple_threads, i);
 
-        ASSERT_EQ(SaCryptoCipherMultipleThread::process_multiple_threads(nullptr), nullptr);
-
-        void* result;
-        for (auto& thread : threads) {
-            ASSERT_EQ(pthread_join(thread.thread_id, &result), 0);
-            ASSERT_EQ(result, nullptr);
-        }
+        for (auto& future : futures)
+            ASSERT_EQ(SA_STATUS_OK, future.get());
     }
 } // namespace
