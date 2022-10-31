@@ -295,8 +295,8 @@ static int cipher_do_cipher(
             sa_status status = SA_STATUS_OK;
             size_t bytes_to_process = in_length;
             if (in != NULL) {
-                sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, .context.clear = {out, in_length, 0}};
-                sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, .context.clear = {(void*) in, in_length, 0}};
+                sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out, in_length, 0}}};
+                sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {(void*) in, in_length, 0}}};
 
                 status = sa_crypto_cipher_process(&out_buffer, app_data->cipher_context, &in_buffer,
                         &bytes_to_process);
@@ -305,8 +305,8 @@ static int cipher_do_cipher(
                        app_data->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20) {
                 uint8_t temp;
                 sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR,
-                        .context.clear = {out, EVP_CIPHER_CTX_block_size(cipher_ctx), 0}};
-                sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, .context.clear = {&temp, 0, 0}};
+                        {.clear = {out, EVP_CIPHER_CTX_block_size(cipher_ctx), 0}}};
+                sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {&temp, 0, 0}}};
                 bytes_to_process = 0;
 
                 sa_cipher_end_parameters_aes_gcm end_parameters = {app_data->tag, 16};

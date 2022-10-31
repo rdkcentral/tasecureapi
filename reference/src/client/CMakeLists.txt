@@ -111,6 +111,7 @@ add_executable(saclienttest
         test/client_test_helpers.cpp
         test/client_test_helpers.h
         test/environment.cpp
+        test/sa_client_thread_test.cpp
         test/sa_crypto_cipher_common.h
         test/sa_crypto_cipher_common.cpp
         test/sa_crypto_cipher_init.cpp

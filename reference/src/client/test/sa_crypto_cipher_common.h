@@ -136,7 +136,7 @@ class SaCryptoCipherElGamalFailTest : public ::testing::TestWithParam<SaCryptoCi
 
 class SaCryptoCipherMultipleThread : public ::testing::Test, public SaCipherCryptoBase {
 public:
-    static void* process_multiple_threads(void* args);
+    static sa_status process_multiple_threads(size_t id);
 };
 
 // clang-format on
