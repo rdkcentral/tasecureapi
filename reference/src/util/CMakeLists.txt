@@ -41,15 +41,22 @@ add_library(util STATIC
         include/log.h
         include/pkcs8.h
         include/pkcs12.h
+        include/sa_rights.h
+        include/test_helpers.h
+        include/test_process_common_encryption.h
 
         src/log.c
         src/pkcs8.c
         src/pkcs12.c
+        src/sa_rights.c
+        src/test_helpers.cpp
+        src/test_process_common_encryption.cpp
 )
 
 target_include_directories(util
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../client/include>
         PRIVATE
         ${OPENSSL_INCLUDE_DIR}
         )

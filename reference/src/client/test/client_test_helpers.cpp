@@ -1568,10 +1568,6 @@ namespace client_test_helpers {
             0x90, 0xA6, 0xC0, 0x8F, 0x4D, 0xF4, 0x35, 0xC9, 0x34, 0x06, 0x31, 0x99,
             0xFF, 0xFF, 0xFF, 0xFF, 0x08, 0x08, 0x08, 0x08};
 
-    static sa_buffer get_buffer(std::vector<uint8_t>& data) {
-        return {SA_BUFFER_TYPE_CLEAR, {.clear = {data.data(), data.size(), 0}}};
-    }
-
     static bool hmac_sa(
             std::vector<uint8_t>& out,
             sa_key key,
@@ -1623,8 +1619,8 @@ namespace client_test_helpers {
         }
 
         size_t length = in.size();
-        auto out_buffer = get_buffer(out);
-        auto in_buffer = get_buffer(in);
+        sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
+        sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
         if (sa_crypto_cipher_process(&out_buffer, *context, &in_buffer, &length) != SA_STATUS_OK) {
             ERROR("sa_crypto_cipher_process failed");
             return false;
@@ -1651,8 +1647,8 @@ namespace client_test_helpers {
         }
 
         size_t length = in.size();
-        auto out_buffer = get_buffer(out);
-        auto in_buffer = get_buffer(in);
+        sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
+        sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
         if (sa_crypto_cipher_process(&out_buffer, *context, &in_buffer, &length) != SA_STATUS_OK) {
             ERROR("sa_crypto_cipher_process failed");
             return false;
@@ -1860,14 +1856,14 @@ namespace client_test_helpers {
         }
 
         size_t length = in.size();
-        auto in_buffer = get_buffer(in);
+        sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
         if (sa_crypto_cipher_process(nullptr, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
             ERROR("sa_crypto_cipher_init failed");
             return false;
         }
 
         auto out = std::vector<uint8_t>(length);
-        auto out_buffer = get_buffer(out);
+        sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
         length = in.size();
         if (sa_crypto_cipher_process(&out_buffer, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
             ERROR("sa_crypto_cipher_init failed");
@@ -1975,14 +1971,14 @@ namespace client_test_helpers {
         }
 
         size_t length = in.size();
-        auto in_buffer = get_buffer(in);
+        sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
         if (sa_crypto_cipher_process(nullptr, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
             ERROR("sa_crypto_cipher_process failed");
             return false;
         }
 
         auto out = std::vector<uint8_t>(length);
-        auto out_buffer = get_buffer(out);
+        sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
         length = in.size();
         if (sa_crypto_cipher_process(&out_buffer, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
             ERROR("sa_crypto_cipher_process failed");
@@ -2187,17 +2183,6 @@ namespace client_test_helpers {
             default:
                 return {};
         }
-    }
-
-    std::vector<uint8_t> random(size_t size) {
-        std::vector<uint8_t> data(size);
-
-        if (RAND_bytes(data.data(), static_cast<int>(data.size())) != 1) {
-            ERROR("RAND_bytes failed");
-            return {};
-        }
-
-        return data;
     }
 
     std::string iso8601(const uint64_t instant) {
@@ -3137,7 +3122,7 @@ namespace client_test_helpers {
         }
 
         bool status = false;
-        EVP_MD_CTX* context = nullptr;
+        EVP_MD_CTX* context;
         ECDSA_SIG* eddsa_signature = nullptr;
         do {
             context = EVP_MD_CTX_create();
@@ -3310,7 +3295,7 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& key,
             bool pad) {
 
-        if (!pad && (in.size() % 16 != 0)) {
+        if (!pad && (in.size() % AES_BLOCK_SIZE != 0)) {
             ERROR("Invalid in_length");
             return false;
         }
@@ -3321,12 +3306,12 @@ namespace client_test_helpers {
         }
 
         if (pad)
-            out.resize(((in.size() / 16) * 16) + 16);
+            out.resize(((in.size() / AES_BLOCK_SIZE) * AES_BLOCK_SIZE) + AES_BLOCK_SIZE);
         else
             out.resize(in.size());
 
         bool status = false;
-        EVP_CIPHER_CTX* context = nullptr;
+        EVP_CIPHER_CTX* context;
         do {
             context = EVP_CIPHER_CTX_new();
             if (context == nullptr) {
@@ -3402,7 +3387,7 @@ namespace client_test_helpers {
 
         out.resize(in.size());
         bool status = false;
-        EVP_CIPHER_CTX* context = nullptr;
+        EVP_CIPHER_CTX* context;
         do {
             context = EVP_CIPHER_CTX_new();
             if (context == nullptr) {
@@ -3466,7 +3451,7 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& key,
             bool pad) {
 
-        if (!pad && (in.size() % 16 != 0)) {
+        if (!pad && (in.size() % AES_BLOCK_SIZE != 0)) {
             ERROR("Invalid in_length");
             return false;
         }
@@ -3477,12 +3462,12 @@ namespace client_test_helpers {
         }
 
         if (pad)
-            out.resize(((in.size() / 16) * 16) + 16);
+            out.resize(((in.size() / AES_BLOCK_SIZE) * AES_BLOCK_SIZE) + AES_BLOCK_SIZE);
         else
             out.resize(in.size());
 
         bool status = false;
-        EVP_CIPHER_CTX* context = nullptr;
+        EVP_CIPHER_CTX* context;
         do {
             context = EVP_CIPHER_CTX_new();
             if (context == nullptr) {
@@ -3558,7 +3543,7 @@ namespace client_test_helpers {
         out.resize(in.size());
 
         bool status = false;
-        EVP_CIPHER_CTX* context = nullptr;
+        EVP_CIPHER_CTX* context;
         do {
             context = EVP_CIPHER_CTX_new();
             if (context == nullptr) {
@@ -3630,7 +3615,7 @@ namespace client_test_helpers {
         out.resize(in.size());
 
         bool status = false;
-        EVP_CIPHER_CTX* context = nullptr;
+        EVP_CIPHER_CTX* context;
         do {
             context = EVP_CIPHER_CTX_new();
             if (context == nullptr) {
@@ -3687,7 +3672,7 @@ namespace client_test_helpers {
         out.resize(in.size());
 
         bool status = false;
-        EVP_CIPHER_CTX* context = nullptr;
+        EVP_CIPHER_CTX* context;
         do {
             context = EVP_CIPHER_CTX_new();
             if (context == nullptr) {
@@ -3751,7 +3736,7 @@ namespace client_test_helpers {
         out.resize(in.size());
 
         bool status = false;
-        EVP_CIPHER_CTX* context = nullptr;
+        EVP_CIPHER_CTX* context;
         do {
             context = EVP_CIPHER_CTX_new();
             if (context == nullptr) {
@@ -3853,7 +3838,7 @@ namespace client_test_helpers {
         out.resize(in.size());
 
         bool status = false;
-        EVP_CIPHER_CTX* context = nullptr;
+        EVP_CIPHER_CTX* context;
         do {
             context = EVP_CIPHER_CTX_new();
             if (context == nullptr) {
@@ -3960,7 +3945,7 @@ namespace client_test_helpers {
         out.resize(in.size());
 
         bool status = false;
-        EVP_CIPHER_CTX* context = nullptr;
+        EVP_CIPHER_CTX* context;
         std::vector<uint8_t> iv;
         iv.insert(iv.end(), counter.begin(), counter.end());
         iv.insert(iv.end(), nonce.begin(), nonce.end());
@@ -4029,7 +4014,7 @@ namespace client_test_helpers {
         out.resize(in.size());
 
         bool status = false;
-        EVP_CIPHER_CTX* context = nullptr;
+        EVP_CIPHER_CTX* context;
         std::vector<uint8_t> iv;
         iv.insert(iv.end(), counter.begin(), counter.end());
         iv.insert(iv.end(), nonce.begin(), nonce.end());
@@ -4094,7 +4079,7 @@ namespace client_test_helpers {
         out.resize(in.size());
 
         bool status = false;
-        EVP_CIPHER_CTX* context = nullptr;
+        EVP_CIPHER_CTX* context;
         do {
             context = EVP_CIPHER_CTX_new();
             if (context == nullptr) {
@@ -4199,7 +4184,7 @@ namespace client_test_helpers {
         out.resize(in.size());
 
         bool status = false;
-        EVP_CIPHER_CTX* context = nullptr;
+        EVP_CIPHER_CTX* context;
         do {
             context = EVP_CIPHER_CTX_new();
             if (context == nullptr) {
@@ -4273,114 +4258,6 @@ namespace client_test_helpers {
         EVP_CIPHER_CTX_free(context);
         return status;
 #endif
-    }
-
-    const EVP_MD* digest_mechanism(sa_digest_algorithm digest_algorithm) {
-        switch (digest_algorithm) {
-            case SA_DIGEST_ALGORITHM_SHA1:
-                return EVP_sha1();
-
-            case SA_DIGEST_ALGORITHM_SHA256:
-                return EVP_sha256();
-
-            case SA_DIGEST_ALGORITHM_SHA384:
-                return EVP_sha384();
-
-            case SA_DIGEST_ALGORITHM_SHA512:
-                return EVP_sha512();
-
-            default:
-                ERROR("Unknown digest_algorithm encountered");
-                return nullptr;
-        }
-    }
-
-    size_t digest_length(sa_digest_algorithm digest_algorithm) {
-        switch (digest_algorithm) {
-            case SA_DIGEST_ALGORITHM_SHA1:
-                return SHA1_DIGEST_LENGTH;
-
-            case SA_DIGEST_ALGORITHM_SHA256:
-                return SHA256_DIGEST_LENGTH;
-
-            case SA_DIGEST_ALGORITHM_SHA384:
-                return SHA384_DIGEST_LENGTH;
-
-            case SA_DIGEST_ALGORITHM_SHA512:
-                return SHA512_DIGEST_LENGTH;
-
-            default:
-                ERROR("Unknown digest_algorithm encountered");
-                break;
-        }
-
-        return 0;
-    }
-
-    bool digest_openssl(
-            std::vector<uint8_t>& out,
-            sa_digest_algorithm digest_algorithm,
-            const std::vector<uint8_t>& in1,
-            const std::vector<uint8_t>& in2,
-            const std::vector<uint8_t>& in3) {
-
-        size_t required_length = digest_length(digest_algorithm);
-
-        bool status = false;
-        EVP_MD_CTX* context = nullptr;
-        do {
-            context = EVP_MD_CTX_create();
-            if (context == nullptr) {
-                ERROR("EVP_MD_CTX_create failed");
-                break;
-            }
-
-            const EVP_MD* md = digest_mechanism(digest_algorithm);
-            if (md == nullptr) {
-                ERROR("digest_mechanism failed");
-                break;
-            }
-
-            if (EVP_DigestInit_ex(context, md, nullptr) != 1) {
-                ERROR("EVP_DigestInit_ex failed");
-                break;
-            }
-
-            if (!in1.empty()) {
-                if (EVP_DigestUpdate(context, in1.data(), in1.size()) != 1) {
-                    ERROR("EVP_DigestUpdate failed");
-                    break;
-                }
-            }
-
-            if (!in2.empty()) {
-                if (EVP_DigestUpdate(context, in2.data(), in2.size()) != 1) {
-                    ERROR("EVP_DigestUpdate failed");
-                    break;
-                }
-            }
-
-            if (!in3.empty()) {
-                if (EVP_DigestUpdate(context, in3.data(), in3.size()) != 1) {
-                    ERROR("EVP_DigestUpdate failed");
-                    break;
-                }
-            }
-
-            unsigned int length = required_length;
-            out.resize(required_length);
-            if (EVP_DigestFinal_ex(context, out.data(), &length) != 1) {
-                ERROR("EVP_DigestFinal_ex failed");
-                break;
-            }
-
-            status = true;
-
-        } while (false);
-
-        EVP_MD_CTX_destroy(context);
-
-        return status;
     }
 
     bool hmac_openssl(

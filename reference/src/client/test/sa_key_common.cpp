@@ -443,22 +443,22 @@ std::shared_ptr<std::vector<uint8_t>> SaKeyBase::derive_test_key_ladder(
         return nullptr;
 
     std::vector<uint8_t> stage1(key_length);
-    if (!decrypt_aes_ecb_openssl(stage1, c1, key, false) || key_length != 16)
+    if (!decrypt_aes_ecb_openssl(stage1, c1, key, false) || key_length != SYM_128_KEY_SIZE)
         return nullptr;
 
     std::vector<uint8_t> stage2(key_length);
-    if (!decrypt_aes_ecb_openssl(stage2, c2, stage1, false) || key_length != 16)
+    if (!decrypt_aes_ecb_openssl(stage2, c2, stage1, false) || key_length != SYM_128_KEY_SIZE)
         return nullptr;
 
     std::vector<uint8_t> stage3(key_length);
-    if (!decrypt_aes_ecb_openssl(stage3, c3, stage2, false) || key_length != 16)
+    if (!decrypt_aes_ecb_openssl(stage3, c3, stage2, false) || key_length != SYM_128_KEY_SIZE)
         return nullptr;
 
     std::shared_ptr<std::vector<uint8_t>> stage4(new std::vector<uint8_t>(key_length),
             [](std::vector<uint8_t>* p) { delete p; });
     if (c4.empty())
         *stage4 = stage3;
-    else if (!decrypt_aes_ecb_openssl(*stage4, c4, stage3, false) || key_length != 16)
+    else if (!decrypt_aes_ecb_openssl(*stage4, c4, stage3, false) || key_length != SYM_128_KEY_SIZE)
         return nullptr;
 
     return stage4;

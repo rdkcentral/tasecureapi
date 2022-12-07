@@ -203,13 +203,18 @@ target_clangformat_setup(taimpl)
 # Google test
 add_executable(taimpltest
         test/environment.cpp
-        test/test_helpers.cpp
+        test/ta_test_helpers.cpp
         test/json.cpp
         test/object_store.cpp
         test/rights.cpp
         test/slots.cpp
         test/ta_sa_init.cpp
-        )
+        test/ta_sa_svp_buffer_check.cpp
+        test/ta_sa_svp_buffer_copy.cpp
+        test/ta_sa_svp_buffer_write.cpp
+        test/ta_sa_svp_common.cpp
+        test/ta_sa_svp_crypto.cpp
+        test/ta_sa_svp_crypto.h)
 
 target_include_directories(taimpltest
         PRIVATE
@@ -226,6 +231,7 @@ target_link_libraries(taimpltest
         gtest_main
         gmock_main
         taimpl
+        util
         ${OPENSSL_CRYPTO_LIBRARY}
         )
 

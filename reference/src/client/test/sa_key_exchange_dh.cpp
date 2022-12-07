@@ -19,6 +19,7 @@
 #include "client_test_helpers.h"
 #include "sa.h"
 #include "sa_key_exchange_common.h"
+#include "sa_rights.h"
 #include "gtest/gtest.h"
 
 using namespace client_test_helpers;

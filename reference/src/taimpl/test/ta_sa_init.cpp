@@ -17,10 +17,10 @@
  */
 
 #include "ta_sa.h"
-#include "test_helpers.h"
+#include "ta_test_helpers.h"
 #include "gtest/gtest.h"
 
-using namespace test_helpers;
+using namespace ta_test_helpers;
 
 namespace {
     TEST(TaSaInit, nominalNoAvailableResourceSlot) {
@@ -32,14 +32,14 @@ namespace {
                     [](const ta_client* p) {
                         if (p != nullptr) {
                             if (*p != INVALID_HANDLE) {
-                                ta_sa_close(*p, uuid());
+                                ta_sa_close(*p, ta_uuid());
                             }
 
                             delete p;
                         }
                     });
 
-            status = ta_sa_init(client.get(), uuid());
+            status = ta_sa_init(client.get(), ta_uuid());
             ASSERT_LE(i++, MAX_CLIENT_SLOTS);
             clients.push_back(client);
         } while (status == SA_STATUS_OK);

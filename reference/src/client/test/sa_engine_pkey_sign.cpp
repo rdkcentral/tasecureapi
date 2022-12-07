@@ -17,7 +17,6 @@
  */
 
 #include "client_test_helpers.h"
-#include "sa.h"
 #include "sa_engine_common.h"
 #include <gtest/gtest.h>
 #include <openssl/evp.h>

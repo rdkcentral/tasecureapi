@@ -22,20 +22,27 @@
 #include "common.h"
 #include "log.h"
 #include "pad.h"
+#include "porting/memory.h"
 #include "rights.h"
 #include "symmetric.h"
 #include "ta_sa.h"
 #include <memory.h>
 
+#define PADDED_SIZE(size) AES_BLOCK_SIZE*(((size) / AES_BLOCK_SIZE) + 1)
+
 static size_t get_required_length(
         cipher_t* cipher,
         size_t bytes_to_process) {
     sa_cipher_algorithm cipher_algorithm = cipher_get_algorithm(cipher);
+    sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
 
     switch (cipher_algorithm) {
         case SA_CIPHER_ALGORITHM_AES_CBC_PKCS7:
         case SA_CIPHER_ALGORITHM_AES_ECB_PKCS7:
-            return AES_BLOCK_SIZE;
+            if (cipher_mode == SA_CIPHER_MODE_ENCRYPT)
+                return PADDED_SIZE(bytes_to_process);
+            else
+                return bytes_to_process;
 
         case SA_CIPHER_ALGORITHM_AES_CTR:
         case SA_CIPHER_ALGORITHM_AES_GCM:
@@ -88,60 +95,73 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
     }
 
     sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
-    if (cipher_mode == SA_CIPHER_MODE_ENCRYPT) {
-        if (*bytes_to_process >= AES_BLOCK_SIZE) {
-            ERROR("Invalid bytes_to_process");
-            return SA_STATUS_INVALID_PARAMETER;
-        }
 
-        if (!rights_allowed_encrypt(rights, SA_KEY_TYPE_SYMMETRIC)) {
-            ERROR("rights_allowed_encrypt failed");
-            return SA_STATUS_OPERATION_NOT_ALLOWED;
-        }
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
+    uint8_t* padded = NULL;
+    do {
+        if (cipher_mode == SA_CIPHER_MODE_ENCRYPT) {
+            if (!rights_allowed_encrypt(rights, SA_KEY_TYPE_SYMMETRIC)) {
+                ERROR("rights_allowed_encrypt failed");
+                status = SA_STATUS_OPERATION_NOT_ALLOWED;
+                break;
+            }
 
-        uint8_t padded_input[SYM_128_KEY_SIZE];
-        memcpy(padded_input, in, *bytes_to_process);
-        if (!pad_apply_pkcs7(padded_input, SYM_128_KEY_SIZE - *bytes_to_process)) {
-            ERROR("pad_apply_pkcs7 failed");
-            return SA_STATUS_VERIFICATION_FAILED;
-        }
+            size_t padded_size = PADDED_SIZE(*bytes_to_process);
+            padded = memory_secure_alloc(padded_size);
+            if (padded == NULL) {
+                ERROR("memory_secure_alloc failed");
+                break;
+            }
 
-        sa_status status = symmetric_context_encrypt(symmetric_context, out, padded_input, sizeof(padded_input));
-        if (status != SA_STATUS_OK) {
-            ERROR("symmetric_context_encrypt failed");
-            return status;
-        }
-        *bytes_to_process = sizeof(padded_input);
-    } else if (cipher_mode == SA_CIPHER_MODE_DECRYPT) {
-        if (*bytes_to_process != AES_BLOCK_SIZE) {
-            ERROR("Invalid bytes_to_process");
-            return SA_STATUS_INVALID_PARAMETER;
-        }
+            memcpy(padded, in, *bytes_to_process);
+            if (!pad_apply_pkcs7(padded + padded_size - AES_BLOCK_SIZE, padded_size - *bytes_to_process)) {
+                ERROR("pad_apply_pkcs7 failed");
+                status = SA_STATUS_VERIFICATION_FAILED;
+                break;
+            }
 
-        if (!rights_allowed_decrypt(rights, SA_KEY_TYPE_SYMMETRIC)) {
-            ERROR("rights_allowed_decrypt failed");
-            return SA_STATUS_OPERATION_NOT_ALLOWED;
+            status = symmetric_context_encrypt(symmetric_context, out, padded, padded_size);
+            if (status != SA_STATUS_OK) {
+                ERROR("symmetric_context_encrypt failed");
+            }
+
+            *bytes_to_process = padded_size;
+        } else if (cipher_mode == SA_CIPHER_MODE_DECRYPT) {
+            if (*bytes_to_process % AES_BLOCK_SIZE != 0) {
+                ERROR("Invalid bytes_to_process");
+                status = SA_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            if (!rights_allowed_decrypt(rights, SA_KEY_TYPE_SYMMETRIC)) {
+                ERROR("rights_allowed_decrypt failed");
+                status = SA_STATUS_OPERATION_NOT_ALLOWED;
+                break;
+            }
+
+            status = symmetric_context_decrypt(symmetric_context, out, in, *bytes_to_process);
+            if (status != SA_STATUS_OK) {
+                ERROR("symmetric_context_decrypt failed");
+                break;
+            }
+
+            uint8_t pad_value = 0;
+            if (!pad_check_pkcs7(&pad_value, out + *bytes_to_process - AES_BLOCK_SIZE)) {
+                ERROR("pad_check_pkcs7 failed");
+                status = SA_STATUS_VERIFICATION_FAILED;
+                break;
+            }
+
+            *bytes_to_process = *bytes_to_process - pad_value;
+        } else {
+            ERROR("Unknown mode encountered");
         }
+    } while (false);
 
-        sa_status status = symmetric_context_decrypt(symmetric_context, out, in, *bytes_to_process);
-        if (status != SA_STATUS_OK) {
-            ERROR("symmetric_context_decrypt failed");
-            return status;
-        }
+    if (padded != NULL)
+        memory_secure_free(padded);
 
-        uint8_t pad_value = 0;
-        if (!pad_check_pkcs7(&pad_value, out)) {
-            ERROR("pad_check_pkcs7 failed");
-            return SA_STATUS_VERIFICATION_FAILED;
-        }
-
-        *bytes_to_process = *bytes_to_process - pad_value;
-    } else {
-        ERROR("Unknown mode encountered");
-        return SA_STATUS_INTERNAL_ERROR;
-    }
-
-    return SA_STATUS_OK;
+    return status;
 }
 
 static sa_status ta_sa_crypto_cipher_process_last_aes_ctr(
@@ -500,15 +520,16 @@ sa_status ta_sa_crypto_cipher_process_last(
         }
 
         sa_cipher_algorithm cipher_algorithm = cipher_get_algorithm(cipher);
-        if (out->buffer_type == SA_BUFFER_TYPE_SVP &&
-                (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP ||
+        if ((out->buffer_type == SA_BUFFER_TYPE_SVP || in->buffer_type == SA_BUFFER_TYPE_SVP) &&
+                (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM ||
+                        cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 ||
+                        cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP ||
                         cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15 ||
                         cipher_algorithm == SA_CIPHER_ALGORITHM_EC_ELGAMAL)) {
             ERROR("Invalid algorithm");
-            status = SA_STATUS_INVALID_PARAMETER;
+            status = SA_STATUS_OPERATION_NOT_ALLOWED;
             break;
         }
-
         if (out->buffer_type == SA_BUFFER_TYPE_CLEAR && in->buffer_type != out->buffer_type) {
             ERROR("buffer_type mismatch");
             status = SA_STATUS_INVALID_PARAMETER;

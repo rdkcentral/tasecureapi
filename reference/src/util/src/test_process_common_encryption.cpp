@@ -16,8 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sa_process_common_encryption_common.h" // NOLINT
-#include "client_test_helpers.h"
+#include "test_process_common_encryption.h" // NOLINT
+#include "common.h"
+#include "log.h"
+#include "test_helpers.h"
+#include <cstring>
 #include <openssl/evp.h>
 
 #ifdef __APPLE__
@@ -25,11 +28,11 @@
 #define be64toh(x) ntohll(x)
 #endif
 
-using namespace client_test_helpers;
-
 #define MIN(A, B) ((A) <= (B) ? (A) : (B))
 
-EVP_CIPHER_CTX* SaProcessCommonEncryptionBase::openssl_init(
+using namespace test_helpers;
+
+EVP_CIPHER_CTX* ProcessCommonEncryptionBase::openssl_init(
         const void* iv,
         const uint8_t* key,
         sa_cipher_algorithm cipher_algorithm) {
@@ -74,7 +77,7 @@ EVP_CIPHER_CTX* SaProcessCommonEncryptionBase::openssl_init(
     return context;
 }
 
-bool SaProcessCommonEncryptionBase::encrypt(
+bool ProcessCommonEncryptionBase::encrypt(
         uint8_t* out_bytes,
         uint8_t* in_bytes,
         size_t bytes_to_process,
@@ -127,7 +130,7 @@ bool SaProcessCommonEncryptionBase::encrypt(
     return true;
 }
 
-bool SaProcessCommonEncryptionBase::encrypt_samples(
+bool ProcessCommonEncryptionBase::encrypt_samples(
         uint8_t* in_bytes,
         std::vector<sa_sample>& samples,
         std::vector<uint8_t>& clear_key,
@@ -214,15 +217,15 @@ bool SaProcessCommonEncryptionBase::encrypt_samples(
     return true;
 }
 
-bool SaProcessCommonEncryptionBase::build_samples(
+bool ProcessCommonEncryptionBase::build_samples(
         size_t sample_size,
         size_t crypt_byte_block,
         size_t skip_byte_block,
         size_t subsample_count,
         size_t bytes_of_clear_data,
-        cipher_parameters& parameters,
-        sa_buffer_type out_buffer_type,
-        sa_buffer_type in_buffer_type,
+        std::vector<uint8_t>& iv,
+        sa_cipher_algorithm cipher_algorithm,
+        std::vector<uint8_t>& clear_key,
         const std::shared_ptr<sa_crypto_cipher_context>& cipher,
         sample_data& sample_data,
         std::vector<sa_sample>& samples) {
@@ -230,16 +233,12 @@ bool SaProcessCommonEncryptionBase::build_samples(
     size_t sample_count = samples.size();
     size_t subsample_size = sample_size / subsample_count;
     sample_data.clear = random(subsample_size * subsample_count * sample_count);
-    sample_data.out = buffer_alloc(out_buffer_type, sample_data.clear.size());
-    if (sample_data.out == nullptr)
-        return false;
-
     sample_data.subsample_lengths.resize(subsample_count * sample_count);
 
     for (size_t i = 0; i < sample_count; i++) {
         auto* sample = &samples[i];
-        sample->iv = parameters.iv.data();
-        sample->iv_length = parameters.iv.size();
+        sample->iv = iv.data();
+        sample->iv_length = iv.size();
         sample->crypt_byte_block = crypt_byte_block;
         sample->skip_byte_block = skip_byte_block;
         sample->subsample_count = subsample_count;
@@ -259,43 +258,24 @@ bool SaProcessCommonEncryptionBase::build_samples(
     // Encrypt the data in the clear and then copy it into the clear or SVP input buffer and then update the sample
     // data.
     std::vector<uint8_t> in = sample_data.clear;
-    if (!encrypt_samples(in.data(), samples, parameters.clear_key, parameters.cipher_algorithm)) {
+    if (!encrypt_samples(in.data(), samples, clear_key, cipher_algorithm)) {
         ERROR("encrypt_sample failed");
         return false;
     }
 
-    sample_data.in = buffer_alloc(in_buffer_type, in);
-    if (sample_data.in == nullptr)
-        return false;
+    if (sample_data.in->buffer_type == SA_BUFFER_TYPE_CLEAR) {
+        memcpy(sample_data.in->context.clear.buffer, in.data(), in.size());
+    } else {
+        if (svp_buffer_write(sample_data.in->context.svp.buffer, in.data(), in.size()) != SA_STATUS_OK) {
+            ERROR("svp_buffer_write");
+            return false;
+        }
+
+        sample_data.in->context.svp.offset = 0;
+    }
 
     for (sa_sample& sample : samples)
         sample.in = sample_data.in.get();
 
     return true;
 }
-
-void SaProcessCommonEncryptionTest::SetUp() {
-    if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED) {
-        auto buffer_types = std::get<5>(GetParam());
-        sa_buffer_type out_buffer_type = std::get<0>(buffer_types);
-        sa_buffer_type in_buffer_type = std::get<1>(buffer_types);
-        if (in_buffer_type == SA_BUFFER_TYPE_SVP || out_buffer_type == SA_BUFFER_TYPE_SVP)
-            GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
-    }
-}
-
-// clang-format off
-INSTANTIATE_TEST_SUITE_P(
-        SaProcessCommonEncryptionTests,
-        SaProcessCommonEncryptionTest,
-        ::testing::Combine(
-                ::testing::Values(std::make_tuple(1000, 1), std::make_tuple(10000, 2), std::make_tuple(100000, 5),
-                        std::make_tuple(1000000, 10)),          // Sample size and time
-                ::testing::Values(0UL, 1UL, 5UL, 9UL),          // crypt_byte_block
-                ::testing::Values(1UL, 2UL, 5UL, 10UL),         // subsample_size
-                ::testing::Values(0UL, 16UL, 20UL, UINT32_MAX), // bytes_of_clear_data
-                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CTR, SA_CIPHER_ALGORITHM_AES_CBC),
-                ::testing::Values(std::make_tuple(SA_BUFFER_TYPE_CLEAR, SA_BUFFER_TYPE_CLEAR),
-                        std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_CLEAR),
-                        std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_SVP))));
-// clang-format on

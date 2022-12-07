@@ -17,7 +17,8 @@
  */
 
 #include "rights.h"
-#include "test_helpers.h"
+#include "sa_rights.h"
+#include "ta_test_helpers.h"
 #include "gtest/gtest.h"
 
 namespace {
@@ -53,7 +54,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, allowall) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
 
         video_output_state_t video_output_state;
         video_output_state.analog_unprotected_count = 1;
@@ -68,7 +69,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, svprequiredok) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
 
         video_output_state_t video_output_state;
@@ -84,7 +85,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, svprequiredfail) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
 
         video_output_state_t video_output_state;
@@ -100,7 +101,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, analogunprotectedok) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_ALLOWED_ANALOG_UNPROTECTED);
 
         video_output_state_t video_output_state;
@@ -116,7 +117,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, analogunprotectedfail) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_ALLOWED_ANALOG_UNPROTECTED);
 
         video_output_state_t video_output_state;
@@ -132,7 +133,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, analogcgmsaok) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_ALLOWED_ANALOG_CGMSA);
 
         video_output_state_t video_output_state;
@@ -148,7 +149,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, analogcgmsafail) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_ALLOWED_ANALOG_CGMSA);
 
         video_output_state_t video_output_state;
@@ -164,7 +165,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, digitalunprotectedok) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_ALLOWED_DIGITAL_UNPROTECTED);
 
         video_output_state_t video_output_state;
@@ -180,7 +181,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, digitalunprotectedfail) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_ALLOWED_DIGITAL_UNPROTECTED);
 
         video_output_state_t video_output_state;
@@ -196,7 +197,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, digitalhdcp14ok) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_ALLOWED_DIGITAL_HDCP14);
 
         video_output_state_t video_output_state;
@@ -212,7 +213,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, digitalhdcp14fail) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_ALLOWED_DIGITAL_HDCP14);
 
         video_output_state_t video_output_state;
@@ -228,7 +229,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, digitalhdcp22ok) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_ALLOWED_DIGITAL_HDCP22);
 
         video_output_state_t video_output_state;
@@ -244,7 +245,7 @@ namespace {
 
     TEST(RightsAllowedVideoOutputState, digitalhdcp22fail) {
         sa_rights rights;
-        test_helpers::rights_allow_all(&rights);
+        sa_rights_set_allow_all(&rights);
         SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_ALLOWED_DIGITAL_HDCP22);
 
         video_output_state_t video_output_state;

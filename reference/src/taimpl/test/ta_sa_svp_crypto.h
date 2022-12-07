@@ -1,0 +1,43 @@
+/**
+ * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#ifndef TA_SA_SVP_CRYPTO_H
+#define TA_SA_SVP_CRYPTO_H
+
+#include "sa_types.h"
+#include "test_process_common_encryption.h"
+#include "gtest/gtest.h"
+
+using TaCryptoCipherTestType = std::tuple<sa_cipher_algorithm, sa_cipher_mode, size_t, size_t>;
+
+class TaCryptoCipherTest : public ::testing::TestWithParam<TaCryptoCipherTestType> {};
+
+using TaProcessCommonEncryptionType =
+        std::tuple<std::tuple<size_t, size_t>, size_t, size_t, size_t, sa_cipher_algorithm>;
+
+class TaProcessCommonEncryptionTest : public ::testing::TestWithParam<TaProcessCommonEncryptionType>,
+                                      public ProcessCommonEncryptionBase {
+protected:
+    void SetUp() override;
+    sa_status svp_buffer_write(
+            sa_svp_buffer out,
+            const void* in,
+            size_t in_length) override;
+};
+
+#endif //TA_SA_SVP_CRYPTO_H

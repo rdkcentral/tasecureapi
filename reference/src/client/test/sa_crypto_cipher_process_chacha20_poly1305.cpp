@@ -24,8 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_P(SaCryptoCipherWithSvpTest, processChacha20Poly1305NominalEncryptAes256NullAadZeroLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, processChacha20Poly1305NominalEncryptAes256NullAadZeroLength) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20_POLY1305;
         parameters.svp_required = false;
@@ -56,7 +55,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         auto clear = random(AES_BLOCK_SIZE * 2);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 
@@ -65,7 +64,7 @@ namespace {
         ASSERT_EQ(bytes_to_process, clear.size());
 
         // encrypt using SecApi
-        auto out_buffer = buffer_alloc(buffer_type, bytes_to_process);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, bytes_to_process);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OK);
@@ -75,8 +74,7 @@ namespace {
         ASSERT_TRUE(verify_encrypt(out_buffer.get(), clear, parameters, false));
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processChacha20Poly1305NominalDecryptAes256NullAadZeroLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, processChacha20Poly1305NominalDecryptAes256NullAadZeroLength) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20_POLY1305;
         parameters.svp_required = false;
@@ -111,7 +109,7 @@ namespace {
         auto encrypted = encrypt_openssl(clear, parameters);
         ASSERT_FALSE(encrypted.empty());
 
-        auto in_buffer = buffer_alloc(buffer_type, encrypted);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, encrypted);
         ASSERT_NE(in_buffer, nullptr);
 
         // get out_length
@@ -121,7 +119,7 @@ namespace {
         ASSERT_EQ(bytes_to_process, encrypted.size());
 
         // encrypt using SecApi
-        auto out_buffer = buffer_alloc(buffer_type, bytes_to_process);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, bytes_to_process);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OK);
@@ -131,8 +129,7 @@ namespace {
         ASSERT_TRUE(verify_decrypt(out_buffer.get(), clear));
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processChacha20Poly1305EncryptResumePartialBlock) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, processChacha20Poly1305EncryptResumePartialBlock) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20_POLY1305;
         parameters.svp_required = false;
@@ -145,11 +142,11 @@ namespace {
             GTEST_SKIP() << "Cipher algorithm not supported";
 
         auto clear = random(34);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
 
         // encrypt using SecApi
-        auto out_buffer = buffer_alloc(buffer_type, clear.size());
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size() / 2;
         sa_status status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
@@ -165,8 +162,7 @@ namespace {
         ASSERT_TRUE(verify_encrypt(out_buffer.get(), clear, parameters, false));
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processChacha20Poly1305DecryptResumePartialBlock) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, processChacha20Poly1305DecryptResumePartialBlock) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20_POLY1305;
         parameters.svp_required = false;
@@ -185,10 +181,10 @@ namespace {
         auto encrypted = encrypt_openssl(clear, parameters);
         ASSERT_FALSE(encrypted.empty());
 
-        auto in_buffer = buffer_alloc(buffer_type, encrypted);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, encrypted);
         ASSERT_NE(in_buffer, nullptr);
 
-        auto out_buffer = buffer_alloc(buffer_type, clear.size());
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size() / 2;
         sa_status status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
@@ -204,9 +200,8 @@ namespace {
         ASSERT_TRUE(verify_decrypt(out_buffer.get(), clear));
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processChacha20Poly1305FailsInvalidOutLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+    TEST_P(SaCryptoCipherWithoutSvpTest, processChacha20Poly1305FailsInvalidOutLength) {
+        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
@@ -229,9 +224,9 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         auto clear = random(33);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
-        auto out_buffer = buffer_alloc(buffer_type, clear.size() - 1);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size() - 1);
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 
@@ -239,7 +234,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaCryptoCipherSvpOnlyTest, initChacha20Poly1305FailsDecryptInvalidRightsSvpOptionalNotSet) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initAChacha20Poly1305FailsSvpIn) {
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
@@ -252,9 +247,43 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        auto nonce = random(CHACHA20_NONCE_LENGTH);
+        auto iv = random(GCM_IV_LENGTH);
         auto aad = random(36);
-        sa_cipher_parameters_chacha20_poly1305 parameters = {nonce.data(), nonce.size(), aad.data(), aad.size()};
+        sa_cipher_parameters_chacha20_poly1305 parameters = {iv.data(), iv.size(), aad.data(), aad.size()};
+        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20_POLY1305,
+                SA_CIPHER_MODE_DECRYPT, *key, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Cipher algorithm not supported";
+
+        ASSERT_EQ(status, SA_STATUS_OK);
+
+        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, clear);
+        ASSERT_NE(in_buffer, nullptr);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
+        ASSERT_NE(out_buffer, nullptr);
+        size_t bytes_to_process = clear.size();
+
+        status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
+        ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
+    }
+
+    TEST_F(SaCryptoCipherWithoutSvpTest, initChacha20Poly1305FailsSvpOut) {
+        auto clear_key = random(SYM_256_KEY_SIZE);
+
+        sa_rights rights;
+        sa_rights_set_allow_all(&rights);
+        SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
+
+        auto key = create_sa_key_symmetric(&rights, clear_key);
+        ASSERT_NE(key, nullptr);
+
+        auto cipher = create_uninitialized_sa_crypto_cipher_context();
+        ASSERT_NE(cipher, nullptr);
+
+        auto iv = random(GCM_IV_LENGTH);
+        auto aad = random(36);
+        sa_cipher_parameters_chacha20_poly1305 parameters = {iv.data(), iv.size(), aad.data(), aad.size()};
         sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20_POLY1305,
                 SA_CIPHER_MODE_DECRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
@@ -265,7 +294,7 @@ namespace {
         auto clear = random(AES_BLOCK_SIZE * 2);
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
-        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size() - 1);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, clear.size());
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 

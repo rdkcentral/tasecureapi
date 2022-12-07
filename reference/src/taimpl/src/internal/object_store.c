@@ -435,6 +435,7 @@ sa_status object_store_acquire(
         }
 
         if (memory_memcmp_constant(&store_object->owner_uuid, caller_uuid, sizeof(sa_uuid)) != 0) {
+            *object = NULL;
             ERROR("TA UUID does not match");
             status = SA_STATUS_OPERATION_NOT_ALLOWED;
             break;

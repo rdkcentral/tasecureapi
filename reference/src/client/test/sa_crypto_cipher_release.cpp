@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "client_test_helpers.h"
 #include "sa.h"
 #include "sa_crypto_cipher_common.h"
 #include "gtest/gtest.h"

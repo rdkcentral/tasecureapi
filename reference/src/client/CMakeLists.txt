@@ -70,7 +70,7 @@ target_compile_options(saclient PRIVATE -Werror -Wall -Wextra -Wno-type-limits -
 set_target_properties(saclient PROPERTIES
         LINKER_LANGUAGE C
         SO_VERSION 3.1
-        VERSION 3.1.0
+        VERSION 3.1.2
         )
 
 target_include_directories(saclient
@@ -242,8 +242,7 @@ add_executable(saclienttest
         test/sa_key_unwrap_rsa.cpp
         test/sa_crypto_cipher_multiple_thread.cpp
         test/sa_process_common_encryption.cpp
-        test/sa_process_common_encryption_common.cpp
-        test/sa_process_common_encryption_common.h
+        test/sa_process_common_encryption.h
         test/sa_svp_buffer_alloc.cpp
         test/sa_svp_buffer_check.cpp
         test/sa_svp_buffer_copy.cpp

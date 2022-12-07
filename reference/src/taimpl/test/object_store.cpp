@@ -17,16 +17,12 @@
  */
 
 #include "object_store.h"
+#include "ta_test_helpers.h"
 #include "gtest/gtest.h"
 
-namespace {
-    struct {
-        sa_uuid uuid;
-    } global_object_store = {
-            .uuid = {
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}};
+using namespace ta_test_helpers;
 
+namespace {
     void noop(void* obj) {
     }
 
@@ -52,7 +48,7 @@ namespace {
         ASSERT_NE(store, nullptr);
 
         slot_t slot = SLOT_INVALID;
-        sa_status status = object_store_add(&slot, store.get(), &num, &global_object_store.uuid);
+        sa_status status = object_store_add(&slot, store.get(), &num, ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_NE(slot, SLOT_INVALID);
     }
@@ -64,12 +60,12 @@ namespace {
 
         slot_t slot = SLOT_INVALID;
         for (size_t i = 0; i < num; ++i) {
-            sa_status status = object_store_add(&slot, store.get(), &num, &global_object_store.uuid);
+            sa_status status = object_store_add(&slot, store.get(), &num, ta_uuid());
             ASSERT_EQ(status, SA_STATUS_OK);
         }
 
         // allocate one past the limit
-        ASSERT_EQ(object_store_add(&slot, store.get(), &num, &global_object_store.uuid),
+        ASSERT_EQ(object_store_add(&slot, store.get(), &num, ta_uuid()),
                 SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT);
     }
 
@@ -79,15 +75,15 @@ namespace {
         ASSERT_NE(store, nullptr);
 
         slot_t slot = SLOT_INVALID;
-        sa_status status = object_store_add(&slot, store.get(), &num, &global_object_store.uuid);
+        sa_status status = object_store_add(&slot, store.get(), &num, ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_NE(slot, SLOT_INVALID);
 
         void* object = nullptr;
-        status = object_store_acquire(&object, store.get(), slot, &global_object_store.uuid);
+        status = object_store_acquire(&object, store.get(), slot, ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
         std::shared_ptr<void> obj(object, [&](void* object) {
-            sa_status status = object_store_release(store.get(), slot, object, &global_object_store.uuid);
+            sa_status status = object_store_release(store.get(), slot, object, ta_uuid());
             ASSERT_EQ(status, SA_STATUS_OK);
         });
         ASSERT_NE(object, nullptr);
@@ -99,18 +95,18 @@ namespace {
         ASSERT_NE(store, nullptr);
 
         slot_t slot = SLOT_INVALID;
-        sa_status status = object_store_add(&slot, store.get(), &num, &global_object_store.uuid);
+        sa_status status = object_store_add(&slot, store.get(), &num, ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_NE(slot, SLOT_INVALID);
 
         sa_uuid wrong_uuid;
-        memcpy(&wrong_uuid, &global_object_store.uuid, sizeof(sa_uuid));
+        memcpy(&wrong_uuid, ta_uuid(), sizeof(sa_uuid));
         wrong_uuid.id[0] = ~wrong_uuid.id[0];
         void* object = nullptr;
         status = object_store_acquire(&object, store.get(), slot, &wrong_uuid);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
         std::shared_ptr<void> obj(object, [&](void* object) {
-            object_store_release(store.get(), slot, object, &global_object_store.uuid);
+            object_store_release(store.get(), slot, object, ta_uuid());
         });
         ASSERT_EQ(object, nullptr);
     }
@@ -123,26 +119,26 @@ namespace {
         std::vector<slot_t> allocated;
         for (size_t i = 0; i < num; ++i) {
             slot_t slot = SLOT_INVALID;
-            sa_status status = object_store_add(&slot, store.get(), &num, &global_object_store.uuid);
+            sa_status status = object_store_add(&slot, store.get(), &num, ta_uuid());
             ASSERT_EQ(status, SA_STATUS_OK);
             allocated.push_back(slot);
         }
 
         for (unsigned int i : allocated) {
-            sa_status status = object_store_remove(store.get(), i, &global_object_store.uuid);
+            sa_status status = object_store_remove(store.get(), i, ta_uuid());
             ASSERT_EQ(status, SA_STATUS_OK);
         }
 
         std::vector<slot_t> allocated2;
         for (size_t i = 0; i < num; ++i) {
             slot_t slot = SLOT_INVALID;
-            sa_status status = object_store_add(&slot, store.get(), &num, &global_object_store.uuid);
+            sa_status status = object_store_add(&slot, store.get(), &num, ta_uuid());
             ASSERT_EQ(status, SA_STATUS_OK);
             allocated2.push_back(slot);
         }
 
         for (size_t i = 0; i < allocated2.size(); ++i) {
-            sa_status status = object_store_remove(store.get(), allocated[i], &global_object_store.uuid);
+            sa_status status = object_store_remove(store.get(), allocated[i], ta_uuid());
             ASSERT_EQ(status, SA_STATUS_OK);
         }
     }
