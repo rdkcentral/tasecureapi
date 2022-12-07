@@ -36,6 +36,7 @@
 
 #define RSA_DEFAULT_PADDING_MODE RSA_PKCS1_PADDING
 #define RSA_DEFAULT_PSS_SALT_LENGTH RSA_PSS_SALTLEN_AUTO
+#define OPENSSL_OPERATION_NOT_SUPPORTED (-2)
 
 typedef struct {
     int padding_mode;
@@ -324,7 +325,7 @@ static int pkey_sign(
             signature_algorithm, data->private_key, in, in_length, parameters);
     if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
         ERROR("sa_crypto_sign operation not supported");
-        return -2;
+        return OPENSSL_OPERATION_NOT_SUPPORTED;
     }
 
     if (status != SA_STATUS_OK) {
@@ -515,7 +516,7 @@ static int pkey_digestsign(
             in_length, NULL);
     if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
         ERROR("sa_crypto_sign operation not supported");
-        return -2;
+        return OPENSSL_OPERATION_NOT_SUPPORTED;
     }
 
     if (status != SA_STATUS_OK) {
@@ -950,7 +951,7 @@ static int pkey_decrypt(
             data->private_key, parameters);
     if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
         ERROR("sa_crypto_cipher_init operation not supported");
-        return -2;
+        return OPENSSL_OPERATION_NOT_SUPPORTED;
     }
 
     if (status != SA_STATUS_OK) {
