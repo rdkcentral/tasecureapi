@@ -34,7 +34,7 @@ extern "C" {
 
 /**
  * Converts a digest algorithm into an OpenSSL mechanism.
- * @param digest_algorithm the digest algorithm to convert.
+ * @param[in] digest_algorithm the digest algorithm to convert.
  * @return the OpenSSL mechanism.
  */
 const EVP_MD* digest_mechanism(sa_digest_algorithm digest_algorithm);
@@ -42,7 +42,7 @@ const EVP_MD* digest_mechanism(sa_digest_algorithm digest_algorithm);
 /**
  * Returns the digest name as a string.
  *
- * @param digest_algorithm the digest algorithm to lookup.
+ * @param[in] digest_algorithm the digest algorithm to lookup.
  * @return the string identifying the digest.
  */
 const char* digest_string(sa_digest_algorithm digest_algorithm);
