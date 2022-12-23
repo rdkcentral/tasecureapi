@@ -45,8 +45,11 @@ namespace {
             std::copy(in.begin() + i * 2 * chunk_size, in.begin() + i * 2 * chunk_size + chunk_size,
                     std::back_inserter(digest_vector));
         }
+
         status = sa_svp_buffer_copy(*out_buffer, *in_buffer, offsets, offset_length);
         ASSERT_EQ(status, SA_STATUS_OK);
+
+        // Copy verified in taimpltests.
     }
 
     TEST_F(SaSvpBufferCopyTest, failsOutBufferTooSmall) {

@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef TA_SA_SVP_COMMON_H
+#ifndef SA_SVP_COMMON_H
 #define SA_SVP_COMMON_H
 
 #include "sa.h"
@@ -46,4 +46,4 @@ class SaSvpBufferWriteTest : public ::testing::WithParamInterface<SaSvpBufferTes
 
 class SaSvpKeyCheckTest : public SaSvpBase {};
 
-#endif // TA_SA_SVP_COMMON_H
+#endif // SA_SVP_COMMON_H

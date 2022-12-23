@@ -247,9 +247,9 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        auto iv = random(GCM_IV_LENGTH);
+        auto nonce = random(CHACHA20_NONCE_LENGTH);
         auto aad = random(36);
-        sa_cipher_parameters_chacha20_poly1305 parameters = {iv.data(), iv.size(), aad.data(), aad.size()};
+        sa_cipher_parameters_chacha20_poly1305 parameters = {nonce.data(), nonce.size(), aad.data(), aad.size()};
         sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20_POLY1305,
                 SA_CIPHER_MODE_DECRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
@@ -281,9 +281,9 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        auto iv = random(GCM_IV_LENGTH);
+        auto nonce = random(CHACHA20_NONCE_LENGTH);
         auto aad = random(36);
-        sa_cipher_parameters_chacha20_poly1305 parameters = {iv.data(), iv.size(), aad.data(), aad.size()};
+        sa_cipher_parameters_chacha20_poly1305 parameters = {nonce.data(), nonce.size(), aad.data(), aad.size()};
         sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20_POLY1305,
                 SA_CIPHER_MODE_DECRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
