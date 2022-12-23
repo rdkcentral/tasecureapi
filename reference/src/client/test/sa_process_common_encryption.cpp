@@ -1044,11 +1044,10 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, failSvpBufferOverlap) {
 
 // clang-format off
 INSTANTIATE_TEST_SUITE_P(
-        SaProcessCommonEncryptionTests,
+        SaProcessCommonEncryptionTests_1000,
         SaProcessCommonEncryptionTest,
         ::testing::Combine(
-                ::testing::Values(std::make_tuple(1000, 1), std::make_tuple(10000, 2), std::make_tuple(100000, 5),
-                        std::make_tuple(1000000, 10)),          // Sample size and time
+                ::testing::Values(std::make_tuple(1000, 1)),          // Sample size and time
                 ::testing::Values(0UL, 1UL, 5UL, 9UL),          // crypt_byte_block
                 ::testing::Values(1UL, 2UL, 5UL, 10UL),         // subsample_size
                 ::testing::Values(0UL, 16UL, 20UL, UINT32_MAX), // bytes_of_clear_data
@@ -1056,4 +1055,45 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(std::make_tuple(SA_BUFFER_TYPE_CLEAR, SA_BUFFER_TYPE_CLEAR),
                         std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_CLEAR),
                         std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_SVP))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaProcessCommonEncryptionTests_10000,
+        SaProcessCommonEncryptionTest,
+        ::testing::Combine(
+                ::testing::Values(std::make_tuple(10000, 2)),          // Sample size and time
+                ::testing::Values(0UL, 1UL, 5UL, 9UL),          // crypt_byte_block
+                ::testing::Values(1UL, 2UL, 5UL, 10UL),         // subsample_size
+                ::testing::Values(0UL, 16UL, 20UL, UINT32_MAX), // bytes_of_clear_data
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CTR, SA_CIPHER_ALGORITHM_AES_CBC),
+                ::testing::Values(std::make_tuple(SA_BUFFER_TYPE_CLEAR, SA_BUFFER_TYPE_CLEAR),
+                        std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_CLEAR),
+                        std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_SVP))));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaProcessCommonEncryptionTests_100000,
+        SaProcessCommonEncryptionTest,
+        ::testing::Combine(
+                ::testing::Values(std::make_tuple(100000, 5)),          // Sample size and time
+                ::testing::Values(0UL, 1UL, 5UL, 9UL),          // crypt_byte_block
+                ::testing::Values(1UL, 2UL, 5UL, 10UL),         // subsample_size
+                ::testing::Values(0UL, 16UL, 20UL, UINT32_MAX), // bytes_of_clear_data
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CTR, SA_CIPHER_ALGORITHM_AES_CBC),
+                ::testing::Values(std::make_tuple(SA_BUFFER_TYPE_CLEAR, SA_BUFFER_TYPE_CLEAR),
+                        std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_CLEAR),
+                        std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_SVP))));
+
+#ifndef DISABLE_CENC_1000000_TESTS
+INSTANTIATE_TEST_SUITE_P(
+        SaProcessCommonEncryptionTests_1000000,
+        SaProcessCommonEncryptionTest,
+        ::testing::Combine(
+                ::testing::Values(std::make_tuple(1000000, 10)),          // Sample size and time
+                ::testing::Values(0UL, 1UL, 5UL, 9UL),          // crypt_byte_block
+                ::testing::Values(1UL, 2UL, 5UL, 10UL),         // subsample_size
+                ::testing::Values(0UL, 16UL, 20UL, UINT32_MAX), // bytes_of_clear_data
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CTR, SA_CIPHER_ALGORITHM_AES_CBC),
+                ::testing::Values(std::make_tuple(SA_BUFFER_TYPE_CLEAR, SA_BUFFER_TYPE_CLEAR),
+                        std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_CLEAR),
+                        std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_SVP))));
+#endif
 // clang-format on

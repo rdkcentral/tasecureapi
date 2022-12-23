@@ -453,15 +453,44 @@ INSTANTIATE_TEST_SUITE_P(
             ::testing::Values(AES_BLOCK_SIZE * 2, AES_BLOCK_SIZE * 2 + 1, AES_BLOCK_SIZE * 2 + 15)));
 
 INSTANTIATE_TEST_SUITE_P(
-        TaProcessCommonEncryptionTests,
+        TaProcessCommonEncryptionTests_1000,
         TaProcessCommonEncryptionTest,
         ::testing::Combine(
-                ::testing::Values(std::make_tuple(1000, 1),
-                        std::make_tuple(10000, 2),
-                        std::make_tuple(100000, 5),
-                        std::make_tuple(1000000, 10)),          // Sample size and time
+                ::testing::Values(std::make_tuple(1000, 1)),          // Sample size and time
                 ::testing::Values(0UL, 1UL, 5UL, 9UL),          // crypt_byte_block
                 ::testing::Values(1UL, 2UL, 5UL, 10UL),         // subsample_size
                 ::testing::Values(0UL, 16UL, 20UL, UINT32_MAX), // bytes_of_clear_data
                 ::testing::Values(SA_CIPHER_ALGORITHM_AES_CTR, SA_CIPHER_ALGORITHM_AES_CBC)));
+
+INSTANTIATE_TEST_SUITE_P(
+        TaProcessCommonEncryptionTests_10000,
+        TaProcessCommonEncryptionTest,
+        ::testing::Combine(
+                ::testing::Values(std::make_tuple(10000, 2)),          // Sample size and time
+                ::testing::Values(0UL, 1UL, 5UL, 9UL),          // crypt_byte_block
+                ::testing::Values(1UL, 2UL, 5UL, 10UL),         // subsample_size
+                ::testing::Values(0UL, 16UL, 20UL, UINT32_MAX), // bytes_of_clear_data
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CTR, SA_CIPHER_ALGORITHM_AES_CBC)));
+
+INSTANTIATE_TEST_SUITE_P(
+        TaProcessCommonEncryptionTests_100000,
+        TaProcessCommonEncryptionTest,
+        ::testing::Combine(
+                ::testing::Values(std::make_tuple(100000, 5)),          // Sample size and time
+                ::testing::Values(0UL, 1UL, 5UL, 9UL),          // crypt_byte_block
+                ::testing::Values(1UL, 2UL, 5UL, 10UL),         // subsample_size
+                ::testing::Values(0UL, 16UL, 20UL, UINT32_MAX), // bytes_of_clear_data
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CTR, SA_CIPHER_ALGORITHM_AES_CBC)));
+
+#ifndef DISABLE_CENC_1000000_TESTS
+INSTANTIATE_TEST_SUITE_P(
+        TaProcessCommonEncryptionTests_1000000,
+        TaProcessCommonEncryptionTest,
+        ::testing::Combine(
+                ::testing::Values(std::make_tuple(1000000, 10)),          // Sample size and time
+                ::testing::Values(0UL, 1UL, 5UL, 9UL),          // crypt_byte_block
+                ::testing::Values(1UL, 2UL, 5UL, 10UL),         // subsample_size
+                ::testing::Values(0UL, 16UL, 20UL, UINT32_MAX), // bytes_of_clear_data
+                ::testing::Values(SA_CIPHER_ALGORITHM_AES_CTR, SA_CIPHER_ALGORITHM_AES_CBC)));
+#endif
 // clang-format on

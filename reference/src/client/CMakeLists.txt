@@ -41,6 +41,11 @@ else ()
     message("clang-tidy disabled for tests")
 endif ()
 
+if (DEFINED DISABLE_CENC_1000000_TESTS)
+    set(CMAKE_CXX_FLAGS "-DDISABLE_CENC_1000000_TESTS ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "-DDISABLE_CENC_1000000_TESTS ${CMAKE_C_FLAGS}")
+endif ()
+
 find_package(OpenSSL REQUIRED)
 
 add_library(saclient SHARED
