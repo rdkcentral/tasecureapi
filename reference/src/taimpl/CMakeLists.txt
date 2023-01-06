@@ -219,7 +219,8 @@ add_executable(taimpltest
         test/ta_sa_svp_buffer_write.cpp
         test/ta_sa_svp_common.cpp
         test/ta_sa_svp_crypto.cpp
-        test/ta_sa_svp_crypto.h)
+        test/ta_sa_svp_crypto.h
+        test/ta_sa_svp_key_check.cpp)
 
 target_include_directories(taimpltest
         PRIVATE

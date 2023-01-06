@@ -29,6 +29,155 @@
 
 using namespace ta_test_helpers;
 
+std::shared_ptr<sa_key> TaCryptoCipherBase::import_key(std::vector<uint8_t>& clear_key) {
+    sa_rights rights;
+    sa_rights_set_allow_all(&rights);
+    SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
+
+    auto key = create_uninitialized_sa_key();
+    sa_import_parameters_symmetric params = {&rights};
+    sa_status status = ta_sa_key_import(key.get(), SA_KEY_FORMAT_SYMMETRIC_BYTES, clear_key.data(),
+            clear_key.size(), &params, client(), ta_uuid());
+    if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
+        ERROR("Unsupported key type");
+        *key = UNSUPPORTED_KEY;
+    } else if (status != SA_STATUS_OK) {
+        ERROR("sa_key_import failed");
+        key = nullptr;
+    }
+
+    return key;
+}
+
+std::vector<uint8_t> TaCryptoCipherBase::encrypt_openssl(
+        sa_cipher_algorithm cipher_algorithm,
+        const std::vector<uint8_t>& in,
+        const std::vector<uint8_t>& iv,
+        const std::vector<uint8_t>& key) {
+
+    if ((key.size() != SYM_128_KEY_SIZE && key.size() != SYM_256_KEY_SIZE)) {
+        ERROR("Invalid key_length");
+        return {};
+    }
+
+    std::vector<uint8_t> result = {};
+    EVP_CIPHER_CTX* context;
+    do {
+        context = EVP_CIPHER_CTX_new();
+        if (context == nullptr) {
+            ERROR("EVP_CIPHER_CTX_new failed");
+            break;
+        }
+
+        const EVP_CIPHER* cipher = nullptr;
+        bool pad = false;
+        std::vector<uint8_t> temp_iv;
+        switch (cipher_algorithm) {
+            case SA_CIPHER_ALGORITHM_AES_CBC_PKCS7:
+                pad = true;
+                // Fall through
+            case SA_CIPHER_ALGORITHM_AES_CBC:
+                if (key.size() == SYM_128_KEY_SIZE)
+                    cipher = EVP_aes_128_cbc();
+                else if (key.size() == SYM_256_KEY_SIZE)
+                    cipher = EVP_aes_256_cbc();
+
+                temp_iv = iv;
+                break;
+
+            case SA_CIPHER_ALGORITHM_AES_ECB_PKCS7:
+                pad = true;
+                // Fall through
+            case SA_CIPHER_ALGORITHM_AES_ECB:
+                if (key.size() == SYM_128_KEY_SIZE)
+                    cipher = EVP_aes_128_ecb();
+                else if (key.size() == SYM_256_KEY_SIZE)
+                    cipher = EVP_aes_256_ecb();
+
+                break;
+
+            case SA_CIPHER_ALGORITHM_AES_CTR:
+                if (key.size() == SYM_128_KEY_SIZE)
+                    cipher = EVP_aes_128_ctr();
+                else if (key.size() == SYM_256_KEY_SIZE)
+                    cipher = EVP_aes_256_ctr();
+
+                temp_iv = iv;
+                break;
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+            case SA_CIPHER_ALGORITHM_CHACHA20: {
+                if (iv.size() != CHACHA20_NONCE_LENGTH) {
+                    ERROR("Invalid iv length");
+                    break;
+                }
+
+                cipher = EVP_chacha20();
+                std::vector<uint8_t> counter = {1, 0, 0, 0};
+                temp_iv.insert(temp_iv.end(), counter.begin(), counter.end());
+                temp_iv.insert(temp_iv.end(), iv.begin(), iv.end());
+                break;
+            }
+#endif
+            default:
+                ERROR("Unsupported cipher algorithm");
+        }
+
+        if (cipher == nullptr) {
+            ERROR("Unknown cipher");
+            break;
+        }
+
+        if ((cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC || cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB) &&
+                (in.size() % AES_BLOCK_SIZE != 0)) {
+            ERROR("Invalid in_length");
+            break;
+        }
+
+        if (EVP_EncryptInit_ex(context, cipher, nullptr, key.data(), temp_iv.data()) != 1) {
+            ERROR("EVP_EncryptInit_ex failed");
+            break;
+        }
+
+        // set padding
+        if (EVP_CIPHER_CTX_set_padding(context, pad ? 1 : 0) != 1) {
+            ERROR("EVP_CIPHER_CTX_set_padding failed");
+            break;
+        }
+
+        if (pad)
+            result.resize(((in.size() / AES_BLOCK_SIZE) * AES_BLOCK_SIZE) + AES_BLOCK_SIZE);
+        else
+            result.resize(in.size());
+
+        auto* out_bytes = result.data();
+        int length = 0;
+        if (EVP_EncryptUpdate(context, out_bytes, &length, in.data(), static_cast<int>(in.size())) != 1) {
+            ERROR("EVP_EncryptUpdate failed");
+            result.resize(0);
+            break;
+        }
+
+        size_t decrypted_length = length;
+        out_bytes += length;
+
+        if (pad) {
+            if (EVP_EncryptFinal_ex(context, out_bytes, &length) != 1) {
+                ERROR("EVP_EncryptFinal_ex failed");
+                result.resize(0);
+                break;
+            }
+
+            decrypted_length += length;
+        }
+
+        result.resize(decrypted_length);
+    } while (false);
+
+    EVP_CIPHER_CTX_free(context);
+    return result;
+}
+
 void TaProcessCommonEncryptionTest::SetUp() {
     if (ta_sa_svp_supported(client(), ta_uuid()) == SA_STATUS_OPERATION_NOT_SUPPORTED) {
         GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
@@ -44,26 +193,6 @@ sa_status TaProcessCommonEncryptionTest::svp_buffer_write(
 }
 
 namespace {
-    std::shared_ptr<sa_key> import_key(std::vector<uint8_t>& clear_key) {
-        sa_rights rights;
-        sa_rights_set_allow_all(&rights);
-        SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
-
-        auto key = create_uninitialized_sa_key();
-        sa_import_parameters_symmetric params = {&rights};
-        sa_status status = ta_sa_key_import(key.get(), SA_KEY_FORMAT_SYMMETRIC_BYTES, clear_key.data(),
-                clear_key.size(), &params, client(), ta_uuid());
-        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
-            ERROR("Unsupported key type");
-            *key = UNSUPPORTED_KEY;
-        } else if (status != SA_STATUS_OK) {
-            ERROR("sa_key_import failed");
-            key = nullptr;
-        }
-
-        return key;
-    }
-
     void get_cipher_parameters(
             sa_cipher_algorithm cipher_algorithm,
             std::shared_ptr<void>& parameters,
@@ -134,135 +263,6 @@ namespace {
             default:
                 return 0;
         }
-    }
-
-    std::vector<uint8_t> encrypt_openssl(
-            sa_cipher_algorithm cipher_algorithm,
-            const std::vector<uint8_t>& in,
-            const std::vector<uint8_t>& iv,
-            const std::vector<uint8_t>& key) {
-
-        if ((key.size() != SYM_128_KEY_SIZE && key.size() != SYM_256_KEY_SIZE)) {
-            ERROR("Invalid key_length");
-            return {};
-        }
-
-        std::vector<uint8_t> result = {};
-        EVP_CIPHER_CTX* context;
-        do {
-            context = EVP_CIPHER_CTX_new();
-            if (context == nullptr) {
-                ERROR("EVP_CIPHER_CTX_new failed");
-                break;
-            }
-
-            const EVP_CIPHER* cipher = nullptr;
-            bool pad = false;
-            std::vector<uint8_t> temp_iv;
-            switch (cipher_algorithm) {
-                case SA_CIPHER_ALGORITHM_AES_CBC_PKCS7:
-                    pad = true;
-                    // Fall through
-                case SA_CIPHER_ALGORITHM_AES_CBC:
-                    if (key.size() == SYM_128_KEY_SIZE)
-                        cipher = EVP_aes_128_cbc();
-                    else if (key.size() == SYM_256_KEY_SIZE)
-                        cipher = EVP_aes_256_cbc();
-
-                    temp_iv = iv;
-                    break;
-
-                case SA_CIPHER_ALGORITHM_AES_ECB_PKCS7:
-                    pad = true;
-                    // Fall through
-                case SA_CIPHER_ALGORITHM_AES_ECB:
-                    if (key.size() == SYM_128_KEY_SIZE)
-                        cipher = EVP_aes_128_ecb();
-                    else if (key.size() == SYM_256_KEY_SIZE)
-                        cipher = EVP_aes_256_ecb();
-
-                    break;
-
-                case SA_CIPHER_ALGORITHM_AES_CTR:
-                    if (key.size() == SYM_128_KEY_SIZE)
-                        cipher = EVP_aes_128_ctr();
-                    else if (key.size() == SYM_256_KEY_SIZE)
-                        cipher = EVP_aes_256_ctr();
-
-                    temp_iv = iv;
-                    break;
-
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-                case SA_CIPHER_ALGORITHM_CHACHA20: {
-                    if (iv.size() != CHACHA20_NONCE_LENGTH) {
-                        ERROR("Invalid iv length");
-                        break;
-                    }
-
-                    cipher = EVP_chacha20();
-                    std::vector<uint8_t> counter = {1, 0, 0, 0};
-                    temp_iv.insert(temp_iv.end(), counter.begin(), counter.end());
-                    temp_iv.insert(temp_iv.end(), iv.begin(), iv.end());
-                    break;
-                }
-#endif
-                default:
-                    ERROR("Unsupported cipher algorithm");
-            }
-
-            if (cipher == nullptr) {
-                ERROR("Unknown cipher");
-                break;
-            }
-
-            if ((cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC || cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB) &&
-                    (in.size() % AES_BLOCK_SIZE != 0)) {
-                ERROR("Invalid in_length");
-                break;
-            }
-
-            if (EVP_EncryptInit_ex(context, cipher, nullptr, key.data(), temp_iv.data()) != 1) {
-                ERROR("EVP_EncryptInit_ex failed");
-                break;
-            }
-
-            // set padding
-            if (EVP_CIPHER_CTX_set_padding(context, pad ? 1 : 0) != 1) {
-                ERROR("EVP_CIPHER_CTX_set_padding failed");
-                break;
-            }
-
-            if (pad)
-                result.resize(((in.size() / AES_BLOCK_SIZE) * AES_BLOCK_SIZE) + AES_BLOCK_SIZE);
-            else
-                result.resize(in.size());
-
-            auto* out_bytes = result.data();
-            int length = 0;
-            if (EVP_EncryptUpdate(context, out_bytes, &length, in.data(), static_cast<int>(in.size())) != 1) {
-                ERROR("EVP_EncryptUpdate failed");
-                result.resize(0);
-                break;
-            }
-
-            size_t decrypted_length = length;
-            out_bytes += length;
-
-            if (pad) {
-                if (EVP_EncryptFinal_ex(context, out_bytes, &length) != 1) {
-                    ERROR("EVP_EncryptFinal_ex failed");
-                    result.resize(0);
-                    break;
-                }
-
-                decrypted_length += length;
-            }
-
-            result.resize(decrypted_length);
-        } while (false);
-
-        EVP_CIPHER_CTX_free(context);
-        return result;
     }
 
     bool verify(

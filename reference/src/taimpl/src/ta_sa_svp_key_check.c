@@ -23,6 +23,7 @@
 #include "log.h"
 #include "rights.h"
 #include "ta_sa.h"
+#include "transport.h"
 #include "unwrap.h"
 
 sa_status ta_sa_svp_key_check(
@@ -93,6 +94,12 @@ sa_status ta_sa_svp_key_check(
 
         if (in->buffer_type == SA_BUFFER_TYPE_CLEAR && !rights_allowed_clear(&header->rights)) {
             ERROR("rights_allowed_clear failed");
+            status = SA_STATUS_OPERATION_NOT_ALLOWED;
+            break;
+        }
+
+        if (in->buffer_type == SA_BUFFER_TYPE_SVP && is_ree(caller_uuid)) {
+            ERROR("ta_sa_svp_buffer_check can only be called by a TA when buffer type is SVP");
             status = SA_STATUS_OPERATION_NOT_ALLOWED;
             break;
         }

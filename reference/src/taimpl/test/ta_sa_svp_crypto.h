@@ -23,14 +23,26 @@
 #include "test_process_common_encryption.h"
 #include "gtest/gtest.h"
 
+class TaCryptoCipherBase {
+protected:
+    static std::shared_ptr<sa_key> import_key(std::vector<uint8_t>& clear_key);
+
+    static std::vector<uint8_t> encrypt_openssl(
+            sa_cipher_algorithm cipher_algorithm,
+            const std::vector<uint8_t>& in,
+            const std::vector<uint8_t>& iv,
+            const std::vector<uint8_t>& key);
+};
+
 using TaCryptoCipherTestType = std::tuple<sa_cipher_algorithm, sa_cipher_mode, size_t, size_t>;
 
-class TaCryptoCipherTest : public ::testing::TestWithParam<TaCryptoCipherTestType> {};
+class TaCryptoCipherTest : public ::testing::TestWithParam<TaCryptoCipherTestType>, public TaCryptoCipherBase {};
 
 using TaProcessCommonEncryptionType =
         std::tuple<std::tuple<size_t, size_t>, size_t, size_t, size_t, sa_cipher_algorithm>;
 
 class TaProcessCommonEncryptionTest : public ::testing::TestWithParam<TaProcessCommonEncryptionType>,
+                                      public TaCryptoCipherBase,
                                       public ProcessCommonEncryptionBase {
 protected:
     void SetUp() override;

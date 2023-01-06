@@ -20,6 +20,7 @@
 #define TA_SA_SVP_COMMON_H
 
 #include "sa_types.h"
+#include "ta_sa_svp_crypto.h"
 #include <cstddef>
 #include <gtest/gtest.h>
 #include <memory>
@@ -31,6 +32,8 @@ protected:
 };
 
 class TaSvpBufferCheckTest : public ::testing::WithParamInterface<sa_digest_algorithm>, public TaSvpBase {};
+
+class TaSvpKeyCheckTest : public TaSvpBase, public TaCryptoCipherBase {};
 
 using TaSvpBufferTestType = std::tuple<long>;
 

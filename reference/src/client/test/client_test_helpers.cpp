@@ -1754,26 +1754,6 @@ namespace client_test_helpers {
         return true;
     }
 
-    static bool key_check_aes_ecb_svp(
-            sa_key key,
-            std::vector<uint8_t>& clear_key) {
-        auto clear = random(AES_BLOCK_SIZE);
-        auto encrypted = std::vector<uint8_t>(clear.size());
-        if (!encrypt_aes_ecb_openssl(encrypted, clear, clear_key, false)) {
-            ERROR("encrypt_aes_ecb_openssl failed");
-            return false;
-        }
-
-        auto encrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, encrypted);
-        if (sa_svp_key_check(key, encrypted_buffer.get(), clear.size(), clear.data(), clear.size()) !=
-                SA_STATUS_OK) {
-            ERROR("sa_svp_key_check failed");
-            return false;
-        }
-
-        return true;
-    }
-
     static bool key_check_aes_ecb_unwrap(
             sa_key key,
             const std::vector<uint8_t>& clear_key) {
@@ -2404,11 +2384,6 @@ namespace client_test_helpers {
                 if (SA_USAGE_BIT_TEST(header->rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL)) {
                     if (!key_check_decrypt_aes_ecb(key, clear_key)) {
                         ERROR("key_check_decrypt_aes_ecb failed");
-                        return false;
-                    }
-                } else {
-                    if (!key_check_aes_ecb_svp(key, clear_key)) {
-                        ERROR("key_check_aes_ecb_svp failed");
                         return false;
                     }
                 }
