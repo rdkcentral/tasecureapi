@@ -176,6 +176,7 @@ protected:
             uint8_t container_version,
             std::string& key_type,
             sa_key_type clear_key_type,
+            uint8_t secapi_version,
             std::vector<uint8_t>& clear_key,
             std::vector<uint8_t>& iv,
             uint8_t key_usage,
@@ -190,7 +191,7 @@ protected:
 class SaKeyImportSocTest : public ::testing::Test, public SaKeyImportSocBase {};
 
 using SaKeyImportSocAllKeyCombosType =
-        std::tuple<std::string, size_t, sa_key_type, uint8_t, uint8_t>;
+        std::tuple<std::tuple<std::string, size_t, sa_key_type>, std::tuple<uint8_t, uint8_t>, uint8_t>;
 
 class SaKeyImportSocAllKeyCombosTest
     : public ::testing::TestWithParam<SaKeyImportSocAllKeyCombosType>,

@@ -186,13 +186,15 @@ extern "C" {
  * @param[out] stored_key the stored key from the key container.
  * @param[in] in input data for Type-J container.
  * @param[in] in_length input data length.
-
+ * @param[in] parameters parameters for the key container.
+ *
  * @return status of the operation.
  */
 sa_status soc_kc_unwrap(
         stored_key_t** stored_key,
         const void* in,
-        size_t in_length);
+        size_t in_length,
+        void* parameters);
 
 #ifdef __cplusplus
 }
