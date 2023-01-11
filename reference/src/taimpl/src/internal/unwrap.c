@@ -35,7 +35,7 @@ static sa_status import_key(
         const sa_rights* rights,
         const sa_rights* wrapping_key_rights,
         sa_key_type key_type,
-        void* parameters,
+        void* algorithm_parameters,
         const void* in,
         size_t in_length) {
 
@@ -54,8 +54,8 @@ static sa_status import_key(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (key_type == SA_KEY_TYPE_EC && parameters == NULL) {
-        ERROR("NULL parameters");
+    if (key_type == SA_KEY_TYPE_EC && algorithm_parameters == NULL) {
+        ERROR("NULL algorithm_parameters");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -70,7 +70,7 @@ static sa_status import_key(
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
         size_t key_size = in_length;
         if (key_type == SA_KEY_TYPE_EC) {
-            sa_unwrap_type_parameters_ec* ec_parameters = (sa_unwrap_type_parameters_ec*) parameters;
+            sa_unwrap_type_parameters_ec* ec_parameters = (sa_unwrap_type_parameters_ec*) algorithm_parameters;
             key_size = ec_validate_private(ec_parameters->curve, in, in_length);
             if (key_size == 0) {
                 ERROR("ec_validate_private failed");
@@ -299,7 +299,7 @@ sa_status unwrap_aes_ctr(
     }
 
     if (ctr == NULL) {
-        ERROR("NULL parameters");
+        ERROR("NULL algorithm_parameters");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -482,7 +482,7 @@ sa_status unwrap_chacha20(
         const sa_rights* rights,
         sa_key_type key_type,
         void* type_parameters,
-        const sa_unwrap_parameters_chacha20* parameters,
+        const sa_unwrap_parameters_chacha20* algorithm_parameters,
         const stored_key_t* stored_key_wrapping) {
 
     if (stored_key_unwrapped == NULL) {
@@ -500,8 +500,8 @@ sa_status unwrap_chacha20(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (parameters == NULL) {
-        ERROR("NULL parameters");
+    if (algorithm_parameters == NULL) {
+        ERROR("NULL algorithm_parameters");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -542,8 +542,8 @@ sa_status unwrap_chacha20(
         }
 
         uint8_t iv[CHACHA20_COUNTER_LENGTH + CHACHA20_NONCE_LENGTH];
-        memcpy(iv, parameters->counter, parameters->counter_length);
-        memcpy(iv + CHACHA20_COUNTER_LENGTH, parameters->nonce, parameters->nonce_length);
+        memcpy(iv, algorithm_parameters->counter, algorithm_parameters->counter_length);
+        memcpy(iv + CHACHA20_COUNTER_LENGTH, algorithm_parameters->nonce, algorithm_parameters->nonce_length);
         if (EVP_DecryptInit_ex(context, cipher, NULL, key, iv) != 1) {
             ERROR("EVP_DecryptInit_ex failed");
             status = SA_STATUS_INTERNAL_ERROR;
@@ -595,7 +595,7 @@ sa_status unwrap_chacha20_poly1305(
         const sa_rights* rights,
         sa_key_type key_type,
         void* type_parameters,
-        const sa_unwrap_parameters_chacha20_poly1305* parameters,
+        const sa_unwrap_parameters_chacha20_poly1305* algorithm_parameters,
         const stored_key_t* stored_key_wrapping) {
 
     if (stored_key_unwrapped == NULL) {
@@ -613,8 +613,8 @@ sa_status unwrap_chacha20_poly1305(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (parameters == NULL) {
-        ERROR("NULL parameters");
+    if (algorithm_parameters == NULL) {
+        ERROR("NULL algorithm_parameters");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -661,14 +661,15 @@ sa_status unwrap_chacha20_poly1305(
         }
 
         // set nonce length
-        if (EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_IVLEN, (int) parameters->nonce_length, NULL) != 1) {
+        if (EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_IVLEN, (int) algorithm_parameters->nonce_length,
+                    NULL) != 1) {
             ERROR("EVP_CIPHER_CTX_ctrl failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
         // init key and nonce
-        if (EVP_DecryptInit_ex(context, cipher, NULL, key, parameters->nonce) != 1) {
+        if (EVP_DecryptInit_ex(context, cipher, NULL, key, algorithm_parameters->nonce) != 1) {
             ERROR("EVP_DecryptInit_ex failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
@@ -682,9 +683,10 @@ sa_status unwrap_chacha20_poly1305(
         }
 
         // set aad
-        if (parameters->aad != NULL) {
+        if (algorithm_parameters->aad != NULL) {
             int out_length = 0;
-            if (EVP_DecryptUpdate(context, NULL, &out_length, parameters->aad, (int) parameters->aad_length) != 1) {
+            if (EVP_DecryptUpdate(context, NULL, &out_length, algorithm_parameters->aad,
+                        (int) algorithm_parameters->aad_length) != 1) {
                 ERROR("EVP_DecryptUpdate failed");
                 status = SA_STATUS_INTERNAL_ERROR;
                 break;
@@ -699,8 +701,8 @@ sa_status unwrap_chacha20_poly1305(
         }
 
         // check tag
-        if (EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_TAG, (int) parameters->tag_length,
-                    (void*) parameters->tag) != 1) {
+        if (EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_TAG, (int) algorithm_parameters->tag_length,
+                    (void*) algorithm_parameters->tag) != 1) {
             ERROR("EVP_CIPHER_CTX_ctrl failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
@@ -787,7 +789,7 @@ sa_status unwrap_rsa(
         size_t unwrapped_key_length = in_length;
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
             if (algorithm_parameters == NULL) {
-                ERROR("NULL parameters");
+                ERROR("NULL algorithm_parameters");
                 status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }

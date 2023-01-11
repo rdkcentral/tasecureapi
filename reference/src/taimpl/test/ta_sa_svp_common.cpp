@@ -52,7 +52,7 @@ std::shared_ptr<sa_svp_buffer> TaSvpBase::create_sa_svp_buffer(size_t size) {
 
     status = ta_sa_svp_buffer_create(svp_buffer.get(), svp_memory, size, client(), ta_uuid());
     if (status != SA_STATUS_OK) {
-        ERROR("sa_svp_buffer_alloc failed");
+        ERROR("ta_sa_svp_buffer_create failed");
         return nullptr;
     }
 

@@ -89,13 +89,13 @@ TEST_P(SaProcessCommonEncryptionTest, nominal) {
     ASSERT_LE(duration.count(), sample_time);
 #endif
 
-    // SVP case tested in tatestimpl.
+    // SVP case tested in taimpltest.
     if (out_buffer_type == SA_BUFFER_TYPE_CLEAR) {
         int result = memcmp(sample_data.out->context.clear.buffer, sample_data.clear.data(), sample_data.clear.size());
         ASSERT_EQ(result, 0);
     }
 
-    // SVP buffer verified in taimpltests.
+    // SVP buffer verified in taimpltest.
 }
 
 TEST_F(SaProcessCommonEncryptionAlternativeTest, multipleSamples) {
@@ -131,7 +131,7 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, multipleSamples) {
         ASSERT_EQ(result, 0);
     }
 
-    // SVP buffer verified in taimpltests.
+    // SVP buffer verified in taimpltest.
 }
 
 TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest) {
@@ -168,7 +168,7 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest) {
         ASSERT_EQ(result, 0);
     }
 
-    // SVP buffer verified in taimpltests.
+    // SVP buffer verified in taimpltest.
 }
 
 TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest2) {
@@ -205,7 +205,7 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest2) {
         ASSERT_EQ(result, 0);
     }
 
-    // SVP buffer verified in taimpltests.
+    // SVP buffer verified in taimpltest.
 }
 
 TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest3) {
@@ -221,7 +221,7 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest3) {
     if (*cipher == UNSUPPORTED_CIPHER)
         GTEST_SKIP() << "Cipher algorithm not supported";
 
-    // Set lower 8 bytes of IV to FFFFFFFFFFFFFFFD to test rollover condition.
+    // Set lower 8 bytes of IV to FFFFFFFFFFFFFFFC to test rollover condition.
     memset(&parameters.iv[8], 0xff, 7);
     parameters.iv[15] = 0xfc;
 
@@ -231,7 +231,7 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest3) {
     sample_data.in = buffer_alloc(in_buffer_type, 180);
     ASSERT_NE(sample_data.in, nullptr);
     std::vector<sa_sample> samples(1);
-    ASSERT_TRUE(build_samples(100, 0, 0, 5, 0, parameters.iv, parameters.cipher_algorithm, parameters.clear_key, cipher,
+    ASSERT_TRUE(build_samples(180, 0, 0, 5, 0, parameters.iv, parameters.cipher_algorithm, parameters.clear_key, cipher,
             sample_data, samples));
 
     sa_status status = sa_process_common_encryption(samples.size(), samples.data());
@@ -242,7 +242,7 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest3) {
         ASSERT_EQ(result, 0);
     }
 
-    // SVP buffer verified in taimpltests.
+    // SVP buffer verified in taimpltest.
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullSamples) {

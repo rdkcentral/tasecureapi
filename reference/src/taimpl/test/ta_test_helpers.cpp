@@ -147,7 +147,7 @@ namespace ta_test_helpers {
             if (ta_sa_svp_memory_alloc(&svp_memory, size) == SA_STATUS_OK)
                 if (ta_sa_svp_buffer_create(&buffer->context.svp.buffer, svp_memory, size, client(),
                             ta_uuid()) != SA_STATUS_OK) {
-                    ERROR("sa_svp_buffer_alloc failed");
+                    ERROR("ta_sa_svp_memory_alloc failed");
                     return nullptr;
                 }
 
@@ -171,7 +171,7 @@ namespace ta_test_helpers {
             sa_svp_offset offsets = {0, 0, initial_value.size()};
             if (ta_sa_svp_buffer_write(buffer->context.svp.buffer, initial_value.data(), initial_value.size(),
                         &offsets, 1, client(), ta_uuid()) != SA_STATUS_OK) {
-                ERROR("sa_svp_buffer_write");
+                ERROR("ta_sa_svp_buffer_write failed");
                 return nullptr;
             }
 

@@ -188,7 +188,7 @@ bool SaCipherCryptoBase::verify_encrypt(
         return decrypted == clear;
     }
 
-    // The SVP case is verified in the taimpltests.
+    // The SVP case is verified in the taimpltest.
     return true;
 }
 
@@ -203,7 +203,7 @@ bool SaCipherCryptoBase::verify_decrypt(
         return decrypted_data == clear;
     }
 
-    // The SVP case is verified in the taimpltests.
+    // The SVP case is verified in the taimpltest.
     return true;
 }
 

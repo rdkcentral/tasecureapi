@@ -62,8 +62,8 @@ namespace ta_test_helpers {
     /**
      * Allocates an sa_buffer with the given type and size.
      *
-     * @param buffer_type the type of the buffer.
-     * @param size the size of the buffer.
+     * @param[in] buffer_type the type of the buffer.
+     * @param[in] size the size of the buffer.
      * @return the buffer.
      */
     std::shared_ptr<sa_buffer> buffer_alloc(
@@ -73,8 +73,8 @@ namespace ta_test_helpers {
     /**
      * Allocates an sa_buffer with the given type and initializes it with the given value.
      *
-     * @param buffer_type the type of the buffer.
-     * @param initial_value the value to initialize the buffer.
+     * @param[in] buffer_type the type of the buffer.
+     * @param[in] initial_value the value to initialize the buffer.
      * @return the buffer.
      */
     std::shared_ptr<sa_buffer> buffer_alloc(
@@ -95,7 +95,7 @@ namespace ta_test_helpers {
     /**
      * Frees SVP memory from inside the TA.
      *
-     * @param svp_memory the SVP memory region to free.
+     * @param[in] svp_memory the SVP memory region to free.
      * @return the status of the operation.
      */
     sa_status ta_sa_svp_memory_free(void* svp_memory);

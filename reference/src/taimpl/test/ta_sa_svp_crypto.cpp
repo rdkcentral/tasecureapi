@@ -42,7 +42,7 @@ std::shared_ptr<sa_key> TaCryptoCipherBase::import_key(std::vector<uint8_t>& cle
         ERROR("Unsupported key type");
         *key = UNSUPPORTED_KEY;
     } else if (status != SA_STATUS_OK) {
-        ERROR("sa_key_import failed");
+        ERROR("ta_sa_key_import failed");
         key = nullptr;
     }
 

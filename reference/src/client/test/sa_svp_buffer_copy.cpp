@@ -49,7 +49,7 @@ namespace {
         status = sa_svp_buffer_copy(*out_buffer, *in_buffer, offsets, offset_length);
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        // Copy verified in taimpltests.
+        // Copy verified in taimpltest.
     }
 
     TEST_F(SaSvpBufferCopyTest, failsOutBufferTooSmall) {

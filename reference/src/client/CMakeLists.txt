@@ -296,15 +296,6 @@ add_custom_command(
 
 gtest_discover_tests(saclienttest)
 
-# 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS saclient saclienttest EXPORT sa-client-config
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin
-        )
-
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
 # Doxygen
 option(BUILD_DOC "Build documentation" ON)
 if (BUILD_DOC)

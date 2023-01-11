@@ -44,7 +44,7 @@ namespace {
         sa_status status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), offsets, offset_length);
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        // Write verified in taimpltests.
+        // Write verified in taimpltest.
     }
 
     TEST_F(SaSvpBufferWriteTest, failsOutBufferTooSmall) {
