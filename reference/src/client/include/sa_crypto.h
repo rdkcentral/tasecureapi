@@ -106,7 +106,8 @@ sa_status sa_crypto_cipher_update_iv(
         size_t iv_length);
 
 /**
- * Process a data chunk with the cipher.
+ * Process a data chunk with the cipher. Note - SVP buffers cannot be used with RSA, EC, AES-GCM, or CHACHA20-POLY1305
+ * operations.
  *
  * @param[out] out Output buffer. out can be set to NULL to obtain the required size. svp.offset or clear.offset will
  * be set to offset at which the written data ends on function return. If the key rights require SVP, then
@@ -125,6 +126,7 @@ sa_status sa_crypto_cipher_update_iv(
  *   + out.buffer_type or in.buffer_type is not allowed.
  *   + if out.buffer_type does not match the key usage requirements or if in.buffer_type is svp when out.buffer_type is
  *   clear.
+ *   + if out.buffer_type or in.buffer_type is SVP and the cipher is RSA, EC, AES-GCM, or CHACHA20-POLY1305
  * + SA_STATUS_OPERATION_NOT_ALLOWED - Key usage requirements are not met for the specified operation.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
@@ -139,6 +141,7 @@ sa_status sa_crypto_cipher_process(
 /**
  * Process last data chunk with a cipher. Adds padding on encryption for padded cipher algorithms. Checks padding on
  * decryption for padded cipher algorithms. Creates and/or checks the tag for authenticated encryption ciphers.
+ * Note - SVP buffers cannot be used with RSA, EC, AES-GCM or CHACHA20-POLY1305 operations.
  *
  * @param[out] out Output buffer. out can be set to NULL to obtain the required size. svp.offset or clear.offset will
  * be set to offset at which the written data ends on function return. If the key rights require SVP, then
@@ -161,6 +164,7 @@ sa_status sa_crypto_cipher_process(
  *   + out.buffer_type or in.buffer_type is not allowed.
  *   + if out.buffer_type does not match the key usage requirements or if in.buffer_type is svp when out.buffer_type is
  *   clear.
+*   + if out.buffer_type or in.buffer_type is SVP and the cipher is RSA, EC, AES-GCM, or CHACHA20-POLY1305
  * + SA_STATUS_OPERATION_NOT_ALLOWED - Key usage requirements are not met for the specified
  * operation.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.

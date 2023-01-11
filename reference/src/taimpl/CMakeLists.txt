@@ -39,6 +39,11 @@ if (DEFINED SA_LOG_LEVEL)
     set(CMAKE_C_FLAGS "-DSA_LOG_LEVEL=${SA_LOG_LEVEL} ${CMAKE_C_FLAGS}")
 endif ()
 
+if (DEFINED DISABLE_CENC_1000000_TESTS)
+    set(CMAKE_CXX_FLAGS "-DDISABLE_CENC_1000000_TESTS ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "-DDISABLE_CENC_1000000_TESTS ${CMAKE_C_FLAGS}")
+endif ()
+
 find_package(OpenSSL REQUIRED)
 include_directories(AFTER SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 find_package(Threads REQUIRED)
@@ -203,13 +208,19 @@ target_clangformat_setup(taimpl)
 # Google test
 add_executable(taimpltest
         test/environment.cpp
-        test/test_helpers.cpp
+        test/ta_test_helpers.cpp
         test/json.cpp
         test/object_store.cpp
         test/rights.cpp
         test/slots.cpp
         test/ta_sa_init.cpp
-        )
+        test/ta_sa_svp_buffer_check.cpp
+        test/ta_sa_svp_buffer_copy.cpp
+        test/ta_sa_svp_buffer_write.cpp
+        test/ta_sa_svp_common.cpp
+        test/ta_sa_svp_crypto.cpp
+        test/ta_sa_svp_crypto.h
+        test/ta_sa_svp_key_check.cpp)
 
 target_include_directories(taimpltest
         PRIVATE
@@ -226,6 +237,7 @@ target_link_libraries(taimpltest
         gtest_main
         gmock_main
         taimpl
+        util
         ${OPENSSL_CRYPTO_LIBRARY}
         )
 

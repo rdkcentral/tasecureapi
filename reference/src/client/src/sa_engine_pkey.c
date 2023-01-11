@@ -20,6 +20,7 @@
 #include "log.h"
 #include "sa.h"
 #include "sa_engine_internal.h"
+#include "sa_rights.h"
 #include <openssl/engine.h>
 #include <openssl/evp.h>
 

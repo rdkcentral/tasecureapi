@@ -15,6 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
 #ifndef SA_CRYPTO_CIPHER_COMMON_H
 #define SA_CRYPTO_CIPHER_COMMON_H
 
@@ -40,8 +41,6 @@ typedef struct { // NOLINT
     bool svp_required;
 } cipher_parameters;
 
-#define UNSUPPORTED_CIPHER (sa_crypto_cipher_context)(INVALID_HANDLE - 1)
-
 class SaCipherCryptoBase {
 protected:
     static bool import_key(
@@ -49,7 +48,7 @@ protected:
             sa_key_type key_type,
             size_t key_size);
 
-    static bool get_cipher_parameters(cipher_parameters& parameters);
+    static void get_cipher_parameters(cipher_parameters& parameters);
 
     static std::shared_ptr<sa_crypto_cipher_context> initialize_cipher(
             sa_cipher_mode cipher_mode,
@@ -79,9 +78,7 @@ protected:
             sa_cipher_algorithm cipher_algorithm,
             size_t key_length,
             size_t bytes_to_process,
-            bool apply_pad,
-            sa_digest_algorithm digest_algorithm,
-            sa_digest_algorithm mgf1_digest_algorithm);
+            bool apply_pad);
 
     static bool ec_is_valid_x_coordinate(
             std::shared_ptr<EC_GROUP>& ec_group,
@@ -119,7 +116,10 @@ protected:
     void SetUp() override;
 };
 
-class SaCryptoCipherWithoutSvpTest : public ::testing::Test, public SaCipherCryptoBase {};
+using SaCryptoCipherWithoutSvpTestType = std::tuple<sa_cipher_mode>;
+
+class SaCryptoCipherWithoutSvpTest : public ::testing::TestWithParam<SaCryptoCipherWithoutSvpTestType>,
+                                     public SaCipherCryptoBase {};
 
 class SaCryptoCipherSvpOnlyTest : public ::testing::Test, public SaCipherCryptoBase {
 protected:

@@ -20,6 +20,8 @@
 #include "client_test_helpers.h"
 #include <openssl/evp.h>
 
+#define PADDED_SIZE(size) AES_BLOCK_SIZE*(((size) / AES_BLOCK_SIZE) + 1)
+
 using namespace client_test_helpers;
 
 bool SaCipherCryptoBase::import_key(
@@ -71,7 +73,7 @@ bool SaCipherCryptoBase::import_key(
     return true;
 }
 
-bool SaCipherCryptoBase::get_cipher_parameters(cipher_parameters& parameters) {
+void SaCipherCryptoBase::get_cipher_parameters(cipher_parameters& parameters) {
     switch (parameters.cipher_algorithm) {
         case SA_CIPHER_ALGORITHM_AES_CBC:
         case SA_CIPHER_ALGORITHM_AES_CBC_PKCS7: {
@@ -155,8 +157,6 @@ bool SaCipherCryptoBase::get_cipher_parameters(cipher_parameters& parameters) {
         default:
             parameters.parameters = nullptr;
     }
-
-    return true;
 }
 
 bool SaCipherCryptoBase::verify_encrypt(
@@ -188,22 +188,8 @@ bool SaCipherCryptoBase::verify_encrypt(
         return decrypted == clear;
     }
 
-    // encrypt using OpenSSL
-    auto encrypted_data = encrypt_openssl(clear, parameters);
-    if (encrypted_data.empty())
-        return false;
-
-    // Exclude the padding block since we are not calling sa_crypto_cipher_process_last.
-    bool pkcs7 = parameters.cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 ||
-                 parameters.cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7;
-    size_t checked_length = !padded && pkcs7 ? encrypted_data.size() - AES_BLOCK_SIZE : encrypted_data.size();
-    encrypted_data.resize(checked_length);
-    std::vector<uint8_t> hash;
-    if (!digest_openssl(hash, SA_DIGEST_ALGORITHM_SHA256, encrypted_data, {}, {}))
-        return false;
-
-    return sa_svp_buffer_check(encrypted->context.svp.buffer, 0, checked_length, SA_DIGEST_ALGORITHM_SHA256,
-                   hash.data(), hash.size()) == SA_STATUS_OK;
+    // The SVP case is verified in the taimpltest.
+    return true;
 }
 
 bool SaCipherCryptoBase::verify_decrypt(
@@ -217,12 +203,8 @@ bool SaCipherCryptoBase::verify_decrypt(
         return decrypted_data == clear;
     }
 
-    std::vector<uint8_t> hash;
-    if (!digest_openssl(hash, SA_DIGEST_ALGORITHM_SHA256, clear, {}, {}))
-        return false;
-
-    return sa_svp_buffer_check(decrypted->context.svp.buffer, 0, clear.size(), SA_DIGEST_ALGORITHM_SHA256,
-                   hash.data(), hash.size()) == SA_STATUS_OK;
+    // The SVP case is verified in the taimpltest.
+    return true;
 }
 
 std::shared_ptr<sa_crypto_cipher_context> SaCipherCryptoBase::initialize_cipher(
@@ -247,11 +229,7 @@ std::shared_ptr<sa_crypto_cipher_context> SaCipherCryptoBase::initialize_cipher(
         return cipher;
     }
 
-    if (!get_cipher_parameters(parameters)) {
-        ERROR("get_cipher_parameters failed");
-        return nullptr;
-    }
-
+    get_cipher_parameters(parameters);
     sa_status status = sa_crypto_cipher_init(cipher.get(), parameters.cipher_algorithm, cipher_mode, *parameters.key,
             parameters.parameters.get());
     if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
@@ -407,9 +385,7 @@ size_t SaCipherCryptoBase::get_required_length(
         sa_cipher_algorithm cipher_algorithm,
         size_t key_length,
         size_t bytes_to_process,
-        bool apply_pad,
-        sa_digest_algorithm digest_algorithm,
-        sa_digest_algorithm mgf1_digest_algorithm) {
+        bool apply_pad) {
 
     switch (cipher_algorithm) {
         case SA_CIPHER_ALGORITHM_AES_CBC:
@@ -422,7 +398,7 @@ size_t SaCipherCryptoBase::get_required_length(
 
         case SA_CIPHER_ALGORITHM_AES_ECB_PKCS7:
         case SA_CIPHER_ALGORITHM_AES_CBC_PKCS7:
-            return bytes_to_process + (apply_pad ? AES_BLOCK_SIZE : 0);
+            return apply_pad ? PADDED_SIZE(bytes_to_process) : bytes_to_process;
 
         case SA_CIPHER_ALGORITHM_RSA_PKCS1V15:
         case SA_CIPHER_ALGORITHM_RSA_OAEP:
@@ -553,16 +529,25 @@ INSTANTIATE_TEST_SUITE_P(
             ::testing::Values(SA_CIPHER_ALGORITHM_AES_GCM),
             ::testing::Values(SA_KEY_TYPE_SYMMETRIC),
             ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
-            ::testing::Values(SA_BUFFER_TYPE_CLEAR, SA_BUFFER_TYPE_SVP)));
+            ::testing::Values(SA_BUFFER_TYPE_CLEAR)));
 
 INSTANTIATE_TEST_SUITE_P(
         Chacha20Tests,
         SaCryptoCipherEncryptTest,
         ::testing::Combine(
-            ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20, SA_CIPHER_ALGORITHM_CHACHA20_POLY1305),
+            ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20),
             ::testing::Values(SA_KEY_TYPE_SYMMETRIC),
             ::testing::Values(SYM_256_KEY_SIZE),
             ::testing::Values(SA_BUFFER_TYPE_CLEAR, SA_BUFFER_TYPE_SVP)));
+
+INSTANTIATE_TEST_SUITE_P(
+        Chacha20TestsPoly1305,
+        SaCryptoCipherEncryptTest,
+        ::testing::Combine(
+            ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20_POLY1305),
+            ::testing::Values(SA_KEY_TYPE_SYMMETRIC),
+            ::testing::Values(SYM_256_KEY_SIZE),
+            ::testing::Values(SA_BUFFER_TYPE_CLEAR)));
 
 INSTANTIATE_TEST_SUITE_P(
         AesCbcTests,
@@ -631,7 +616,7 @@ INSTANTIATE_TEST_SUITE_P(
             ::testing::Values(SA_CIPHER_ALGORITHM_AES_GCM),
             ::testing::Values(SA_KEY_TYPE_SYMMETRIC),
             ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
-            ::testing::Values(SA_BUFFER_TYPE_CLEAR, SA_BUFFER_TYPE_SVP),
+            ::testing::Values(SA_BUFFER_TYPE_CLEAR),
             ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
             ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
             ::testing::Values(0)));
@@ -640,10 +625,22 @@ INSTANTIATE_TEST_SUITE_P(
         Chacha20Tests,
         SaCryptoCipherDecryptTest,
         ::testing::Combine(
-            ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20, SA_CIPHER_ALGORITHM_CHACHA20_POLY1305),
+            ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20),
             ::testing::Values(SA_KEY_TYPE_SYMMETRIC),
             ::testing::Values(SYM_256_KEY_SIZE),
             ::testing::Values(SA_BUFFER_TYPE_CLEAR, SA_BUFFER_TYPE_SVP),
+            ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+            ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
+            ::testing::Values(0)));
+
+INSTANTIATE_TEST_SUITE_P(
+        Chacha20Poly1305Tests,
+        SaCryptoCipherDecryptTest,
+        ::testing::Combine(
+            ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20_POLY1305),
+            ::testing::Values(SA_KEY_TYPE_SYMMETRIC),
+            ::testing::Values(SYM_256_KEY_SIZE),
+            ::testing::Values(SA_BUFFER_TYPE_CLEAR),
             ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
             ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
             ::testing::Values(0)));
@@ -763,16 +760,16 @@ INSTANTIATE_TEST_SUITE_P(
             ::testing::Values(SA_CIPHER_ALGORITHM_AES_GCM),
             ::testing::Values(SA_KEY_TYPE_SYMMETRIC),
             ::testing::Values(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
-            ::testing::Values(SA_BUFFER_TYPE_CLEAR, SA_BUFFER_TYPE_SVP)));
+            ::testing::Values(SA_BUFFER_TYPE_CLEAR)));
 
 INSTANTIATE_TEST_SUITE_P(
-        Chacha20Tests,
+        Chacha20Poly1305Tests,
         SaCryptoCipherProcessLastTest,
         ::testing::Combine(
             ::testing::Values(SA_CIPHER_ALGORITHM_CHACHA20_POLY1305),
             ::testing::Values(SA_KEY_TYPE_SYMMETRIC),
             ::testing::Values(SYM_256_KEY_SIZE),
-            ::testing::Values(SA_BUFFER_TYPE_CLEAR, SA_BUFFER_TYPE_SVP)));
+            ::testing::Values(SA_BUFFER_TYPE_CLEAR)));
 
 INSTANTIATE_TEST_SUITE_P(
         SaCryptoCipherWithSvpTests,
@@ -782,6 +779,11 @@ INSTANTIATE_TEST_SUITE_P(
             std::make_tuple(SA_BUFFER_TYPE_SVP, SA_CIPHER_MODE_ENCRYPT),
             std::make_tuple(SA_BUFFER_TYPE_CLEAR, SA_CIPHER_MODE_DECRYPT),
             std::make_tuple(SA_BUFFER_TYPE_SVP, SA_CIPHER_MODE_DECRYPT)));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaCryptoCipherWithoutSvpTests,
+        SaCryptoCipherWithoutSvpTest,
+        ::testing::Values(SA_CIPHER_MODE_ENCRYPT, SA_CIPHER_MODE_DECRYPT));
 
 INSTANTIATE_TEST_SUITE_P(
         SaCryptoCipherElGamalTests,

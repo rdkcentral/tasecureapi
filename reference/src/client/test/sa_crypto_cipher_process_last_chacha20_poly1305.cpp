@@ -24,8 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_P(SaCryptoCipherWithSvpTest, failLastChacha20Poly1305EncryptShortTag) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, failLastChacha20Poly1305EncryptShortTag) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20_POLY1305;
         parameters.iv = random(CHACHA20_NONCE_LENGTH);
@@ -52,7 +51,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         auto clear = random(8);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 
@@ -61,7 +60,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         // encrypt using SecApi
-        auto out_buffer = buffer_alloc(buffer_type, bytes_to_process);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, bytes_to_process);
         ASSERT_NE(out_buffer, nullptr);
 
         sa_cipher_end_parameters_chacha20_poly1305 end_parameters = {parameters.tag.data(), parameters.tag.size()};
@@ -70,8 +69,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305DecryptShortTag) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, processLastChacha20Poly1305DecryptShortTag) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20_POLY1305;
         parameters.iv = random(CHACHA20_NONCE_LENGTH);
@@ -105,7 +103,7 @@ namespace {
                 parameters.clear_key));
         ASSERT_FALSE(encrypted.empty());
 
-        auto in_buffer = buffer_alloc(buffer_type, encrypted);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, encrypted);
         ASSERT_NE(in_buffer, nullptr);
 
         // get out_length
@@ -114,7 +112,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         // decrypt using SecApi
-        auto out_buffer = buffer_alloc(buffer_type, bytes_to_process);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, bytes_to_process);
         ASSERT_NE(out_buffer, nullptr);
         bytes_to_process = encrypted.size();
         sa_cipher_end_parameters_chacha20_poly1305 end_parameters = {parameters.tag.data(), parameters.tag.size()};
@@ -123,9 +121,8 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305FailsInvalidOutLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+    TEST_P(SaCryptoCipherWithoutSvpTest, processLastChacha20Poly1305FailsInvalidOutLength) {
+        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
@@ -151,9 +148,9 @@ namespace {
         sa_cipher_end_parameters_chacha20_poly1305 end_parameters = {tag.data(), tag.size()};
 
         auto clear = random(AES_BLOCK_SIZE);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
-        auto out_buffer = buffer_alloc(buffer_type, clear.size() - 1);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size() - 1);
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 
@@ -162,9 +159,8 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305FailsInvalidInLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+    TEST_P(SaCryptoCipherWithoutSvpTest, processLastChacha20Poly1305FailsInvalidInLength) {
+        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
@@ -190,9 +186,9 @@ namespace {
         sa_cipher_end_parameters_chacha20_poly1305 end_parameters = {tag.data(), tag.size()};
 
         auto clear = random(AES_BLOCK_SIZE);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
-        auto out_buffer = buffer_alloc(buffer_type, clear.size());
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = 2 * clear.size();
 
@@ -201,9 +197,8 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305FailsNullParameters) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+    TEST_P(SaCryptoCipherWithoutSvpTest, processLastChacha20Poly1305FailsNullParameters) {
+        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
@@ -226,9 +221,9 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         auto clear = random(AES_BLOCK_SIZE);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
-        auto out_buffer = buffer_alloc(buffer_type, clear.size());
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 
@@ -236,9 +231,8 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305FailsNullTag) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+    TEST_P(SaCryptoCipherWithoutSvpTest, processLastChacha20Poly1305FailsNullTag) {
+        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
@@ -263,9 +257,9 @@ namespace {
         sa_cipher_end_parameters_chacha20_poly1305 end_parameters = {nullptr, 0};
 
         auto clear = random(AES_BLOCK_SIZE);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
-        auto out_buffer = buffer_alloc(buffer_type, clear.size());
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 
@@ -274,9 +268,8 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processLastChacha20Poly1305FailsInvalidTagLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+    TEST_P(SaCryptoCipherWithoutSvpTest, processLastChacha20Poly1305FailsInvalidTagLength) {
+        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_256_KEY_SIZE);
 
         sa_rights rights;
@@ -302,9 +295,9 @@ namespace {
         sa_cipher_end_parameters_chacha20_poly1305 end_parameters = {tag.data(), tag.size()};
 
         auto clear = random(AES_BLOCK_SIZE);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
-        auto out_buffer = buffer_alloc(buffer_type, clear.size());
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 

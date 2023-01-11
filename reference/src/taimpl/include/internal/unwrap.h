@@ -121,7 +121,7 @@ sa_status unwrap_aes_ctr(
  * @param[in] rights the key rights.
  * @param[in] key_type the key type.
  * @param[in] type_parameters the key type parameters.
- * @param[in] parameters the unwrap parameters.
+ * @param[in] algorithm_parameters the unwrap parameters.
  * @param[in] stored_key_wrapping the unwrapping key.
  * @return status of the operation.
  */
@@ -132,7 +132,7 @@ sa_status unwrap_aes_gcm(
         const sa_rights* rights,
         sa_key_type key_type,
         void* type_parameters,
-        const sa_unwrap_parameters_aes_gcm* parameters,
+        const sa_unwrap_parameters_aes_gcm* algorithm_parameters,
         const stored_key_t* stored_key_wrapping);
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
@@ -145,7 +145,7 @@ sa_status unwrap_aes_gcm(
  * @param[in] rights the key rights.
  * @param[in] key_type the key type.
  * @param[in] type_parameters the key type parameters.
- * @param[in] parameters the unwrap parameters.
+ * @param[in] algorithm_parameters the unwrap parameters.
  * @param[in] stored_key_wrapping the unwrapping key.
  * @return status of the operation.
  */
@@ -156,7 +156,7 @@ sa_status unwrap_chacha20(
         const sa_rights* rights,
         sa_key_type key_type,
         void* type_parameters,
-        const sa_unwrap_parameters_chacha20* parameters,
+        const sa_unwrap_parameters_chacha20* algorithm_parameters,
         const stored_key_t* stored_key_wrapping);
 
 /**
@@ -168,7 +168,7 @@ sa_status unwrap_chacha20(
  * @param[in] rights the key rights.
  * @param[in] key_type the key type.
  * @param[in] type_parameters the key type parameters.
- * @param[in] parameters the unwrap parameters.
+ * @param[in] algorithm_parameters the unwrap parameters.
  * @param[in] stored_key_wrapping the unwrapping key.
  * @return status of the operation.
  */
@@ -179,7 +179,7 @@ sa_status unwrap_chacha20_poly1305(
         const sa_rights* rights,
         sa_key_type key_type,
         void* type_parameters,
-        const sa_unwrap_parameters_chacha20_poly1305* parameters,
+        const sa_unwrap_parameters_chacha20_poly1305* algorithm_parameters,
         const stored_key_t* stored_key_wrapping);
 #endif
 

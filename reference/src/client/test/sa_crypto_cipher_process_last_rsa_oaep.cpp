@@ -24,8 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_P(SaCryptoCipherWithSvpTest, processRsaOaepFails) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, processRsaOaepFails) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
         sa_rights rights;
@@ -48,9 +47,9 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         auto clear = random(33);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
-        auto out_buffer = buffer_alloc(buffer_type, clear.size());
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 

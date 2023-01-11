@@ -19,8 +19,9 @@
 #include "client_test_helpers.h"
 #include "sa.h"
 #include "sa_crypto_cipher_common.h"
-#include "gtest/gtest.h"
+#include "gtest/gtest.h" // NOLINT
 #include <future>
+
 using namespace client_test_helpers;
 
 sa_status SaCryptoCipherMultipleThread::process_multiple_threads(size_t id) {
@@ -54,8 +55,7 @@ sa_status SaCryptoCipherMultipleThread::process_multiple_threads(size_t id) {
             return status;
         }
 
-        if (get_required_length(parameters.cipher_algorithm, key_size, clear.size(), true,
-                    parameters.oaep_digest_algorithm, parameters.oaep_mgf1_digest_algorithm) != bytes_to_process) {
+        if (get_required_length(parameters.cipher_algorithm, key_size, clear.size(), true) != bytes_to_process) {
             ERROR("bytes_to_process failed");
             return SA_STATUS_INVALID_PARAMETER;
         }

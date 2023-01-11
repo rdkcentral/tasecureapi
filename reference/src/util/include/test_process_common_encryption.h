@@ -16,13 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SA_PROCESS_COMMON_ENCRYPTION_COMMON_H
-#define SA_PROCESS_COMMON_ENCRYPTION_COMMON_H
+#ifndef TEST_PROCESS_COMMON_ENCRYPTION_H
+#define TEST_PROCESS_COMMON_ENCRYPTION_H
 
-#include "sa.h"
-#include "sa_crypto_cipher_common.h"
-#include "gtest/gtest.h"
+#include "sa_cenc.h"
 #include <memory>
+#include <openssl/evp.h>
 #include <vector>
 
 typedef struct {
@@ -32,20 +31,25 @@ typedef struct {
     std::vector<sa_subsample_length> subsample_lengths;
 } sample_data;
 
-class SaProcessCommonEncryptionBase : public SaCipherCryptoBase {
+class ProcessCommonEncryptionBase {
 protected:
-    static bool build_samples(
+    bool build_samples(
             size_t sample_size,
             size_t crypt_byte_block,
             size_t skip_byte_block,
             size_t subsample_count,
             size_t bytes_of_clear_data,
-            cipher_parameters& parameters,
-            sa_buffer_type out_buffer_type,
-            sa_buffer_type in_buffer_type,
+            std::vector<uint8_t>& iv,
+            sa_cipher_algorithm cipher_algorithm,
+            std::vector<uint8_t>& clear_key,
             const std::shared_ptr<sa_crypto_cipher_context>& cipher,
             sample_data& sample_data,
             std::vector<sa_sample>& samples);
+
+    virtual sa_status svp_buffer_write(
+            sa_svp_buffer out,
+            const void* in,
+            size_t in_length) = 0;
 
 private:
     static EVP_CIPHER_CTX* openssl_init(
@@ -68,19 +72,4 @@ private:
             sa_cipher_algorithm cipher_algorithm);
 };
 
-// clang-format off
-using SaProcessCommonEncryptionType = std::tuple<std::tuple<size_t, size_t>, size_t, size_t, size_t,
-        sa_cipher_algorithm, std::tuple<sa_buffer_type, sa_buffer_type>>;
-// clang-format on
-
-class SaProcessCommonEncryptionTest : public ::testing::TestWithParam<SaProcessCommonEncryptionType>,
-                                      public SaProcessCommonEncryptionBase {
-protected:
-    void SetUp() override;
-};
-
-class SaProcessCommonEncryptionNegativeTest : public ::testing::Test, public SaProcessCommonEncryptionBase {};
-
-class SaProcessCommonEncryptionAlternativeTest : public ::testing::Test, public SaProcessCommonEncryptionBase {};
-
-#endif // SA_PROCESS_COMMON_ENCRYPTION_COMMON_H
+#endif // TEST_PROCESS_COMMON_ENCRYPTION_H

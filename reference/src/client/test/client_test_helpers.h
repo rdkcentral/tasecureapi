@@ -23,6 +23,7 @@
 #include "log.h"
 #include "sa.h"
 #include "sa_public_key.h"
+#include "test_helpers.h"
 #include <ctime>
 #include <memory>
 #include <openssl/ec.h>
@@ -39,10 +40,10 @@ typedef enum {
 
 #define EC_KEY_SIZE(ec_group) (EC_GROUP_get_degree(ec_group) / 8 + (EC_GROUP_get_degree(ec_group) % 8 == 0 ? 0 : 1))
 
-#define UNSUPPORTED_KEY static_cast<sa_key>(INVALID_HANDLE - 1)
 #define UNSUPPORTED_OPENSSL_KEY static_cast<uintptr_t>(-1)
 
 namespace client_test_helpers {
+    using namespace test_helpers;
 
     /**
      * Obtain a sample DH Prime - 768.
@@ -190,14 +191,6 @@ namespace client_test_helpers {
      * @return the requested RSA key.
      */
     std::vector<uint8_t> get_rsa_private_key(size_t key_size);
-
-    /**
-     * Generate a vector of random data.
-     *
-     * @param[in] size size of the generated vector.
-     * @return generated vector.
-     */
-    std::vector<uint8_t> random(size_t size);
 
     /**
      * Convert time instant into ISO8601 format.
@@ -691,39 +684,6 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& aad,
             const std::vector<uint8_t>& tag,
             const std::vector<uint8_t>& key);
-
-    /**
-     * Converts a digest algorithm into an OpenSSL mechanism.
-     * @param[in] digest_algorithm the digest to convert.
-     * @return the OpenSSL mechanism.
-     */
-    const EVP_MD* digest_mechanism(sa_digest_algorithm digest_algorithm);
-
-    /**
-     * Obtain digest length for specified algorithm.
-     *
-     * @param[in] digest_algorithm digest algorithm.
-     * @return length required to store the digest value. Returns (size_t) -1 if invalid digest
-     * algorithm is specified.
-     */
-    size_t digest_length(sa_digest_algorithm digest_algorithm);
-
-    /**
-     * Compute SHA digest value over inputs.
-     *
-     * @param[out] out output buffer for computed digest value.
-     * @param[in] digest_algorithm the algorithm to use in the digest.
-     * @param[in] in1 first input buffer.
-     * @param[in] in2 second input buffer.
-     * @param[in] in3 third input buffer.
-     * @return status of the operation
-     */
-    bool digest_openssl(
-            std::vector<uint8_t>& out,
-            sa_digest_algorithm digest_algorithm,
-            const std::vector<uint8_t>& in1,
-            const std::vector<uint8_t>& in2,
-            const std::vector<uint8_t>& in3);
 
     /**
      * Compute HMAC value over inputs.

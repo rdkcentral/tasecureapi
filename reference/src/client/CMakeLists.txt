@@ -41,6 +41,11 @@ else ()
     message("clang-tidy disabled for tests")
 endif ()
 
+if (DEFINED DISABLE_CENC_1000000_TESTS)
+    set(CMAKE_CXX_FLAGS "-DDISABLE_CENC_1000000_TESTS ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "-DDISABLE_CENC_1000000_TESTS ${CMAKE_C_FLAGS}")
+endif ()
+
 find_package(OpenSSL REQUIRED)
 
 add_library(saclient SHARED
@@ -70,7 +75,7 @@ target_compile_options(saclient PRIVATE -Werror -Wall -Wextra -Wno-type-limits -
 set_target_properties(saclient PROPERTIES
         LINKER_LANGUAGE C
         SO_VERSION 3.1
-        VERSION 3.1.0
+        VERSION 3.1.2
         )
 
 target_include_directories(saclient
@@ -242,8 +247,7 @@ add_executable(saclienttest
         test/sa_key_unwrap_rsa.cpp
         test/sa_crypto_cipher_multiple_thread.cpp
         test/sa_process_common_encryption.cpp
-        test/sa_process_common_encryption_common.cpp
-        test/sa_process_common_encryption_common.h
+        test/sa_process_common_encryption.h
         test/sa_svp_buffer_alloc.cpp
         test/sa_svp_buffer_check.cpp
         test/sa_svp_buffer_copy.cpp
@@ -291,15 +295,6 @@ add_custom_command(
         ${CMAKE_CURRENT_BINARY_DIR}/root_keystore.p12)
 
 gtest_discover_tests(saclienttest)
-
-# 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS saclient saclienttest EXPORT sa-client-config
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin
-        )
-
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 # Doxygen
 option(BUILD_DOC "Build documentation" ON)

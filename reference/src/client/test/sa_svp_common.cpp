@@ -49,15 +49,6 @@ std::shared_ptr<sa_svp_buffer> SaSvpBase::create_sa_svp_buffer(size_t size) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-        SaSvpBufferCheckNominalTests,
-        SaSvpBufferCheckTest,
-        ::testing::Values(
-                SA_DIGEST_ALGORITHM_SHA1,
-                SA_DIGEST_ALGORITHM_SHA256,
-                SA_DIGEST_ALGORITHM_SHA384,
-                SA_DIGEST_ALGORITHM_SHA512));
-
-INSTANTIATE_TEST_SUITE_P(
         SaSvpBufferCopyTests,
         SaSvpBufferCopyTest,
         ::testing::Values(1, 3, 10));

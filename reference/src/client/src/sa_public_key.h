@@ -87,13 +87,6 @@ EVP_PKEY* sa_import_public_key(
  */
 EVP_PKEY* sa_get_public_key(sa_key key);
 
-/**
- * Set key rights to allow all operations.
- *
- * @param[out] rights key rights
- */
-void sa_rights_set_allow_all(sa_rights* rights);
-
 #ifdef __cplusplus
 }
 #endif

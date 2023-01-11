@@ -24,25 +24,6 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaSvpKeyCheckTest, nominal) {
-        auto clear_key = random(SYM_128_KEY_SIZE);
-
-        sa_rights rights;
-        sa_rights_set_allow_all(&rights);
-        SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
-
-        auto key = create_sa_key_symmetric(&rights, clear_key);
-        ASSERT_NE(key, nullptr);
-
-        auto clear = random(AES_BLOCK_SIZE);
-        auto encrypted = std::vector<uint8_t>(clear.size());
-        ASSERT_TRUE(encrypt_aes_ecb_openssl(encrypted, clear, clear_key, false));
-
-        auto encrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, encrypted);
-        ASSERT_EQ(sa_svp_key_check(*key, encrypted_buffer.get(), clear.size(), clear.data(), clear.size()),
-                SA_STATUS_OK);
-    }
-
     TEST_F(SaSvpKeyCheckTest, nominalClear) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
@@ -57,24 +38,6 @@ namespace {
         ASSERT_TRUE(encrypt_aes_ecb_openssl(encrypted, clear, clear_key, false));
 
         auto encrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, encrypted);
-        ASSERT_EQ(sa_svp_key_check(*key, encrypted_buffer.get(), clear.size(), clear.data(), clear.size()),
-                SA_STATUS_OK);
-    }
-
-    TEST_F(SaSvpKeyCheckTest, nominalSvp) {
-        auto clear_key = random(SYM_128_KEY_SIZE);
-
-        sa_rights rights;
-        sa_rights_set_allow_all(&rights);
-
-        auto key = create_sa_key_symmetric(&rights, clear_key);
-        ASSERT_NE(key, nullptr);
-
-        auto clear = random(AES_BLOCK_SIZE);
-        auto encrypted = std::vector<uint8_t>(clear.size());
-        ASSERT_TRUE(encrypt_aes_ecb_openssl(encrypted, clear, clear_key, false));
-
-        auto encrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, encrypted);
         ASSERT_EQ(sa_svp_key_check(*key, encrypted_buffer.get(), clear.size(), clear.data(), clear.size()),
                 SA_STATUS_OK);
     }
@@ -96,22 +59,6 @@ namespace {
         auto encrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, encrypted);
         ASSERT_EQ(sa_svp_key_check(*key, encrypted_buffer.get(), clear.size(), clear.data(), clear.size()),
                 SA_STATUS_OPERATION_NOT_ALLOWED);
-    }
-
-    TEST_F(SaSvpKeyCheckTest, failKeyCheck) {
-        auto clear_key = random(SYM_128_KEY_SIZE);
-
-        sa_rights rights;
-        sa_rights_set_allow_all(&rights);
-        SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
-
-        auto key = create_sa_key_symmetric(&rights, clear_key);
-        ASSERT_NE(key, nullptr);
-
-        auto clear = random(AES_BLOCK_SIZE);
-        auto encrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, clear);
-        ASSERT_EQ(sa_svp_key_check(*key, encrypted_buffer.get(), clear.size(), clear.data(), clear.size()),
-                SA_STATUS_VERIFICATION_FAILED);
     }
 
     TEST_F(SaSvpKeyCheckTest, failNullIn) {
@@ -219,7 +166,7 @@ namespace {
 
         auto clear = random(AES_BLOCK_SIZE);
         auto encrypted = std::vector<uint8_t>(clear.size());
-        auto encrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, encrypted);
+        auto encrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, encrypted);
         ASSERT_EQ(sa_svp_key_check(*key, encrypted_buffer.get(), clear.size(), clear.data(), clear.size()),
                 SA_STATUS_INVALID_KEY_TYPE);
     }

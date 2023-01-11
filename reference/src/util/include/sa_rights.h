@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef TEST_HELPERS_H
-#define TEST_HELPERS_H
+#ifndef SA_RIGHTS_H
+#define SA_RIGHTS_H
 
-#include "ta_sa.h"
+#include "sa_types.h"
 
-#define MAX_CLIENT_SLOTS 256
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-namespace test_helpers {
-    void rights_allow_all(sa_rights* rights);
+/**
+ * Set key rights to allow all operations.
+ *
+ * @param[out] rights key rights
+ */
+void sa_rights_set_allow_all(sa_rights* rights);
 
-    const sa_uuid* uuid();
+#ifdef __cplusplus
+}
+#endif
 
-    ta_client client();
-} // namespace test_helpers
-
-#endif // TEST_HELPERS_H
+#endif // SA_RIGHTS_H

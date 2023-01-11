@@ -36,6 +36,14 @@ extern "C" {
  */
 sa_status transport_authenticate_caller(sa_uuid* uuid);
 
+/**
+ * Determines if the calling entity is the REE.
+ *
+ * @param uuid the UUID of the caller.
+ * @return true if this is the REE UUID or false if not.
+ */
+bool is_ree(const sa_uuid* uuid);
+
 #ifdef __cplusplus
 }
 #endif

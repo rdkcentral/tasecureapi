@@ -24,8 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_P(SaCryptoCipherWithSvpTest, processAesGcmNominalEncryptAes128NullAadZeroLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, processAesGcmNominalEncryptAes128NullAadZeroLength) {
         cipher_parameters parameters = {
                 .cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM,
                 .key = nullptr,
@@ -66,7 +65,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         auto clear = random(AES_BLOCK_SIZE * 2);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 
@@ -75,7 +74,7 @@ namespace {
         ASSERT_EQ(bytes_to_process, clear.size());
 
         // encrypt using SecApi
-        auto out_buffer = buffer_alloc(buffer_type, bytes_to_process);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, bytes_to_process);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OK);
@@ -85,8 +84,7 @@ namespace {
         ASSERT_TRUE(verify_encrypt(out_buffer.get(), clear, parameters, false));
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processAesGcmNominalDecryptAes128NullAadZeroLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, processAesGcmNominalDecryptAes128NullAadZeroLength) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
         parameters.svp_required = false;
@@ -120,7 +118,7 @@ namespace {
         auto encrypted = encrypt_openssl(clear, parameters);
         ASSERT_FALSE(encrypted.empty());
 
-        auto in_buffer = buffer_alloc(buffer_type, encrypted);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, encrypted);
         ASSERT_NE(in_buffer, nullptr);
 
         // get out_length
@@ -130,7 +128,7 @@ namespace {
         ASSERT_EQ(bytes_to_process, encrypted.size());
 
         // encrypt using SecApi
-        auto out_buffer = buffer_alloc(buffer_type, bytes_to_process);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, bytes_to_process);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OK);
@@ -140,8 +138,7 @@ namespace {
         ASSERT_TRUE(verify_decrypt(out_buffer.get(), clear));
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processAesGcmNominalEncryptAes256NullAadZeroLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, processAesGcmNominalEncryptAes256NullAadZeroLength) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
         parameters.svp_required = false;
@@ -171,7 +168,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         auto clear = random(AES_BLOCK_SIZE * 2);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 
@@ -180,7 +177,7 @@ namespace {
         ASSERT_EQ(bytes_to_process, clear.size());
 
         // encrypt using SecApi
-        auto out_buffer = buffer_alloc(buffer_type, bytes_to_process);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, bytes_to_process);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OK);
@@ -190,8 +187,7 @@ namespace {
         ASSERT_TRUE(verify_encrypt(out_buffer.get(), clear, parameters, false));
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processAesGcmNominalDecryptAes256NullAadZeroLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, processAesGcmNominalDecryptAes256NullAadZeroLength) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
         parameters.svp_required = false;
@@ -225,7 +221,7 @@ namespace {
         auto encrypted = encrypt_openssl(clear, parameters);
         ASSERT_FALSE(encrypted.empty());
 
-        auto in_buffer = buffer_alloc(buffer_type, encrypted);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, encrypted);
         ASSERT_NE(in_buffer, nullptr);
 
         // get out_length
@@ -235,7 +231,7 @@ namespace {
         ASSERT_EQ(bytes_to_process, encrypted.size());
 
         // encrypt using SecApi
-        auto out_buffer = buffer_alloc(buffer_type, bytes_to_process);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, bytes_to_process);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OK);
@@ -245,8 +241,7 @@ namespace {
         ASSERT_TRUE(verify_decrypt(out_buffer.get(), clear));
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processAesGcmEncryptResumePartialBlock) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, processAesGcmEncryptResumePartialBlock) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
         parameters.svp_required = false;
@@ -259,11 +254,11 @@ namespace {
             GTEST_SKIP() << "Cipher algorithm not supported";
 
         auto clear = random(34);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
 
         // encrypt using SecApi
-        auto out_buffer = buffer_alloc(buffer_type, clear.size());
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size() / 2;
         sa_status status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
@@ -279,8 +274,7 @@ namespace {
         ASSERT_TRUE(verify_encrypt(out_buffer.get(), clear, parameters, false));
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processAesGcmDecryptResumePartialBlock) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+    TEST_F(SaCryptoCipherWithoutSvpTest, processAesGcmDecryptResumePartialBlock) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
         parameters.svp_required = false;
@@ -298,10 +292,10 @@ namespace {
         auto encrypted = encrypt_openssl(clear, parameters);
         ASSERT_FALSE(encrypted.empty());
 
-        auto in_buffer = buffer_alloc(buffer_type, encrypted);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, encrypted);
         ASSERT_NE(in_buffer, nullptr);
 
-        auto out_buffer = buffer_alloc(buffer_type, clear.size());
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size() / 2;
         sa_status status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
@@ -317,9 +311,8 @@ namespace {
         ASSERT_TRUE(verify_decrypt(out_buffer.get(), clear));
     }
 
-    TEST_P(SaCryptoCipherWithSvpTest, processAesGcmFailsInvalidOutLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+    TEST_P(SaCryptoCipherWithoutSvpTest, processAesGcmFailsInvalidOutLength) {
+        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -342,9 +335,9 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         auto clear = random(33);
-        auto in_buffer = buffer_alloc(buffer_type, clear);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
-        auto out_buffer = buffer_alloc(buffer_type, clear.size() - 1);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size() - 1);
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 
@@ -352,7 +345,41 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaCryptoCipherSvpOnlyTest, initAesGcmFailsDecryptInvalidRightsSvpOptionalNotSet) {
+    TEST_F(SaCryptoCipherWithoutSvpTest, initAesGcmFailsSvpIn) {
+        auto clear_key = random(SYM_128_KEY_SIZE);
+
+        sa_rights rights;
+        sa_rights_set_allow_all(&rights);
+        SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
+
+        auto key = create_sa_key_symmetric(&rights, clear_key);
+        ASSERT_NE(key, nullptr);
+
+        auto cipher = create_uninitialized_sa_crypto_cipher_context();
+        ASSERT_NE(cipher, nullptr);
+
+        auto iv = random(GCM_IV_LENGTH);
+        auto aad = random(36);
+        sa_cipher_parameters_aes_gcm parameters = {iv.data(), iv.size(), aad.data(), aad.size()};
+        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM, SA_CIPHER_MODE_DECRYPT,
+                *key, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Cipher algorithm not supported";
+
+        ASSERT_EQ(status, SA_STATUS_OK);
+
+        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, clear);
+        ASSERT_NE(in_buffer, nullptr);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
+        ASSERT_NE(out_buffer, nullptr);
+        size_t bytes_to_process = clear.size();
+
+        status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
+        ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
+    }
+
+    TEST_F(SaCryptoCipherWithoutSvpTest, initAesGcmFailsSvpOut) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -378,7 +405,7 @@ namespace {
         auto clear = random(AES_BLOCK_SIZE * 2);
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
-        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size() - 1);
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, clear.size());
         ASSERT_NE(out_buffer, nullptr);
         size_t bytes_to_process = clear.size();
 

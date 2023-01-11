@@ -228,7 +228,8 @@ sa_status sa_svp_key_check(
 
 /**
  * Perform a buffer check by digesting the data in the buffer at the offset and length and comparing it with the input
- * hash.
+ * hash. This function can only be called from another TA. Calls from the REE will return
+ * SA_STATUS_OPERATION_NOT_SUPPORTED.
  *
  * @param[in] svp_buffer Buffer to hash.
  * @param[in] offset Offset at which to begin the hash.

@@ -40,14 +40,11 @@ namespace {
             std::copy(in.begin() + i * 2 * chunk_size, in.begin() + i * 2 * chunk_size + chunk_size,
                     std::back_inserter(digest_vector));
         }
+
         sa_status status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), offsets, offset_length);
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        std::vector<uint8_t> hash(SHA256_DIGEST_LENGTH);
-        ASSERT_TRUE(digest_openssl(hash, SA_DIGEST_ALGORITHM_SHA256, digest_vector, {}, {}));
-        status = sa_svp_buffer_check(*out_buffer, 0, offset_length * chunk_size, SA_DIGEST_ALGORITHM_SHA256,
-                hash.data(), hash.size());
-        ASSERT_EQ(status, SA_STATUS_OK);
+        // Write verified in taimpltest.
     }
 
     TEST_F(SaSvpBufferWriteTest, failsOutBufferTooSmall) {

@@ -22,6 +22,7 @@
 #include "log.h"
 #include "porting/memory.h"
 #include "ta_sa.h"
+#include "transport.h"
 
 sa_status ta_sa_svp_buffer_check(
         sa_svp_buffer svp_buffer,
@@ -36,6 +37,11 @@ sa_status ta_sa_svp_buffer_check(
     if (hash == NULL) {
         ERROR("NULL hash");
         return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (is_ree(caller_uuid)) {
+        ERROR("ta_sa_svp_buffer_check can only be called by a TA");
+        return SA_STATUS_OPERATION_NOT_ALLOWED;
     }
 
     size_t required_length = digest_length(digest_algorithm);

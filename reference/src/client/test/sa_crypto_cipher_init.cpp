@@ -75,8 +75,7 @@ namespace {
             auto cipher = create_uninitialized_sa_crypto_cipher_context();
             ASSERT_NE(cipher, nullptr);
 
-            ASSERT_TRUE(get_cipher_parameters(parameters));
-
+            get_cipher_parameters(parameters);
             status = sa_crypto_cipher_init(cipher.get(), parameters.cipher_algorithm, SA_CIPHER_MODE_DECRYPT,
                     *parameters.key, parameters.parameters.get());
             if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)

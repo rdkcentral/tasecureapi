@@ -44,7 +44,7 @@
  */
 #define SA_SPECIFICATION_MAJOR 3
 #define SA_SPECIFICATION_MINOR 1
-#define SA_SPECIFICATION_REVISION 1
+#define SA_SPECIFICATION_REVISION 2
 
 #ifdef __cplusplus
 extern "C" {

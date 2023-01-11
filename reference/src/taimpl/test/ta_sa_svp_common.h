@@ -16,34 +16,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SA_SVP_COMMON_H
-#define SA_SVP_COMMON_H
+#ifndef TA_SA_SVP_COMMON_H
+#define TA_SA_SVP_COMMON_H
 
-#include "sa.h"
+#include "sa_types.h"
+#include "ta_sa_svp_crypto.h"
 #include <cstddef>
 #include <gtest/gtest.h>
 #include <memory>
 
-class SaSvpBase : public ::testing::Test {
+class TaSvpBase : public ::testing::Test {
 protected:
     void SetUp() override;
     static std::shared_ptr<sa_svp_buffer> create_sa_svp_buffer(size_t size);
 };
 
-class SaSvpBufferAllocTest : public SaSvpBase {};
+class TaSvpBufferCheckTest : public ::testing::WithParamInterface<sa_digest_algorithm>, public TaSvpBase {};
 
-using SaSvpBufferTestType = std::tuple<long>;
+class TaSvpKeyCheckTest : public TaSvpBase, public TaCryptoCipherBase {};
 
-class SaSvpBufferCopyTest : public ::testing::WithParamInterface<SaSvpBufferTestType>, public SaSvpBase {};
+using TaSvpBufferTestType = std::tuple<long>;
 
-class SaSvpBufferCheckTest : public SaSvpBase {};
+class TaSvpBufferCopyTest : public ::testing::WithParamInterface<TaSvpBufferTestType>, public TaSvpBase {};
 
-class SaSvpBufferCreateTest : public SaSvpBase {};
+class TaSvpBufferWriteTest : public ::testing::WithParamInterface<TaSvpBufferTestType>, public TaSvpBase {};
 
-class SaSvpBufferReleaseTest : public SaSvpBase {};
-
-class SaSvpBufferWriteTest : public ::testing::WithParamInterface<SaSvpBufferTestType>, public SaSvpBase {};
-
-class SaSvpKeyCheckTest : public SaSvpBase {};
-
-#endif // SA_SVP_COMMON_H
+#endif // TA_SA_SVP_COMMON_H

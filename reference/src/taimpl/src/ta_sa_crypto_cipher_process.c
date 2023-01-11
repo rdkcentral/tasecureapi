@@ -436,12 +436,14 @@ sa_status ta_sa_crypto_cipher_process(
         }
 
         sa_cipher_algorithm cipher_algorithm = cipher_get_algorithm(cipher);
-        if (out->buffer_type == SA_BUFFER_TYPE_SVP &&
-                (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP ||
+        if ((out->buffer_type == SA_BUFFER_TYPE_SVP || in->buffer_type == SA_BUFFER_TYPE_SVP) &&
+                (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM ||
+                        cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 ||
+                        cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP ||
                         cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15 ||
                         cipher_algorithm == SA_CIPHER_ALGORITHM_EC_ELGAMAL)) {
             ERROR("Invalid algorithm");
-            status = SA_STATUS_INVALID_PARAMETER;
+            status = SA_STATUS_OPERATION_NOT_ALLOWED;
             break;
         }
 

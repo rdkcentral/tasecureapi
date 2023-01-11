@@ -16,25 +16,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "client_test_helpers.h"
-#include "sa.h"
-#include "sa_svp_common.h"
+#include "common.h"
+#include "ta_sa.h"
+#include "ta_sa_svp_common.h"
+#include "ta_test_helpers.h"
 #include "gtest/gtest.h"
 
-using namespace client_test_helpers;
+using namespace ta_test_helpers;
 
 namespace {
-    TEST_P(SaSvpBufferCopyTest, nominal) {
+    TEST_P(TaSvpBufferWriteTest, nominal) {
         auto offset_length = std::get<0>(GetParam());
 
         auto out_buffer = create_sa_svp_buffer(1024);
         ASSERT_NE(out_buffer, nullptr);
-        auto in_buffer = create_sa_svp_buffer(1024);
-        ASSERT_NE(in_buffer, nullptr);
         auto in = random(1024);
-        sa_svp_offset write_offset = {0, 0, 1024};
-        sa_status status = sa_svp_buffer_write(*in_buffer, in.data(), in.size(), &write_offset, 1);
-        ASSERT_EQ(status, SA_STATUS_OK);
         long chunk_size = offset_length > 1 ? (1024 / (2 * offset_length)) : 1024; // NOLINT
         std::vector<uint8_t> digest_vector;
         sa_svp_offset offsets[offset_length];
@@ -45,56 +41,47 @@ namespace {
             std::copy(in.begin() + i * 2 * chunk_size, in.begin() + i * 2 * chunk_size + chunk_size,
                     std::back_inserter(digest_vector));
         }
-
-        status = sa_svp_buffer_copy(*out_buffer, *in_buffer, offsets, offset_length);
+        sa_status status = ta_sa_svp_buffer_write(*out_buffer, in.data(), in.size(), offsets, offset_length, client(),
+                ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        // Copy verified in taimpltest.
+        std::vector<uint8_t> hash(SHA256_DIGEST_LENGTH);
+        ASSERT_TRUE(digest_openssl(hash, SA_DIGEST_ALGORITHM_SHA256, digest_vector, {}, {}));
+        status = ta_sa_svp_buffer_check(*out_buffer, 0, offset_length * chunk_size, SA_DIGEST_ALGORITHM_SHA256,
+                hash.data(), hash.size(), client(), ta_uuid());
+        ASSERT_EQ(status, SA_STATUS_OK);
     }
 
-    TEST_F(SaSvpBufferCopyTest, failsOutBufferTooSmall) {
+    TEST_F(TaSvpBufferWriteTest, failsOutBufferTooSmall) {
         auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(out_buffer, nullptr);
-        auto in_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(in_buffer, nullptr);
-        sa_svp_offset offset = {1, 0, AES_BLOCK_SIZE};
-        sa_status status = sa_svp_buffer_copy(*out_buffer, *in_buffer, &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
-    }
-
-    TEST_F(SaSvpBufferCopyTest, failsInBufferTooSmall) {
-        auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(out_buffer, nullptr);
-        auto in_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(in_buffer, nullptr);
-        sa_svp_offset offset = {0, 1, AES_BLOCK_SIZE};
-        sa_status status = sa_svp_buffer_copy(*out_buffer, *in_buffer, &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
-    }
-
-    TEST_F(SaSvpBufferCopyTest, failsNullOffset) {
-        auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE * 2);
-        ASSERT_NE(out_buffer, nullptr);
-        auto in_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(in_buffer, nullptr);
         auto in = random(AES_BLOCK_SIZE);
-        sa_status status = sa_svp_buffer_copy(*out_buffer, *in_buffer, nullptr, 0);
+        sa_svp_offset offset = {1, 0, in.size()};
+        sa_status status = ta_sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &offset, 1, client(), ta_uuid());
+        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
+    }
+
+    TEST_F(TaSvpBufferWriteTest, failsNullOutOffset) {
+        auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
+        ASSERT_NE(out_buffer, nullptr);
+        auto in = random(AES_BLOCK_SIZE);
+        sa_status status = ta_sa_svp_buffer_write(*out_buffer, in.data(), in.size(), nullptr, 0, client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaSvpBufferCopyTest, failsInvalidOut) {
-        auto in_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(in_buffer, nullptr);
-        sa_svp_offset offset = {0, 0, 1};
-        sa_status status = sa_svp_buffer_copy(INVALID_HANDLE, *in_buffer, &offset, 1);
+    TEST_F(TaSvpBufferWriteTest, failsInvalidOut) {
+        auto in = random(AES_BLOCK_SIZE);
+        sa_svp_offset offset = {0, 0, in.size()};
+        sa_status status = ta_sa_svp_buffer_write(INVALID_HANDLE, in.data(), in.size(), &offset, 1, client(),
+                ta_uuid());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaSvpBufferCopyTest, failsInvalidIn) {
+    TEST_F(TaSvpBufferWriteTest, failsNullIn) {
         auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(out_buffer, nullptr);
         sa_svp_offset offset = {0, 0, 1};
-        sa_status status = sa_svp_buffer_copy(*out_buffer, INVALID_HANDLE, &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+        sa_status status = ta_sa_svp_buffer_write(*out_buffer, nullptr, 0, &offset, 1, client(), ta_uuid());
+        ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

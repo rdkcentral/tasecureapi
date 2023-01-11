@@ -24,70 +24,11 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_P(SaSvpBufferCheckTest, nominal) {
-        auto digest = GetParam();
-        auto buffer = create_sa_svp_buffer(1024);
-        ASSERT_NE(buffer, nullptr);
-        auto in = random(1024);
-        sa_svp_offset offset = {0, 0, in.size()};
-        sa_status status = sa_svp_buffer_write(*buffer, in.data(), in.size(), &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_OK);
-
-        size_t length = digest_length(digest);
-        std::vector<uint8_t> hash(length);
-        ASSERT_TRUE(digest_openssl(hash, digest, in, {}, {}));
-        status = sa_svp_buffer_check(*buffer, 0, 1024, digest, hash.data(), hash.size());
-        ASSERT_EQ(status, SA_STATUS_OK);
-    }
-
-    TEST_P(SaSvpBufferCheckTest, failsHashMismatch) {
-        auto digest = GetParam();
-        auto buffer = create_sa_svp_buffer(1024);
-        ASSERT_NE(buffer, nullptr);
-        auto in = random(1024);
-        sa_svp_offset offset = {0, 0, in.size()};
-        sa_status status = sa_svp_buffer_write(*buffer, in.data(), in.size(), &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_OK);
-
-        size_t length = digest_length(digest);
-        std::vector<uint8_t> hash(length);
-        ASSERT_TRUE(digest_openssl(hash, digest, in, {}, {}));
-        hash[0]++;
-        status = sa_svp_buffer_check(*buffer, 0, 1024, digest, hash.data(), hash.size());
-        ASSERT_EQ(status, SA_STATUS_VERIFICATION_FAILED);
-    }
-
-    TEST_F(SaSvpBufferCheckTest, failsHashWrongSize) {
+    TEST_F(SaSvpBufferCheckTest, failsRee) {
         auto buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(buffer, nullptr);
         std::vector<uint8_t> hash(SHA1_DIGEST_LENGTH);
-        sa_status status = sa_svp_buffer_check(*buffer, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256, hash.data(),
-                hash.size());
-        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
-    }
-
-    TEST_F(SaSvpBufferCheckTest, failsNullHash) {
-        auto buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(buffer, nullptr);
-        sa_status status = sa_svp_buffer_check(*buffer, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256, nullptr, 0);
-        ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
-    }
-
-    TEST_F(SaSvpBufferCheckTest, failsInvalidBuffer) {
-        auto in = random(AES_BLOCK_SIZE);
-        std::vector<uint8_t> hash(SHA256_DIGEST_LENGTH);
-        sa_status status = sa_svp_buffer_check(INVALID_HANDLE, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
-                hash.data(),
-                hash.size());
-        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
-    }
-
-    TEST_F(SaSvpBufferCheckTest, failsInvalidSize) {
-        auto buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(buffer, nullptr);
-        std::vector<uint8_t> hash(SHA1_DIGEST_LENGTH);
-        sa_status status = sa_svp_buffer_check(*buffer, 1, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256, hash.data(),
-                hash.size());
-        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+        sa_status status = sa_svp_buffer_check(*buffer, 0, 1024, SA_DIGEST_ALGORITHM_SHA1, hash.data(), hash.size());
+        ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 } // namespace

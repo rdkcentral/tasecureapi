@@ -20,6 +20,16 @@
 #include "log.h"
 #include <memory.h>
 
+// This is the default value to be used when the TA is not able to authenticate the calling entity as another
+// secure TA. The TA will assume that the caller is an insecure host application and cannot be trusted. No key
+// rights will use this UUID, so the TA will only allow keys that have no key rights UUIDs specified or have the
+// ALL MATCH UUID specified (0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+// 0xff, 0xff).
+static sa_uuid REE_UUID = {
+        .id = {
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}};
+
 sa_status transport_authenticate_caller(sa_uuid* uuid) {
     if (uuid == NULL) {
         ERROR("NULL uuid");
@@ -30,17 +40,11 @@ sa_status transport_authenticate_caller(sa_uuid* uuid) {
     // platform dependent. The caller must be authenticated to prevent spoofing.
     // TODO Soc Vendor: add code here to retrieve the authenticated caller UUID.
 
-    // This is the default value to be used when the TA is not able to authenticate the calling entity as another
-    // secure TA. The TA will assume that the caller is an insecure host application and cannot be trusted. No key
-    // rights will use this UUID, so the TA will only allow keys that have no key rights UUIDs specified or have the
-    // ALL MATCH UUID specified (0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    // 0xff, 0xff).
-    static sa_uuid REE_UUID = {
-            .id = {
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}};
-
     memcpy(uuid, &REE_UUID, sizeof(sa_uuid));
 
     return SA_STATUS_OK;
+}
+
+bool is_ree(const sa_uuid* uuid) {
+    return memcmp(uuid, &REE_UUID, sizeof(sa_uuid)) == 0;
 }

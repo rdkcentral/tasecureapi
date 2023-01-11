@@ -192,6 +192,6 @@ namespace {
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, key_size - 1);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
-        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 } // namespace
