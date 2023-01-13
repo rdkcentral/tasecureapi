@@ -517,10 +517,8 @@ typedef struct {
 
 /**
  * Import parameters for a SOC key container. This structure is used to signal the SecApi compatability version of the
- * key container. This structure is required for SecApi 2 key containers and is optional for SecApi 3 key containers.
- * If the sa_key_import parameters field is NULL, a SecApi 3 key container is assumed. However, it is useful to always
- * use this structure to include the object ID in the key rights. This structure can be extended in a SOC specific way
- * however the length field must include the sizeof the extended structure.
+ * key container and to identify the object_id in the key rights. This structure can be extended in a SOC specific way
+ * with additional fields at the end, however the length field must include the sizeof the extended structure.
  */
 typedef struct {
     /** The size of this structure. The most significant size byte is in length[0] and the least
