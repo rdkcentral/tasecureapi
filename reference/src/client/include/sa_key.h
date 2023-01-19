@@ -104,9 +104,10 @@ sa_status sa_key_export(
  * @param[in] in Input data.
  * @param[in] in_length Size of input data in bytes.
  * @param[in] parameters Format specific import parameters. Use sa_import_parameters_symmetric with
- * SA_KEY_FORMAT_SYMMETRIC_BYTES, sa_import_parameters_ec_private_bytes with
- * SA_KEY_FORMAT_EC_PRIVATE_BYTES, sa_import_parameters_rsa_private_key_info with
- * SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, sa_import_parameters_typej with SA_KEY_FORMAT_TYPEJ.
+ * SA_KEY_FORMAT_SYMMETRIC_BYTES, sa_import_parameters_ec_private_bytes with SA_KEY_FORMAT_EC_PRIVATE_BYTES,
+ * sa_import_parameters_rsa_private_key_info with SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, sa_import_parameters_soc with
+ * SA_KEY_FORMAT_SOC (although this parameter can be NULL for backward compatibility, it is now required for all
+ * new applications), sa_import_parameters_typej with SA_KEY_FORMAT_TYPEJ.
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - There are no available key slots.

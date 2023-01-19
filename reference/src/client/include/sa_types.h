@@ -516,6 +516,27 @@ typedef struct {
 } sa_import_parameters_typej;
 
 /**
+ * Import parameters for a SOC key container. This structure is used to signal the SecApi compatability version of the
+ * key container and to identify the object_id in the key rights. This structure can be extended in a SOC specific way
+ * with additional fields at the end, however the length field must include the sizeof the extended structure.
+ */
+typedef struct {
+    /** The size of this structure. The most significant size byte is in length[0] and the least
+        significant size byte is in length[1]. */
+    uint8_t length[2];
+
+    /** The SecApi version that the key container is compatible with. Must be either version 2 or version 3. */
+    uint8_t version;
+
+    /** The default key rights to use only if the key container does not contain included key rights. */
+    sa_rights default_rights;
+
+    /** The object ID of the key. The first 8 bytes of the sa_rights.id field will be set to this value in big endian
+     * form. */
+    uint64_t object_id;
+} sa_import_parameters_soc;
+
+/**
  * Key generation parameter for SA_KEY_TYPE_SYMMETRIC.
  */
 typedef struct {

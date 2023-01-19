@@ -190,7 +190,8 @@ static soc_kc_unpacked_t* unpack_soc_kc(
 static sa_status fields_to_rights(
         sa_rights* rights,
         sa_key_type key_type,
-        soc_kc_payload_t* payload) {
+        soc_kc_payload_t* payload,
+        void* parameters) {
 
     if (rights == NULL) {
         ERROR("NULL rights");
@@ -203,6 +204,29 @@ static sa_status fields_to_rights(
     }
 
     memory_memset_unoptimizable(rights, 0, sizeof(sa_rights));
+    if (parameters != NULL) {
+        size_t param2_size = ((size_t) ((uint8_t*) parameters)[0] << 8) + (size_t) ((uint8_t*) parameters)[1];
+        if (param2_size != sizeof(sa_import_parameters_soc)) {
+            ERROR("Unknown parameter type");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        sa_import_parameters_soc* parameters_soc = (sa_import_parameters_soc*) parameters;
+        if (parameters_soc->version != 2 && parameters_soc->version != 3) {
+            ERROR("Invalid SOC key version");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        rights->id[0] = parameters_soc->object_id >> 56 & 0xff;
+        rights->id[1] = parameters_soc->object_id >> 48 & 0xff;
+        rights->id[2] = parameters_soc->object_id >> 40 & 0xff;
+        rights->id[3] = parameters_soc->object_id >> 32 & 0xff;
+        rights->id[4] = parameters_soc->object_id >> 24 & 0xff;
+        rights->id[5] = parameters_soc->object_id >> 16 & 0xff;
+        rights->id[6] = parameters_soc->object_id >> 8 & 0xff;
+        rights->id[7] = parameters_soc->object_id & 0xff;
+    }
+
     rights->not_on_or_after = UINT64_MAX;
     SA_USAGE_BIT_SET(rights->usage_flags, SA_USAGE_FLAG_CACHEABLE);
     rights->usage_flags |= SA_USAGE_OUTPUT_PROTECTIONS_MASK;
@@ -650,7 +674,8 @@ static sa_status decrypt_key_and_verify_mac(
         stored_key_t** stored_key,
         soc_kc_header_t* header,
         soc_kc_payload_t* payload,
-        soc_kc_unpacked_t* unpacked) {
+        soc_kc_unpacked_t* unpacked,
+        void* parameters) {
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
@@ -708,7 +733,7 @@ static sa_status decrypt_key_and_verify_mac(
         }
 
         sa_rights rights;
-        status = fields_to_rights(&rights, key_type, payload);
+        status = fields_to_rights(&rights, key_type, payload, parameters);
         if (status != SA_STATUS_OK) {
             ERROR("fields_to_rights failed");
             status = SA_STATUS_INVALID_KEY_FORMAT;
@@ -775,7 +800,8 @@ static sa_status decrypt_key_and_verify_mac(
 sa_status soc_kc_unwrap(
         stored_key_t** stored_key,
         const void* in,
-        size_t in_length) {
+        size_t in_length,
+        void* parameters) {
 
     if (stored_key == NULL) {
         ERROR("NULL out");
@@ -842,7 +868,7 @@ sa_status soc_kc_unwrap(
             break;
         }
 
-        status = decrypt_key_and_verify_mac(stored_key, &header, &payload, unpacked);
+        status = decrypt_key_and_verify_mac(stored_key, &header, &payload, unpacked, parameters);
         if (status != SA_STATUS_OK) {
             ERROR("decrypt_key_and_verify_mac failed");
             break;

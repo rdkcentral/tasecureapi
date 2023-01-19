@@ -302,6 +302,7 @@ static sa_status ta_sa_key_import_soc(
         sa_key* key,
         const void* in,
         size_t in_length,
+        void* parameters,
         client_t* client,
         const sa_uuid* caller_uuid) {
 
@@ -334,7 +335,7 @@ static sa_status ta_sa_key_import_soc(
     sa_status status;
     stored_key_t* stored_key = NULL;
     do {
-        status = soc_kc_unwrap(&stored_key, in, in_length);
+        status = soc_kc_unwrap(&stored_key, in, in_length, parameters);
         if (status != SA_STATUS_OK) {
             ERROR("soc_kc_unwrap failed");
             break;
@@ -534,7 +535,7 @@ sa_status ta_sa_key_import(
                 break;
             }
         } else if (key_format == SA_KEY_FORMAT_SOC) {
-            status = ta_sa_key_import_soc(key, in, in_length, client, caller_uuid);
+            status = ta_sa_key_import_soc(key, in, in_length, parameters, client, caller_uuid);
             if (status != SA_STATUS_OK) {
                 ERROR("ta_sa_key_import_soc failed");
                 break;
