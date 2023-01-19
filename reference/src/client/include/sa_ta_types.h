@@ -151,7 +151,7 @@ typedef struct {
 // sa_key_import
 // param[0] INOUT - sa_key_import_s
 // param[1] IN - in + in_length
-// param[2] IN - rights or sa_import_parameters_typej or soc_private_data
+// param[2] IN - rights or sa_import_parameters_typej or sa_import_parameters_soc
 typedef struct {
     uint8_t api_version;
     sa_key key;
@@ -239,24 +239,24 @@ typedef struct {
 typedef struct {
     size_t key_length;
     uint32_t digest_algorithm;
-    uint32_t parent;
+    sa_key parent;
 } sa_kdf_parameters_hkdf_s;
 
 typedef struct {
     size_t key_length;
     uint32_t digest_algorithm;
-    uint32_t parent;
+    sa_key parent;
 } sa_kdf_parameters_concat_s;
 
 typedef struct {
     size_t key_length;
     uint32_t digest_algorithm;
-    uint32_t parent;
+    sa_key parent;
 } sa_kdf_parameters_ansi_x963_s;
 
 typedef struct {
     size_t key_length;
-    uint32_t parent;
+    sa_key parent;
     uint32_t counter;
 } sa_kdf_parameters_cmac_s;
 

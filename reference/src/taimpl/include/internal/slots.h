@@ -27,18 +27,20 @@
 
 #ifdef __cplusplus
 
+#include <climits>
 #include <cstddef>
 #include <cstdint>
 
 extern "C" {
 #else
+#include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
 #endif
 
-typedef uint32_t slot_t;
+typedef unsigned long slot_t;
 
-#define SLOT_INVALID ((slot_t) -1)
+#define SLOT_INVALID ((slot_t) ULONG_MAX)
 
 typedef struct slots_s slots_t;
 

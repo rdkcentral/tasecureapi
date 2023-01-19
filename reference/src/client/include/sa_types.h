@@ -29,12 +29,14 @@
 
 #ifdef __cplusplus
 
+#include <climits>
 #include <cstdbool>
 #include <cstddef>
 #include <cstdint>
 
 extern "C" {
 #else
+#include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -85,9 +87,9 @@ extern "C" {
 /**
  * Generic handle type.
  */
-typedef uint32_t sa_handle;
+typedef unsigned long sa_handle;
 
-#define INVALID_HANDLE (sa_handle) UINT32_MAX
+#define INVALID_HANDLE ((sa_handle) ULONG_MAX)
 
 #define NUM_MAGIC 4
 

@@ -174,7 +174,7 @@ static int cipher_init(
             app_data->cipher_algorithm = cipher_get_cipher_algorithm(EVP_CIPHER_CTX_nid(cipher_ctx));
             app_data->padding = app_data->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC ||
                                 app_data->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB;
-            app_data->cipher_context = UINT32_MAX;
+            app_data->cipher_context = INVALID_HANDLE;
             app_data->mode = enc ? SA_CIPHER_MODE_ENCRYPT : SA_CIPHER_MODE_DECRYPT;
             app_data->key = NULL;
             app_data->iv = NULL;
@@ -221,7 +221,7 @@ static int cipher_do_cipher(
             break;
         }
 
-        if (app_data->cipher_context == UINT32_MAX) {
+        if (app_data->cipher_context == INVALID_HANDLE) {
             void* aad = NULL;
             size_t aad_length;
             if (out == NULL) {
@@ -389,7 +389,7 @@ static int cipher_ctrl(
 static int cipher_cleanup(EVP_CIPHER_CTX* cipher_ctx) {
     cipher_app_data* app_data = EVP_CIPHER_CTX_get_app_data(cipher_ctx);
     if (app_data != NULL) {
-        if (app_data->cipher_context != UINT32_MAX)
+        if (app_data->cipher_context != INVALID_HANDLE)
             sa_crypto_cipher_release(app_data->cipher_context);
 
         free(app_data);
