@@ -39,10 +39,9 @@ namespace ta_test_helpers {
     }
 
     ta_client client() {
-        const auto INVALID_CLIENT = static_cast<uint32_t>(UINT32_MAX);
-        static ta_client client = INVALID_CLIENT;
+        static ta_client client = INVALID_HANDLE;
 
-        if (client == INVALID_CLIENT) {
+        if (client == INVALID_HANDLE) {
             if (SA_STATUS_OK != ta_sa_init(&client, ta_uuid())) {
                 ERROR("ta_sa_init failed")
                 return client;
