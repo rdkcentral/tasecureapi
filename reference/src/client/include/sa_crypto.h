@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -164,7 +164,7 @@ sa_status sa_crypto_cipher_process(
  *   + out.buffer_type or in.buffer_type is not allowed.
  *   + if out.buffer_type does not match the key usage requirements or if in.buffer_type is svp when out.buffer_type is
  *   clear.
-*   + if out.buffer_type or in.buffer_type is SVP and the cipher is RSA, EC, AES-GCM, or CHACHA20-POLY1305
+ *   + if out.buffer_type or in.buffer_type is SVP and the cipher is RSA, EC, AES-GCM, or CHACHA20-POLY1305
  * + SA_STATUS_OPERATION_NOT_ALLOWED - Key usage requirements are not met for the specified
  * operation.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
