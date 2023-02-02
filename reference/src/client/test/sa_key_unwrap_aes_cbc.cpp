@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -346,9 +346,9 @@ namespace {
     TEST_P(SaKeyUnwrapAesCbcTest, failAesCbcPkcsPadding) {
         auto cipher_algorithm = GetParam();
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7) {
-            std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE * 2);
-            wrapped_key[AES_BLOCK_SIZE * 2 - 1] = 0;
-            std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+            std::vector<uint8_t> clear_key = random(AES_BLOCK_SIZE * 2);
+            clear_key[AES_BLOCK_SIZE * 2 - 1] = 0;
+            std::vector<uint8_t> wrapped_key;
             std::shared_ptr<sa_key> wrapping_key;
             std::vector<uint8_t> clear_wrapping_key;
             std::shared_ptr<void> wrapping_parameters;

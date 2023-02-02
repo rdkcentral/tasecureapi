@@ -21,8 +21,8 @@
 #include "key_type.h"
 #include "log.h"
 #include "porting/memory.h"
+#include "porting/transport.h"
 #include "ta_sa.h"
-#include "transport.h"
 
 sa_status ta_sa_svp_buffer_check(
         sa_svp_buffer svp_buffer,

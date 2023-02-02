@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ namespace {
         sa_generate_parameters_symmetric parameters_symmetric;
         sa_generate_parameters_ec parameters_ec;
         sa_generate_parameters_dh parameters_dh;
+        sa_generate_parameters_rsa parameters_rsa;
         switch (key_type) {
             case SA_KEY_TYPE_EC: {
                 curve = static_cast<sa_elliptic_curve>(key_length);
@@ -45,6 +46,11 @@ namespace {
             case SA_KEY_TYPE_SYMMETRIC: {
                 parameters_symmetric.key_length = key_length;
                 parameters = &parameters_symmetric;
+                break;
+            }
+            case SA_KEY_TYPE_RSA: {
+                parameters_rsa.modulus_length = key_length;
+                parameters = &parameters_rsa;
                 break;
             }
             case SA_KEY_TYPE_DH: {
@@ -91,6 +97,62 @@ namespace {
         ASSERT_EQ(key_length, header->size);
         ASSERT_EQ(memcmp(&type_parameters, &header->type_parameters, sizeof(sa_type_parameters)), 0);
         ASSERT_EQ(key_type, header->type);
+
+        auto clear_data = random(AES_BLOCK_SIZE);
+        std::vector<uint8_t> encrypted_data;
+        sa_cipher_algorithm cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+        if (key_type == SA_KEY_TYPE_EC || key_type == SA_KEY_TYPE_RSA) {
+            size_t public_key_length = 0;
+            ASSERT_EQ(sa_key_get_public(nullptr, &public_key_length, *key), SA_STATUS_OK);
+            std::vector<uint8_t> public_key(public_key_length);
+            ASSERT_EQ(sa_key_get_public(public_key.data(), &public_key_length, *key), SA_STATUS_OK);
+            std::shared_ptr<EVP_PKEY> evp_public_key = {sa_import_public_key(public_key.data(), public_key.size()),
+                    EVP_PKEY_free};
+            ASSERT_NE(evp_public_key, nullptr);
+
+            if (key_type == SA_KEY_TYPE_RSA) {
+                ASSERT_TRUE(encrypt_rsa_pkcs1v15_openssl(encrypted_data, clear_data, evp_public_key));
+                cipher_algorithm = SA_CIPHER_ALGORITHM_RSA_PKCS1V15;
+            } else if (is_pcurve(curve)) {
+                std::vector<uint8_t> in(ec_get_key_size(curve));
+                std::copy(clear_data.begin(), clear_data.end(), in.begin() + 1);
+                ASSERT_TRUE(encrypt_ec_elgamal_openssl(encrypted_data, in, curve, evp_public_key));
+                cipher_algorithm = SA_CIPHER_ALGORITHM_EC_ELGAMAL;
+            }
+        } else if (key_type == SA_KEY_TYPE_SYMMETRIC &&
+                   (key_length == SYM_128_KEY_SIZE || key_length == SYM_256_KEY_SIZE)) {
+            cipher_algorithm = SA_CIPHER_ALGORITHM_AES_ECB;
+            auto cipher = create_uninitialized_sa_crypto_cipher_context();
+            status = sa_crypto_cipher_init(cipher.get(), cipher_algorithm, SA_CIPHER_MODE_ENCRYPT, *key, nullptr);
+            ASSERT_EQ(status, SA_STATUS_OK);
+            size_t encrypted_data_length = clear_data.size();
+            sa_buffer in = {SA_BUFFER_TYPE_CLEAR, {.clear = {clear_data.data(), clear_data.size(), 0}}};
+            ASSERT_EQ(sa_crypto_cipher_process(nullptr, *cipher, &in, &encrypted_data_length), SA_STATUS_OK);
+            encrypted_data.resize(encrypted_data_length);
+            encrypted_data_length = clear_data.size();
+            sa_buffer out = {SA_BUFFER_TYPE_CLEAR, {.clear = {encrypted_data.data(), encrypted_data.size(), 0}}};
+            ASSERT_EQ(sa_crypto_cipher_process(&out, *cipher, &in, &encrypted_data_length), SA_STATUS_OK);
+        }
+
+        if (!encrypted_data.empty()) {
+            auto cipher = create_uninitialized_sa_crypto_cipher_context();
+            sa_buffer in = {SA_BUFFER_TYPE_CLEAR, {.clear = {encrypted_data.data(), encrypted_data.size(), 0}}};
+            status = sa_crypto_cipher_init(cipher.get(), cipher_algorithm, SA_CIPHER_MODE_DECRYPT, *key, nullptr);
+            ASSERT_EQ(status, SA_STATUS_OK);
+            size_t decrypted_data_length = encrypted_data.size();
+            ASSERT_EQ(sa_crypto_cipher_process(nullptr, *cipher, &in, &decrypted_data_length), SA_STATUS_OK);
+            std::vector<uint8_t> decrypted_data(decrypted_data_length);
+            decrypted_data_length = encrypted_data.size();
+            sa_buffer out = {SA_BUFFER_TYPE_CLEAR, {.clear = {decrypted_data.data(), decrypted_data.size(), 0}}};
+            ASSERT_EQ(sa_crypto_cipher_process(&out, *cipher, &in, &decrypted_data_length), SA_STATUS_OK);
+            decrypted_data.resize(decrypted_data_length);
+            if (key_type == SA_KEY_TYPE_EC) {
+                decrypted_data.erase(decrypted_data.begin());
+                decrypted_data.resize(clear_data.size());
+            }
+
+            ASSERT_EQ(clear_data, decrypted_data);
+        }
     }
 
     TEST_F(SaKeyGenerateTest, failsNullKey) {

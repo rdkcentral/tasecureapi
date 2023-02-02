@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ sa_status sa_key_unwrap(
         }
 
         size_t param1_size;
-        ta_param_type param1_type;
+        uint32_t param1_type;
         if (in != NULL) {
             CREATE_PARAM(param1, (void*) in, in_length);
             if (param1 == NULL) {
@@ -103,9 +103,9 @@ sa_status sa_key_unwrap(
         }
 
         size_t param2_size;
-        ta_param_type param2_type;
+        uint32_t param2_type;
         size_t param3_size;
-        ta_param_type param3_type;
+        uint32_t param3_type;
         switch (cipher_algorithm) {
             case SA_CIPHER_ALGORITHM_AES_CBC:
             case SA_CIPHER_ALGORITHM_AES_CBC_PKCS7:
@@ -443,8 +443,7 @@ sa_status sa_key_unwrap(
                 param2_size = sizeof(sa_unwrap_parameters_rsa_oaep_s);
                 param2_type = TA_PARAM_IN;
                 if (parameters_rsa_oaep->label != NULL) {
-                    CREATE_PARAM(param3, (void*) parameters_rsa_oaep->label,
-                            parameters_rsa_oaep_s->label_length);
+                    CREATE_PARAM(param3, (void*) parameters_rsa_oaep->label, parameters_rsa_oaep->label_length);
                     if (param3 == NULL) {
                         ERROR("CREATE_PARAM failed");
                         status = SA_STATUS_INTERNAL_ERROR;
@@ -466,7 +465,7 @@ sa_status sa_key_unwrap(
         }
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, param3_type};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, param3_type};
         ta_param params[NUM_TA_PARAMS] = {{key_unwrap, sizeof(sa_key_unwrap_s)},
                                           {param1, param1_size},
                                           {param2, param2_size},

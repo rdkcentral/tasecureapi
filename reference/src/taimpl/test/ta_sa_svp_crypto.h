@@ -25,7 +25,9 @@
 
 class TaCryptoCipherBase {
 protected:
-    static std::shared_ptr<sa_key> import_key(std::vector<uint8_t>& clear_key);
+    static std::shared_ptr<sa_key> import_key(
+            std::vector<uint8_t>& clear_key,
+            bool svp);
 
     static std::vector<uint8_t> encrypt_openssl(
             sa_cipher_algorithm cipher_algorithm,

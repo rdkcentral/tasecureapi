@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,10 +58,10 @@ sa_status sa_crypto_random(
         }
 
         size_t param1_size = length;
-        ta_param_type param1_type = TA_PARAM_OUT;
+        uint32_t param1_type = TA_PARAM_OUT;
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, param1_type, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, param1_type, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{crypto_random, sizeof(sa_crypto_random_s)},
                                           {param1, param1_size},
                                           {NULL, 0},
@@ -73,8 +73,7 @@ sa_status sa_crypto_random(
             break;
         }
 
-        if (out != NULL)
-            COPY_OUT_PARAM(out, param1, length);
+        COPY_OUT_PARAM(out, param1, length);
     } while (false);
 
     RELEASE_COMMAND(crypto_random);

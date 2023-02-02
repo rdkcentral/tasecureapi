@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,8 @@ extern "C" {
 #endif
 
 /**
- * Converts a sa_buffer into byte and checks the parameters for validity.
+ * Converts a sa_buffer into byte and checks the parameters for validity. The SoC vendor must verify that SVP buffers
+ * reside entirely within SVP memory space and clear buffers reside entirely within clear memory space.
  *
  * @param[out] bytes the array of bytes.
  * @param[out] svp the svp object.

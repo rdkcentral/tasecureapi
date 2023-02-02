@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,7 +106,7 @@ sa_status sa_crypto_sign(
         }
 
         size_t param1_size;
-        ta_param_type param1_type;
+        uint32_t param1_type;
         if (out != NULL) {
             CREATE_OUT_PARAM(param1, out, *out_length);
             if (param1 == NULL) {
@@ -123,7 +123,7 @@ sa_status sa_crypto_sign(
         }
 
         size_t param2_size;
-        ta_param_type param2_type;
+        uint32_t param2_type;
         if (in != NULL) {
             CREATE_PARAM(param2, (void*) in, in_length);
             if (param2 == NULL) {
@@ -140,7 +140,7 @@ sa_status sa_crypto_sign(
         }
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{sign, sizeof(sa_crypto_sign_s)},
                                           {param1, param1_size},
                                           {param2, param2_size},

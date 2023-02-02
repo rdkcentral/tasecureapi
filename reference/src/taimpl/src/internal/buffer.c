@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 #include "buffer.h"
 #include "client_store.h"
 #include "log.h"
+#include "porting/memory.h"
+#include "porting/overflow.h"
 
 sa_status convert_buffer(
         uint8_t** bytes,
@@ -33,6 +35,26 @@ sa_status convert_buffer(
         return SA_STATUS_NULL_PARAMETER;
     }
 
+    if (svp == NULL) {
+        ERROR("NULL svp");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (buffer == NULL) {
+        ERROR("NULL buffer");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (client == NULL) {
+        ERROR("NULL client");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (caller_uuid == NULL) {
+        ERROR("NULL caller_uuid");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
     if (buffer->buffer_type == SA_BUFFER_TYPE_SVP) {
         svp_store_t* svp_store = client_get_svp_store(client);
         sa_status status = svp_store_acquire_exclusive(svp, svp_store, buffer->context.svp.buffer, caller_uuid);
@@ -41,21 +63,47 @@ sa_status convert_buffer(
             return status;
         }
 
-        svp_buffer_t* out_svp_buffer = svp_get_buffer(*svp);
-        *bytes = (uint8_t*) svp_get_svp_memory(out_svp_buffer) + buffer->context.svp.offset;
-        size_t out_length = svp_get_size(out_svp_buffer);
-        if (buffer->context.svp.offset + bytes_to_process > out_length) {
+        size_t memory_range;
+        if (add_overflow(buffer->context.svp.offset, bytes_to_process, &memory_range)) {
+            ERROR("Integer overflow");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        svp_buffer_t* svp_buffer = svp_get_buffer(*svp);
+
+        // This call validates that SVP buffer is contained entirely within SVP memory.
+        void* memory_location = svp_get_svp_memory(svp_buffer);
+        if (memory_location == NULL) {
+            ERROR("memory range is not within SVP memory");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        size_t memory_size = svp_get_size(svp_buffer);
+        if (memory_range > memory_size) {
             ERROR("buffer not large enough");
             return SA_STATUS_INVALID_PARAMETER;
         }
+
+        *bytes = (uint8_t*) memory_location + buffer->context.svp.offset;
     } else {
         if (buffer->context.clear.buffer == NULL) {
             ERROR("NULL buffer");
             return SA_STATUS_NULL_PARAMETER;
         }
 
-        if (buffer->context.clear.offset + bytes_to_process > buffer->context.clear.length) {
+        size_t memory_range;
+        if (add_overflow(buffer->context.clear.offset, bytes_to_process, &memory_range)) {
+            ERROR("Integer overflow");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        if (memory_range > buffer->context.clear.length) {
             ERROR("buffer not large enough");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        if (!memory_is_valid_clear(buffer->context.clear.buffer, buffer->context.clear.length)) {
+            ERROR("memory location is not within SVP memory");
             return SA_STATUS_INVALID_PARAMETER;
         }
 

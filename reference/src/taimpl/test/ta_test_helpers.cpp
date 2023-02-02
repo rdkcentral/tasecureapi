@@ -17,11 +17,9 @@
  */
 
 #include "ta_test_helpers.h"
-#include <cstdio>
+#include "log.h"
 #include <cstdlib>
 #include <cstring>
-
-#define ERROR(msg) printf("%s:%d %s\n", __FILE__, __LINE__, msg);
 
 namespace ta_test_helpers {
 
@@ -43,7 +41,7 @@ namespace ta_test_helpers {
 
         if (client == INVALID_HANDLE) {
             if (SA_STATUS_OK != ta_sa_init(&client, ta_uuid())) {
-                ERROR("ta_sa_init failed")
+                ERROR("ta_sa_init failed");
                 return client;
             }
 

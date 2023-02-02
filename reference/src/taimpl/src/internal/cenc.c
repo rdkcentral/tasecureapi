@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include "buffer.h"
 #include "common.h"
 #include "log.h"
+#include "porting/overflow.h"
 #include "sa_cenc.h"
 #include "sa_types.h"
 #include "symmetric.h"
@@ -130,7 +131,18 @@ size_t cenc_get_required_length(
 
     size_t required_length = 0;
     for (size_t i = 0; i < subsample_count; i++) {
-        required_length += subsample_lengths[i].bytes_of_clear_data + subsample_lengths[i].bytes_of_protected_data;
+        size_t subsample_len;
+        if (add_overflow(subsample_lengths[i].bytes_of_clear_data, subsample_lengths[i].bytes_of_protected_data,
+                    &subsample_len)) {
+            return 0;
+        }
+
+        size_t new_required_length;
+        if (add_overflow(required_length, subsample_len, &new_required_length)) {
+            return 0;
+        }
+
+        required_length = new_required_length;
     }
 
     return required_length;
@@ -155,6 +167,12 @@ sa_status cenc_process_sample(
         }
 
         size_t required_length = cenc_get_required_length(sample->subsample_lengths, sample->subsample_count);
+        if (required_length == 0) {
+            ERROR("cenc_get_required_length integer overflow");
+            status = SA_STATUS_INVALID_PARAMETER;
+            break;
+        }
+
         uint8_t* out_bytes = NULL;
         status = convert_buffer(&out_bytes, &out_svp, sample->out, required_length, client, caller_uuid);
         if (status != SA_STATUS_OK) {

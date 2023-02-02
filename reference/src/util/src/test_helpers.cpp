@@ -17,12 +17,9 @@
  */
 
 #include "test_helpers.h"
+#include "log.h"
 #include "sa.h"
-#include <cstdio>
-#include <cstring>
 #include <openssl/rand.h>
-
-#define ERROR(msg) printf("%s:%d %s\n", __FILE__, __LINE__, msg);
 
 namespace test_helpers {
     std::vector<uint8_t> random(size_t size) {

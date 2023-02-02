@@ -924,7 +924,7 @@ sa_status unwrap_ec(
         }
 
         if (written != unwrapped_key_length) {
-            ERROR("ecp256_dec_elgamal failed");
+            ERROR("ec_decrypt_elgamal failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }

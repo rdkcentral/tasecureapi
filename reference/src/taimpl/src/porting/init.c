@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,10 @@
 static void* openssl_secure_malloc(size_t size) {
 #else
 
-static void* openssl_secure_malloc(size_t size, const char* file, int line) {
+static void* openssl_secure_malloc(
+        size_t size,
+        const char* file,
+        int line) {
 #endif
     void* buffer = memory_secure_alloc(size);
 
@@ -38,10 +41,16 @@ static void* openssl_secure_malloc(size_t size, const char* file, int line) {
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 
-static void* openssl_secure_realloc(void* buffer, size_t size) {
+static void* openssl_secure_realloc(
+        void* buffer,
+        size_t size) {
 #else
 
-static void* openssl_secure_realloc(void* buffer, size_t size, const char* file, int line) {
+static void* openssl_secure_realloc(
+        void* buffer,
+        size_t size,
+        const char* file,
+        int line) {
 #endif
     return memory_secure_realloc(buffer, size);
 }
@@ -51,7 +60,10 @@ static void* openssl_secure_realloc(void* buffer, size_t size, const char* file,
 static void openssl_secure_free(void* buffer) {
 #else
 
-static void openssl_secure_free(void* buffer, const char* file, int line) {
+static void openssl_secure_free(
+        void* buffer,
+        const char* file,
+        int line) {
 #endif
     memory_secure_free(buffer);
 }

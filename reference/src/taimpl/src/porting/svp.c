@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include "log.h"
 #include "porting/memory.h"
 #include "porting/otp_internal.h"
+#include "porting/overflow.h"
 #include "stored_key_internal.h"
 #include <memory.h>
 
@@ -31,14 +32,15 @@ struct svp_buffer_s {
 };
 
 static bool svp_validate_buffer(const svp_buffer_t* svp_buffer) {
-
     if (svp_buffer == NULL) {
         ERROR("NULL svp_buffer");
         return false;
     }
 
-    // TODO Soc Vendor: insert code for validating whether the passed in pointer and size are fully contained within the
-    // protected svp memory space
+    if (!memory_is_valid_svp(svp_buffer->svp_memory, svp_buffer->size)) {
+        ERROR("memory range is not within SVP memory");
+        return SA_STATUS_INVALID_PARAMETER;
+    }
 
     return true;
 }
@@ -56,6 +58,11 @@ bool svp_create_buffer(
     if (svp_memory == NULL) {
         ERROR("NULL svp_memory");
         return false;
+    }
+
+    if (!memory_is_valid_svp(svp_memory, size)) {
+        ERROR("memory range is not within SVP memory");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     *svp_buffer = memory_internal_alloc(sizeof(svp_buffer_t));
@@ -127,12 +134,23 @@ bool svp_write(
     }
 
     for (size_t i = 0; i < offsets_length; i++) {
-        if ((offsets[i].out_offset + offsets[i].length) > out_svp_buffer->size) {
+        size_t range;
+        if (add_overflow(offsets[i].out_offset, offsets[i].length, &range)) {
+            ERROR("Integer overflow");
+            return false;
+        }
+
+        if (range > out_svp_buffer->size) {
             ERROR("attempting to write outside the bounds of output secure buffer");
             return false;
         }
 
-        if ((offsets[i].in_offset + offsets[i].length) > in_length) {
+        if (add_overflow(offsets[i].in_offset, offsets[i].length, &range)) {
+            ERROR("Integer overflow");
+            return false;
+        }
+
+        if (range > in_length) {
             ERROR("attempting to read outside the bounds of input buffer");
             return false;
         }
@@ -177,12 +195,23 @@ bool svp_copy(
     }
 
     for (size_t i = 0; i < offsets_length; i++) {
-        if ((offsets[i].out_offset + offsets[i].length) > out_svp_buffer->size) {
+        size_t range;
+        if (add_overflow(offsets[i].out_offset, offsets[i].length, &range)) {
+            ERROR("Integer overflow");
+            return false;
+        }
+
+        if (range > out_svp_buffer->size) {
             ERROR("attempting to write outside the bounds of output secure buffer");
             return false;
         }
 
-        if ((offsets[i].in_offset + offsets[i].length) > in_svp_buffer->size) {
+        if (add_overflow(offsets[i].in_offset, offsets[i].length, &range)) {
+            ERROR("Integer overflow");
+            return false;
+        }
+
+        if (range > in_svp_buffer->size) {
             ERROR("attempting to read outside the bounds of input secure buffer");
             return false;
         }
@@ -262,6 +291,22 @@ bool svp_digest(
         size_t offset,
         size_t length) {
 
+    // here
+    if (offset + length < offset) {
+        ERROR("Integer overflow");
+        return false;
+    }
+
+    if (offset + length > svp_buffer->size) {
+        ERROR("Buffer overflow");
+        return false;
+    }
+
+    if (!svp_validate_buffer(svp_buffer)) {
+        ERROR("svp_validate_buffer failed");
+        return false;
+    }
+
     if (!digest_sha(out, out_length, digest_algorithm, (uint8_t*) svp_buffer->svp_memory + offset, length, NULL, 0,
                 NULL, 0)) {
         ERROR("digest_sha failed");
@@ -277,7 +322,7 @@ void* svp_get_svp_memory(const svp_buffer_t* svp_buffer) {
 
     if (!svp_validate_buffer(svp_buffer)) {
         ERROR("svp_validate_buffer failed");
-        return false;
+        return NULL;
     }
 
     return svp_buffer->svp_memory;

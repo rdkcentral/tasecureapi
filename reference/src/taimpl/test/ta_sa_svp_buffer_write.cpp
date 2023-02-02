@@ -52,6 +52,24 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
+    TEST_F(TaSvpBufferWriteTest, failsOutOffsetOverflow) {
+        auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
+        ASSERT_NE(out_buffer, nullptr);
+        auto in = random(AES_BLOCK_SIZE);
+        sa_svp_offset offset = {SIZE_MAX - 4, 0, in.size()};
+        sa_status status = ta_sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &offset, 1, client(), ta_uuid());
+        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
+    }
+
+    TEST_F(TaSvpBufferWriteTest, failsInOffsetOverflow) {
+        auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
+        ASSERT_NE(out_buffer, nullptr);
+        auto in = random(AES_BLOCK_SIZE);
+        sa_svp_offset offset = {0, SIZE_MAX - 4, in.size()};
+        sa_status status = ta_sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &offset, 1, client(), ta_uuid());
+        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
+    }
+
     TEST_F(TaSvpBufferWriteTest, failsOutBufferTooSmall) {
         auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(out_buffer, nullptr);

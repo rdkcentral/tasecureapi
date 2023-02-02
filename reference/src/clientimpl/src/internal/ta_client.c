@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ void ta_close_session(void* session_context) {
 sa_status ta_invoke_command(
         void* session_context,
         SA_COMMAND_ID command_id,
-        const ta_param_type param_types[NUM_TA_PARAMS],
+        const uint32_t param_types[NUM_TA_PARAMS],
         ta_param params[NUM_TA_PARAMS]) {
 
 #ifdef TA_CLIENT_TEST
@@ -68,8 +68,7 @@ sa_status ta_invoke_command(
     }
 #endif
 
-    // Handler does not need the param types. These are used at the TA interface level.
-    sa_status status = ta_invoke_command_handler(session_context, command_id, params);
+    sa_status status = ta_invoke_command_handler(session_context, command_id, param_types, params);
 
 #ifdef TA_CLIENT_TEST
     // This is for testing purposes to check for implementation errors.

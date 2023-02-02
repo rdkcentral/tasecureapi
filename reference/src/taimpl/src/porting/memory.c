@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
  */
 
 #include "porting/memory.h"
+#include "log.h"
+#include "porting/overflow.h"
 #include <stdlib.h>
 
 void* memory_secure_alloc(size_t size) {
@@ -63,4 +65,44 @@ void* memory_memset_unoptimizable(void* destination, uint8_t value, size_t size)
     while (size--)
         *pointer++ = value;
     return destination;
+}
+
+bool memory_is_valid_svp(
+        void* memory_location,
+        size_t size) {
+
+    if (memory_location == NULL) {
+        ERROR("Invalid memory");
+        return false;
+    }
+
+    size_t temp;
+    if (add_overflow((unsigned long) memory_location, size, &temp)) {
+        ERROR("Integer overflow");
+        return false;
+    }
+
+    // TODO: SoC vendor must verify that all bytes between memory_location and memory_location+size are within SVP
+    // space.
+    return true;
+}
+
+bool memory_is_valid_clear(
+        void* memory_location,
+        size_t size) {
+
+    if (memory_location == NULL) {
+        ERROR("Invalid memory");
+        return false;
+    }
+
+    size_t temp;
+    if (add_overflow((unsigned long) memory_location, size, &temp)) {
+        ERROR("Integer overflow");
+        return false;
+    }
+
+    // TODO: SoC vendor must verify that all bytes between memory_location and memory_location+size are not within SVP
+    // space.
+    return true;
 }

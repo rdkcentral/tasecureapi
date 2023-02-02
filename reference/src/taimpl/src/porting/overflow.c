@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sa.h"
-#include "client_test_helpers.h"
-#include "sa_key_common.h"
-#include "gtest/gtest.h"
+#include "porting/overflow.h"
 
-using namespace client_test_helpers;
-
-namespace {
-    TEST_F(SaKeyGenerateTest, failsRsaNullParameters) {
-        auto key = create_uninitialized_sa_key();
-        ASSERT_NE(key, nullptr);
-
-        sa_rights rights;
-        sa_rights_set_allow_all(&rights);
-
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_EC, nullptr);
-        ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
-    }
-} // namespace
+bool add_overflow(
+        unsigned long a,
+        unsigned long b,
+        unsigned long* result) {
+    return __builtin_uaddl_overflow(a, b, result);
+}

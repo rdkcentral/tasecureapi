@@ -26,13 +26,17 @@
 #include <chrono>
 
 #define PADDED_SIZE(size) AES_BLOCK_SIZE*(((size) / AES_BLOCK_SIZE) + 1)
+#define SUBSAMPLE_SIZE 256UL
 
 using namespace ta_test_helpers;
 
-std::shared_ptr<sa_key> TaCryptoCipherBase::import_key(std::vector<uint8_t>& clear_key) {
+std::shared_ptr<sa_key> TaCryptoCipherBase::import_key(
+        std::vector<uint8_t>& clear_key,
+        bool svp) {
     sa_rights rights;
     sa_rights_set_allow_all(&rights);
-    SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
+    if (svp)
+        SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
 
     auto key = create_uninitialized_sa_key();
     sa_import_parameters_symmetric params = {&rights};
@@ -289,7 +293,7 @@ namespace {
         get_cipher_parameters(cipher_algorithm, parameters, iv, counter);
 
         auto clear_key = random(key_size);
-        auto key = import_key(clear_key);
+        auto key = import_key(clear_key, true);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "Key type not supported";
 
@@ -350,6 +354,81 @@ namespace {
         }
     }
 
+    TEST_P(TaCryptoCipherTest, processFailsOutOffsetOverflow) {
+        auto cipher_algorithm = std::get<0>(GetParam());
+        auto cipher_mode = std::get<1>(GetParam());
+        size_t key_size = std::get<2>(GetParam());
+
+        std::shared_ptr<void> parameters;
+        std::vector<uint8_t> iv;
+        std::vector<uint8_t> counter;
+        get_cipher_parameters(cipher_algorithm, parameters, iv, counter);
+
+        auto clear_key = random(key_size);
+        auto key = import_key(clear_key, false);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "Key type not supported";
+
+        auto cipher = create_uninitialized_sa_crypto_cipher_context();
+        ASSERT_NE(cipher, nullptr);
+
+        sa_status status = ta_sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB, cipher_mode, *key,
+                nullptr, client(), ta_uuid());
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Cipher algorithm not supported";
+
+        ASSERT_EQ(status, SA_STATUS_OK);
+        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
+        ASSERT_NE(in_buffer, nullptr);
+
+        size_t bytes_to_process = clear.size();
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, bytes_to_process);
+        ASSERT_NE(out_buffer, nullptr);
+        out_buffer->context.clear.offset = SIZE_MAX - 4;
+
+        status = ta_sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process, client(),
+                ta_uuid());
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+    }
+
+    TEST_P(TaCryptoCipherTest, processFailsInOffsetOverflow) {
+        auto cipher_algorithm = std::get<0>(GetParam());
+        auto cipher_mode = std::get<1>(GetParam());
+        size_t key_size = std::get<2>(GetParam());
+
+        std::shared_ptr<void> parameters;
+        std::vector<uint8_t> iv;
+        std::vector<uint8_t> counter;
+        get_cipher_parameters(cipher_algorithm, parameters, iv, counter);
+
+        auto clear_key = random(key_size);
+        auto key = import_key(clear_key, false);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "Key type not supported";
+
+        auto cipher = create_uninitialized_sa_crypto_cipher_context();
+        ASSERT_NE(cipher, nullptr);
+
+        sa_status status = ta_sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB, cipher_mode, *key,
+                nullptr, client(), ta_uuid());
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Cipher algorithm not supported";
+
+        ASSERT_EQ(status, SA_STATUS_OK);
+        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
+        ASSERT_NE(in_buffer, nullptr);
+
+        size_t bytes_to_process = clear.size();
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, bytes_to_process);
+        in_buffer->context.clear.offset = SIZE_MAX - 4;
+
+        status = ta_sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process, client(),
+                ta_uuid());
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+    }
+
     TEST_P(TaProcessCommonEncryptionTest, nominal) {
         auto sample_size_and_time = std::get<0>(GetParam());
         auto sample_size = std::get<0>(sample_size_and_time);
@@ -366,15 +445,14 @@ namespace {
         get_cipher_parameters(cipher_algorithm, parameters, iv, counter);
 
         auto clear_key = random(SYM_128_KEY_SIZE);
-        auto key = import_key(clear_key);
+        auto key = import_key(clear_key, true);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "Key type not supported";
 
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
         sa_status status = ta_sa_crypto_cipher_init(cipher.get(), cipher_algorithm, SA_CIPHER_MODE_DECRYPT, *key,
-                parameters.get(),
-                client(), ta_uuid());
+                parameters.get(), client(), ta_uuid());
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -411,6 +489,100 @@ namespace {
         status = ta_sa_svp_buffer_check(sample_data.out->context.svp.buffer, 0, sample_data.clear.size(),
                 SA_DIGEST_ALGORITHM_SHA256, digest.data(), digest.size(), client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
+    }
+
+    TEST_F(TaProcessCommonEncryptionTest, failsOutBufferOverflow) {
+        std::shared_ptr<void> parameters;
+        std::vector<uint8_t> iv;
+        std::vector<uint8_t> counter;
+        get_cipher_parameters(SA_CIPHER_ALGORITHM_AES_CBC, parameters, iv, counter);
+
+        auto clear_key = random(SYM_128_KEY_SIZE);
+        auto key = import_key(clear_key, false);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "Key type not supported";
+
+        auto cipher = create_uninitialized_sa_crypto_cipher_context();
+        ASSERT_NE(cipher, nullptr);
+        sa_status status = ta_sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CBC, SA_CIPHER_MODE_DECRYPT,
+                *key, parameters.get(), client(), ta_uuid());
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Cipher algorithm not supported";
+
+        ASSERT_EQ(status, SA_STATUS_OK);
+
+        sa_sample sample;
+        sample_data sample_data;
+        sample.iv = iv.data();
+        sample.iv_length = iv.size();
+        sample.crypt_byte_block = 0;
+        sample.skip_byte_block = 0;
+        sample.subsample_count = 1;
+
+        sample_data.subsample_lengths.resize(1);
+        sample.subsample_lengths = sample_data.subsample_lengths.data();
+        sample.subsample_lengths[0].bytes_of_clear_data = 0;
+        sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
+
+        sample.context = *cipher;
+        sample_data.clear = random(SUBSAMPLE_SIZE);
+        sample_data.in = buffer_alloc(SA_BUFFER_TYPE_SVP, sample_data.clear);
+        ASSERT_NE(sample_data.in, nullptr);
+        sample.in = sample_data.in.get();
+
+        sample_data.out = buffer_alloc(SA_BUFFER_TYPE_SVP, SUBSAMPLE_SIZE);
+        ASSERT_NE(sample_data.out, nullptr);
+        sample.out = sample_data.out.get();
+        sample.out->context.svp.offset = SIZE_MAX - 4;
+        status = ta_sa_process_common_encryption(1, &sample, client(), ta_uuid());
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+    }
+
+    TEST_F(TaProcessCommonEncryptionTest, failsInBufferOverflow) {
+        std::shared_ptr<void> parameters;
+        std::vector<uint8_t> iv;
+        std::vector<uint8_t> counter;
+        get_cipher_parameters(SA_CIPHER_ALGORITHM_AES_CBC, parameters, iv, counter);
+
+        auto clear_key = random(SYM_128_KEY_SIZE);
+        auto key = import_key(clear_key, false);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "Key type not supported";
+
+        auto cipher = create_uninitialized_sa_crypto_cipher_context();
+        ASSERT_NE(cipher, nullptr);
+        sa_status status = ta_sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CBC, SA_CIPHER_MODE_DECRYPT,
+                *key, parameters.get(), client(), ta_uuid());
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "Cipher algorithm not supported";
+
+        ASSERT_EQ(status, SA_STATUS_OK);
+
+        sa_sample sample;
+        sample_data sample_data;
+        sample.iv = iv.data();
+        sample.iv_length = iv.size();
+        sample.crypt_byte_block = 0;
+        sample.skip_byte_block = 0;
+        sample.subsample_count = 1;
+
+        sample_data.subsample_lengths.resize(1);
+        sample.subsample_lengths = sample_data.subsample_lengths.data();
+        sample.subsample_lengths[0].bytes_of_clear_data = 0;
+        sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
+
+        sample.context = *cipher;
+        sample_data.clear = random(SUBSAMPLE_SIZE);
+        sample_data.in = buffer_alloc(SA_BUFFER_TYPE_SVP, sample_data.clear);
+        ASSERT_NE(sample_data.in, nullptr);
+        sample.in = sample_data.in.get();
+        sample.in->context.svp.offset = SIZE_MAX - 4;
+
+        sample_data.out = buffer_alloc(SA_BUFFER_TYPE_SVP, SUBSAMPLE_SIZE);
+        ASSERT_NE(sample_data.out, nullptr);
+        sample.out = sample_data.out.get();
+        status = ta_sa_process_common_encryption(1, &sample, client(), ta_uuid());
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
 } // namespace

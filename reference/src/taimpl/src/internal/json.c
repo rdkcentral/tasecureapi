@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1180,7 +1180,7 @@ bool b64_decode(
             }
 
             if (data_length != in_length)
-                memset(data + in_length, '=', data_length - in_length);
+                memory_memset_unoptimizable(data + in_length, '=', data_length - in_length);
         }
 
         b64 = BIO_new(BIO_f_base64());

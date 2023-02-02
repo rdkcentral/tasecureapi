@@ -20,6 +20,7 @@
 #include "client_test_helpers.h"
 #include "sa_crypto_cipher_common.h"
 #include <chrono>
+#include <cstddef>
 
 #define SUBSAMPLE_SIZE 256UL
 
@@ -115,9 +116,9 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, multipleSamples) {
     memset(&parameters.iv[8], 0xff, 8);
 
     sample_data sample_data;
-    sample_data.out = buffer_alloc(out_buffer_type, 5000 * 5);
+    sample_data.out = buffer_alloc(out_buffer_type, static_cast<size_t>(5000 * 5));
     ASSERT_NE(sample_data.out, nullptr);
-    sample_data.in = buffer_alloc(in_buffer_type, 5000 * 5);
+    sample_data.in = buffer_alloc(in_buffer_type, static_cast<size_t>(5000 * 5));
     ASSERT_NE(sample_data.in, nullptr);
     std::vector<sa_sample> samples(5);
     ASSERT_TRUE(build_samples(5000, 0, 0, 5, 20, parameters.iv, parameters.cipher_algorithm, parameters.clear_key,
@@ -268,7 +269,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullIv) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -303,7 +304,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidIvLength) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -370,7 +371,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidSubsampleCount) {
     sample.subsample_count = 0;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -406,7 +407,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullOut) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -439,7 +440,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullOutBuffer) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -476,7 +477,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutSvpBuffer) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -513,7 +514,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullIn) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -546,7 +547,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullInBuffer) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -585,7 +586,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullInSvpBuffer) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -620,7 +621,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidSkipByteBlock) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -654,7 +655,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipher) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -689,7 +690,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipherMode) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -724,7 +725,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutBufferType) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -759,7 +760,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidInBufferType) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -795,7 +796,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipherAlgorithm) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -833,7 +834,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidBufferTypeCombo) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -883,7 +884,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTypeDisallowed) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -918,7 +919,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTooShort) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -932,6 +933,42 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTooShort) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sample.out->context.clear.offset++;
+    sa_status status = sa_process_common_encryption(1, &sample);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+}
+
+TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferOverflow) {
+    cipher_parameters parameters;
+    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
+    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
+    ASSERT_NE(cipher, nullptr);
+    if (*cipher == UNSUPPORTED_CIPHER)
+        GTEST_SKIP() << "Cipher algorithm not supported";
+
+    sa_sample sample;
+    sample_data sample_data;
+    sample.iv = parameters.iv.data();
+    sample.iv_length = parameters.iv.size();
+    sample.crypt_byte_block = 0;
+    sample.skip_byte_block = 0;
+    sample.subsample_count = 1;
+
+    sample_data.subsample_lengths.resize(1);
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
+    sample.subsample_lengths[0].bytes_of_clear_data = 0;
+    sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
+
+    sample.context = *cipher;
+    sample_data.clear = random(SUBSAMPLE_SIZE);
+    sample_data.in = buffer_alloc(SA_BUFFER_TYPE_CLEAR, sample_data.clear);
+    ASSERT_NE(sample_data.in, nullptr);
+    sample.in = sample_data.in.get();
+
+    sample_data.out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, SUBSAMPLE_SIZE);
+    ASSERT_NE(sample_data.out, nullptr);
+    sample.out = sample_data.out.get();
+    sample.out->context.clear.offset = SIZE_MAX - 4;
     sa_status status = sa_process_common_encryption(1, &sample);
     ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
@@ -954,7 +991,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, inBufferTooShort) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -964,6 +1001,42 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, inBufferTooShort) {
     ASSERT_NE(sample_data.in, nullptr);
     sample.in = sample_data.in.get();
     sample.in->context.clear.offset++;
+
+    sample_data.out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, SUBSAMPLE_SIZE);
+    ASSERT_NE(sample_data.out, nullptr);
+    sample.out = sample_data.out.get();
+    sa_status status = sa_process_common_encryption(1, &sample);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+}
+
+TEST_F(SaProcessCommonEncryptionNegativeTest, inBufferOverflow) {
+    cipher_parameters parameters;
+    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
+    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
+    ASSERT_NE(cipher, nullptr);
+    if (*cipher == UNSUPPORTED_CIPHER)
+        GTEST_SKIP() << "Cipher algorithm not supported";
+
+    sa_sample sample;
+    sample_data sample_data;
+    sample.iv = parameters.iv.data();
+    sample.iv_length = parameters.iv.size();
+    sample.crypt_byte_block = 0;
+    sample.skip_byte_block = 0;
+    sample.subsample_count = 1;
+
+    sample_data.subsample_lengths.resize(1);
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
+    sample.subsample_lengths[0].bytes_of_clear_data = 0;
+    sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
+
+    sample.context = *cipher;
+    sample_data.clear = random(SUBSAMPLE_SIZE);
+    sample_data.in = buffer_alloc(SA_BUFFER_TYPE_CLEAR, sample_data.clear);
+    ASSERT_NE(sample_data.in, nullptr);
+    sample.in = sample_data.in.get();
+    sample.in->context.clear.offset = SIZE_MAX - 4;
 
     sample_data.out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, SUBSAMPLE_SIZE);
     ASSERT_NE(sample_data.out, nullptr);
@@ -990,7 +1063,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, failClearBufferOverlap) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 
@@ -1027,7 +1100,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, failSvpBufferOverlap) {
     sample.subsample_count = 1;
 
     sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = &sample_data.subsample_lengths[0];
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
     sample.subsample_lengths[0].bytes_of_clear_data = 0;
     sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
 

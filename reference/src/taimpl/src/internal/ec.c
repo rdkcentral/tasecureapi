@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1000,6 +1000,7 @@ sa_status ec_generate_key(
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* key = NULL;
+    size_t key_length = 0;
     EVP_PKEY_CTX* evp_pkey_param_ctx = NULL;
     EVP_PKEY* evp_pkey_params = NULL;
     EVP_PKEY_CTX* evp_pkey_ctx = NULL;
@@ -1057,7 +1058,6 @@ sa_status ec_generate_key(
             break;
         }
 
-        size_t key_length = 0;
         if (!evp_pkey_to_pkcs8(NULL, &key_length, evp_pkey)) {
             ERROR("evp_pkey_to_pkcs8 failed");
             break;
@@ -1086,7 +1086,7 @@ sa_status ec_generate_key(
     } while (false);
 
     if (key != NULL) {
-        memory_memset_unoptimizable(key, 0, key_size);
+        memory_memset_unoptimizable(key, 0, key_length);
         memory_secure_free(key);
     }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -258,18 +258,27 @@ namespace {
     TEST_P(SaKeyUnwrapAesEcbTest, failAesEcbPkcsPadding) {
         auto cipher_algorithm = GetParam();
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7) {
-            std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE * 2);
-            wrapped_key[AES_BLOCK_SIZE * 2 - 1] = 0;
+            std::vector<uint8_t> clear_key = random(AES_BLOCK_SIZE * 2);
+            clear_key[AES_BLOCK_SIZE * 2 - 1] = 0;
+            std::vector<uint8_t> wrapped_key;
+            std::shared_ptr<sa_key> wrapping_key;
+            std::vector<uint8_t> clear_wrapping_key;
+            std::shared_ptr<void> wrapping_parameters;
+
+            sa_status status = wrap_key(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
+                    SYM_128_KEY_SIZE, clear_key, SA_CIPHER_ALGORITHM_AES_ECB, SA_DIGEST_ALGORITHM_SHA1,
+                    SA_DIGEST_ALGORITHM_SHA1, 0);
+            if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+                GTEST_SKIP() << "key type, key size, or curve not supported";
+
+            ASSERT_EQ(status, SA_STATUS_OK);
 
             sa_rights rights;
             sa_rights_set_allow_all(&rights);
-            std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
-            std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
-            ASSERT_NE(wrapping_key, nullptr);
 
             auto unwrapped_key = create_uninitialized_sa_key();
             ASSERT_NE(unwrapped_key, nullptr);
-            sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+            status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                     SA_CIPHER_ALGORITHM_AES_ECB_PKCS7, nullptr, *wrapping_key,
                     wrapped_key.data(), wrapped_key.size());
             ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ sa_status sa_crypto_cipher_process(
         cipher_process->in_buffer_type = in->buffer_type;
 
         size_t param1_size;
-        ta_param_type param1_type;
+        uint32_t param1_type;
         if (out != NULL) {
             if (out->buffer_type == SA_BUFFER_TYPE_CLEAR) {
                 if (out->context.clear.buffer == NULL) {
@@ -72,9 +72,14 @@ sa_status sa_crypto_cipher_process(
                     break;
                 }
 
+                if (out->context.clear.offset > out->context.clear.length) {
+                    ERROR("Integer overflow");
+                    status = SA_STATUS_INVALID_PARAMETER;
+                    break;
+                }
+
                 cipher_process->out_offset = 0;
                 param1_size = out->context.clear.length - out->context.clear.offset;
-
                 param1_type = TA_PARAM_OUT;
                 CREATE_OUT_PARAM(param1, ((uint8_t*) out->context.clear.buffer) + out->context.clear.offset,
                         param1_size);
@@ -103,7 +108,7 @@ sa_status sa_crypto_cipher_process(
         }
 
         size_t param2_size;
-        ta_param_type param2_type = TA_PARAM_IN;
+        uint32_t param2_type = TA_PARAM_IN;
         if (in->buffer_type == SA_BUFFER_TYPE_CLEAR) {
             if (in->context.clear.buffer == NULL) {
                 ERROR("NULL in.context.clear.buffer");
@@ -111,9 +116,14 @@ sa_status sa_crypto_cipher_process(
                 break;
             }
 
+            if (in->context.clear.offset > in->context.clear.length) {
+                ERROR("Integer overflow");
+                status = SA_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
             cipher_process->in_offset = 0;
             param2_size = in->context.clear.length - in->context.clear.offset;
-
             CREATE_PARAM(param2, ((uint8_t*) in->context.clear.buffer) + in->context.clear.offset, param2_size);
             if (param2 == NULL) {
                 ERROR("CREATE_PARAM failed");
@@ -133,7 +143,7 @@ sa_status sa_crypto_cipher_process(
         }
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{cipher_process, sizeof(sa_crypto_cipher_process_s)},
                                           {param1, param1_size},
                                           {param2, param2_size},

@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -225,7 +225,7 @@ sa_status dh_compute_shared_secret(
 #if OPENSSL_VERSION_NUMBER < 0x10100000
         if (header->size != shared_secret_length) {
             memmove(shared_secret + header->size - shared_secret_length, shared_secret, shared_secret_length);
-            memset(shared_secret, 0, header->size - shared_secret_length);
+            memory_memset_unoptimizable(shared_secret, 0, header->size - shared_secret_length);
             shared_secret_length = header->size;
         }
 #endif

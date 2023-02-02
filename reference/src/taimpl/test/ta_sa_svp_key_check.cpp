@@ -26,7 +26,7 @@ using namespace ta_test_helpers;
 namespace {
     TEST_F(TaSvpKeyCheckTest, nominal) {
         auto clear_key = random(SYM_128_KEY_SIZE);
-        auto key = import_key(clear_key);
+        auto key = import_key(clear_key, true);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "Key type not supported";
 
@@ -44,7 +44,7 @@ namespace {
 
     TEST_F(TaSvpKeyCheckTest, nominalSvp) {
         auto clear_key = random(SYM_128_KEY_SIZE);
-        auto key = import_key(clear_key);
+        auto key = import_key(clear_key, true);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "Key type not supported";
 
@@ -62,7 +62,7 @@ namespace {
 
     TEST_F(TaSvpKeyCheckTest, failKeyCheck) {
         auto clear_key = random(SYM_128_KEY_SIZE);
-        auto key = import_key(clear_key);
+        auto key = import_key(clear_key, true);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "Key type not supported";
 
@@ -77,7 +77,7 @@ namespace {
 
     TEST_F(TaSvpKeyCheckTest, failNullIn) {
         auto clear_key = random(SYM_128_KEY_SIZE);
-        auto key = import_key(clear_key);
+        auto key = import_key(clear_key, true);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "Key type not supported";
 
@@ -91,7 +91,7 @@ namespace {
 
     TEST_F(TaSvpKeyCheckTest, failNullExpected) {
         auto clear_key = random(SYM_128_KEY_SIZE);
-        auto key = import_key(clear_key);
+        auto key = import_key(clear_key, true);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "Key type not supported";
 
@@ -109,7 +109,7 @@ namespace {
 
     TEST_F(TaSvpKeyCheckTest, failInvalidBytesToProcess) {
         auto clear_key = random(SYM_128_KEY_SIZE);
-        auto key = import_key(clear_key);
+        auto key = import_key(clear_key, true);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "Key type not supported";
 
@@ -127,7 +127,7 @@ namespace {
 
     TEST_F(TaSvpKeyCheckTest, failInvalidExpected) {
         auto clear_key = random(SYM_128_KEY_SIZE);
-        auto key = import_key(clear_key);
+        auto key = import_key(clear_key, true);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "Key type not supported";
 
