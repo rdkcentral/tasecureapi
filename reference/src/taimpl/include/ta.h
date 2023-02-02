@@ -51,12 +51,14 @@ void ta_close_session_handler(void* session_context);
  *
  * @param session_context the opaque session context returned from an open session command.
  * @param command_id the id of the command to invoke.
+ * @param parameters_types the types of the 4 parameters.
  * @param parameters the 4 command parameters.
  * @return the status of the command.
  */
 sa_status ta_invoke_command_handler(
         void* session_context,
         SA_COMMAND_ID command_id,
+        const ta_param_type param_types[NUM_TA_PARAMS],
         ta_param params[NUM_TA_PARAMS]);
 
 #ifdef __cplusplus

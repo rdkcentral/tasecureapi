@@ -68,8 +68,7 @@ sa_status ta_invoke_command(
     }
 #endif
 
-    // Handler does not need the param types. These are used at the TA interface level.
-    sa_status status = ta_invoke_command_handler(session_context, command_id, params);
+    sa_status status = ta_invoke_command_handler(session_context, command_id, param_types, params);
 
 #ifdef TA_CLIENT_TEST
     // This is for testing purposes to check for implementation errors.

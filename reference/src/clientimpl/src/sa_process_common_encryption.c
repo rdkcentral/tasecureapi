@@ -114,6 +114,13 @@ sa_status sa_process_common_encryption(
                     break;
                 }
 
+                if (samples[i].out->context.clear.length - samples[i].out->context.clear.offset >
+                        samples[i].out->context.clear.length) {
+                    ERROR("Integer underflow");
+                    status = SA_STATUS_INVALID_PARAMETER;
+                    break;
+                }
+
                 process_common_encryption->out_offset = 0;
                 param2_size = samples[i].out->context.clear.length - samples[i].out->context.clear.offset;
 
@@ -144,6 +151,13 @@ sa_status sa_process_common_encryption(
                 if (samples[i].in->context.clear.buffer == NULL) {
                     ERROR("NULL samples[i].in.context.clear.buffer");
                     status = SA_STATUS_NULL_PARAMETER;
+                    break;
+                }
+
+                if (samples[i].in->context.clear.length - samples[i].in->context.clear.offset >
+                        samples[i].in->context.clear.length) {
+                    ERROR("Integer underflow");
+                    status = SA_STATUS_INVALID_PARAMETER;
                     break;
                 }
 

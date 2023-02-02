@@ -127,12 +127,14 @@ bool svp_write(
     }
 
     for (size_t i = 0; i < offsets_length; i++) {
-        if ((offsets[i].out_offset + offsets[i].length) > out_svp_buffer->size) {
+        if (((offsets[i].out_offset + offsets[i].length) < offsets[i].out_offset) ||
+                ((offsets[i].out_offset + offsets[i].length) > out_svp_buffer->size)) {
             ERROR("attempting to write outside the bounds of output secure buffer");
             return false;
         }
 
-        if ((offsets[i].in_offset + offsets[i].length) > in_length) {
+        if (((offsets[i].in_offset + offsets[i].length) < offsets[i].in_offset) ||
+                ((offsets[i].in_offset + offsets[i].length) > in_length)) {
             ERROR("attempting to read outside the bounds of input buffer");
             return false;
         }
@@ -177,12 +179,14 @@ bool svp_copy(
     }
 
     for (size_t i = 0; i < offsets_length; i++) {
-        if ((offsets[i].out_offset + offsets[i].length) > out_svp_buffer->size) {
+        if (((offsets[i].out_offset + offsets[i].length) < offsets[i].out_offset) ||
+                ((offsets[i].out_offset + offsets[i].length) > out_svp_buffer->size)) {
             ERROR("attempting to write outside the bounds of output secure buffer");
             return false;
         }
 
-        if ((offsets[i].in_offset + offsets[i].length) > in_svp_buffer->size) {
+        if (((offsets[i].in_offset + offsets[i].length) < offsets[i].in_offset) ||
+                ((offsets[i].in_offset + offsets[i].length) > in_svp_buffer->size)) {
             ERROR("attempting to read outside the bounds of input secure buffer");
             return false;
         }
@@ -261,6 +265,16 @@ bool svp_digest(
         const svp_buffer_t* svp_buffer,
         size_t offset,
         size_t length) {
+
+    if (offset + length < offset) {
+        ERROR("Integer overflow");
+        return false;
+    }
+
+    if (offset + length > svp_buffer->size) {
+        ERROR("Buffer overflow");
+        return false;
+    }
 
     if (!digest_sha(out, out_length, digest_algorithm, (uint8_t*) svp_buffer->svp_memory + offset, length, NULL, 0,
                 NULL, 0)) {

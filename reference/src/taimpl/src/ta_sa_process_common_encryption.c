@@ -144,19 +144,12 @@ static sa_status verify_sample(
         }
 
         // Check if the buffers overlap.
-        if (sample->out->buffer_type == SA_BUFFER_TYPE_CLEAR && sample->in->buffer_type == SA_BUFFER_TYPE_CLEAR) {
-            uint8_t* out = (uint8_t*) sample->out->context.clear.buffer;
-            uint8_t* out_end = (uint8_t*) sample->out->context.clear.buffer + sample->out->context.clear.offset;
-            uint8_t* in = (uint8_t*) sample->in->context.clear.buffer;
-            uint8_t* in_end = (uint8_t*) sample->in->context.clear.buffer + sample->in->context.clear.offset;
-            if ((out >= in && out <= in_end) || (out_end >= in && out_end <= in_end) || (in >= out && in <= out_end) ||
-                    (in_end >= out && in_end <= out_end)) {
-                ERROR("Overlapping in and out buffers");
-                status = SA_STATUS_INVALID_PARAMETER;
-                break;
-            }
-        } else if (sample->out->buffer_type == SA_BUFFER_TYPE_SVP && sample->in->buffer_type == SA_BUFFER_TYPE_SVP &&
-                   sample->out->context.svp.buffer == sample->in->context.svp.buffer) {
+        uint8_t* out_bytes_end = out_bytes + required_length;
+        uint8_t* in_bytes_end = in_bytes + required_length;
+        if ((out_bytes >= in_bytes && out_bytes <= in_bytes_end) ||
+                (out_bytes_end >= in_bytes && out_bytes_end <= in_bytes_end) ||
+                (in_bytes >= out_bytes && in_bytes <= out_bytes_end) ||
+                (in_bytes_end >= out_bytes && in_bytes_end <= out_bytes_end)) {
             ERROR("Overlapping in and out buffers");
             status = SA_STATUS_INVALID_PARAMETER;
             break;

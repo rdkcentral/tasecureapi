@@ -130,7 +130,16 @@ size_t cenc_get_required_length(
 
     size_t required_length = 0;
     for (size_t i = 0; i < subsample_count; i++) {
-        required_length += subsample_lengths[i].bytes_of_clear_data + subsample_lengths[i].bytes_of_protected_data;
+        size_t subsample_len = subsample_lengths[i].bytes_of_clear_data + subsample_lengths[i].bytes_of_protected_data;
+        size_t old_length = required_length;
+        if (subsample_len < subsample_lengths[i].bytes_of_clear_data) {
+            return 0;
+        }
+
+        required_length += subsample_len;
+        if (required_length < old_length) {
+            return 0;
+        }
     }
 
     return required_length;
@@ -155,6 +164,12 @@ sa_status cenc_process_sample(
         }
 
         size_t required_length = cenc_get_required_length(sample->subsample_lengths, sample->subsample_count);
+        if (required_length == 0) {
+            ERROR("cenc_get_required_length integer overflow");
+            status = SA_STATUS_INVALID_PARAMETER;
+            break;
+        }
+
         uint8_t* out_bytes = NULL;
         status = convert_buffer(&out_bytes, &out_svp, sample->out, required_length, client, caller_uuid);
         if (status != SA_STATUS_OK) {

@@ -33,6 +33,26 @@ sa_status convert_buffer(
         return SA_STATUS_NULL_PARAMETER;
     }
 
+    if (svp == NULL) {
+        ERROR("NULL svp");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (buffer == NULL) {
+        ERROR("NULL buffer");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (client == NULL) {
+        ERROR("NULL client");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (caller_uuid == NULL) {
+        ERROR("NULL caller_uuid");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
     if (buffer->buffer_type == SA_BUFFER_TYPE_SVP) {
         svp_store_t* svp_store = client_get_svp_store(client);
         sa_status status = svp_store_acquire_exclusive(svp, svp_store, buffer->context.svp.buffer, caller_uuid);
@@ -41,17 +61,30 @@ sa_status convert_buffer(
             return status;
         }
 
-        svp_buffer_t* out_svp_buffer = svp_get_buffer(*svp);
-        *bytes = (uint8_t*) svp_get_svp_memory(out_svp_buffer) + buffer->context.svp.offset;
-        size_t out_length = svp_get_size(out_svp_buffer);
-        if (buffer->context.svp.offset + bytes_to_process > out_length) {
+        if (buffer->context.svp.offset + bytes_to_process < bytes_to_process) {
+            ERROR("Integer overflow");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        svp_buffer_t* svp_buffer = svp_get_buffer(*svp);
+        size_t length = svp_get_size(svp_buffer);
+        if (buffer->context.svp.offset + bytes_to_process > length) {
             ERROR("buffer not large enough");
             return SA_STATUS_INVALID_PARAMETER;
         }
+
+        *bytes = (uint8_t*) svp_get_svp_memory(svp_buffer) + buffer->context.svp.offset;
+
+        // TODO: SoC vendor must verify that memory address is within SVP space.
     } else {
         if (buffer->context.clear.buffer == NULL) {
             ERROR("NULL buffer");
             return SA_STATUS_NULL_PARAMETER;
+        }
+
+        if (buffer->context.clear.offset + bytes_to_process < bytes_to_process) {
+            ERROR("Integer overflow");
+            return SA_STATUS_INVALID_PARAMETER;
         }
 
         if (buffer->context.clear.offset + bytes_to_process > buffer->context.clear.length) {
@@ -60,6 +93,8 @@ sa_status convert_buffer(
         }
 
         *bytes = (uint8_t*) buffer->context.clear.buffer + buffer->context.clear.offset;
+
+        // TODO: SoC vendor must verify that memory address is within SVP space.
     }
 
     return SA_STATUS_OK;

@@ -34,7 +34,8 @@ extern "C" {
 #endif
 
 /**
- * Converts a sa_buffer into byte and checks the parameters for validity.
+ * Converts a sa_buffer into byte and checks the parameters for validity. The SoC vendor must verify that SVP buffers
+ * reside entirely within SVP memory space and clear buffers reside entirely within clear memory space.
  *
  * @param[out] bytes the array of bytes.
  * @param[out] svp the svp object.

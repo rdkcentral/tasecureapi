@@ -37,6 +37,8 @@ extern "C" {
 #define CHACHA20_NONCE_LENGTH 12
 #define API_VERSION 1
 
+#define PARAM_MASK 0x3
+
 /**
  * Command IDs of the SecApi 3 commands, used in the ta_invoke_command function.
  */
