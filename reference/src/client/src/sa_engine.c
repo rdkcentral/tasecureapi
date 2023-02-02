@@ -25,6 +25,7 @@
 
 #define SA_ENGINE_ID "secapi3"
 #define SA_ENGINE_NAME "SecApi3 OpenSSL Engine"
+#define OPENSSL_ENGINE_ID "openssl"
 
 mtx_t engine_mutex;
 static once_flag flag = ONCE_FLAG_INIT;
@@ -45,6 +46,18 @@ static void sa_engine_shutdown() {
 static void sa_engine_init() {
     if (mtx_init(&engine_mutex, mtx_plain | mtx_recursive) != thrd_success) {
         ERROR("mtx_init failed");
+    }
+
+    ENGINE* engine = ENGINE_by_id(OPENSSL_ENGINE_ID);
+    if (engine == NULL) {
+        ENGINE_load_openssl();
+        engine = ENGINE_by_id(OPENSSL_ENGINE_ID);
+        if (engine == NULL) {
+            ERROR("ENGINE_load_openssl failed");
+        } else {
+            ENGINE_set_default(engine, ENGINE_METHOD_ALL);
+            ENGINE_free(engine);
+        }
     }
 
     if (atexit(sa_engine_shutdown) != 0) {
