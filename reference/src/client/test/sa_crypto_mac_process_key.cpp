@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_P(SaCryptoMacProcessKey, nominal) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -60,7 +60,7 @@ namespace {
         auto mac_key = create_sa_key_symmetric(&rights, clear_mac_key);
         ASSERT_NE(mac_key, nullptr);
 
-        sa_status status = sa_crypto_mac_process_key(INVALID_HANDLE, *mac_key);
+        sa_status const status = sa_crypto_mac_process_key(INVALID_HANDLE, *mac_key);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -87,9 +87,9 @@ namespace {
     }
 
     TEST_P(SaCryptoMacProcessKeyArgChecks, failsWithInvalidContext) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -113,9 +113,9 @@ namespace {
     }
 
     TEST_P(SaCryptoMacProcessKeyArgChecks, failsInvalidContextAlreadyUsed) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -206,15 +206,10 @@ namespace {
         sa_rights_set_allow_all(&rights);
 
         auto rsa_key = sample_rsa_2048_pkcs8();
-        sa_import_parameters_rsa_private_key_info rsa_parameters = {&rights};
         auto key = create_sa_key_rsa(&rights, rsa_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "key type, key size, or curve not supported";
-
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, rsa_key.data(),
-                rsa_key.size(), &rsa_parameters);
-        ASSERT_EQ(status, SA_STATUS_OK);
 
         auto clear_mac_key = random(SYM_128_KEY_SIZE);
         auto mac_key = create_sa_key_symmetric(&rights, clear_mac_key);
@@ -223,7 +218,7 @@ namespace {
         auto mac = create_uninitialized_sa_crypto_mac_context();
         ASSERT_NE(mac, nullptr);
 
-        status = sa_crypto_mac_init(mac.get(), SA_MAC_ALGORITHM_CMAC, *mac_key, nullptr);
+        sa_status status = sa_crypto_mac_init(mac.get(), SA_MAC_ALGORITHM_CMAC, *mac_key, nullptr);
         ASSERT_EQ(status, SA_STATUS_OK);
 
         status = sa_crypto_mac_process_key(*mac, *key);

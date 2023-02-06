@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -188,7 +188,6 @@ int keyexch_derive(
                 keyexch_context->key_data->private_key, other_public, other_public_length, NULL);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
             ERROR("sa_key_exchange operation not supported");
-            result = 0;
             break;
         }
 

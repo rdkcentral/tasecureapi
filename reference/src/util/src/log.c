@@ -1,5 +1,5 @@
-/**
- * Copyright 2019-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ static const char* LOG_LEVEL_STRING[] = {
         "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
 
 #ifndef SA_LOG_LEVEL
-#define SA_LOG_LEVEL LOG_LEVEL_INFO
+#define SA_LOG_LEVEL LOG_LEVEL_WARN
 #endif
 
 static struct {

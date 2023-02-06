@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,8 +38,8 @@ namespace {
 
         auto iv = random(AES_BLOCK_SIZE);
         sa_cipher_parameters_aes_cbc parameters = {iv.data(), iv.size()};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CBC, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CBC,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -63,8 +63,8 @@ namespace {
 
         auto iv = random(AES_BLOCK_SIZE);
         sa_cipher_parameters_aes_cbc parameters = {iv.data(), iv.size()};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CBC, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CBC,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -83,8 +83,8 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CBC, SA_CIPHER_MODE_ENCRYPT,
-                *key, nullptr);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CBC,
+                SA_CIPHER_MODE_ENCRYPT, *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -104,8 +104,8 @@ namespace {
         ASSERT_NE(cipher, nullptr);
 
         sa_cipher_parameters_aes_cbc parameters = {nullptr, AES_BLOCK_SIZE};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CBC, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CBC,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -126,8 +126,8 @@ namespace {
 
         auto iv = random(17);
         sa_cipher_parameters_aes_cbc parameters = {iv.data(), iv.size()};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CBC, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CBC,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 

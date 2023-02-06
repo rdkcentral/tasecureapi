@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ namespace {
     TEST_F(SaSvpBufferReleaseTest, failsInvalidSvpBuffer) {
         void* out = nullptr;
         size_t out_length = 0;
-        sa_status status = sa_svp_buffer_release(&out, &out_length, INVALID_HANDLE);
+        sa_status const status = sa_svp_buffer_release(&out, &out_length, INVALID_HANDLE);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

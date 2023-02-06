@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@
 #include "object_store.h"
 #include "porting/svp.h"
 #include "sa_types.h"
+#include "ta_sa_types.h"
 
 #ifdef __cplusplus
 extern "C" {

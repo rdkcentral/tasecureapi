@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,7 +97,7 @@ namespace {
         ASSERT_NE(unwrapped_key, nullptr);
 
         auto clear_key = random(SYM_128_KEY_SIZE);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 static_cast<sa_cipher_algorithm>(UINT8_MAX), nullptr, *wrapping_key, clear_key.data(),
                 clear_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);

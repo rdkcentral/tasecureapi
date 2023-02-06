@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -114,6 +114,8 @@ sa_status rsa_verify_cipher(
         sa_cipher_mode cipher_mode,
         void* parameters,
         const stored_key_t* stored_key) {
+
+    DEBUG("rsa_verify_cipher: algorithm %d, mode %d, stored_key %p", cipher_algorithm, cipher_mode, stored_key);
 
     if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
         if (parameters == NULL) {

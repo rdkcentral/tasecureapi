@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,12 +51,6 @@ sa_status sa_svp_key_check(
     sa_status status;
     do {
         CREATE_COMMAND(sa_svp_key_check_s, svp_key_check);
-        if (svp_key_check == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         svp_key_check->api_version = API_VERSION;
         svp_key_check->key = key;
         svp_key_check->in_buffer_type = in->buffer_type;
@@ -73,34 +67,16 @@ sa_status sa_svp_key_check(
 
             svp_key_check->in_offset = in->context.clear.offset;
             CREATE_PARAM(param1, in->context.clear.buffer, in->context.clear.length);
-            if (param1 == NULL) {
-                ERROR("CREATE_PARAM failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-                break;
-            }
-
             param1_size = in->context.clear.length;
             param1_type = TA_PARAM_IN;
         } else {
             svp_key_check->in_offset = in->context.svp.offset;
             CREATE_PARAM(param1, &in->context.svp.buffer, sizeof(sa_svp_buffer));
-            if (param1 == NULL) {
-                ERROR("CREATE_PARAM failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-                break;
-            }
-
             param1_size = sizeof(sa_svp_buffer);
             param1_type = TA_PARAM_IN;
         }
 
         CREATE_PARAM(param2, (void*) expected, expected_length);
-        if (param2 == NULL) {
-            ERROR("CREATE_PARAM failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         size_t param2_size = expected_length;
         ta_param_type param2_type = TA_PARAM_IN;
 

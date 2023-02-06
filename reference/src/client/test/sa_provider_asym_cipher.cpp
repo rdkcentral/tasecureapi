@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,13 +48,13 @@ TEST_P(SaProviderAsymCipherTest, encryptTest) {
     const uint8_t* p_clear_key = clear_key.data();
     EVP_PKEY* temp = d2i_AutoPrivateKey_ex(nullptr, &p_clear_key, static_cast<long>(clear_key.size()), // NOLINT
             lib_ctx, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
     ASSERT_NE(evp_pkey, nullptr);
 
     auto data = random(32);
     auto label = random(oaep_label);
     std::vector<uint8_t> encrypted_data;
-    std::shared_ptr<EVP_PKEY_CTX> encrypt_pkey_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const encrypt_pkey_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(encrypt_pkey_ctx, nullptr);
 
@@ -81,11 +81,10 @@ TEST_P(SaProviderAsymCipherTest, encryptTest) {
     encrypted_data.resize(encrypted_data_length);
     int result = EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), encrypted_data.data(), &encrypted_data_length, data.data(),
             data.size());
-
     ASSERT_EQ(result, 1);
 
     std::vector<uint8_t> decrypted_data;
-    std::shared_ptr<EVP_PKEY_CTX> decrypt_pkey_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const decrypt_pkey_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(decrypt_pkey_ctx, nullptr);
 
@@ -97,14 +96,13 @@ TEST_P(SaProviderAsymCipherTest, encryptTest) {
     decrypted_data.resize(decrypted_data_length);
     result = EVP_PKEY_decrypt(decrypt_pkey_ctx.get(), decrypted_data.data(), &decrypted_data_length,
             encrypted_data.data(), encrypted_data.size());
-
     ASSERT_EQ(result, 1);
     decrypted_data.resize(decrypted_data_length);
     ASSERT_EQ(decrypted_data, data);
 }
 
 TEST_F(SaProviderAsymCipherTest, defaultPaddingTest) {
-    size_t key_length = RSA_2048_BYTE_LENGTH;
+    size_t const key_length = RSA_2048_BYTE_LENGTH;
     int padding = RSA_PKCS1_PADDING;
 
     std::vector<uint8_t> clear_key;
@@ -115,12 +113,12 @@ TEST_F(SaProviderAsymCipherTest, defaultPaddingTest) {
     const uint8_t* p_clear_key = clear_key.data();
     EVP_PKEY* temp = d2i_AutoPrivateKey_ex(nullptr, &p_clear_key, static_cast<long>(clear_key.size()), // NOLINT
             lib_ctx, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
     ASSERT_NE(evp_pkey, nullptr);
 
     auto data = random(32);
     std::vector<uint8_t> encrypted_data;
-    std::shared_ptr<EVP_PKEY_CTX> encrypt_pkey_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const encrypt_pkey_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(encrypt_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_encrypt_init(encrypt_pkey_ctx.get()), 1);
@@ -129,7 +127,6 @@ TEST_F(SaProviderAsymCipherTest, defaultPaddingTest) {
     encrypted_data.resize(encrypted_data_length);
     int result = EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), encrypted_data.data(), &encrypted_data_length, data.data(),
             data.size());
-
     ASSERT_EQ(result, 1);
 
     std::vector<uint8_t> decrypted_data;
@@ -137,7 +134,7 @@ TEST_F(SaProviderAsymCipherTest, defaultPaddingTest) {
             OSSL_PARAM_construct_int(OSSL_ASYM_CIPHER_PARAM_PAD_MODE, &padding),
             OSSL_PARAM_construct_end()};
 
-    std::shared_ptr<EVP_PKEY_CTX> decrypt_pkey_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const decrypt_pkey_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(decrypt_pkey_ctx, nullptr);
 
@@ -145,7 +142,6 @@ TEST_F(SaProviderAsymCipherTest, defaultPaddingTest) {
     size_t decrypted_data_length = 0;
     result = EVP_PKEY_decrypt(decrypt_pkey_ctx.get(), nullptr, &decrypted_data_length, encrypted_data.data(),
             encrypted_data.size());
-
     ASSERT_EQ(result, 1);
     decrypted_data.resize(decrypted_data_length);
     result = EVP_PKEY_decrypt(decrypt_pkey_ctx.get(), decrypted_data.data(), &decrypted_data_length,

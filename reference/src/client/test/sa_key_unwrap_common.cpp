@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -417,7 +417,7 @@ sa_status SaKeyUnwrapBase::wrap_key_el_gamal(
     // always be a multiple of 8. For P192, the offset will be 0 due to the key size. All others will be non-zero to
     // vary the test. encrypt_ec_elgamal_openssl uses the last 32 bits of the clear data as a counter to allow
     // multiple tries to find a valid point when performing the El Gamal encrypt algorithm.
-    size_t offset = ((ec_get_key_size(curve) - COUNTER_SIZE - SYM_128_KEY_SIZE) / 8) * 8;
+    size_t const offset = ((ec_get_key_size(curve) - COUNTER_SIZE - SYM_128_KEY_SIZE) / 8) * 8;
     auto temp = random(wrapping_key_size);
     std::copy(clear_key.begin(), clear_key.end(), temp.begin() + static_cast<int64_t>(offset));
 

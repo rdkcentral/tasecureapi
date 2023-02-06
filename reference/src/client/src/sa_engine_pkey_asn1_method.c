@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,7 +56,7 @@ static void pkey_asn1_free(EVP_PKEY* evp_pkey) {
 static int pkey_asn1_ctrl(
         EVP_PKEY* evp_pkey,
         int command,
-        long p1,
+        ossl_unused long p1,
         void* p2) {
 
     if (evp_pkey == NULL) {
@@ -138,7 +138,7 @@ static EVP_PKEY_ASN1_METHOD* get_pkey_asn1_method(
 }
 
 int sa_get_engine_pkey_asn1_meths(
-        ENGINE* engine,
+        ossl_unused ENGINE* engine,
         EVP_PKEY_ASN1_METHOD** method,
         const int** nids,
         int nid) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -223,7 +223,7 @@ static void* keymgmt_new(
     }
 
     key_data->provider_context = provider_context;
-    atomic_init(&key_data->reference_count, 1);
+    atomic_store(&key_data->reference_count, 1);
     key_data->type = type;
     key_data->name = name;
     key_data->private_key = INVALID_HANDLE;

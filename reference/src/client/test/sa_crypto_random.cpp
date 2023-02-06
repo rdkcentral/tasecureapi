@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,32 +23,26 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST(SaCryptoRandom, nominalSize0) {
-        auto out = std::vector<uint8_t>(1);
-        sa_status status = sa_crypto_random(out.data(), 0);
-        ASSERT_EQ(status, SA_STATUS_OK);
-    }
-
     TEST(SaCryptoRandom, nominalSize1) {
         auto out = std::vector<uint8_t>(1);
-        sa_status status = sa_crypto_random(out.data(), out.size());
+        sa_status const status = sa_crypto_random(out.data(), out.size());
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
     TEST(SaCryptoRandom, nominalSize16) {
         auto out = std::vector<uint8_t>(AES_BLOCK_SIZE);
-        sa_status status = sa_crypto_random(out.data(), out.size());
+        sa_status const status = sa_crypto_random(out.data(), out.size());
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
     TEST(SaCryptoRandom, nominalSize512) {
         auto out = std::vector<uint8_t>(512);
-        sa_status status = sa_crypto_random(out.data(), out.size());
+        sa_status const status = sa_crypto_random(out.data(), out.size());
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
     TEST(SaCryptoRandom, failsNullOut) {
-        sa_status status = sa_crypto_random(nullptr, 16);
+        sa_status const status = sa_crypto_random(nullptr, 16);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

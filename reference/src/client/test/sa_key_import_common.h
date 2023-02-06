@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -127,7 +127,7 @@ protected:
     static void typej_rights_set_allow_all(sa_rights* rights);
 };
 
-using SaKeyImportTypejType = std::tuple<size_t, sa_cipher_algorithm, uint64_t>;
+typedef std::tuple<size_t, sa_cipher_algorithm, uint64_t> SaKeyImportTypejType;
 
 class SaKeyImportTypejTest : public ::testing::TestWithParam<SaKeyImportTypejType>, public SaKeyImportTypejBase {};
 
@@ -191,8 +191,8 @@ protected:
 
 class SaKeyImportSocTest : public ::testing::Test, public SaKeyImportSocBase {};
 
-using SaKeyImportSocAllKeyCombosType =
-        std::tuple<std::tuple<std::string, size_t, sa_key_type>, std::tuple<uint8_t, uint8_t>, uint8_t>;
+typedef std::tuple<std::tuple<std::string, size_t, sa_key_type>, std::tuple<uint8_t, uint8_t>, uint8_t>
+        SaKeyImportSocAllKeyCombosType;
 
 class SaKeyImportSocAllKeyCombosTest
     : public ::testing::TestWithParam<SaKeyImportSocAllKeyCombosType>,

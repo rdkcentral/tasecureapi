@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,7 @@
 #endif
 
 #define EC_KEY_SIZE(ec_group) (EC_GROUP_get_degree(ec_group) / 8 + (EC_GROUP_get_degree(ec_group) % 8 == 0 ? 0 : 1))
-#define MAX_EC_SIGNATURE 256
+#define MAX_EC_SIGNATURE 256 // NOLINT
 
 static inline bool is_pcurve(sa_elliptic_curve curve) {
     return curve == SA_ELLIPTIC_CURVE_NIST_P192 || curve == SA_ELLIPTIC_CURVE_NIST_P224 ||
@@ -182,8 +182,7 @@ static EC_GROUP* ec_group_from_curve(sa_elliptic_curve curve) {
 static size_t export_point(
         uint8_t** out,
         const EC_GROUP* ec_group,
-        EC_POINT* ec_point,
-        bool raw) {
+        EC_POINT* ec_point) {
 
     if (out == NULL) {
         ERROR("out is NULL");
@@ -200,7 +199,7 @@ static size_t export_point(
         return 0;
     }
 
-    size_t point_length = EC_KEY_SIZE(ec_group) * 2;
+    size_t point_length = (size_t) EC_KEY_SIZE(ec_group) * 2;
     if (point_length == 0) {
         ERROR("ec_key_size_from_curve failed");
         return 0;
@@ -218,14 +217,14 @@ static size_t export_point(
         return 0;
     }
 
-    size_t out_length = point_length + (raw ? 0 : 1);
+    size_t out_length = point_length;
     *out = memory_secure_alloc(out_length);
     if (*out == NULL) {
         ERROR("memory_secure_alloc failed");
         return 0;
     }
 
-    memcpy(*out, &buffer[raw ? 1 : 0], out_length);
+    memcpy(*out, &buffer[1], out_length);
     return out_length;
 }
 
@@ -404,6 +403,8 @@ sa_status ec_verify_cipher(
         sa_cipher_mode cipher_mode,
         const stored_key_t* stored_key) {
 
+    DEBUG("ec_verify_cipher: mode %d, stored_key %p", cipher_mode, stored_key);
+
     const sa_header* header = stored_key_get_header(stored_key);
     if (header == NULL) {
         ERROR("stored_key_get_header failed");
@@ -474,7 +475,7 @@ sa_status ec_decrypt_elgamal(
             break;
         }
 
-        size_t point_length = header->size * 2;
+        size_t point_length = (size_t) header->size * 2;
         if (out == NULL) {
             *out_length = point_length * 2;
             status = SA_STATUS_OK;
@@ -569,7 +570,7 @@ sa_status ec_decrypt_elgamal(
             break;
         }
 
-        if (export_point(&buffer, ec_group, message_point, true) != point_length) {
+        if (export_point(&buffer, ec_group, message_point) != point_length) {
             ERROR("export_point failed");
             break;
         }
@@ -778,7 +779,7 @@ sa_status ec_sign_ecdsa(
             break;
         }
 
-        size_t ec_signature_length = 2 * header->size;
+        size_t ec_signature_length = (size_t) header->size * 2;
         if (signature == NULL) {
             *signature_length = ec_signature_length;
             status = SA_STATUS_OK;
@@ -931,7 +932,7 @@ sa_status ec_sign_eddsa(
             break;
         }
 
-        size_t ec_signature_length = 2 * header->size;
+        size_t ec_signature_length = (size_t) header->size * 2;
         if (signature == NULL) {
             *signature_length = ec_signature_length;
             status = SA_STATUS_OK;
@@ -999,6 +1000,7 @@ sa_status ec_generate_key(
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* key = NULL;
+    size_t key_length = 0;
     EVP_PKEY_CTX* evp_pkey_param_ctx = NULL;
     EVP_PKEY* evp_pkey_params = NULL;
     EVP_PKEY_CTX* evp_pkey_ctx = NULL;
@@ -1056,7 +1058,6 @@ sa_status ec_generate_key(
             break;
         }
 
-        size_t key_length = 0;
         if (!evp_pkey_to_pkcs8(NULL, &key_length, evp_pkey)) {
             ERROR("evp_pkey_to_pkcs8 failed");
             break;
@@ -1085,7 +1086,7 @@ sa_status ec_generate_key(
     } while (false);
 
     if (key != NULL) {
-        memory_memset_unoptimizable(key, 0, key_size);
+        memory_memset_unoptimizable(key, 0, key_length);
         memory_secure_free(key);
     }
 

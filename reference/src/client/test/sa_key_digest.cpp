@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,10 +26,10 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_P(SaKeyDigestTest, nominal) {
-        sa_key_type key_type = std::get<0>(GetParam());
+        sa_key_type const key_type = std::get<0>(GetParam());
         size_t key_length = std::get<1>(GetParam());
-        sa_digest_algorithm digest_algorithm = std::get<2>(GetParam());
-        size_t length = digest_length(digest_algorithm);
+        sa_digest_algorithm const digest_algorithm = std::get<2>(GetParam());
+        size_t const length = digest_length(digest_algorithm);
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -63,7 +63,7 @@ namespace {
         auto clear_key = random(SYM_128_KEY_SIZE);
         auto key = create_sa_key_symmetric(&rights, clear_key);
 
-        sa_status status = sa_key_digest(nullptr, nullptr, *key, SA_DIGEST_ALGORITHM_SHA256);
+        sa_status const status = sa_key_digest(nullptr, nullptr, *key, SA_DIGEST_ALGORITHM_SHA256);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -106,18 +106,13 @@ namespace {
         sa_rights_set_allow_all(&rights);
 
         auto rsa_key = sample_rsa_2048_pkcs8();
-        sa_import_parameters_rsa_private_key_info rsa_parameters = {&rights};
         auto key = create_sa_key_rsa(&rights, rsa_key);
         ASSERT_NE(key, nullptr);
         if (*key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, rsa_key.data(),
-                rsa_key.size(), &rsa_parameters);
-        ASSERT_EQ(status, SA_STATUS_OK);
-
         size_t out_length = 0;
-        status = sa_key_digest(nullptr, &out_length, *key, SA_DIGEST_ALGORITHM_SHA256);
+        sa_status const status = sa_key_digest(nullptr, &out_length, *key, SA_DIGEST_ALGORITHM_SHA256);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

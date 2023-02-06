@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,7 +43,7 @@ static void sa_engine_shutdown() {
     mtx_destroy(&engine_mutex);
 }
 
-static void sa_engine_init() {
+ossl_unused static void sa_engine_init() {
     if (mtx_init(&engine_mutex, mtx_plain | mtx_recursive) != thrd_success) {
         ERROR("mtx_init failed");
     }

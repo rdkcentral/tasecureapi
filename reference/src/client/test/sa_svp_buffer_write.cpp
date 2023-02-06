@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,7 @@ namespace {
                     std::back_inserter(digest_vector));
         }
 
-        sa_status status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), offsets, offset_length);
+        sa_status const status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), offsets, offset_length);
         ASSERT_EQ(status, SA_STATUS_OK);
 
         // Write verified in taimpltest.
@@ -52,7 +52,7 @@ namespace {
         ASSERT_NE(out_buffer, nullptr);
         auto in = random(AES_BLOCK_SIZE);
         sa_svp_offset offset = {1, 0, in.size()};
-        sa_status status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &offset, 1);
+        sa_status const status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &offset, 1);
         ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
     }
 
@@ -60,14 +60,14 @@ namespace {
         auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(out_buffer, nullptr);
         auto in = random(AES_BLOCK_SIZE);
-        sa_status status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), nullptr, 0);
+        sa_status const status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), nullptr, 0);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
     TEST_F(SaSvpBufferWriteTest, failsInvalidOut) {
         auto in = random(AES_BLOCK_SIZE);
         sa_svp_offset offset = {0, 0, in.size()};
-        sa_status status = sa_svp_buffer_write(INVALID_HANDLE, in.data(), in.size(), &offset, 1);
+        sa_status const status = sa_svp_buffer_write(INVALID_HANDLE, in.data(), in.size(), &offset, 1);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -75,7 +75,7 @@ namespace {
         auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(out_buffer, nullptr);
         sa_svp_offset offset = {0, 0, 1};
-        sa_status status = sa_svp_buffer_write(*out_buffer, nullptr, 0, &offset, 1);
+        sa_status const status = sa_svp_buffer_write(*out_buffer, nullptr, 0, &offset, 1);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

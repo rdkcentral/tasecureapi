@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,52 +62,52 @@ protected:
             sa_elliptic_curve& curve);
 };
 
-using SaProviderCipherTestType = std::tuple<const char*, int, int, int>;
+typedef std::tuple<const char*, int, int, int> SaProviderCipherTestType;
 
 class SaProviderCipherTest : public ::testing::TestWithParam<SaProviderCipherTestType>,
                              public SaProviderTest {};
 
-using SaProviderSignTestType = std::tuple<sa_key_type, size_t, const char*, const char*, int, int>;
+typedef std::tuple<sa_key_type, size_t, const char*, const char*, int, int> SaProviderSignTestType;
 
 class SaProviderSignTest : public ::testing::TestWithParam<SaProviderSignTestType>,
                            public SaProviderTest {};
 
-using SaProviderSignWithGenerateTestType = std::tuple<sa_key_type, size_t, const char*>;
+typedef std::tuple<sa_key_type, size_t, const char*> SaProviderSignWithGenerateTestType;
 
 class SaProviderSignWithGenerateTest : public ::testing::TestWithParam<SaProviderSignWithGenerateTestType>,
                                        public SaProviderTest {};
 
-using SaProviderSignDefaultDigestSignTestType = std::tuple<sa_key_type, size_t>;
+typedef std::tuple<sa_key_type, size_t> SaProviderSignDefaultDigestSignTestType;
 
 class SaProviderSignDefaultDigestSignTest : public ::testing::TestWithParam<SaProviderSignDefaultDigestSignTestType>,
                                             public SaProviderTest {};
 
-using SaProviderSignEdTestType = std::tuple<sa_key_type, size_t>;
+typedef std::tuple<sa_key_type, size_t> SaProviderSignEdTestType;
 
 class SaProviderSignEdTest : public ::testing::TestWithParam<SaProviderSignEdTestType>,
                              public SaProviderTest {};
 
-using SaProviderPkcs7TestType = std::tuple<sa_key_type, size_t, const char*>;
+typedef std::tuple<sa_key_type, size_t, const char*> SaProviderPkcs7TestType;
 
 class SaProviderPkcs7Test : public ::testing::TestWithParam<SaProviderPkcs7TestType>,
                             public SaProviderTest {};
 
-using SaProviderAsymCipherTestType =
-        std::tuple<sa_key_type, size_t, int, sa_digest_algorithm, sa_digest_algorithm, int>;
+typedef std::tuple<sa_key_type, size_t, int, sa_digest_algorithm, sa_digest_algorithm, int>
+        SaProviderAsymCipherTestType;
 
 class SaProviderAsymCipherTest : public ::testing::TestWithParam<SaProviderAsymCipherTestType>,
                                  public SaProviderTest {};
 
-using SaProviderMacTestType = std::tuple<size_t, const char*, const char*>;
+typedef std::tuple<size_t, const char*, const char*> SaProviderMacTestType;
 
 class SaProviderMacTest : public ::testing::TestWithParam<SaProviderMacTestType> {};
 
-using SaProviderKeyExchangeTestType = std::tuple<sa_key_type, size_t>;
+typedef std::tuple<sa_key_type, size_t> SaProviderKeyExchangeTestType;
 
 class SaProviderKeyExchangeTest : public ::testing::TestWithParam<SaProviderKeyExchangeTestType>,
                                   public SaProviderTest {};
 
-using SaProviderKdfTestType = std::tuple<const char*, const char*>;
+typedef std::tuple<const char*, const char*> SaProviderKdfTestType;
 
 class SaProviderKdfTest : public ::testing::TestWithParam<SaProviderKdfTestType>,
                           public SaProviderTest {};

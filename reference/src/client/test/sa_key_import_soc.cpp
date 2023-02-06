@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,9 +34,9 @@ namespace {
         auto key_size = std::get<1>(param0);
         auto key_type = std::get<2>(param0);
         auto param1 = std::get<1>(GetParam());
-        uint8_t key_usage = std::get<0>(param1);
-        uint8_t decrypted_key_usage = std::get<1>(param1);
-        uint8_t secapi_version = std::get<2>(GetParam());
+        uint8_t const key_usage = std::get<0>(param1);
+        uint8_t const decrypted_key_usage = std::get<1>(param1);
+        uint8_t const secapi_version = std::get<2>(GetParam());
 
         if (key_usage == KEY_ONLY && memcmp(key_type_string.data(), "HMAC", 4) == 0)
             return;
@@ -105,8 +105,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, invalidKeyUsage1) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "HMAC-128";
-        uint8_t key_usage = 2;
-        uint8_t decrypted_key_usage = 2;
+        uint8_t const key_usage = 2;
+        uint8_t const decrypted_key_usage = 2;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
@@ -114,8 +114,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -125,8 +125,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, invalidKeyUsage2) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "HMAC-160";
-        uint8_t key_usage = 2;
-        uint8_t decrypted_key_usage = 2;
+        uint8_t const key_usage = 2;
+        uint8_t const decrypted_key_usage = 2;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
@@ -134,8 +134,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -145,8 +145,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, invalidKeyUsage3) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "HMAC-256";
-        uint8_t key_usage = 2;
-        uint8_t decrypted_key_usage = 2;
+        uint8_t const key_usage = 2;
+        uint8_t const decrypted_key_usage = 2;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
@@ -154,8 +154,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -165,8 +165,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, invalidContainerVersion) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
-        uint8_t key_usage = 3;
-        uint8_t decrypted_key_usage = 0;
+        uint8_t const key_usage = 3;
+        uint8_t const decrypted_key_usage = 0;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
@@ -174,7 +174,7 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), 0, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key, iv, key_usage,
+        sa_status const status = import_key(key.get(), 0, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key, iv, key_usage,
                 decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
@@ -185,8 +185,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, missingIv) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
-        uint8_t key_usage = 3;
-        uint8_t decrypted_key_usage = 0;
+        uint8_t const key_usage = 3;
+        uint8_t const decrypted_key_usage = 0;
         std::vector<uint8_t> iv;
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
@@ -194,8 +194,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -205,8 +205,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, missingC1) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
-        uint8_t key_usage = 3;
-        uint8_t decrypted_key_usage = 0;
+        uint8_t const key_usage = 3;
+        uint8_t const decrypted_key_usage = 0;
         std::vector<uint8_t> c1;
         auto iv = random(GCM_IV_LENGTH);
         auto c2 = random(AES_BLOCK_SIZE);
@@ -214,8 +214,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -225,8 +225,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, missingC2) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
-        uint8_t key_usage = 3;
-        uint8_t decrypted_key_usage = 0;
+        uint8_t const key_usage = 3;
+        uint8_t const decrypted_key_usage = 0;
         std::vector<uint8_t> c2;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
@@ -234,8 +234,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -245,8 +245,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, missingC3) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
-        uint8_t key_usage = 3;
-        uint8_t decrypted_key_usage = 0;
+        uint8_t const key_usage = 3;
+        uint8_t const decrypted_key_usage = 0;
         std::vector<uint8_t> c3;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
@@ -254,8 +254,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -265,8 +265,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, unknownKeyType) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-64";
-        uint8_t key_usage = 3;
-        uint8_t decrypted_key_usage = 0;
+        uint8_t const key_usage = 3;
+        uint8_t const decrypted_key_usage = 0;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
@@ -274,8 +274,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -285,8 +285,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, unknownKeyUsage1) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
-        uint8_t key_usage = 0;
-        uint8_t decrypted_key_usage = 0;
+        uint8_t const key_usage = 0;
+        uint8_t const decrypted_key_usage = 0;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
@@ -294,8 +294,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -305,8 +305,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, unknownKeyUsage2) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
-        uint8_t key_usage = 4;
-        uint8_t decrypted_key_usage = 0;
+        uint8_t const key_usage = 4;
+        uint8_t const decrypted_key_usage = 0;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
@@ -314,8 +314,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -325,8 +325,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, unknownDecryptedKeyUsage1) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
-        uint8_t key_usage = 2;
-        uint8_t decrypted_key_usage = 0;
+        uint8_t const key_usage = 2;
+        uint8_t const decrypted_key_usage = 0;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
@@ -334,8 +334,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -345,8 +345,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, unknownDecryptedKeyUsage2) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
-        uint8_t key_usage = 2;
-        uint8_t decrypted_key_usage = 4;
+        uint8_t const key_usage = 2;
+        uint8_t const decrypted_key_usage = 4;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
@@ -354,8 +354,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -365,8 +365,8 @@ namespace {
     TEST_F(SaKeyImportSocTest, failsDisallowedKey) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
-        uint8_t key_usage = 3;
-        uint8_t decrypted_key_usage = 0;
+        uint8_t const key_usage = 3;
+        uint8_t const decrypted_key_usage = 0;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
@@ -393,14 +393,14 @@ namespace {
     TEST_P(SaKeyImportSocTaIdRangeTest, multipleEntitledTaIdsCounts) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
-        uint8_t key_usage = 3;
-        uint8_t decrypted_key_usage = 0;
+        uint8_t const key_usage = 3;
+        uint8_t const decrypted_key_usage = 0;
         std::vector<std::string> entitled_ta_ids;
         auto iv = random(GCM_IV_LENGTH);
         auto c1 = random(AES_BLOCK_SIZE);
         auto c2 = random(AES_BLOCK_SIZE);
         auto c3 = random(AES_BLOCK_SIZE);
-        int count = GetParam();
+        int const count = GetParam();
         sa_rights key_rights;
 
         for (int i = 0; i < count; i++) {
@@ -415,8 +415,8 @@ namespace {
         }
 
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, entitled_ta_ids, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, entitled_ta_ids, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 

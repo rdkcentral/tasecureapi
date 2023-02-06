@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -124,7 +124,7 @@ static int cipher_nids[] = {
         NID_aes_256_ctr,
         NID_aes_256_gcm};
 
-static int cipher_nids_num = (sizeof(cipher_nids) / sizeof(cipher_nids[0]));
+ossl_unused static int cipher_nids_num = (sizeof(cipher_nids) / sizeof(cipher_nids[0]));
 
 static sa_cipher_algorithm cipher_get_cipher_algorithm(int nid) {
     switch (nid) {

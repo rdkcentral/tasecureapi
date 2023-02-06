@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,8 +32,8 @@ using namespace client_test_helpers;
 TEST_P(SaEnginePkeySignTest, digestSignWithUpdateFinalTest) {
     auto key_type = std::get<0>(GetParam());
     auto key_length = std::get<1>(GetParam());
-    int nid = std::get<2>(GetParam());
-    int mgf1_nid = std::get<3>(GetParam());
+    int const nid = std::get<2>(GetParam());
+    int const mgf1_nid = std::get<3>(GetParam());
     auto padding = std::get<4>(GetParam());
     auto salt = std::get<5>(GetParam());
 
@@ -46,15 +46,15 @@ TEST_P(SaEnginePkeySignTest, digestSignWithUpdateFinalTest) {
 
     auto data = random(256);
     std::vector<uint8_t> signature;
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
     const EVP_MD* evp_md = EVP_get_digestbynid(nid);
 
     size_t signature_length = 0;
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_sign_ctx = nullptr;
     ASSERT_EQ(EVP_DigestSignInit(evp_md_sign_ctx.get(), &evp_pkey_sign_ctx, evp_md, engine.get(), evp_pkey.get()),
@@ -73,7 +73,7 @@ TEST_P(SaEnginePkeySignTest, digestSignWithUpdateFinalTest) {
     ASSERT_EQ(EVP_DigestSignFinal(evp_md_sign_ctx.get(), signature.data(), &signature_length), 1);
     signature.resize(signature_length);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_verify_ctx = nullptr;
     ASSERT_EQ(EVP_DigestVerifyInit(evp_md_verify_ctx.get(), &evp_pkey_verify_ctx, evp_md, engine.get(), evp_pkey.get()),
@@ -93,8 +93,8 @@ TEST_P(SaEnginePkeySignTest, digestSignWithUpdateFinalTest) {
 TEST_P(SaEnginePkeySignTest, signTest) {
     auto key_type = std::get<0>(GetParam());
     auto key_length = std::get<1>(GetParam());
-    int nid = std::get<2>(GetParam());
-    int mgf1_nid = std::get<3>(GetParam());
+    int const nid = std::get<2>(GetParam());
+    int const mgf1_nid = std::get<3>(GetParam());
     auto padding = std::get<4>(GetParam());
     auto salt = std::get<5>(GetParam());
 
@@ -107,10 +107,10 @@ TEST_P(SaEnginePkeySignTest, signTest) {
 
     auto data = random(256);
     std::vector<uint8_t> signature;
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     const EVP_MD* evp_md = EVP_get_digestbynid(nid);
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     ASSERT_EQ(EVP_DigestInit(evp_md_sign_ctx.get(), evp_md), 1);
     ASSERT_EQ(EVP_DigestUpdate(evp_md_sign_ctx.get(), data.data(), data.size()), 1);
@@ -120,8 +120,9 @@ TEST_P(SaEnginePkeySignTest, signTest) {
 
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_sign_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_sign_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+            EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey, nullptr);
 
     size_t signature_length = 0;
@@ -137,7 +138,8 @@ TEST_P(SaEnginePkeySignTest, signTest) {
     ASSERT_EQ(EVP_PKEY_CTX_set_signature_md(evp_pkey_sign_ctx.get(), evp_md), 1);
     ASSERT_EQ(EVP_PKEY_sign(evp_pkey_sign_ctx.get(), nullptr, &signature_length, digest, digest_length), 1);
     signature.resize(signature_length);
-    int result = EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest, digest_length);
+    int const result = EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest,
+            digest_length);
     if (result == -2)
         GTEST_SKIP() << "Operation not supported";
 
@@ -145,7 +147,7 @@ TEST_P(SaEnginePkeySignTest, signTest) {
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_verify_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_verify_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
             EVP_PKEY_CTX_free);
     ASSERT_EQ(EVP_PKEY_verify_init(evp_pkey_verify_ctx.get()), 1);
     if (key_type == SA_KEY_TYPE_RSA) {
@@ -160,7 +162,7 @@ TEST_P(SaEnginePkeySignTest, signTest) {
     ASSERT_EQ(EVP_PKEY_verify(evp_pkey_verify_ctx.get(), signature.data(), signature.size(), digest, digest_length), 1);
 
     // Verify again with DigestVerify
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_ver2_ctx = nullptr;
     ASSERT_EQ(EVP_DigestVerifyInit(evp_md_verify_ctx.get(), &evp_pkey_ver2_ctx, evp_md, engine.get(), evp_pkey.get()),
@@ -178,7 +180,7 @@ TEST_P(SaEnginePkeySignTest, signTest) {
 }
 
 TEST(SaEnginePkeySignTest, defaultPaddingTest) {
-    sa_key_type key_type = SA_KEY_TYPE_RSA;
+    sa_key_type const key_type = SA_KEY_TYPE_RSA;
     size_t key_length = RSA_2048_BYTE_LENGTH;
 
     std::vector<uint8_t> clear_key;
@@ -190,10 +192,10 @@ TEST(SaEnginePkeySignTest, defaultPaddingTest) {
 
     auto data = random(256);
     std::vector<uint8_t> signature;
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     const EVP_MD* evp_md = EVP_sha256();
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     ASSERT_EQ(EVP_DigestInit(evp_md_sign_ctx.get(), evp_md), 1);
     ASSERT_EQ(EVP_DigestUpdate(evp_md_sign_ctx.get(), data.data(), data.size()), 1);
@@ -203,8 +205,9 @@ TEST(SaEnginePkeySignTest, defaultPaddingTest) {
 
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_sign_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_sign_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+            EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey, nullptr);
 
     size_t signature_length = 0;
@@ -212,7 +215,8 @@ TEST(SaEnginePkeySignTest, defaultPaddingTest) {
     ASSERT_EQ(EVP_PKEY_CTX_set_signature_md(evp_pkey_sign_ctx.get(), evp_md), 1);
     ASSERT_EQ(EVP_PKEY_sign(evp_pkey_sign_ctx.get(), nullptr, &signature_length, digest, digest_length), 1);
     signature.resize(signature_length);
-    int result = EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest, digest_length);
+    int const result = EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest,
+            digest_length);
     if (result == -2)
         GTEST_SKIP() << "Operation not supported";
 
@@ -220,8 +224,8 @@ TEST(SaEnginePkeySignTest, defaultPaddingTest) {
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
-    int padding = RSA_PKCS1_PADDING;
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_verify_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+    int const padding = RSA_PKCS1_PADDING;
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_verify_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
             EVP_PKEY_CTX_free);
     ASSERT_EQ(EVP_PKEY_verify_init(evp_pkey_verify_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(evp_pkey_verify_ctx.get(), padding), 1);
@@ -230,7 +234,7 @@ TEST(SaEnginePkeySignTest, defaultPaddingTest) {
     ASSERT_EQ(EVP_PKEY_verify(evp_pkey_verify_ctx.get(), signature.data(), signature.size(), digest, digest_length), 1);
 
     // Verify again with DigestVerify
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_ver2_ctx = nullptr;
     ASSERT_EQ(EVP_DigestVerifyInit(evp_md_verify_ctx.get(), &evp_pkey_ver2_ctx, evp_md, engine.get(), evp_pkey.get()),
@@ -242,9 +246,9 @@ TEST(SaEnginePkeySignTest, defaultPaddingTest) {
 }
 
 TEST(SaEnginePkeySignTest, defaultSaltTest) {
-    sa_key_type key_type = SA_KEY_TYPE_RSA;
+    sa_key_type const key_type = SA_KEY_TYPE_RSA;
     size_t key_length = RSA_2048_BYTE_LENGTH;
-    int padding = RSA_PKCS1_PSS_PADDING;
+    int const padding = RSA_PKCS1_PSS_PADDING;
 
     std::vector<uint8_t> clear_key;
     sa_elliptic_curve curve;
@@ -255,10 +259,10 @@ TEST(SaEnginePkeySignTest, defaultSaltTest) {
 
     auto data = random(256);
     std::vector<uint8_t> signature;
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     const EVP_MD* evp_md = EVP_sha256();
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     ASSERT_EQ(EVP_DigestInit(evp_md_sign_ctx.get(), evp_md), 1);
     ASSERT_EQ(EVP_DigestUpdate(evp_md_sign_ctx.get(), data.data(), data.size()), 1);
@@ -268,8 +272,9 @@ TEST(SaEnginePkeySignTest, defaultSaltTest) {
 
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_sign_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_sign_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+            EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey, nullptr);
 
     size_t signature_length = 0;
@@ -279,7 +284,8 @@ TEST(SaEnginePkeySignTest, defaultSaltTest) {
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(evp_pkey_sign_ctx.get(), padding), 1);
     ASSERT_EQ(EVP_PKEY_sign(evp_pkey_sign_ctx.get(), nullptr, &signature_length, digest, digest_length), 1);
     signature.resize(signature_length);
-    int result = EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest, digest_length);
+    int const result = EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest,
+            digest_length);
     if (result == -2)
         GTEST_SKIP() << "Operation not supported";
 
@@ -287,7 +293,7 @@ TEST(SaEnginePkeySignTest, defaultSaltTest) {
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_verify_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_verify_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
             EVP_PKEY_CTX_free);
     ASSERT_EQ(EVP_PKEY_verify_init(evp_pkey_verify_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(evp_pkey_verify_ctx.get(), padding), 1);
@@ -298,7 +304,7 @@ TEST(SaEnginePkeySignTest, defaultSaltTest) {
     ASSERT_EQ(EVP_PKEY_verify(evp_pkey_verify_ctx.get(), signature.data(), signature.size(), digest, digest_length), 1);
 
     // Verify again with DigestVerify
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_ver2_ctx = nullptr;
     ASSERT_EQ(EVP_DigestVerifyInit(evp_md_verify_ctx.get(), &evp_pkey_ver2_ctx, evp_md, engine.get(), evp_pkey.get()),
@@ -312,9 +318,9 @@ TEST(SaEnginePkeySignTest, defaultSaltTest) {
 }
 
 TEST(SaEnginePkeySignTest, defaultMgf1DigestTest) {
-    sa_key_type key_type = SA_KEY_TYPE_RSA;
+    sa_key_type const key_type = SA_KEY_TYPE_RSA;
     size_t key_length = RSA_2048_BYTE_LENGTH;
-    int padding = RSA_PKCS1_PSS_PADDING;
+    int const padding = RSA_PKCS1_PSS_PADDING;
 
     std::vector<uint8_t> clear_key;
     sa_elliptic_curve curve;
@@ -325,10 +331,10 @@ TEST(SaEnginePkeySignTest, defaultMgf1DigestTest) {
 
     auto data = random(256);
     std::vector<uint8_t> signature;
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     const EVP_MD* evp_md = EVP_sha256();
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     ASSERT_EQ(EVP_DigestInit(evp_md_sign_ctx.get(), evp_md), 1);
     ASSERT_EQ(EVP_DigestUpdate(evp_md_sign_ctx.get(), data.data(), data.size()), 1);
@@ -338,8 +344,9 @@ TEST(SaEnginePkeySignTest, defaultMgf1DigestTest) {
 
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_sign_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_sign_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+            EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey, nullptr);
 
     size_t signature_length = 0;
@@ -349,7 +356,8 @@ TEST(SaEnginePkeySignTest, defaultMgf1DigestTest) {
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_pss_saltlen(evp_pkey_sign_ctx.get(), RSA_PSS_SALTLEN_AUTO), 1);
     ASSERT_EQ(EVP_PKEY_sign(evp_pkey_sign_ctx.get(), nullptr, &signature_length, digest, digest_length), 1);
     signature.resize(signature_length);
-    int result = EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest, digest_length);
+    int const result = EVP_PKEY_sign(evp_pkey_sign_ctx.get(), signature.data(), &signature_length, digest,
+            digest_length);
     if (result == -2)
         GTEST_SKIP() << "Operation not supported";
 
@@ -357,7 +365,7 @@ TEST(SaEnginePkeySignTest, defaultMgf1DigestTest) {
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_verify_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_verify_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
             EVP_PKEY_CTX_free);
     ASSERT_EQ(EVP_PKEY_verify_init(evp_pkey_verify_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_signature_md(evp_pkey_verify_ctx.get(), evp_md), 1);
@@ -367,7 +375,7 @@ TEST(SaEnginePkeySignTest, defaultMgf1DigestTest) {
     ASSERT_EQ(EVP_PKEY_verify(evp_pkey_verify_ctx.get(), signature.data(), signature.size(), digest, digest_length), 1);
 
     // Verify again with DigestVerify
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_ver2_ctx = nullptr;
     ASSERT_EQ(EVP_DigestVerifyInit(evp_md_verify_ctx.get(), &evp_pkey_ver2_ctx, evp_md, engine.get(), evp_pkey.get()),
@@ -383,8 +391,8 @@ TEST(SaEnginePkeySignTest, defaultMgf1DigestTest) {
 TEST_P(SaEnginePkeySignTest, digestSignNoUpdateFinalTest) {
     auto key_type = std::get<0>(GetParam());
     auto key_length = std::get<1>(GetParam());
-    int nid = std::get<2>(GetParam());
-    int mgf1_nid = std::get<3>(GetParam());
+    int const nid = std::get<2>(GetParam());
+    int const mgf1_nid = std::get<3>(GetParam());
     auto padding = std::get<4>(GetParam());
     auto salt = std::get<5>(GetParam());
 
@@ -397,15 +405,15 @@ TEST_P(SaEnginePkeySignTest, digestSignNoUpdateFinalTest) {
 
     auto data = random(256);
     std::vector<uint8_t> signature;
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
     const EVP_MD* evp_md = EVP_get_digestbynid(nid);
 
     size_t signature_length = 0;
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_sign_ctx = nullptr;
     ASSERT_EQ(EVP_DigestSignInit(evp_md_sign_ctx.get(), &evp_pkey_sign_ctx, evp_md, engine.get(), evp_pkey.get()),
@@ -423,7 +431,7 @@ TEST_P(SaEnginePkeySignTest, digestSignNoUpdateFinalTest) {
     ASSERT_EQ(EVP_DigestSign(evp_md_sign_ctx.get(), signature.data(), &signature_length, data.data(), data.size()), 1);
     signature.resize(signature_length);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_verify_ctx = nullptr;
     ASSERT_EQ(EVP_DigestVerifyInit(evp_md_verify_ctx.get(), &evp_pkey_verify_ctx, evp_md, engine.get(), evp_pkey.get()),
@@ -453,13 +461,13 @@ TEST_P(SaEnginePkeySignEdTest, digestSignTest) {
 
     auto data = random(256);
     std::vector<uint8_t> signature;
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     ASSERT_EQ(EVP_DigestSignInit(evp_md_sign_ctx.get(), nullptr, nullptr, engine.get(), evp_pkey.get()), 1);
     size_t signature_length = 0;
@@ -468,7 +476,7 @@ TEST_P(SaEnginePkeySignEdTest, digestSignTest) {
     ASSERT_EQ(EVP_DigestSign(evp_md_sign_ctx.get(), signature.data(), &signature_length, data.data(), data.size()), 1);
     signature.resize(signature_length);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     ASSERT_EQ(EVP_DigestVerifyInit(evp_md_verify_ctx.get(), nullptr, nullptr, engine.get(), evp_pkey.get()), 1);
     ASSERT_EQ(EVP_DigestVerify(evp_md_verify_ctx.get(), signature.data(), signature.size(), data.data(), data.size()),

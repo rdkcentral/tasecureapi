@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,12 +45,6 @@ sa_status sa_svp_buffer_copy(
     size_t param1_size;
     do {
         CREATE_COMMAND(sa_svp_buffer_copy_s, svp_buffer_copy);
-        if (svp_buffer_copy == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         svp_buffer_copy->api_version = API_VERSION;
         svp_buffer_copy->out = out;
         svp_buffer_copy->in = in;

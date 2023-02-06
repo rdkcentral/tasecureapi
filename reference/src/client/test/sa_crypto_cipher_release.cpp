@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,15 +26,15 @@ namespace {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
         parameters.svp_required = false;
-        sa_key_type key_type = std::get<1>(GetParam());
-        size_t key_size = std::get<2>(GetParam());
+        sa_key_type const key_type = std::get<1>(GetParam());
+        size_t const key_size = std::get<2>(GetParam());
 
         auto cipher = initialize_cipher(SA_CIPHER_MODE_ENCRYPT, key_type, key_size, parameters);
         ASSERT_NE(cipher, nullptr);
         if (*cipher == UNSUPPORTED_CIPHER)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
-        sa_status status = sa_crypto_cipher_release(*cipher);
+        sa_status const status = sa_crypto_cipher_release(*cipher);
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
@@ -42,8 +42,8 @@ namespace {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
         parameters.svp_required = false;
-        sa_key_type key_type = std::get<1>(GetParam());
-        size_t key_size = std::get<2>(GetParam());
+        sa_key_type const key_type = std::get<1>(GetParam());
+        size_t const key_size = std::get<2>(GetParam());
         parameters.oaep_digest_algorithm = std::get<4>(GetParam());
         parameters.oaep_mgf1_digest_algorithm = std::get<5>(GetParam());
         parameters.oaep_label_length = std::get<6>(GetParam());
@@ -53,12 +53,12 @@ namespace {
         if (*cipher == UNSUPPORTED_CIPHER)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
-        sa_status status = sa_crypto_cipher_release(*cipher);
+        sa_status const status = sa_crypto_cipher_release(*cipher);
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
     TEST_F(SaCryptoCipherWithoutSvpTest, releaseFailsInvalidContext) {
-        sa_status status = sa_crypto_cipher_release(INVALID_HANDLE);
+        sa_status const status = sa_crypto_cipher_release(INVALID_HANDLE);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

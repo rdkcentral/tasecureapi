@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,7 @@
  */
 
 #include "client_store.h"
-#include "digest.h"
 #include "digest_util.h"
-#include "key_type.h"
 #include "log.h"
 #include "porting/memory.h"
 #include "ta_sa.h"

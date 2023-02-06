@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_P(SaCryptoCipherWithSvpTest, processAesEcbFailsInvalidInLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+        sa_buffer_type const buffer_type = std::get<0>(GetParam());
+        sa_cipher_mode const cipher_mode = std::get<1>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -57,8 +57,8 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherWithSvpTest, processAesEcbFailsInvalidOutLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+        sa_buffer_type const buffer_type = std::get<0>(GetParam());
+        sa_cipher_mode const cipher_mode = std::get<1>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -76,7 +76,7 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto in_buffer = buffer_alloc(buffer_type, clear);
         ASSERT_NE(in_buffer, nullptr);
         auto out_buffer = buffer_alloc(buffer_type, clear.size() - 1);
@@ -109,7 +109,7 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size() - 1);

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,9 +62,9 @@
 #define MAX_CMAC_SIZE 64
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000
-#define RSA_PSS_SALTLEN_DIGEST -1
-#define RSA_PSS_SALTLEN_AUTO -2
-#define RSA_PSS_SALTLEN_MAX -3
+#define RSA_PSS_SALTLEN_DIGEST (-1)
+#define RSA_PSS_SALTLEN_AUTO (-2)
+#define RSA_PSS_SALTLEN_MAX (-3)
 #endif
 
 #define DEFAULT_ROOT_KEYSTORE_PASSWORD "password01234567"

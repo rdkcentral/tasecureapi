@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -85,11 +85,11 @@ bool ProcessCommonEncryptionBase::encrypt(
         uint8_t* iv,
         EVP_CIPHER_CTX* context) {
 
-    bool ctr_mode = EVP_CIPHER_CTX_mode(context) == EVP_CIPH_CTR_MODE;
+    bool const ctr_mode = EVP_CIPHER_CTX_mode(context) == EVP_CIPH_CTR_MODE;
     bool first_block = true;
     for (size_t bytes_encrypted = 0; bytes_to_process > bytes_encrypted;) {
         if (ctr_mode) {
-            int remaining_in_block = MIN(AES_BLOCK_SIZE - *enc_byte_count % AES_BLOCK_SIZE,
+            int const remaining_in_block = MIN(AES_BLOCK_SIZE - *enc_byte_count % AES_BLOCK_SIZE,
                     bytes_to_process - bytes_encrypted);
             if (!first_block || remaining_in_block == AES_BLOCK_SIZE) {
                 if (EVP_EncryptInit_ex(context, nullptr, nullptr, nullptr, iv) != 1) {
@@ -106,7 +106,7 @@ bool ProcessCommonEncryptionBase::encrypt(
             }
 
             if ((*enc_byte_count + remaining_in_block) % AES_BLOCK_SIZE == 0) {
-                auto* counterBuffer = reinterpret_cast<uint64_t*>(iv + 8);
+                auto* counterBuffer = reinterpret_cast<uint64_t*>(iv + 8); // NOLINT
                 (*counterBuffer) = htobe64(be64toh(*counterBuffer) + 1);
             }
 
@@ -137,7 +137,7 @@ bool ProcessCommonEncryptionBase::encrypt_samples(
         sa_cipher_algorithm cipher_algorithm) {
 
     size_t offset = 0;
-    for (sa_sample& sample : samples) {
+    for (const sa_sample& sample : samples) {
         uint8_t iv[AES_BLOCK_SIZE];
         memcpy(iv, sample.iv, sample.iv_length);
 
@@ -230,8 +230,8 @@ bool ProcessCommonEncryptionBase::build_samples(
         sample_data& sample_data,
         std::vector<sa_sample>& samples) {
 
-    size_t sample_count = samples.size();
-    size_t subsample_size = sample_size / subsample_count;
+    size_t const sample_count = samples.size();
+    size_t const subsample_size = sample_size / subsample_count;
     sample_data.clear = random(subsample_size * subsample_count * sample_count);
     sample_data.subsample_lengths.resize(subsample_count * sample_count);
 

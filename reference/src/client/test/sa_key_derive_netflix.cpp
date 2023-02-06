@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
         ASSERT_EQ(status, SA_STATUS_OK);
 
         std::vector<uint8_t> clear_key(SYM_128_KEY_SIZE);
@@ -68,7 +68,7 @@ namespace {
                 .kenc = *encryption_key,
                 .khmac = INVALID_HANDLE};
 
-        sa_status status = sa_key_derive(nullptr, &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
+        sa_status const status = sa_key_derive(nullptr, &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -88,7 +88,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), nullptr, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
+        sa_status const status = sa_key_derive(key.get(), nullptr, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -98,7 +98,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, nullptr);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -118,7 +118,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -138,7 +138,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -166,7 +166,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
@@ -193,7 +193,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
@@ -219,7 +219,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
@@ -245,7 +245,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 } // namespace

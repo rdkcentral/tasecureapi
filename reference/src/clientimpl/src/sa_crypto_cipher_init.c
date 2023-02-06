@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,12 +46,6 @@ sa_status sa_crypto_cipher_init(
     sa_status status;
     do {
         CREATE_COMMAND(sa_crypto_cipher_init_s, cipher_init);
-        if (cipher_init == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         cipher_init->api_version = API_VERSION;
         cipher_init->context = *context;
         cipher_init->cipher_algorithm = cipher_algorithm;
@@ -89,12 +83,6 @@ sa_status sa_crypto_cipher_init(
                 }
 
                 CREATE_PARAM(param1, (void*) parameters_aes_cbc->iv, parameters_aes_cbc->iv_length);
-                if (param1 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 param1_size = parameters_aes_cbc->iv_length;
                 param1_type = TA_PARAM_IN;
                 param2_size = 0;
@@ -116,12 +104,6 @@ sa_status sa_crypto_cipher_init(
                 }
 
                 CREATE_PARAM(param1, (void*) parameters_aes_ctr->ctr, parameters_aes_ctr->ctr_length);
-                if (param1 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 param1_size = parameters_aes_ctr->ctr_length;
                 param1_type = TA_PARAM_IN;
                 param2_size = 0;
@@ -149,23 +131,11 @@ sa_status sa_crypto_cipher_init(
                 }
 
                 CREATE_PARAM(param1, (void*) parameters_aes_gcm->iv, parameters_aes_gcm->iv_length);
-                if (param1 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 param1_size = parameters_aes_gcm->iv_length;
                 param1_type = TA_PARAM_IN;
 
                 if (parameters_aes_gcm->aad != NULL) {
                     CREATE_PARAM(param2, (void*) parameters_aes_gcm->aad, parameters_aes_gcm->aad_length);
-                    if (param2 == NULL) {
-                        ERROR("CREATE_PARAM failed");
-                        status = SA_STATUS_INTERNAL_ERROR;
-                        continue; // NOLINT
-                    }
-
                     param2_size = parameters_aes_gcm->aad_length;
                     param2_type = TA_PARAM_IN;
                 } else {
@@ -195,22 +165,10 @@ sa_status sa_crypto_cipher_init(
                 }
 
                 CREATE_PARAM(param1, (void*) parameters_chacha20->nonce, parameters_chacha20->nonce_length);
-                if (param1 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 param1_size = parameters_chacha20->nonce_length;
                 param1_type = TA_PARAM_IN;
 
                 CREATE_PARAM(param2, (void*) parameters_chacha20->counter, parameters_chacha20->counter_length);
-                if (param2 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 param2_size = parameters_chacha20->counter_length;
                 param2_type = TA_PARAM_IN;
                 break;
@@ -238,24 +196,12 @@ sa_status sa_crypto_cipher_init(
 
                 CREATE_PARAM(param1, (void*) parameters_chacha20_poly1305->nonce,
                         parameters_chacha20_poly1305->nonce_length);
-                if (param1 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 param1_size = parameters_chacha20_poly1305->nonce_length;
                 param1_type = TA_PARAM_IN;
 
                 if (parameters_chacha20_poly1305->aad != NULL) {
                     CREATE_PARAM(param2, (void*) parameters_chacha20_poly1305->aad,
                             parameters_chacha20_poly1305->aad_length);
-                    if (param2 == NULL) {
-                        ERROR("CREATE_PARAM failed");
-                        status = SA_STATUS_INTERNAL_ERROR;
-                        continue; // NOLINT
-                    }
-
                     param2_size = parameters_chacha20_poly1305->aad_length;
                     param2_type = TA_PARAM_IN;
                 } else {
@@ -279,12 +225,6 @@ sa_status sa_crypto_cipher_init(
                 }
 
                 CREATE_COMMAND(sa_cipher_parameters_rsa_oaep_s, param1);
-                if (param1 == NULL) {
-                    ERROR("CREATE_COMMAND failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 sa_cipher_parameters_rsa_oaep_s* parameters_rsa_oaep_s = (sa_cipher_parameters_rsa_oaep_s*) param1;
                 parameters_rsa_oaep_s->digest_algorithm = parameters_rsa_oaep->digest_algorithm;
                 parameters_rsa_oaep_s->mgf1_digest_algorithm = parameters_rsa_oaep->mgf1_digest_algorithm;
@@ -292,14 +232,7 @@ sa_status sa_crypto_cipher_init(
                 param1_size = sizeof(sa_cipher_parameters_rsa_oaep_s);
                 param1_type = TA_PARAM_IN;
                 if (parameters_rsa_oaep->label != NULL) {
-                    CREATE_PARAM(param2, (void*) parameters_rsa_oaep->label,
-                            parameters_rsa_oaep_s->label_length);
-                    if (param2 == NULL) {
-                        ERROR("CREATE_PARAM failed");
-                        status = SA_STATUS_INTERNAL_ERROR;
-                        continue; // NOLINT
-                    }
-
+                    CREATE_PARAM(param2, (void*) parameters_rsa_oaep->label, parameters_rsa_oaep->label_length);
                     param2_size = parameters_rsa_oaep->label_length;
                     param2_type = TA_PARAM_IN;
                 } else {
@@ -331,7 +264,7 @@ sa_status sa_crypto_cipher_init(
     } while (false);
 
     RELEASE_COMMAND(cipher_init);
-    if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
+    if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) { // NOLINT
         RELEASE_COMMAND(param1);
     } else {
         RELEASE_PARAM(param1);

@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ namespace {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, nullptr);
+        sa_status const status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -43,12 +43,12 @@ namespace {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
-        std::vector<uint8_t> dhp4096 = sample_dh_p_4096();
+        std::vector<uint8_t> const dhp4096 = sample_dh_p_4096();
         std::vector<uint8_t> dhg4096 = sample_dh_g_4096();
 
         sa_generate_parameters_dh parameters = {nullptr, dhp4096.size(), dhg4096.data(), dhg4096.size()};
 
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
+        sa_status const status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -60,11 +60,11 @@ namespace {
         sa_rights_set_allow_all(&rights);
 
         std::vector<uint8_t> dhp4096 = sample_dh_p_4096();
-        std::vector<uint8_t> dhg4096 = sample_dh_g_4096();
+        std::vector<uint8_t> const dhg4096 = sample_dh_g_4096();
 
         sa_generate_parameters_dh parameters = {dhp4096.data(), dhp4096.size(), nullptr, dhg4096.size()};
 
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
+        sa_status const status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -81,7 +81,7 @@ namespace {
         sa_generate_parameters_dh parameters = {dhp_invalid_4096.data(), dhp_invalid_4096.size(), dhg4096.data(),
                 dhg4096.size()};
 
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
+        sa_status const status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -97,7 +97,7 @@ namespace {
 
         sa_generate_parameters_dh parameters = {dhp4096.data(), 0, dhg4096.data(), dhg4096.size()};
 
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
+        sa_status const status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -113,7 +113,7 @@ namespace {
 
         sa_generate_parameters_dh parameters = {dhp4096.data(), dhp4096.size(), dhg4096.data(), 0};
 
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
+        sa_status const status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -129,7 +129,7 @@ namespace {
         dhp4096.push_back(1);
         sa_generate_parameters_dh parameters = {dhp4096.data(), dhp4096.size(), dhg4096.data(), dhg4096.size()};
 
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
+        sa_status const status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -144,7 +144,7 @@ namespace {
         std::vector<uint8_t> dhg4096 = random(dhp4096.size() + 1);
         sa_generate_parameters_dh parameters = {dhp4096.data(), dhp4096.size(), dhg4096.data(), dhg4096.size()};
 
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
+        sa_status const status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_DH, &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

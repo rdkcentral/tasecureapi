@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,12 +55,6 @@ sa_status sa_key_generate(
     sa_status status;
     do {
         CREATE_COMMAND(sa_key_generate_s, key_generate);
-        if (key_generate == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         key_generate->api_version = API_VERSION;
         key_generate->key = *key;
         key_generate->rights = *rights;
@@ -92,22 +86,10 @@ sa_status sa_key_generate(
                 }
 
                 CREATE_PARAM(param1, (void*) parameters_dh->p, parameters_dh->p_length);
-                if (param1 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 param1_length = parameters_dh->p_length;
                 param1_type = TA_PARAM_IN;
 
                 CREATE_PARAM(param2, (void*) parameters_dh->g, parameters_dh->g_length);
-                if (param2 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 param2_length = parameters_dh->g_length;
                 param2_type = TA_PARAM_IN;
                 key_generate->key_length = 0;

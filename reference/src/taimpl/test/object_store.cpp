@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "object_store.h"
+#include "object_store.h" // NOLINT
+#include "log.h"
 #include "ta_test_helpers.h"
 #include "gtest/gtest.h"
 
@@ -24,17 +25,18 @@ using namespace ta_test_helpers;
 
 namespace {
     void noop(void* obj) {
+        DEBUG("Releasing %p", obj);
     }
 
     TEST(ObjectStoreInit, nominal) {
-        size_t num = 128;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
+        size_t const num = 128;
+        std::shared_ptr<object_store_t> const store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_NE(store, nullptr);
     }
 
     TEST(ObjectStoreInit, failsOnInvalidNumSlots) {
-        size_t num = 129;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
+        size_t const num = 129;
+        std::shared_ptr<object_store_t> const store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_EQ(store, nullptr);
     }
 
@@ -44,23 +46,23 @@ namespace {
 
     TEST(ObjectStoreAdd, nominal) {
         size_t num = 128;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
+        std::shared_ptr<object_store_t> const store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_NE(store, nullptr);
 
         slot_t slot = SLOT_INVALID;
-        sa_status status = object_store_add(&slot, store.get(), &num, ta_uuid());
+        sa_status const status = object_store_add(&slot, store.get(), &num, ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_NE(slot, SLOT_INVALID);
     }
 
     TEST(ObjectStoreAdd, failsWhenFull) {
         size_t num = 128;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
+        std::shared_ptr<object_store_t> const store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_NE(store, nullptr);
 
         slot_t slot = SLOT_INVALID;
         for (size_t i = 0; i < num; ++i) {
-            sa_status status = object_store_add(&slot, store.get(), &num, ta_uuid());
+            sa_status const status = object_store_add(&slot, store.get(), &num, ta_uuid());
             ASSERT_EQ(status, SA_STATUS_OK);
         }
 
@@ -82,8 +84,8 @@ namespace {
         void* object = nullptr;
         status = object_store_acquire(&object, store.get(), slot, ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
-        std::shared_ptr<void> obj(object, [&](void* object) {
-            sa_status status = object_store_release(store.get(), slot, object, ta_uuid());
+        std::shared_ptr<void> const obj(object, [&](void* object) {
+            sa_status const status = object_store_release(store.get(), slot, object, ta_uuid());
             ASSERT_EQ(status, SA_STATUS_OK);
         });
         ASSERT_NE(object, nullptr);
@@ -105,7 +107,7 @@ namespace {
         void* object = nullptr;
         status = object_store_acquire(&object, store.get(), slot, &wrong_uuid);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
-        std::shared_ptr<void> obj(object, [&](void* object) {
+        std::shared_ptr<void> const obj(object, [&](void* object) {
             object_store_release(store.get(), slot, object, ta_uuid());
         });
         ASSERT_EQ(object, nullptr);
@@ -113,39 +115,39 @@ namespace {
 
     TEST(ObjectStoreRemove, nominal) {
         size_t num = 128;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
+        std::shared_ptr<object_store_t> const store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_NE(store, nullptr);
 
         std::vector<slot_t> allocated;
         for (size_t i = 0; i < num; ++i) {
             slot_t slot = SLOT_INVALID;
-            sa_status status = object_store_add(&slot, store.get(), &num, ta_uuid());
+            sa_status const status = object_store_add(&slot, store.get(), &num, ta_uuid());
             ASSERT_EQ(status, SA_STATUS_OK);
             allocated.push_back(slot);
         }
 
-        for (unsigned int i : allocated) {
-            sa_status status = object_store_remove(store.get(), i, ta_uuid());
+        for (unsigned int const i : allocated) {
+            sa_status const status = object_store_remove(store.get(), i, ta_uuid());
             ASSERT_EQ(status, SA_STATUS_OK);
         }
 
         std::vector<slot_t> allocated2;
         for (size_t i = 0; i < num; ++i) {
             slot_t slot = SLOT_INVALID;
-            sa_status status = object_store_add(&slot, store.get(), &num, ta_uuid());
+            sa_status const status = object_store_add(&slot, store.get(), &num, ta_uuid());
             ASSERT_EQ(status, SA_STATUS_OK);
             allocated2.push_back(slot);
         }
 
         for (size_t i = 0; i < allocated2.size(); ++i) {
-            sa_status status = object_store_remove(store.get(), allocated[i], ta_uuid());
+            sa_status const status = object_store_remove(store.get(), allocated[i], ta_uuid());
             ASSERT_EQ(status, SA_STATUS_OK);
         }
     }
 
     TEST(ObjectStoreSize, nominal) {
-        size_t num = 128;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
+        size_t const num = 128;
+        std::shared_ptr<object_store_t> const store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_NE(store, nullptr);
 
         ASSERT_EQ(num, object_store_size(store.get()));

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,7 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_F(SaKeyUnwrapAesGcmTest, failsNullKey) {
-        std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> const clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
@@ -48,7 +48,7 @@ namespace {
     }
 
     TEST_F(SaKeyUnwrapAesGcmTest, failsNullRights) {
-        std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> const clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
@@ -70,7 +70,7 @@ namespace {
     }
 
     TEST_F(SaKeyUnwrapAesGcmTest, failsNullIn) {
-        std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> const clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
@@ -95,7 +95,7 @@ namespace {
     }
 
     TEST_F(SaKeyUnwrapAesGcmTest, failsNullAlgorithmParameters) {
-        std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> const clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
@@ -124,8 +124,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> aad = random(1024);
@@ -140,7 +140,7 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
@@ -151,8 +151,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> iv = random(GCM_IV_LENGTH + 1);
@@ -168,7 +168,7 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
@@ -179,8 +179,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
@@ -195,7 +195,7 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
@@ -206,8 +206,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
@@ -222,7 +222,7 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
@@ -233,8 +233,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
@@ -250,14 +250,14 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyUnwrapAesGcmTest, failsUnknownWrappingKey) {
-        std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> const clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
@@ -287,8 +287,8 @@ namespace {
         sa_rights wrapping_key_rights;
         sa_rights_set_allow_all(&wrapping_key_rights);
         SA_USAGE_BIT_CLEAR(wrapping_key_rights.usage_flags, SA_USAGE_FLAG_UNWRAP);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
@@ -306,7 +306,7 @@ namespace {
         sa_rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
@@ -318,8 +318,8 @@ namespace {
         sa_rights wrapping_key_rights;
         sa_rights_set_allow_all(&wrapping_key_rights);
         wrapping_key_rights.not_before = time(nullptr) + 60;
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
@@ -337,7 +337,7 @@ namespace {
         sa_rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
@@ -349,8 +349,8 @@ namespace {
         sa_rights wrapping_key_rights;
         sa_rights_set_allow_all(&wrapping_key_rights);
         wrapping_key_rights.not_on_or_after = time(nullptr) - 60;
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_128_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
@@ -368,7 +368,7 @@ namespace {
         sa_rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
@@ -380,8 +380,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = ec_generate_key_bytes(curve);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_ec(&rights, curve, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = ec_generate_key_bytes(curve);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_ec(&rights, curve, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
         if (*wrapping_key == UNSUPPORTED_KEY)
             GTEST_SKIP() << "key type, key size, or curve not supported";
@@ -399,7 +399,7 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
@@ -410,8 +410,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_128_KEY_SIZE + 1);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_128_KEY_SIZE + 1);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
@@ -427,7 +427,7 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_AES_GCM, &unwrap_parameters_aes_gcm, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);

@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ namespace {
         auto out = std::vector<uint8_t>(512);
         size_t out_length = out.size();
 
-        sa_status status = sa_key_get_public(out.data(), &out_length, *key);
+        sa_status const status = sa_key_get_public(out.data(), &out_length, *key);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

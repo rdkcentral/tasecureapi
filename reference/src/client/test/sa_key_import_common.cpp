@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sa_key_import_common.h"
+#include "sa_key_import_common.h" // NOLINT
 #include "client_test_helpers.h"
 
 using namespace client_test_helpers;
@@ -84,7 +84,7 @@ bool SaKeyImportBase::convert_uuid(
 }
 
 std::string SaKeyImportTypejBase::generate_header() {
-    std::string hdr = R"({"alg":"HS256","kid":"sessionid"})";
+    std::string const hdr = R"({"alg":"HS256","kid":"sessionid"})";
     return b64_encode(hdr.data(), hdr.size(), true);
 }
 
@@ -167,11 +167,11 @@ std::string SaKeyImportTypejBase::generate_content_key_rights(const sa_rights* r
 }
 
 size_t SaKeyImportTypejBase::generate_content_key_usage(const sa_rights* rights) {
-    bool unwrap = SA_USAGE_BIT_TEST(rights->usage_flags, SA_USAGE_FLAG_UNWRAP);
-    bool decrypt = SA_USAGE_BIT_TEST(rights->usage_flags, SA_USAGE_FLAG_DECRYPT);
-    bool encrypt = SA_USAGE_BIT_TEST(rights->usage_flags, SA_USAGE_FLAG_ENCRYPT);
-    bool derive = SA_USAGE_BIT_TEST(rights->usage_flags, SA_USAGE_FLAG_DERIVE);
-    bool sign = SA_USAGE_BIT_TEST(rights->usage_flags, SA_USAGE_FLAG_SIGN);
+    bool const unwrap = SA_USAGE_BIT_TEST(rights->usage_flags, SA_USAGE_FLAG_UNWRAP);
+    bool const decrypt = SA_USAGE_BIT_TEST(rights->usage_flags, SA_USAGE_FLAG_DECRYPT);
+    bool const encrypt = SA_USAGE_BIT_TEST(rights->usage_flags, SA_USAGE_FLAG_ENCRYPT);
+    bool const derive = SA_USAGE_BIT_TEST(rights->usage_flags, SA_USAGE_FLAG_DERIVE);
+    bool const sign = SA_USAGE_BIT_TEST(rights->usage_flags, SA_USAGE_FLAG_SIGN);
 
     if ((decrypt && encrypt && sign && derive) != (decrypt || encrypt || sign || derive)) {
         // invalid set of flags for Type-J container
@@ -201,15 +201,15 @@ std::string SaKeyImportTypejBase::generate_body_v1(
         const std::vector<uint8_t>& key,
         const std::vector<uint8_t>& enckey) {
 
-    std::string format = "{"
-                         "\"contentKey\": \"%s\","
-                         "\"contentKeyId\": \"%s\","
-                         "\"contentKeyRights\": \"%s\","
-                         "\"contentKeyUsage\": %d,"
-                         "\"contentKeyNotBefore\": \"%s\","
-                         "\"contentKeyNotOnOrAfter\": \"%s\","
-                         "\"contentKeyCacheable\": %s"
-                         "}";
+    std::string const format = "{"
+                               "\"contentKey\": \"%s\","
+                               "\"contentKeyId\": \"%s\","
+                               "\"contentKeyRights\": \"%s\","
+                               "\"contentKeyUsage\": %d,"
+                               "\"contentKeyNotBefore\": \"%s\","
+                               "\"contentKeyNotOnOrAfter\": \"%s\","
+                               "\"contentKeyCacheable\": %s"
+                               "}";
 
     auto contentKey = generate_content_key(SA_CIPHER_ALGORITHM_AES_ECB, key, {}, enckey);
     const auto* contentKeyId = rights->id;
@@ -251,32 +251,32 @@ std::string SaKeyImportTypejBase::generate_body_v2(
         const std::vector<uint8_t>& key,
         const std::vector<uint8_t>& enckey) {
 
-    std::string formatECB = "{"
-                            "\"contentKeyContainerVersion\": %d,"
-                            "\"contentKeyTransportAlgorithm\": \"%s\","
-                            "\"contentKeyLength\": %d,"
-                            "\"contentKey\": \"%s\","
-                            "\"contentKeyId\": \"%s\","
-                            "\"contentKeyRights\": \"%s\","
-                            "\"contentKeyUsage\": %d,"
-                            "\"contentKeyNotBefore\": \"%s\","
-                            "\"contentKeyNotOnOrAfter\": \"%s\","
-                            "\"contentKeyCacheable\": %s"
-                            "}";
+    std::string const formatECB = "{"
+                                  "\"contentKeyContainerVersion\": %d,"
+                                  "\"contentKeyTransportAlgorithm\": \"%s\","
+                                  "\"contentKeyLength\": %d,"
+                                  "\"contentKey\": \"%s\","
+                                  "\"contentKeyId\": \"%s\","
+                                  "\"contentKeyRights\": \"%s\","
+                                  "\"contentKeyUsage\": %d,"
+                                  "\"contentKeyNotBefore\": \"%s\","
+                                  "\"contentKeyNotOnOrAfter\": \"%s\","
+                                  "\"contentKeyCacheable\": %s"
+                                  "}";
 
-    std::string formatCBC = "{"
-                            "\"contentKeyContainerVersion\": %d,"
-                            "\"contentKeyTransportAlgorithm\": \"%s\","
-                            "\"contentKeyTransportIv\": \"%s\","
-                            "\"contentKeyLength\": %d,"
-                            "\"contentKey\": \"%s\","
-                            "\"contentKeyId\": \"%s\","
-                            "\"contentKeyRights\": \"%s\","
-                            "\"contentKeyUsage\": %d,"
-                            "\"contentKeyNotBefore\": \"%s\","
-                            "\"contentKeyNotOnOrAfter\": \"%s\","
-                            "\"contentKeyCacheable\": %s"
-                            "}";
+    std::string const formatCBC = "{"
+                                  "\"contentKeyContainerVersion\": %d,"
+                                  "\"contentKeyTransportAlgorithm\": \"%s\","
+                                  "\"contentKeyTransportIv\": \"%s\","
+                                  "\"contentKeyLength\": %d,"
+                                  "\"contentKey\": \"%s\","
+                                  "\"contentKeyId\": \"%s\","
+                                  "\"contentKeyRights\": \"%s\","
+                                  "\"contentKeyUsage\": %d,"
+                                  "\"contentKeyNotBefore\": \"%s\","
+                                  "\"contentKeyNotOnOrAfter\": \"%s\","
+                                  "\"contentKeyCacheable\": %s"
+                                  "}";
 
     auto contentKeyContainerVersion = 2;
     const auto* contentKeyTransportAlgorithm = typej_algorithm_string(cipher_algorithm);
@@ -315,34 +315,34 @@ std::string SaKeyImportTypejBase::generate_body_v3(
         const std::vector<uint8_t>& key,
         const std::vector<uint8_t>& enckey) {
 
-    std::string formatECB = "{"
-                            "\"contentKeyContainerVersion\": %d,"
-                            "\"contentKeyTransportAlgorithm\": \"%s\","
-                            "\"contentKeyLength\": %d,"
-                            "\"contentKey\": \"%s\","
-                            "\"contentKeyId\": \"%s\","
-                            "\"contentKeyRights\": \"%s\","
-                            "\"contentKeyUsage\": %d,"
-                            "\"contentKeyNotBefore\": \"%s\","
-                            "\"contentKeyNotOnOrAfter\": \"%s\","
-                            "\"contentKeyCacheable\": %s"
-                            "%s"
-                            "}";
+    std::string const formatECB = "{"
+                                  "\"contentKeyContainerVersion\": %d,"
+                                  "\"contentKeyTransportAlgorithm\": \"%s\","
+                                  "\"contentKeyLength\": %d,"
+                                  "\"contentKey\": \"%s\","
+                                  "\"contentKeyId\": \"%s\","
+                                  "\"contentKeyRights\": \"%s\","
+                                  "\"contentKeyUsage\": %d,"
+                                  "\"contentKeyNotBefore\": \"%s\","
+                                  "\"contentKeyNotOnOrAfter\": \"%s\","
+                                  "\"contentKeyCacheable\": %s"
+                                  "%s"
+                                  "}";
 
-    std::string formatCBC = "{"
-                            "\"contentKeyContainerVersion\": %d,"
-                            "\"contentKeyTransportAlgorithm\": \"%s\","
-                            "\"contentKeyTransportIv\": \"%s\","
-                            "\"contentKeyLength\": %d,"
-                            "\"contentKey\": \"%s\","
-                            "\"contentKeyId\": \"%s\","
-                            "\"contentKeyRights\": \"%s\","
-                            "\"contentKeyUsage\": %d,"
-                            "\"contentKeyNotBefore\": \"%s\","
-                            "\"contentKeyNotOnOrAfter\": \"%s\","
-                            "\"contentKeyCacheable\": %s"
-                            "%s"
-                            "}";
+    std::string const formatCBC = "{"
+                                  "\"contentKeyContainerVersion\": %d,"
+                                  "\"contentKeyTransportAlgorithm\": \"%s\","
+                                  "\"contentKeyTransportIv\": \"%s\","
+                                  "\"contentKeyLength\": %d,"
+                                  "\"contentKey\": \"%s\","
+                                  "\"contentKeyId\": \"%s\","
+                                  "\"contentKeyRights\": \"%s\","
+                                  "\"contentKeyUsage\": %d,"
+                                  "\"contentKeyNotBefore\": \"%s\","
+                                  "\"contentKeyNotOnOrAfter\": \"%s\","
+                                  "\"contentKeyCacheable\": %s"
+                                  "%s"
+                                  "}";
 
     auto contentKeyContainerVersion = 3;
     const auto* contentKeyTransportAlgorithm = typej_algorithm_string(cipher_algorithm);
@@ -394,7 +394,7 @@ std::string SaKeyImportTypejBase::generate_typej_v1(
         const std::vector<uint8_t>& enckey,
         bool valid_signature) {
 
-    std::string hdr = generate_header();
+    std::string const hdr = generate_header();
     std::string body = generate_body_v1(rights, key, enckey);
 
     std::vector<uint8_t> mac_bytes(SHA256_DIGEST_LENGTH);
@@ -408,7 +408,7 @@ std::string SaKeyImportTypejBase::generate_typej_v1(
             throw;
         }
     }
-    std::string mac = b64_encode(mac_bytes.data(), mac_bytes.size(), true);
+    std::string const mac = b64_encode(mac_bytes.data(), mac_bytes.size(), true);
 
     return hdr + "." + body + "." + mac;
 }
@@ -421,7 +421,7 @@ std::string SaKeyImportTypejBase::generate_typej_v2(
         const std::vector<uint8_t>& enckey,
         bool valid_signature) {
 
-    std::string hdr = generate_header();
+    std::string const hdr = generate_header();
     std::string body = generate_body_v2(cipher_algorithm, rights, key, enckey);
 
     std::vector<uint8_t> mac_bytes(SHA256_DIGEST_LENGTH);
@@ -435,7 +435,7 @@ std::string SaKeyImportTypejBase::generate_typej_v2(
             throw;
         }
     }
-    std::string mac = b64_encode(mac_bytes.data(), mac_bytes.size(), true);
+    std::string const mac = b64_encode(mac_bytes.data(), mac_bytes.size(), true);
 
     return hdr + "." + body + "." + mac;
 }
@@ -449,7 +449,7 @@ std::string SaKeyImportTypejBase::generate_typej_v3(
         const std::vector<uint8_t>& enckey,
         bool valid_signature) {
 
-    std::string hdr = generate_header();
+    std::string const hdr = generate_header();
     std::string body = generate_body_v3(cipher_algorithm, rights, entitled_ta_ids, key, enckey);
 
     std::vector<uint8_t> mac_bytes(SHA256_DIGEST_LENGTH);
@@ -463,7 +463,7 @@ std::string SaKeyImportTypejBase::generate_typej_v3(
             throw;
         }
     }
-    std::string mac = b64_encode(mac_bytes.data(), mac_bytes.size(), true);
+    std::string const mac = b64_encode(mac_bytes.data(), mac_bytes.size(), true);
 
     return hdr + "." + body + "." + mac;
 }
@@ -521,7 +521,7 @@ std::string SaKeyImportSocBase::generate_encrypted_key(
 
     std::vector<uint8_t> empty;
     std::vector<uint8_t> root_key;
-    if(!get_root_key(root_key))
+    if (!get_root_key(root_key))
         return "";
 
     auto derived_key = derive_test_key_ladder(root_key, c1, c2, c3, empty);
@@ -535,7 +535,7 @@ std::string SaKeyImportSocBase::generate_encrypted_key(
 }
 
 std::string SaKeyImportSocBase::generate_header() {
-    std::string hdr = R"({"alg": "A128GCM"})";
+    std::string const hdr = R"({"alg": "A128GCM"})";
     return b64_encode(hdr.data(), hdr.size(), true);
 }
 
@@ -558,7 +558,7 @@ std::string SaKeyImportSocBase::generate_payload(
     if (!key_type.empty())
         oss << R"(, "keyType": ")" << key_type << "\"";
 
-    std::string encrypted_key = generate_encrypted_key(container_version, key_type, key, iv, key_usage,
+    std::string const encrypted_key = generate_encrypted_key(container_version, key_type, key, iv, key_usage,
             decrypted_key_usage, entitled_ta_ids, c1, c2, c3, tag);
     if (encrypted_key.empty())
         return "";
@@ -700,9 +700,9 @@ sa_status SaKeyImportSocBase::import_key(
     auto jwt_header = generate_header();
     auto jwt_payload = generate_payload(container_version, key_type, clear_key, iv, key_usage, decrypted_key_usage,
             entitled_ta_ids, c1, c2, c3, tag);
-    std::string key_container = jwt_header + "." + jwt_payload + "." + b64_encode(tag.data(), tag.size(), true);
+    std::string const key_container = jwt_header + "." + jwt_payload + "." + b64_encode(tag.data(), tag.size(), true);
 
-    bool hmac = memcmp(key_type.data(), "HMAC", 4) == 0;
+    bool const hmac = memcmp(key_type.data(), "HMAC", 4) == 0;
     sa_rights_set_allow_all(&key_rights);
     set_key_usage_flags(key_usage, decrypted_key_usage, key_rights, clear_key_type, hmac);
     int i = 0;

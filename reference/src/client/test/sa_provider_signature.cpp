@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,17 +51,17 @@ TEST_P(SaProviderSignTest, digestSignWithUpdateFinalTest) {
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey_ctx, nullptr);
     EVP_PKEY* temp = nullptr;
     ASSERT_EQ(EVP_PKEY_fromdata_init(evp_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_fromdata(evp_pkey_ctx.get(), &temp, EVP_PKEY_KEYPAIR, params), 1);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
     size_t signature_length = 0;
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_sign_ctx = nullptr;
     int result = EVP_DigestSignInit_ex(evp_md_sign_ctx.get(), &evp_pkey_sign_ctx, md_name, lib_ctx, nullptr,
@@ -81,7 +81,7 @@ TEST_P(SaProviderSignTest, digestSignWithUpdateFinalTest) {
     ASSERT_EQ(EVP_DigestSignFinal(evp_md_sign_ctx.get(), signature.data(), &signature_length), 1);
     signature.resize(signature_length);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_verify_ctx = nullptr;
     result = EVP_DigestVerifyInit_ex(evp_md_verify_ctx.get(), &evp_pkey_verify_ctx, md_name, lib_ctx, nullptr,
@@ -124,18 +124,18 @@ TEST_P(SaProviderSignTest, signTest) {
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey_ctx, nullptr);
     EVP_PKEY* temp = nullptr;
     ASSERT_EQ(EVP_PKEY_fromdata_init(evp_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_fromdata(evp_pkey_ctx.get(), &temp, EVP_PKEY_KEYPAIR, params), 1);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
-    std::shared_ptr<EVP_MD> evp_md(EVP_MD_fetch(lib_ctx, md_name, nullptr), EVP_MD_free);
+    std::shared_ptr<EVP_MD> const evp_md(EVP_MD_fetch(lib_ctx, md_name, nullptr), EVP_MD_free);
     ASSERT_NE(evp_md, nullptr);
     ASSERT_EQ(EVP_DigestInit_ex2(evp_md_sign_ctx.get(), evp_md.get(), nullptr), 1);
     ASSERT_EQ(EVP_DigestUpdate(evp_md_sign_ctx.get(), data.data(), data.size()), 1);
@@ -143,7 +143,7 @@ TEST_P(SaProviderSignTest, signTest) {
     uint8_t digest[EVP_MAX_MD_SIZE];
     ASSERT_EQ(EVP_DigestFinal(evp_md_sign_ctx.get(), digest, &digest_length), 1);
 
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_sign_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_sign_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey, nullptr);
 
@@ -168,8 +168,8 @@ TEST_P(SaProviderSignTest, signTest) {
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_verify_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
-            EVP_PKEY_CTX_free);
+    EVP_PKEY_CTX* temp_ctx = EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr);
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_verify_ctx(temp_ctx, EVP_PKEY_CTX_free);
     ASSERT_EQ(EVP_PKEY_verify_init(evp_pkey_verify_ctx.get()), 1);
     if (key_type == SA_KEY_TYPE_RSA) {
         ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(evp_pkey_verify_ctx.get(), padding), 1);
@@ -183,7 +183,7 @@ TEST_P(SaProviderSignTest, signTest) {
     ASSERT_EQ(EVP_PKEY_verify(evp_pkey_verify_ctx.get(), signature.data(), signature.size(), digest, digest_length), 1);
 
     // Verify again with DigestVerify
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_ver2_ctx = nullptr;
     result = EVP_DigestVerifyInit_ex(evp_md_verify_ctx.get(), &evp_pkey_ver2_ctx, md_name, lib_ctx, nullptr,
@@ -215,9 +215,9 @@ TEST_P(SaProviderSignWithGenerateTest, signTestWithGenerateKey) {
     if (evp_pkey == nullptr)
         GTEST_SKIP() << "Operation not supported";
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
-    std::shared_ptr<EVP_MD> evp_md(EVP_MD_fetch(lib_ctx, md_name, nullptr), EVP_MD_free);
+    std::shared_ptr<EVP_MD> const evp_md(EVP_MD_fetch(lib_ctx, md_name, nullptr), EVP_MD_free);
     ASSERT_NE(evp_md, nullptr);
     ASSERT_EQ(EVP_DigestInit_ex2(evp_md_sign_ctx.get(), evp_md.get(), nullptr), 1);
     ASSERT_EQ(EVP_DigestUpdate(evp_md_sign_ctx.get(), data.data(), data.size()), 1);
@@ -225,7 +225,7 @@ TEST_P(SaProviderSignWithGenerateTest, signTestWithGenerateKey) {
     uint8_t digest[EVP_MAX_MD_SIZE];
     ASSERT_EQ(EVP_DigestFinal(evp_md_sign_ctx.get(), digest, &digest_length), 1);
 
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_sign_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_sign_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey, nullptr);
 
@@ -242,14 +242,14 @@ TEST_P(SaProviderSignWithGenerateTest, signTestWithGenerateKey) {
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_verify_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
-            EVP_PKEY_CTX_free);
+    EVP_PKEY_CTX* temp_ctx = EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr);
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_verify_ctx(temp_ctx, EVP_PKEY_CTX_free);
     ASSERT_EQ(EVP_PKEY_verify_init(evp_pkey_verify_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_signature_md(evp_pkey_verify_ctx.get(), evp_md.get()), 1);
     ASSERT_EQ(EVP_PKEY_verify(evp_pkey_verify_ctx.get(), signature.data(), signature.size(), digest, digest_length), 1);
 
     // Verify again with DigestVerify
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_ver2_ctx = nullptr;
     result = EVP_DigestVerifyInit_ex(evp_md_verify_ctx.get(), &evp_pkey_ver2_ctx, md_name, lib_ctx, nullptr,
@@ -280,17 +280,17 @@ TEST_P(SaProviderSignDefaultDigestSignTest, defaultDigestTest) {
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey_ctx, nullptr);
     EVP_PKEY* temp = nullptr;
     ASSERT_EQ(EVP_PKEY_fromdata_init(evp_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_fromdata(evp_pkey_ctx.get(), &temp, EVP_PKEY_KEYPAIR, params), 1);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
     size_t signature_length = 0;
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_sign_ctx = nullptr;
     int result = EVP_DigestSignInit_ex(evp_md_sign_ctx.get(), &evp_pkey_sign_ctx, nullptr, lib_ctx, nullptr,
@@ -306,7 +306,7 @@ TEST_P(SaProviderSignDefaultDigestSignTest, defaultDigestTest) {
     ASSERT_EQ(EVP_DigestSignFinal(evp_md_sign_ctx.get(), signature.data(), &signature_length), 1);
     signature.resize(signature_length);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_verify_ctx = nullptr;
     result = EVP_DigestVerifyInit_ex(evp_md_verify_ctx.get(), &evp_pkey_verify_ctx, DEFAULT_DIGEST, lib_ctx, nullptr,
@@ -341,18 +341,18 @@ TEST_P(SaProviderSignDefaultDigestSignTest, defaultDigestTest2) {
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey_ctx, nullptr);
     EVP_PKEY* temp = nullptr;
     ASSERT_EQ(EVP_PKEY_fromdata_init(evp_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_fromdata(evp_pkey_ctx.get(), &temp, EVP_PKEY_KEYPAIR, params), 1);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
-    std::shared_ptr<EVP_MD> evp_md(EVP_MD_fetch(lib_ctx, DEFAULT_DIGEST, nullptr), EVP_MD_free);
+    std::shared_ptr<EVP_MD> const evp_md(EVP_MD_fetch(lib_ctx, DEFAULT_DIGEST, nullptr), EVP_MD_free);
     ASSERT_NE(evp_md, nullptr);
     ASSERT_EQ(EVP_DigestInit_ex2(evp_md_sign_ctx.get(), evp_md.get(), nullptr), 1);
     ASSERT_EQ(EVP_DigestUpdate(evp_md_sign_ctx.get(), data.data(), data.size()), 1);
@@ -360,7 +360,7 @@ TEST_P(SaProviderSignDefaultDigestSignTest, defaultDigestTest2) {
     uint8_t digest[EVP_MAX_MD_SIZE];
     ASSERT_EQ(EVP_DigestFinal(evp_md_sign_ctx.get(), digest, &digest_length), 1);
 
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_sign_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_sign_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey, nullptr);
 
@@ -380,8 +380,8 @@ TEST_P(SaProviderSignDefaultDigestSignTest, defaultDigestTest2) {
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_verify_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
-            EVP_PKEY_CTX_free);
+    EVP_PKEY_CTX* temp_ctx = EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr);
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_verify_ctx(temp_ctx, EVP_PKEY_CTX_free);
     ASSERT_EQ(EVP_PKEY_verify_init(evp_pkey_verify_ctx.get()), 1);
     if (key_type == SA_KEY_TYPE_RSA) {
         ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(evp_pkey_verify_ctx.get(), RSA_PKCS1_PADDING), 1);
@@ -391,7 +391,7 @@ TEST_P(SaProviderSignDefaultDigestSignTest, defaultDigestTest2) {
     ASSERT_EQ(EVP_PKEY_verify(evp_pkey_verify_ctx.get(), signature.data(), signature.size(), digest, digest_length), 1);
 
     // Verify again with DigestVerify
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_ver2_ctx = nullptr;
     result = EVP_DigestVerifyInit_ex(evp_md_verify_ctx.get(), &evp_pkey_ver2_ctx, DEFAULT_DIGEST, lib_ctx, nullptr,
@@ -406,7 +406,7 @@ TEST_P(SaProviderSignDefaultDigestSignTest, defaultDigestTest2) {
 }
 
 TEST_F(SaProviderSignTest, defaultPaddingTest) {
-    sa_key_type key_type = SA_KEY_TYPE_RSA;
+    sa_key_type const key_type = SA_KEY_TYPE_RSA;
     size_t key_length = RSA_2048_BYTE_LENGTH;
 
     std::vector<uint8_t> clear_key;
@@ -426,18 +426,18 @@ TEST_F(SaProviderSignTest, defaultPaddingTest) {
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey_ctx, nullptr);
     EVP_PKEY* temp = nullptr;
     ASSERT_EQ(EVP_PKEY_fromdata_init(evp_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_fromdata(evp_pkey_ctx.get(), &temp, EVP_PKEY_KEYPAIR, params), 1);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
-    std::shared_ptr<EVP_MD> evp_md(EVP_MD_fetch(lib_ctx, DEFAULT_DIGEST, nullptr), EVP_MD_free);
+    std::shared_ptr<EVP_MD> const evp_md(EVP_MD_fetch(lib_ctx, DEFAULT_DIGEST, nullptr), EVP_MD_free);
     ASSERT_NE(evp_md, nullptr);
     ASSERT_EQ(EVP_DigestInit_ex2(evp_md_sign_ctx.get(), evp_md.get(), nullptr), 1);
     ASSERT_EQ(EVP_DigestUpdate(evp_md_sign_ctx.get(), data.data(), data.size()), 1);
@@ -445,7 +445,7 @@ TEST_F(SaProviderSignTest, defaultPaddingTest) {
     uint8_t digest[EVP_MAX_MD_SIZE];
     ASSERT_EQ(EVP_DigestFinal(evp_md_sign_ctx.get(), digest, &digest_length), 1);
 
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_sign_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_sign_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey, nullptr);
 
@@ -462,9 +462,9 @@ TEST_F(SaProviderSignTest, defaultPaddingTest) {
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
-    int padding = RSA_PKCS1_PADDING;
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_verify_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
-            EVP_PKEY_CTX_free);
+    int const padding = RSA_PKCS1_PADDING;
+    EVP_PKEY_CTX* temp_ctx = EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr);
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_verify_ctx(temp_ctx, EVP_PKEY_CTX_free);
     ASSERT_EQ(EVP_PKEY_verify_init(evp_pkey_verify_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(evp_pkey_verify_ctx.get(), padding), 1);
 
@@ -472,7 +472,7 @@ TEST_F(SaProviderSignTest, defaultPaddingTest) {
     ASSERT_EQ(EVP_PKEY_verify(evp_pkey_verify_ctx.get(), signature.data(), signature.size(), digest, digest_length), 1);
 
     // Verify again with DigestVerify
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_ver2_ctx = nullptr;
     result = EVP_DigestVerifyInit_ex(evp_md_verify_ctx.get(), &evp_pkey_ver2_ctx, DEFAULT_DIGEST, lib_ctx, nullptr,
@@ -485,7 +485,7 @@ TEST_F(SaProviderSignTest, defaultPaddingTest) {
 }
 
 TEST_F(SaProviderSignTest, defaultSaltTest) {
-    sa_key_type key_type = SA_KEY_TYPE_RSA;
+    sa_key_type const key_type = SA_KEY_TYPE_RSA;
     size_t key_length = RSA_2048_BYTE_LENGTH;
 
     std::vector<uint8_t> clear_key;
@@ -505,25 +505,25 @@ TEST_F(SaProviderSignTest, defaultSaltTest) {
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey_ctx, nullptr);
     EVP_PKEY* temp = nullptr;
     ASSERT_EQ(EVP_PKEY_fromdata_init(evp_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_fromdata(evp_pkey_ctx.get(), &temp, EVP_PKEY_KEYPAIR, params), 1);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
-    std::shared_ptr<EVP_MD> evp_md(EVP_MD_fetch(lib_ctx, DEFAULT_DIGEST, nullptr), EVP_MD_free);
+    std::shared_ptr<EVP_MD> const evp_md(EVP_MD_fetch(lib_ctx, DEFAULT_DIGEST, nullptr), EVP_MD_free);
     ASSERT_NE(evp_md, nullptr);
     ASSERT_EQ(EVP_DigestInit_ex2(evp_md_sign_ctx.get(), evp_md.get(), nullptr), 1);
     ASSERT_EQ(EVP_DigestUpdate(evp_md_sign_ctx.get(), data.data(), data.size()), 1);
     unsigned int digest_length;
     uint8_t digest[EVP_MAX_MD_SIZE];
     ASSERT_EQ(EVP_DigestFinal(evp_md_sign_ctx.get(), digest, &digest_length), 1);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_sign_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_sign_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey, nullptr);
 
@@ -542,8 +542,8 @@ TEST_F(SaProviderSignTest, defaultSaltTest) {
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_verify_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
-            EVP_PKEY_CTX_free);
+    EVP_PKEY_CTX* temp_ctx = EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr);
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_verify_ctx(temp_ctx, EVP_PKEY_CTX_free);
     ASSERT_EQ(EVP_PKEY_verify_init(evp_pkey_verify_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(evp_pkey_verify_ctx.get(), RSA_PKCS1_PSS_PADDING), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_mgf1_md(evp_pkey_verify_ctx.get(), evp_md.get()), 1);
@@ -553,7 +553,7 @@ TEST_F(SaProviderSignTest, defaultSaltTest) {
     ASSERT_EQ(EVP_PKEY_verify(evp_pkey_verify_ctx.get(), signature.data(), signature.size(), digest, digest_length), 1);
 
     // Verify again with DigestVerify
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_ver2_ctx = nullptr;
     result = EVP_DigestVerifyInit_ex(evp_md_verify_ctx.get(), &evp_pkey_ver2_ctx, DEFAULT_DIGEST, lib_ctx, nullptr,
@@ -568,7 +568,7 @@ TEST_F(SaProviderSignTest, defaultSaltTest) {
 }
 
 TEST_F(SaProviderSignTest, defaultMgf1DigestTest) {
-    sa_key_type key_type = SA_KEY_TYPE_RSA;
+    sa_key_type const key_type = SA_KEY_TYPE_RSA;
     size_t key_length = RSA_2048_BYTE_LENGTH;
 
     std::vector<uint8_t> clear_key;
@@ -588,18 +588,18 @@ TEST_F(SaProviderSignTest, defaultMgf1DigestTest) {
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey_ctx, nullptr);
     EVP_PKEY* temp = nullptr;
     ASSERT_EQ(EVP_PKEY_fromdata_init(evp_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_fromdata(evp_pkey_ctx.get(), &temp, EVP_PKEY_KEYPAIR, params), 1);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
-    std::shared_ptr<EVP_MD> evp_md(EVP_MD_fetch(lib_ctx, DEFAULT_DIGEST, nullptr), EVP_MD_free);
+    std::shared_ptr<EVP_MD> const evp_md(EVP_MD_fetch(lib_ctx, DEFAULT_DIGEST, nullptr), EVP_MD_free);
     ASSERT_NE(evp_md, nullptr);
     ASSERT_EQ(EVP_DigestInit_ex2(evp_md_sign_ctx.get(), evp_md.get(), nullptr), 1);
     ASSERT_EQ(EVP_DigestUpdate(evp_md_sign_ctx.get(), data.data(), data.size()), 1);
@@ -607,7 +607,7 @@ TEST_F(SaProviderSignTest, defaultMgf1DigestTest) {
     uint8_t digest[EVP_MAX_MD_SIZE];
     ASSERT_EQ(EVP_DigestFinal(evp_md_sign_ctx.get(), digest, &digest_length), 1);
 
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_sign_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_sign_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey, nullptr);
 
@@ -626,8 +626,8 @@ TEST_F(SaProviderSignTest, defaultMgf1DigestTest) {
     signature.resize(signature_length);
 
     // Verify with EVP_PKEY_verify
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_verify_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
-            EVP_PKEY_CTX_free);
+    EVP_PKEY_CTX* temp_ctx = EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr);
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_verify_ctx(temp_ctx, EVP_PKEY_CTX_free);
     ASSERT_EQ(EVP_PKEY_verify_init(evp_pkey_verify_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_signature_md(evp_pkey_verify_ctx.get(), evp_md.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(evp_pkey_verify_ctx.get(), RSA_PKCS1_PSS_PADDING), 1);
@@ -636,7 +636,7 @@ TEST_F(SaProviderSignTest, defaultMgf1DigestTest) {
     ASSERT_EQ(EVP_PKEY_verify(evp_pkey_verify_ctx.get(), signature.data(), signature.size(), digest, digest_length), 1);
 
     // Verify again with DigestVerify
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_ver2_ctx = nullptr;
     result = EVP_DigestVerifyInit_ex(evp_md_verify_ctx.get(), &evp_pkey_ver2_ctx, DEFAULT_DIGEST, lib_ctx, nullptr,
@@ -674,17 +674,17 @@ TEST_P(SaProviderSignTest, digestSignNoUpdateFinalTest) {
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey_ctx, nullptr);
     EVP_PKEY* temp = nullptr;
     ASSERT_EQ(EVP_PKEY_fromdata_init(evp_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_fromdata(evp_pkey_ctx.get(), &temp, EVP_PKEY_KEYPAIR, params), 1);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
     size_t signature_length = 0;
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_sign_ctx = nullptr;
     int result = EVP_DigestSignInit_ex(evp_md_sign_ctx.get(), &evp_pkey_sign_ctx, md_name, lib_ctx, nullptr,
@@ -703,7 +703,7 @@ TEST_P(SaProviderSignTest, digestSignNoUpdateFinalTest) {
     ASSERT_EQ(EVP_DigestSign(evp_md_sign_ctx.get(), signature.data(), &signature_length, data.data(), data.size()), 1);
     signature.resize(signature_length);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_verify_ctx = nullptr;
     result = EVP_DigestVerifyInit_ex(evp_md_verify_ctx.get(), &evp_pkey_verify_ctx, md_name, lib_ctx, nullptr,
@@ -742,16 +742,16 @@ TEST_P(SaProviderSignEdTest, digestSignTest) {
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey_ctx, nullptr);
     EVP_PKEY* temp = nullptr;
     ASSERT_EQ(EVP_PKEY_fromdata_init(evp_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_fromdata(evp_pkey_ctx.get(), &temp, EVP_PKEY_KEYPAIR, params), 1);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     int result = EVP_DigestSignInit_ex(evp_md_sign_ctx.get(), nullptr, nullptr, lib_ctx, nullptr, evp_pkey.get(),
             nullptr);
@@ -762,7 +762,7 @@ TEST_P(SaProviderSignEdTest, digestSignTest) {
     ASSERT_EQ(EVP_DigestSign(evp_md_sign_ctx.get(), signature.data(), &signature_length, data.data(), data.size()), 1);
     signature.resize(signature_length);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     result = EVP_DigestVerifyInit_ex(evp_md_verify_ctx.get(), nullptr, nullptr, lib_ctx, nullptr, evp_pkey.get(),
             nullptr);
@@ -784,7 +784,7 @@ TEST_P(SaProviderSignEdTest, digestSignTestWithGenerateKey) {
     if (evp_pkey == nullptr)
         GTEST_SKIP() << "Operation not supported";
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     int result = EVP_DigestSignInit_ex(evp_md_sign_ctx.get(), nullptr, nullptr, lib_ctx, nullptr, evp_pkey.get(),
             nullptr);
@@ -795,7 +795,7 @@ TEST_P(SaProviderSignEdTest, digestSignTestWithGenerateKey) {
     ASSERT_EQ(EVP_DigestSign(evp_md_sign_ctx.get(), signature.data(), &signature_length, data.data(), data.size()), 1);
     signature.resize(signature_length);
 
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_verify_ctx, nullptr);
     result = EVP_DigestVerifyInit_ex(evp_md_verify_ctx.get(), nullptr, nullptr, lib_ctx, nullptr, evp_pkey.get(),
             nullptr);

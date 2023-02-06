@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -318,7 +318,7 @@ std::shared_ptr<EVP_PKEY> SaProviderTest::generate_sa_key(
         }
     } while (false);
 
-    return std::shared_ptr<EVP_PKEY>(evp_pkey, EVP_PKEY_free);
+    return {evp_pkey, EVP_PKEY_free};
 }
 
 #endif

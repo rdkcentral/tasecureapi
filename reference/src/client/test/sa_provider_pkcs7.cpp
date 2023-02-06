@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@ using namespace client_test_helpers;
 TEST_P(SaProviderPkcs7Test, pkcs7Test) {
     auto key_type = std::get<0>(GetParam());
     auto key_length = std::get<1>(GetParam());
-    auto digest_name = std::get<2>(GetParam());
+    const auto* digest_name = std::get<2>(GetParam());
 
     std::vector<uint8_t> clear_key;
     sa_elliptic_curve curve;
@@ -45,14 +45,14 @@ TEST_P(SaProviderPkcs7Test, pkcs7Test) {
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx(EVP_PKEY_CTX_new_from_name(lib_ctx, key_name, nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey_ctx, nullptr);
     EVP_PKEY* temp_evp_pkey = nullptr;
     ASSERT_EQ(EVP_PKEY_fromdata_init(evp_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_fromdata(evp_pkey_ctx.get(), &temp_evp_pkey, EVP_PKEY_KEYPAIR, params), 1);
     ASSERT_NE(temp_evp_pkey, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp_evp_pkey, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp_evp_pkey, EVP_PKEY_free);
 
     auto x509 = std::shared_ptr<X509>(X509_new_ex(lib_ctx, nullptr), X509_free);
     ASSERT_NE(x509, nullptr);
@@ -73,7 +73,7 @@ TEST_P(SaProviderPkcs7Test, pkcs7Test) {
     ASSERT_EQ(result, 1);
     ASSERT_EQ(X509_set_subject_name(x509.get(), x509_name.get()), 1);
     ASSERT_EQ(X509_set_issuer_name(x509.get(), x509_name.get()), 1);
-    std::shared_ptr<EVP_MD> evp_md(EVP_MD_fetch(lib_ctx, digest_name, nullptr), EVP_MD_free);
+    std::shared_ptr<EVP_MD> const evp_md(EVP_MD_fetch(lib_ctx, digest_name, nullptr), EVP_MD_free);
     ASSERT_GT(X509_sign(x509.get(), evp_pkey.get(), evp_md.get()), 1);
 
     auto bio = std::shared_ptr<BIO>(BIO_new_mem_buf(data.data(), static_cast<int>(data.size())), BIO_free);

@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ public:
             const std::vector<uint8_t>& in);
 };
 
-using SaCryptoMacType = std::tuple<sa_mac_algorithm, void*, int>;
+typedef std::tuple<sa_mac_algorithm, void*, int> SaCryptoMacType;
 
 class SaCryptoMacInit : public ::testing::TestWithParam<SaCryptoMacType>, public SaCryptoMacBase {};
 

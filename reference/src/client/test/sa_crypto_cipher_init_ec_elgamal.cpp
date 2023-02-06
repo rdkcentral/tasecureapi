@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_P(SaCryptoCipherElGamalTest, initEcElgamalFailsInvalidMode) {
-        sa_elliptic_curve curve = std::get<0>(GetParam());
+        sa_elliptic_curve const curve = std::get<0>(GetParam());
         auto clear_key = ec_generate_key_bytes(curve);
 
         sa_rights rights;
@@ -39,8 +39,8 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_CIPHER_MODE_ENCRYPT,
-                *key, nullptr);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_EC_ELGAMAL,
+                SA_CIPHER_MODE_ENCRYPT, *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -48,7 +48,7 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherElGamalTest, initEcElgamalFailsInvalidKeyType) {
-        sa_elliptic_curve curve = std::get<0>(GetParam());
+        sa_elliptic_curve const curve = std::get<0>(GetParam());
         auto clear_key = ec_generate_key_bytes(curve);
 
         sa_rights rights;
@@ -60,8 +60,8 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_CIPHER_MODE_DECRYPT,
-                *key, nullptr);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_EC_ELGAMAL,
+                SA_CIPHER_MODE_DECRYPT, *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -69,7 +69,7 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherElGamalFailTest, initEcElgamalFailsInvalidCurve) {
-        sa_elliptic_curve curve = std::get<0>(GetParam());
+        sa_elliptic_curve const curve = std::get<0>(GetParam());
         auto clear_key = ec_generate_key_bytes(curve);
 
         sa_rights rights;
@@ -83,8 +83,8 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_CIPHER_MODE_DECRYPT,
-                *key, nullptr);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_EC_ELGAMAL,
+                SA_CIPHER_MODE_DECRYPT, *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 

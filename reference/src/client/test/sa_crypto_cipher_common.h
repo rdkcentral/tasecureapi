@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -95,7 +95,7 @@ protected:
     void SetUp() override;
 };
 
-using SaCryptoCipherTestType = std::tuple<sa_cipher_algorithm, sa_key_type, size_t, sa_buffer_type>;
+typedef std::tuple<sa_cipher_algorithm, sa_key_type, size_t, sa_buffer_type> SaCryptoCipherTestType;
 
 class SaCryptoCipherEncryptTest : public ::testing::TestWithParam<SaCryptoCipherTestType>, public SaCipherCryptoBase {
 protected:
@@ -108,7 +108,7 @@ protected:
     void SetUp() override;
 };
 
-using SaCryptoCipherWithSvpTestType = std::tuple<sa_buffer_type, sa_cipher_mode>;
+typedef std::tuple<sa_buffer_type, sa_cipher_mode> SaCryptoCipherWithSvpTestType;
 
 class SaCryptoCipherWithSvpTest : public ::testing::TestWithParam<SaCryptoCipherWithSvpTestType>,
                                   public SaCipherCryptoBase {
@@ -116,7 +116,7 @@ protected:
     void SetUp() override;
 };
 
-using SaCryptoCipherWithoutSvpTestType = std::tuple<sa_cipher_mode>;
+typedef std::tuple<sa_cipher_mode> SaCryptoCipherWithoutSvpTestType;
 
 class SaCryptoCipherWithoutSvpTest : public ::testing::TestWithParam<SaCryptoCipherWithoutSvpTestType>,
                                      public SaCipherCryptoBase {};
@@ -126,7 +126,7 @@ protected:
     void SetUp() override;
 };
 
-using SaCryptoCipherElGamalTestType = std::tuple<sa_elliptic_curve>;
+typedef std::tuple<sa_elliptic_curve> SaCryptoCipherElGamalTestType;
 
 class SaCryptoCipherElGamalTest : public ::testing::TestWithParam<SaCryptoCipherElGamalTestType>,
                                   public SaCipherCryptoBase {};

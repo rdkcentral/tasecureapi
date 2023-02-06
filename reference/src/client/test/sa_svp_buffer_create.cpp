@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ namespace {
 
     TEST_F(SaSvpBufferCreateTest, failsNullBuffer) {
         sa_svp_buffer svp_buffer;
-        sa_status status = sa_svp_buffer_create(&svp_buffer, nullptr, AES_BLOCK_SIZE);
+        sa_status const status = sa_svp_buffer_create(&svp_buffer, nullptr, AES_BLOCK_SIZE);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

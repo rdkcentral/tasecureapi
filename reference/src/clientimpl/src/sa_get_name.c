@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,12 +42,6 @@ sa_status sa_get_name(
     sa_status status;
     do {
         CREATE_COMMAND(sa_get_name_s, get_name);
-        if (get_name == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         get_name->api_version = API_VERSION;
         get_name->name_length = *name_length;
 
@@ -55,12 +49,6 @@ sa_status sa_get_name(
         ta_param_type param1_type = TA_PARAM_NULL;
         if (name != NULL) {
             CREATE_OUT_PARAM(param1, name, *name_length);
-            if (param1 == NULL) {
-                ERROR("CREATE_OUT_PARAM failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-                break;
-            }
-
             param1_type = TA_PARAM_OUT;
             param1_size = *name_length;
         }

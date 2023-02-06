@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,7 @@
 #define SA_SVP_COMMON_H
 
 #include "sa.h"
-#include <cstddef>
+#include <cstddef> // NOLINT
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -32,7 +32,7 @@ protected:
 
 class SaSvpBufferAllocTest : public SaSvpBase {};
 
-using SaSvpBufferTestType = std::tuple<long>;
+typedef std::tuple<long> SaSvpBufferTestType; // NOLINT
 
 class SaSvpBufferCopyTest : public ::testing::WithParamInterface<SaSvpBufferTestType>, public SaSvpBase {};
 

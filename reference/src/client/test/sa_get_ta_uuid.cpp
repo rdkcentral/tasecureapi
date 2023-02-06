@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,12 @@
 namespace {
     TEST(SaGetTaUuid, nominal) {
         sa_uuid uuid;
-        sa_status status = sa_get_ta_uuid(&uuid);
+        sa_status const status = sa_get_ta_uuid(&uuid);
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
     TEST(SaGetTaUuid, failsNullUuid) {
-        sa_status status = sa_get_ta_uuid(nullptr);
+        sa_status const status = sa_get_ta_uuid(nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

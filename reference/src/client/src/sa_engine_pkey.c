@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,7 +47,7 @@ typedef struct {
     sa_crypto_mac_context mac_context;
 } pkey_app_data;
 
-static int pkey_nids[] = {
+ossl_unused static int pkey_nids[] = {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
         EVP_PKEY_ED25519,
         EVP_PKEY_X25519,
@@ -59,19 +59,19 @@ static int pkey_nids[] = {
         EVP_PKEY_RSA,
         EVP_PKEY_DH};
 
-static int pkey_nids_num = (sizeof(pkey_nids) / sizeof(pkey_nids[0]));
+ossl_unused static int pkey_nids_num = (sizeof(pkey_nids) / sizeof(pkey_nids[0]));
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
-static EVP_PKEY_METHOD* ed25519_pkey_method = NULL;
-static EVP_PKEY_METHOD* x25519_pkey_method = NULL;
-static EVP_PKEY_METHOD* ed448_pkey_method = NULL;
-static EVP_PKEY_METHOD* x448_pkey_method = NULL;
+ossl_unused static EVP_PKEY_METHOD* ed25519_pkey_method = NULL;
+ossl_unused static EVP_PKEY_METHOD* x25519_pkey_method = NULL;
+ossl_unused static EVP_PKEY_METHOD* ed448_pkey_method = NULL;
+ossl_unused static EVP_PKEY_METHOD* x448_pkey_method = NULL;
 #endif
-static EVP_PKEY_METHOD* sym_pkey_method = NULL;
-static EVP_PKEY_METHOD* ec_key_pkey_method = NULL;
-static EVP_PKEY_METHOD* rsa_pkey_method = NULL;
-static EVP_PKEY_METHOD* dh_pkey_method = NULL;
+ossl_unused static EVP_PKEY_METHOD* sym_pkey_method = NULL;
+ossl_unused static EVP_PKEY_METHOD* ec_key_pkey_method = NULL;
+ossl_unused static EVP_PKEY_METHOD* rsa_pkey_method = NULL;
+ossl_unused static EVP_PKEY_METHOD* dh_pkey_method = NULL;
 
-static int pkey_init(EVP_PKEY_CTX* evp_pkey_ctx) {
+ossl_unused static int pkey_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     pkey_app_data* app_data = OPENSSL_malloc(sizeof(pkey_app_data));
     if (app_data == NULL) {
         ERROR("malloc failed");
@@ -106,12 +106,12 @@ static int pkey_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     }
 
     app_data->evp_md_ctx = NULL;
-    app_data->mac_context = 0;
+    app_data->mac_context = INVALID_HANDLE;
     EVP_PKEY_CTX_set_app_data(evp_pkey_ctx, app_data);
     return 1;
 }
 
-static int pkey_copy(
+ossl_unused static int pkey_copy(
         EVP_PKEY_CTX* dst_evp_pkey_ctx,
         EVP_PKEY_CTX* src_evp_pkey_ctx) {
     pkey_app_data* app_data = EVP_PKEY_CTX_get_app_data(src_evp_pkey_ctx);
@@ -145,8 +145,12 @@ static int pkey_copy(
     return 1;
 }
 
-static void pkey_cleanup(EVP_PKEY_CTX* evp_pkey_ctx) {
+ossl_unused static void pkey_cleanup(EVP_PKEY_CTX* evp_pkey_ctx) {
     pkey_app_data* app_data = EVP_PKEY_CTX_get_app_data(evp_pkey_ctx);
+
+    if (app_data->mac_context != INVALID_HANDLE)
+        sa_crypto_mac_release(app_data->mac_context);
+
     if (app_data->oaep_label != NULL)
         OPENSSL_free(app_data->oaep_label);
 
@@ -155,7 +159,7 @@ static void pkey_cleanup(EVP_PKEY_CTX* evp_pkey_ctx) {
 }
 
 // RSA and EC signing and verification
-static int pkey_signverify_init(EVP_PKEY_CTX* evp_pkey_ctx) {
+ossl_unused static int pkey_signverify_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     EVP_PKEY* evp_pkey = EVP_PKEY_CTX_get0_pkey(evp_pkey_ctx);
     if (evp_pkey == NULL) {
         ERROR("NULL evp_pkey");
@@ -172,7 +176,7 @@ static int pkey_signverify_init(EVP_PKEY_CTX* evp_pkey_ctx) {
 }
 
 // RSA and EC signing
-static int pkey_sign(
+ossl_unused static int pkey_sign(
         EVP_PKEY_CTX* evp_pkey_ctx,
         unsigned char* signature,
         size_t* signature_length,
@@ -326,7 +330,7 @@ static int pkey_sign(
 }
 
 // RSA and EC verification
-static int pkey_verify(
+ossl_unused static int pkey_verify(
         EVP_PKEY_CTX* evp_pkey_ctx,
         const unsigned char* signature,
         size_t signature_length,
@@ -428,7 +432,7 @@ static int pkey_verify(
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
 // ED25519 and ED448 signing
-static int pkey_digestsign(
+ossl_unused static int pkey_digestsign(
         EVP_MD_CTX* evp_md_ctx,
         unsigned char* signature,
         size_t* signature_length,
@@ -498,7 +502,7 @@ static int pkey_digestsign(
 }
 
 // ED25519 and ED448 verification
-static int pkey_digestverify(
+ossl_unused static int pkey_digestverify(
         EVP_MD_CTX* evp_md_ctx,
         const unsigned char* signature,
         size_t signature_length,
@@ -580,7 +584,7 @@ static int pkey_digestverify(
 }
 #endif
 
-static int pkey_mac_init(EVP_PKEY_CTX* evp_pkey_ctx) {
+ossl_unused static int pkey_mac_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     EVP_PKEY* evp_pkey = EVP_PKEY_CTX_get0_pkey(evp_pkey_ctx);
     if (evp_pkey == NULL) {
         ERROR("NULL evp_pkey");
@@ -668,7 +672,7 @@ static int pkey_mac_update(
 }
 
 // HMAC and CMAC signing
-static int pkey_signctx_init(
+ossl_unused static int pkey_signctx_init(
         EVP_PKEY_CTX* evp_pkey_ctx,
         EVP_MD_CTX* evp_md_ctx) {
 
@@ -706,7 +710,7 @@ static int pkey_signctx_init(
 }
 
 // HMAC and CMAC signing
-static int pkey_signctx(
+ossl_unused static int pkey_signctx(
         EVP_PKEY_CTX* evp_pkey_ctx,
         unsigned char* signature,
         size_t* signature_length,
@@ -738,7 +742,7 @@ static int pkey_signctx(
 }
 
 // RSA encrypt/decrypt
-static int pkey_encryptdecrypt_init(EVP_PKEY_CTX* evp_pkey_ctx) {
+ossl_unused static int pkey_encryptdecrypt_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     EVP_PKEY* evp_pkey = EVP_PKEY_CTX_get0_pkey(evp_pkey_ctx);
     if (evp_pkey == NULL) {
         ERROR("NULL evp_pkey");
@@ -755,7 +759,7 @@ static int pkey_encryptdecrypt_init(EVP_PKEY_CTX* evp_pkey_ctx) {
 }
 
 // RSA encrypt
-static int pkey_encrypt(
+ossl_unused static int pkey_encrypt(
         EVP_PKEY_CTX* evp_pkey_ctx,
         unsigned char* out,
         size_t* out_length,
@@ -862,7 +866,7 @@ static int pkey_encrypt(
 }
 
 // RSA decrypt
-static int pkey_decrypt(
+ossl_unused static int pkey_decrypt(
         EVP_PKEY_CTX* evp_pkey_ctx,
         unsigned char* out, // NOLINT
         size_t* out_length,
@@ -938,6 +942,7 @@ static int pkey_decrypt(
         return OPENSSL_NOT_SUPPORTED;
     }
 
+    sa_crypto_cipher_release(cipher_context);
     if (status != SA_STATUS_OK) {
         ERROR("sa_crypto_cipher_process failed");
         return 0;
@@ -948,7 +953,7 @@ static int pkey_decrypt(
 }
 
 // DH and ECDH derive
-static int pkey_pderive_init(EVP_PKEY_CTX* evp_pkey_ctx) {
+ossl_unused static int pkey_pderive_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     EVP_PKEY* evp_pkey = EVP_PKEY_CTX_get0_pkey(evp_pkey_ctx);
     if (evp_pkey == NULL) {
         ERROR("NULL evp_pkey");
@@ -969,7 +974,7 @@ static int pkey_pderive_init(EVP_PKEY_CTX* evp_pkey_ctx) {
 }
 
 // DH and ECDH derive
-static int pkey_pderive(
+ossl_unused static int pkey_pderive(
         EVP_PKEY_CTX* evp_pkey_ctx,
         unsigned char* shared_secret_key,
         size_t* shared_secret_key_length) {
@@ -1073,7 +1078,7 @@ static int pkey_pderive(
     return result;
 }
 
-static int pkey_ctrl(
+ossl_unused static int pkey_ctrl(
         EVP_PKEY_CTX* evp_pkey_ctx,
         int command,
         int p1,
@@ -1249,7 +1254,7 @@ static int pkey_ctrl(
     return 1;
 }
 
-static EVP_PKEY_METHOD* get_pkey_method(
+ossl_unused static EVP_PKEY_METHOD* get_pkey_method(
         int nid,
         int flags) {
     EVP_PKEY_METHOD* evp_pkey_method = EVP_PKEY_meth_new(nid, flags);

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +38,7 @@ extern "C" {
 #include <stdint.h>
 #endif
 
-typedef unsigned long slot_t;
+typedef unsigned long slot_t; // NOLINT
 
 #define SLOT_INVALID ((slot_t) ULONG_MAX)
 

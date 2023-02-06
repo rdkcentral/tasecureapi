@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,8 +38,8 @@ namespace {
 
         auto iv = random(GCM_IV_LENGTH);
         sa_cipher_parameters_aes_gcm parameters = {iv.data(), iv.size(), nullptr, 0};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM, SA_CIPHER_MODE_DECRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM,
+                SA_CIPHER_MODE_DECRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -62,8 +62,8 @@ namespace {
         auto iv = random(GCM_IV_LENGTH);
         auto aad = random(36);
         sa_cipher_parameters_aes_gcm parameters = {iv.data(), iv.size(), aad.data(), aad.size()};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -88,8 +88,8 @@ namespace {
         auto iv = random(GCM_IV_LENGTH);
         auto aad = random(36);
         sa_cipher_parameters_aes_gcm parameters = {iv.data(), iv.size(), aad.data(), aad.size()};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -108,8 +108,8 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM, SA_CIPHER_MODE_ENCRYPT,
-                *key, nullptr);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM,
+                SA_CIPHER_MODE_ENCRYPT, *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -130,8 +130,8 @@ namespace {
 
         auto aad = random(36);
         sa_cipher_parameters_aes_gcm parameters = {nullptr, GCM_IV_LENGTH, aad.data(), aad.size()};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -153,8 +153,8 @@ namespace {
         auto iv = random(AES_BLOCK_SIZE);
         auto aad = random(36);
         sa_cipher_parameters_aes_gcm parameters = {iv.data(), iv.size(), aad.data(), aad.size()};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -175,8 +175,8 @@ namespace {
 
         auto iv = random(GCM_IV_LENGTH);
         sa_cipher_parameters_aes_gcm parameters = {iv.data(), iv.size(), nullptr, 8};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_GCM,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 

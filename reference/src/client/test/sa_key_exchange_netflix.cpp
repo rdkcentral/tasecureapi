@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,12 +53,13 @@ namespace {
                 .rights_kh = &rights};
 
         auto kwrap = create_uninitialized_sa_key();
-        sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
-                *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
+        sa_status const status = sa_key_exchange(kwrap.get(), &rights,
+                SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH, *dh_key, other_public_key.data(),
+                other_public_key.size(), &netflix_parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
 
         // Calculate the test side of the netflix key exchange.
-        std::vector<uint8_t> clear_key(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> const clear_key(SYM_128_KEY_SIZE);
         std::vector<uint8_t> clear_shared_secret;
         ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_dh, dh_public_key));
         std::vector<uint8_t> clear_kenc;
@@ -98,7 +99,7 @@ namespace {
                 .out_kh = khmac.get(),
                 .rights_kh = &rights};
 
-        sa_status status = sa_key_exchange(nullptr, &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
+        sa_status const status = sa_key_exchange(nullptr, &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
                 *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
@@ -130,8 +131,9 @@ namespace {
                 .rights_kh = &rights};
 
         auto kwrap = create_uninitialized_sa_key();
-        sa_status status = sa_key_exchange(kwrap.get(), nullptr, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
-                *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
+        sa_status const status = sa_key_exchange(kwrap.get(), nullptr,
+                SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH, *dh_key, other_public_key.data(),
+                other_public_key.size(), &netflix_parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -162,8 +164,8 @@ namespace {
                 .rights_kh = &rights};
 
         auto kwrap = create_uninitialized_sa_key();
-        sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
-                *dh_key, nullptr, 0, &netflix_parameters);
+        sa_status const status = sa_key_exchange(kwrap.get(), &rights,
+                SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH, *dh_key, nullptr, 0, &netflix_parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -187,8 +189,9 @@ namespace {
         ASSERT_NE(khmac, nullptr);
 
         auto kwrap = create_uninitialized_sa_key();
-        sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
-                *dh_key, other_public_key.data(), other_public_key.size(), nullptr);
+        sa_status const status = sa_key_exchange(kwrap.get(), &rights,
+                SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH, *dh_key, other_public_key.data(),
+                other_public_key.size(), nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -219,8 +222,9 @@ namespace {
                 .rights_kh = &rights};
 
         auto kwrap = create_uninitialized_sa_key();
-        sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
-                *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
+        sa_status const status = sa_key_exchange(kwrap.get(), &rights,
+                SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH, *dh_key, other_public_key.data(),
+                other_public_key.size(), &netflix_parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -251,8 +255,9 @@ namespace {
                 .rights_kh = nullptr};
 
         auto kwrap = create_uninitialized_sa_key();
-        sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
-                *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
+        sa_status const status = sa_key_exchange(kwrap.get(), &rights,
+                SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH, *dh_key, other_public_key.data(),
+                other_public_key.size(), &netflix_parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -283,7 +288,7 @@ namespace {
                 .rights_kh = &rights};
 
         auto kwrap = create_uninitialized_sa_key();
-        sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
+        auto status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
                 *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
@@ -315,8 +320,9 @@ namespace {
                 .rights_kh = nullptr};
 
         auto kwrap = create_uninitialized_sa_key();
-        sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
-                *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
+        sa_status const status = sa_key_exchange(kwrap.get(), &rights,
+                SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH, *dh_key, other_public_key.data(),
+                other_public_key.size(), &netflix_parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -347,8 +353,9 @@ namespace {
                 .rights_kh = &rights};
 
         auto kwrap = create_uninitialized_sa_key();
-        sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
-                *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
+        sa_status const status = sa_key_exchange(kwrap.get(), &rights,
+                SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH, *dh_key, other_public_key.data(),
+                other_public_key.size(), &netflix_parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -464,9 +471,9 @@ namespace {
                 .rights_kh = &rights};
 
         auto kwrap = create_uninitialized_sa_key();
-        sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
-                INVALID_HANDLE, other_public_key.data(), other_public_key.size(),
-                &netflix_parameters);
+        sa_status const status = sa_key_exchange(kwrap.get(), &rights,
+                SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH, INVALID_HANDLE, other_public_key.data(),
+                other_public_key.size(), &netflix_parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -590,8 +597,9 @@ namespace {
                 .rights_kh = &rights};
 
         auto kwrap = create_uninitialized_sa_key();
-        sa_status status = sa_key_exchange(kwrap.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH,
-                *dh_key, other_public_key.data(), other_public_key.size(), &netflix_parameters);
+        sa_status const status = sa_key_exchange(kwrap.get(), &rights,
+                SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH, *dh_key, other_public_key.data(),
+                other_public_key.size(), &netflix_parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace
