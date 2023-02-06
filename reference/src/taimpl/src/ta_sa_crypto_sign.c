@@ -18,6 +18,7 @@
 
 #include "client_store.h"
 #include "digest.h"
+#include "digest_util.h"
 #include "ec.h"
 #include "key_store.h"
 #include "key_type.h"

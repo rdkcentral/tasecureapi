@@ -20,6 +20,7 @@
 #include "cmac_context.h"
 #include "common.h"
 #include "digest.h"
+#include "digest_util.h"
 #include "hmac_internal.h"
 #include "log.h"
 #include "porting/memory.h"

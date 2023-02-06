@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef SA_ENGINE_COMMON_H
+#define SA_ENGINE_COMMON_H
+
+#include "sa_engine_internal.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
 #include "client_test_helpers.h"
 #include "sa.h"
-#include "sa_engine.h"
 #include "sa_key_common.h"
 #include <gtest/gtest.h>
 #include <memory>
 #include <openssl/crypto.h>
 #include <vector>
 
-#ifndef SA_ENGINE_COMMON_H
-#define SA_ENGINE_COMMON_H
+#if OPENSSL_VERSION_NUMBER < 0x10100000
+#define EVP_MD_CTX_new EVP_MD_CTX_create
+#define EVP_MD_CTX_free EVP_MD_CTX_destroy
+#endif
 
 class SaEngineTest {
 protected:
@@ -88,4 +94,5 @@ using SaEnginePkeyMacTestType = std::tuple<sa_key_type, size_t, sa_digest_algori
 
 class SaEnginePkeyMacTest : public ::testing::TestWithParam<SaEnginePkeyMacTestType> {};
 
+#endif
 #endif //SA_ENGINE_COMMON_H

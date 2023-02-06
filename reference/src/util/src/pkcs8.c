@@ -30,10 +30,9 @@ bool evp_pkey_to_pkcs8(
     PKCS8_PRIV_KEY_INFO* pkcs8 = NULL;
     do {
         pkcs8 = EVP_PKEY2PKCS8(evp_pkey);
-        if (pkcs8 == NULL) {
-            ERROR("EVP_PKEY_keygen failed");
+        if (pkcs8 == NULL)
+            // Don't log.
             break;
-        }
 
         int length = i2d_PKCS8_PRIV_KEY_INFO(pkcs8, NULL);
         if (length <= 0) {

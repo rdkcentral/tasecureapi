@@ -24,9 +24,6 @@
 #include <openssl/ec.h>
 #include <openssl/evp.h>
 #include <openssl/x509.h>
-#if OPENSSL_VERSION_NUMBER < 0x30000000
-#include <memory.h>
-#endif
 #if OPENSSL_VERSION_NUMBER < 0x10100000
 #include <openssl/ecdsa.h>
 #endif

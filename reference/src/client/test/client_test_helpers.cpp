@@ -17,6 +17,7 @@
  */
 
 #include "client_test_helpers.h"
+#include "digest_util.h"
 #include "pkcs8.h"
 #include "sa_public_key.h"
 #include <cstring>
@@ -24,12 +25,10 @@
 #include <openssl/cmac.h>
 #include <openssl/dh.h>
 #include <openssl/hmac.h>
-#include <openssl/rand.h>
 #include <openssl/x509.h>
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-#include <openssl/core_names.h>
-#else
+#if OPENSSL_VERSION_NUMBER < 0x30000000
 #include <openssl/ecdsa.h>
+#include <openssl/rand.h>
 #endif
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 #define EVP_MD_CTX_free EVP_MD_CTX_destroy
@@ -2342,8 +2341,7 @@ namespace client_test_helpers {
     }
 
     std::shared_ptr<sa_header> key_header(sa_key key) {
-        std::shared_ptr<sa_header> hdr(static_cast<sa_header*>(malloc(sizeof(sa_header))), free);
-
+        std::shared_ptr<sa_header> hdr(new sa_header);
         if (sa_key_header(hdr.get(), key) != SA_STATUS_OK) {
             ERROR("sa_key_header failed");
             return nullptr;

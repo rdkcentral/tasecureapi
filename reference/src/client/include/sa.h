@@ -40,11 +40,36 @@
 #include "sa_types.h"
 
 /**
- * SecAPI specification version
+ * SecAPI specification major version
  */
 #define SA_SPECIFICATION_MAJOR 3
+
+/**
+ * SecAPI specification minor version
+ */
 #define SA_SPECIFICATION_MINOR 1
+
+/**
+ * SecAPI specification revision
+ */
 #define SA_SPECIFICATION_REVISION 2
+
+/**
+ * Stringify helper macro.
+ */
+#define STR(arg) #arg
+
+/**
+ * Stringify helper macro.
+ */
+// clang-format off
+#define VERSION_STR(x, y, z) STR(x) "." STR(y) "." STR(z)
+// clang-format on
+
+/**
+ * SecAPI version string.
+ */
+#define SA_SPECIFICATION_STR VERSION_STR(SA_SPECIFICATION_MAJOR, SA_SPECIFICATION_MINOR, SA_SPECIFICATION_REVISION)
 
 #ifdef __cplusplus
 extern "C" {

@@ -19,6 +19,7 @@
 #include "client_store.h"
 #include "common.h"
 #include "digest.h"
+#include "digest_util.h"
 #include "log.h"
 #include "mac_store.h"
 #include "ta_sa.h"

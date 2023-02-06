@@ -18,7 +18,7 @@
 
 #include "ec.h" // NOLINT
 #include "common.h"
-#include "digest_internal.h"
+#include "digest_util.h"
 #include "log.h"
 #include "pkcs8.h"
 #include "porting/memory.h"
@@ -27,7 +27,6 @@
 #include <openssl/pem.h>
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 #include <openssl/core_names.h>
-#define MAX_GROUP_NAME_SIZE 50
 #endif
 
 #define EC_KEY_SIZE(ec_group) (EC_GROUP_get_degree(ec_group) / 8 + (EC_GROUP_get_degree(ec_group) % 8 == 0 ? 0 : 1))
@@ -285,9 +284,9 @@ size_t ec_validate_private(
         // ED and X curves are checked in evp_pkey_from_pkcs8.
         if (is_pcurve(curve)) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
-            char group_name[MAX_GROUP_NAME_SIZE];
+            char group_name[MAX_NAME_SIZE];
             size_t length = 0;
-            if (EVP_PKEY_get_utf8_string_param(evp_pkey, OSSL_PKEY_PARAM_GROUP_NAME, group_name, MAX_GROUP_NAME_SIZE,
+            if (EVP_PKEY_get_utf8_string_param(evp_pkey, OSSL_PKEY_PARAM_GROUP_NAME, group_name, MAX_NAME_SIZE,
                         &length) != 1) {
                 ERROR("EVP_PKEY_get_utf8_string_param failed");
                 break;

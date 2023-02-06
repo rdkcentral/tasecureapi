@@ -16,15 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "sa_engine_internal.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
 #include "common.h"
 #include "log.h"
 #include "sa.h"
-#include "sa_engine_internal.h"
-#include <openssl/engine.h>
-#include <threads.h>
-#if OPENSSL_VERSION_NUMBER < 0x30000000
 #include <memory.h>
-#endif
+#include <threads.h>
 
 // These do not follow the convention of all upper case to make the DECLARE_CIPHER macro work properly.
 #define BLOCK_SIZE_aes_cbc 16
@@ -416,7 +414,7 @@ DECLARE_CIPHER(chacha20, 256, poly1305, EVP_CIPH_ALWAYS_CALL_INIT | EVP_CIPH_FLA
 #endif
 
 int sa_get_engine_ciphers(
-        ENGINE* engine,
+        ossl_unused ENGINE* engine,
         const EVP_CIPHER** cipher,
         const int** nids,
         int nid) {
@@ -513,3 +511,5 @@ void sa_free_engine_ciphers() {
     cipher_chacha20_256_poly1305 = NULL;
 #endif
 }
+
+#endif

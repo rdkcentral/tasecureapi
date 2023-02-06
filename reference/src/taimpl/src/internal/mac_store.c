@@ -123,7 +123,7 @@ static void mac_unlock(mac_t* mac) {
 }
 
 mac_store_t* mac_store_init(size_t size) {
-    mac_store_t* store = object_store_init(mac_free, size);
+    mac_store_t* store = object_store_init(mac_free, size, "mac");
     if (store == NULL) {
         ERROR("object_store_init failed");
         return NULL;

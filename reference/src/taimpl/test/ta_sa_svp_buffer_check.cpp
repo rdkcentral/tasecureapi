@@ -17,6 +17,7 @@
  */
 
 #include "common.h"
+#include "digest_util.h"
 #include "ta_sa.h"
 #include "ta_sa_svp_common.h"
 #include "ta_test_helpers.h"

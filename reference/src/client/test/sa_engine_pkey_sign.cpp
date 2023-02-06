@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "client_test_helpers.h"
 #include "sa_engine_common.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
+#include "client_test_helpers.h"
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
 
@@ -519,3 +520,4 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(0),
                 ::testing::Values(0)));
 // clang-format on
+#endif

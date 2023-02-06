@@ -114,7 +114,7 @@ svp_buffer_t* svp_get_buffer(const svp_t* svp) {
 }
 
 svp_store_t* svp_store_init(size_t size) {
-    svp_store_t* store = object_store_init(svp_free, size);
+    svp_store_t* store = object_store_init(svp_free, size, "svp");
     if (store == NULL) {
         ERROR("object_store_init failed");
         return NULL;

@@ -31,8 +31,6 @@
 #include <memory.h>
 #endif
 
-#define MAX_NAME_LENGTH 16
-
 static uint64_t device_id;
 
 static uint64_t convert_str_to_int(
@@ -41,7 +39,7 @@ static uint64_t convert_str_to_int(
     static const char lookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     uint64_t value = 0;
-    if (str_length > MAX_NAME_LENGTH) {
+    if (str_length > MAX_NAME_SIZE) {
         ERROR("Invalid str length");
         return 0;
     }
@@ -81,14 +79,14 @@ static bool get_root_key(
     }
 
     if (key_length == 0) {
-        char name[MAX_NAME_LENGTH];
-        size_t name_length = MAX_NAME_LENGTH;
-        if (load_pkcs12_secret_key(key, &key_length, name, &name_length) != 1) {
+        char device_name[MAX_NAME_SIZE];
+        size_t device_name_length = MAX_NAME_SIZE;
+        if (load_pkcs12_secret_key(key, &key_length, device_name, &device_name_length) != 1) {
             ERROR("load_pkcs12_secret_key failed");
             return false;
         }
 
-        device_id = convert_str_to_int(name, name_length);
+        device_id = convert_str_to_int(device_name, device_name_length);
         if (device_id == 0) {
             ERROR("Invalid device ID in keystore");
             return false;
@@ -122,8 +120,8 @@ static bool get_common_root_key(
     }
 
     if (key_length == 0) {
-        char name[MAX_NAME_LENGTH];
-        size_t name_length = MAX_NAME_LENGTH;
+        char name[MAX_NAME_SIZE];
+        size_t name_length = MAX_NAME_SIZE;
         strcpy(name, COMMON_ROOT_NAME);
         if (load_pkcs12_secret_key(key, &key_length, name, &name_length) != 1) {
             ERROR("load_pkcs12_secret_key failed");

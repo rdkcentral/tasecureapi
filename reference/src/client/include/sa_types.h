@@ -64,7 +64,7 @@ extern "C" {
 #define SA_USAGE_BIT_TEST(a, b) ((a) & SA_USAGE_BIT_MASK(b))
 
 /**
- * Create bit mask of all video output protection bits.
+ * A bit mask of all video output protection bits.
  */
 #define SA_USAGE_OUTPUT_PROTECTIONS_MASK \
     (SA_USAGE_BIT_MASK(SA_USAGE_FLAG_ALLOWED_ANALOG_UNPROTECTED) | \
@@ -74,7 +74,9 @@ extern "C" {
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_ALLOWED_DIGITAL_HDCP22) | \
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_ALLOWED_DIGITAL_DTCP) | \
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_SVP_OPTIONAL))
-
+/**
+ * A bit mask of all key usage bits
+ */
 #define SA_KEY_USAGE_MASK \
     (SA_USAGE_BIT_MASK(SA_USAGE_FLAG_KEY_EXCHANGE) | \
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_DERIVE) | \
@@ -82,6 +84,7 @@ extern "C" {
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_ENCRYPT) | \
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_DECRYPT) | \
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_SIGN))
+
 /* clang-format on */
 
 /**
@@ -89,8 +92,14 @@ extern "C" {
  */
 typedef unsigned long sa_handle;
 
+/**
+ * Value for an uninitialized handle.
+ */
 #define INVALID_HANDLE ((sa_handle) ULONG_MAX)
 
+/**
+ * The number of MAGIC bytes in a key header.
+ */
 #define NUM_MAGIC 4
 
 /**
@@ -374,6 +383,9 @@ typedef struct {
     uint8_t id[16];
 } sa_uuid;
 
+/**
+ * The number of allowed TA IDs in a key header.
+ */
 #define MAX_NUM_ALLOWED_TA_IDS 32
 
 /**
@@ -418,14 +430,19 @@ typedef struct {
     sa_uuid allowed_tas[MAX_NUM_ALLOWED_TA_IDS];
 } sa_rights;
 
+/**
+ * The maxium length of the p and g values in DH parameters.
+ */
 #define DH_MAX_MOD_SIZE 512
 
 /**
  * Type parameters for the sa_header.
  */
 typedef union {
+    /** EC curve type. */
     sa_elliptic_curve curve;
 
+    /** DH parameters. **/
     struct {
         /** Prime. */
         uint8_t p[DH_MAX_MOD_SIZE];
@@ -856,7 +873,7 @@ typedef struct {
 } sa_kdf_parameters_hkdf;
 
 /**
- * KDF parameters for SA_KDF_ALGORITHM_CONCAT.
+ * KDF parameters for SA_KDF_ALGORITHM_CONCAT. See NIST SP 56A for definition.
  */
 typedef struct {
     /** Derived key length in bytes. */
@@ -872,7 +889,7 @@ typedef struct {
 } sa_kdf_parameters_concat;
 
 /**
- * KDF parameters for SA_KDF_ALGORITHM_ANSI_X963.
+ * KDF parameters for SA_KDF_ALGORITHM_ANSI_X963. See ANSI X9.63 for definition.
  */
 typedef struct {
     /** Derived key length in bytes. */
@@ -888,14 +905,14 @@ typedef struct {
 } sa_kdf_parameters_ansi_x963;
 
 /**
- * KDF parameters for SA_KDF_ALGORITHM_CMAC.
+ * KDF parameters for SA_KDF_ALGORITHM_CMAC. See NIST SP 800-108 for definition.
  */
 typedef struct {
     /** Derived key length in bytes. */
     size_t key_length;
     /** Parent key handle. */
     sa_key parent;
-    /** Other data value. */
+    /** Other data value. Should be Label || 0x00 || Context || L according to NIST SP 800-108 */
     const void* other_data;
     /** Length of other data in bytes. */
     size_t other_data_length;
@@ -938,11 +955,11 @@ typedef struct {
  * Structure to use in sa_svp_buffer_copy_blocks
  */
 typedef struct {
-    // offset into the output buffer.
+    /** offset into the output buffer. */
     size_t out_offset;
-    // offset into the input buffer.
+    /** offset into the input buffer. */
     size_t in_offset;
-    // numbers of bytes to copy or write.
+    /** numbers of bytes to copy or write. */
     size_t length;
 } sa_svp_offset;
 

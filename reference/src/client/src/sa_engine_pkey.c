@@ -16,20 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "sa_engine_internal.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
 #include "common.h"
+#include "digest_util.h"
 #include "log.h"
 #include "sa.h"
-#include "sa_engine_internal.h"
 #include "sa_rights.h"
+#include <memory.h>
 #include <openssl/engine.h>
 #include <openssl/evp.h>
-
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-#define MAX_GROUP_NAME 24
-#include <openssl/core_names.h>
-#else
-#include <memory.h>
-#endif
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000
 #define EVP_PKEY_get0_engine(evp_pkey) evp_pkey->engine
@@ -75,26 +71,6 @@ static EVP_PKEY_METHOD* ec_key_pkey_method = NULL;
 static EVP_PKEY_METHOD* rsa_pkey_method = NULL;
 static EVP_PKEY_METHOD* dh_pkey_method = NULL;
 
-static sa_digest_algorithm get_digest_algorithm(const EVP_MD* evp_md) {
-    if (evp_md != NULL) {
-        switch (EVP_MD_nid(evp_md)) {
-            case NID_sha1:
-                return SA_DIGEST_ALGORITHM_SHA1;
-
-            case NID_sha256:
-                return SA_DIGEST_ALGORITHM_SHA256;
-
-            case NID_sha384:
-                return SA_DIGEST_ALGORITHM_SHA384;
-
-            case NID_sha512:
-                return SA_DIGEST_ALGORITHM_SHA512;
-        }
-    }
-
-    return UINT32_MAX;
-}
-
 static int pkey_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     pkey_app_data* app_data = OPENSSL_malloc(sizeof(pkey_app_data));
     if (app_data == NULL) {
@@ -135,17 +111,10 @@ static int pkey_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     return 1;
 }
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-static int pkey_copy(
-        EVP_PKEY_CTX* dst_evp_pkey_ctx,
-        const EVP_PKEY_CTX* src_evp_pkey_ctx) {
-    pkey_app_data* app_data = EVP_PKEY_CTX_get_app_data((EVP_PKEY_CTX*) src_evp_pkey_ctx);
-#else
 static int pkey_copy(
         EVP_PKEY_CTX* dst_evp_pkey_ctx,
         EVP_PKEY_CTX* src_evp_pkey_ctx) {
     pkey_app_data* app_data = EVP_PKEY_CTX_get_app_data(src_evp_pkey_ctx);
-#endif
     pkey_app_data* new_app_data = OPENSSL_malloc(sizeof(pkey_app_data));
     if (new_app_data == NULL) {
         ERROR("malloc failed");
@@ -250,9 +219,9 @@ static int pkey_sign(
         case SA_KEY_TYPE_RSA:
             if (app_data->padding_mode == RSA_PKCS1_PADDING) {
                 signature_algorithm = SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15;
-                parameters_rsa_pkcs1v15.digest_algorithm = get_digest_algorithm(app_data->evp_md);
+                parameters_rsa_pkcs1v15.digest_algorithm = digest_algorithm_from_md(app_data->evp_md);
                 if (parameters_rsa_pkcs1v15.digest_algorithm == UINT32_MAX) {
-                    ERROR("digest_algorithm unknown");
+                    ERROR("digest_algorithm_from_name unknown");
                     return 0;
                 }
 
@@ -260,15 +229,15 @@ static int pkey_sign(
                 parameters = &parameters_rsa_pkcs1v15;
             } else if (app_data->padding_mode == RSA_PKCS1_PSS_PADDING) {
                 signature_algorithm = SA_SIGNATURE_ALGORITHM_RSA_PSS;
-                parameters_rsa_pss.digest_algorithm = get_digest_algorithm(app_data->evp_md);
-                parameters_rsa_pss.mgf1_digest_algorithm = get_digest_algorithm(app_data->mgf1_md);
+                parameters_rsa_pss.digest_algorithm = digest_algorithm_from_md(app_data->evp_md);
+                parameters_rsa_pss.mgf1_digest_algorithm = digest_algorithm_from_md(app_data->mgf1_md);
                 if (parameters_rsa_pss.digest_algorithm == UINT32_MAX) {
-                    ERROR("digest_algorithm unknown");
+                    ERROR("digest_algorithm_from_name unknown");
                     return 0;
                 }
 
                 if (parameters_rsa_pss.mgf1_digest_algorithm == UINT32_MAX) {
-                    ERROR("digest_algorithm unknown");
+                    ERROR("digest_algorithm_from_name unknown");
                     return 0;
                 }
 
@@ -305,9 +274,9 @@ static int pkey_sign(
             }
 
             signature_algorithm = SA_SIGNATURE_ALGORITHM_ECDSA;
-            parameters_ecdsa.digest_algorithm = get_digest_algorithm(app_data->evp_md);
+            parameters_ecdsa.digest_algorithm = digest_algorithm_from_md(app_data->evp_md);
             if (parameters_ecdsa.digest_algorithm == UINT32_MAX) {
-                ERROR("digest_algorithm unknown");
+                ERROR("digest_algorithm_from_name unknown");
                 return 0;
             }
 
@@ -634,7 +603,7 @@ static int pkey_mac_init(EVP_PKEY_CTX* evp_pkey_ctx) {
     sa_mac_parameters_hmac parameters_hmac;
     void* parameters;
     if (data->header.type == SA_KEY_TYPE_SYMMETRIC) {
-        sa_digest_algorithm digest_algorithm = get_digest_algorithm(app_data->evp_md);
+        sa_digest_algorithm digest_algorithm = digest_algorithm_from_md(app_data->evp_md);
         if (digest_algorithm == UINT32_MAX) {
             mac_algorithm = SA_MAC_ALGORITHM_CMAC;
             parameters = NULL;
@@ -741,7 +710,7 @@ static int pkey_signctx(
         EVP_PKEY_CTX* evp_pkey_ctx,
         unsigned char* signature,
         size_t* signature_length,
-        EVP_MD_CTX* evp_md_ctx) {
+        ossl_unused EVP_MD_CTX* evp_md_ctx) {
 
     if (evp_pkey_ctx == NULL) {
         ERROR("NULL evp_pkey_ctx");
@@ -938,8 +907,8 @@ static int pkey_decrypt(
     void* parameters = NULL;
     if (app_data->padding_mode == RSA_PKCS1_OAEP_PADDING) {
         cipher_algorithm = SA_CIPHER_ALGORITHM_RSA_OAEP;
-        parameters_rsa_oaep.digest_algorithm = get_digest_algorithm(app_data->evp_md);
-        parameters_rsa_oaep.mgf1_digest_algorithm = get_digest_algorithm(app_data->mgf1_md);
+        parameters_rsa_oaep.digest_algorithm = digest_algorithm_from_md(app_data->evp_md);
+        parameters_rsa_oaep.mgf1_digest_algorithm = digest_algorithm_from_md(app_data->mgf1_md);
         parameters_rsa_oaep.label = app_data->oaep_label;
         parameters_rsa_oaep.label_length = app_data->oaep_label_length;
         parameters = &parameters_rsa_oaep;
@@ -1294,172 +1263,11 @@ static EVP_PKEY_METHOD* get_pkey_method(
     return evp_pkey_method;
 }
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-// OpenSSL 3 doesn't set up a key read through d2i_PUBKEY correctly for use by an engine. Stream it out as a PublicKey
-// and reread it to get the correct settings.
-static EVP_PKEY* fixup_openssl3_key(EVP_PKEY* evp_pkey) {
-    int type = EVP_PKEY_id(evp_pkey);
-    EVP_PKEY* new_evp_pkey = NULL;
-    uint8_t* public_key = NULL;
-    EC_GROUP* ec_group = NULL;
-    EC_POINT* ec_point = NULL;
-    EC_KEY* ec_key = NULL;
-    do {
-        if (type == EVP_PKEY_DH) {
-            // Don't fix a DH key.
-            return evp_pkey;
-        }
-
-        if (type == EVP_PKEY_RSA) {
-            int length = i2d_PublicKey(evp_pkey, NULL);
-            if (length <= 0) {
-                ERROR("i2d_PublicKey failed");
-                break;
-            }
-
-            public_key = OPENSSL_malloc(length);
-            if (public_key == NULL) {
-                ERROR("OPENSSL_malloc failed");
-                break;
-            }
-
-            uint8_t* p_public_key = public_key;
-            length = i2d_PublicKey(evp_pkey, &p_public_key);
-            if (length <= 0) {
-                ERROR("i2d_PublicKey failed");
-                break;
-            }
-
-            const uint8_t* p_public_key2 = public_key;
-            new_evp_pkey = d2i_PublicKey(type, NULL, &p_public_key2, length);
-            if (new_evp_pkey == NULL) {
-                ERROR("d2i_PublicKey failed");
-                break;
-            }
-        } else if (type == EVP_PKEY_EC) {
-            char group_name[MAX_GROUP_NAME];
-            size_t group_name_length = MAX_GROUP_NAME;
-            if (EVP_PKEY_get_utf8_string_param(evp_pkey, OSSL_PKEY_PARAM_GROUP_NAME, group_name,
-                        group_name_length, &group_name_length) != 1) {
-                ERROR("EVP_PKEY_get_utf8_string_param failed");
-                break;
-            }
-
-            size_t public_key_length = 0;
-            if (EVP_PKEY_get_octet_string_param(evp_pkey, OSSL_PKEY_PARAM_PUB_KEY, NULL, public_key_length,
-                        &public_key_length) != 1) {
-                ERROR("EVP_PKEY_get_octet_string_param failed");
-                break;
-            }
-
-            public_key = OPENSSL_malloc(public_key_length);
-            if (public_key == NULL) {
-                ERROR("OPENSSL_malloc failed");
-                break;
-            }
-
-            if (EVP_PKEY_get_octet_string_param(evp_pkey, OSSL_PKEY_PARAM_PUB_KEY, public_key, public_key_length,
-                        &public_key_length) != 1) {
-                ERROR("EVP_PKEY_get_octet_string_param failed");
-                break;
-            }
-
-            OSSL_PARAM params[] = {
-                    OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, group_name, group_name_length),
-                    OSSL_PARAM_construct_end()};
-
-            ec_group = EC_GROUP_new_from_params(params, NULL, NULL);
-            if (ec_group == NULL) {
-                ERROR("EC_GROUP_new_from_params failed");
-                break;
-            }
-
-            ec_point = EC_POINT_new(ec_group);
-            if (ec_point == NULL) {
-                ERROR("EC_POINT_new failed");
-                break;
-            }
-
-            if (EC_POINT_oct2point(ec_group, ec_point, public_key, public_key_length, NULL) != 1) {
-                ERROR("EC_POINT_oct2point failed");
-                break;
-            }
-
-            ec_key = EC_KEY_new();
-            if (ec_key == NULL) {
-                ERROR("EC_KEY_new failed");
-                break;
-            }
-
-            if (EC_KEY_set_group(ec_key, ec_group) != 1) {
-                ERROR("EC_KEY_set_group failed");
-                break;
-            }
-
-            if (EC_KEY_set_public_key(ec_key, ec_point) != 1) {
-                ERROR("EC_KEY_set_public_key failed");
-                break;
-            }
-
-            new_evp_pkey = EVP_PKEY_new();
-            if (new_evp_pkey == NULL) {
-                ERROR("EVP_PKEY_new failed");
-                break;
-            }
-
-            if (EVP_PKEY_set1_EC_KEY(new_evp_pkey, ec_key) != 1) {
-                ERROR("EVP_PKEY_set1_EC_KEY failed");
-                EVP_PKEY_free(evp_pkey);
-                break;
-            }
-        } else if (type == EVP_PKEY_ED25519 || type == EVP_PKEY_ED448 || type == EVP_PKEY_X25519 ||
-                   type == EVP_PKEY_X448) {
-            size_t public_key_length = 0;
-            if (EVP_PKEY_get_raw_public_key(evp_pkey, NULL, &public_key_length) != 1) {
-                ERROR("EVP_PKEY_get_raw_public_key failed");
-                break;
-            }
-
-            public_key = OPENSSL_malloc(public_key_length);
-            if (public_key == NULL) {
-                ERROR("OPENSSL_malloc failed");
-                break;
-            }
-
-            if (EVP_PKEY_get_raw_public_key(evp_pkey, public_key, &public_key_length) != 1) {
-                ERROR("EVP_PKEY_get_raw_public_key failed");
-                break;
-            }
-
-            new_evp_pkey = EVP_PKEY_new_raw_public_key(type, NULL, public_key, public_key_length);
-            if (new_evp_pkey == NULL) {
-                ERROR("EVP_PKEY_new_raw_public_key failed");
-                break;
-            }
-
-            break;
-        } else {
-            ERROR("Unknown key type");
-            break;
-        }
-    } while (false);
-
-    OPENSSL_free(public_key);
-    EC_GROUP_free(ec_group);
-    EC_POINT_free(ec_point);
-    EC_KEY_free(ec_key);
-    EVP_PKEY_free(evp_pkey);
-
-    evp_pkey = new_evp_pkey;
-    return evp_pkey;
-}
-#endif
-
 EVP_PKEY* sa_load_engine_private_pkey(
         ENGINE* engine,
         const char* key_id,
-        UI_METHOD* ui_method,
-        void* callback_data) {
+        ossl_unused UI_METHOD* ui_method,
+        ossl_unused void* callback_data) {
 
     EVP_PKEY* evp_pkey = NULL;
     do {
@@ -1476,10 +1284,6 @@ EVP_PKEY* sa_load_engine_private_pkey(
                 ERROR("sa_get_public_key failed");
                 break;
             }
-
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-            evp_pkey = fixup_openssl3_key(evp_pkey);
-#endif
         }
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
         else {
@@ -1514,7 +1318,7 @@ EVP_PKEY* sa_load_engine_private_pkey(
 }
 
 int sa_get_engine_pkey_methods(
-        ENGINE* engine,
+        ossl_unused ENGINE* engine,
         EVP_PKEY_METHOD** method,
         const int** nids,
         int nid) {
@@ -1607,3 +1411,5 @@ int sa_get_engine_pkey_methods(
     mtx_unlock(&engine_mutex);
     return *method == NULL ? 0 : 1;
 }
+
+#endif

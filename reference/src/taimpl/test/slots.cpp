@@ -22,13 +22,13 @@
 namespace {
     TEST(SlotsInit, nominal) {
         size_t number_of_slots = 128;
-        std::shared_ptr<slots_t> slots(slots_init(number_of_slots), slots_shutdown);
+        std::shared_ptr<slots_t> slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
         ASSERT_NE(slots, nullptr);
     }
 
     TEST(SlotsInit, invalidnumberOfSlots) {
         size_t number_of_slots = 129;
-        std::shared_ptr<slots_t> slots(slots_init(number_of_slots), slots_shutdown);
+        std::shared_ptr<slots_t> slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
         ASSERT_EQ(slots, nullptr);
     }
 
@@ -38,7 +38,7 @@ namespace {
 
     TEST(SlotsAllocate, nominal) {
         size_t number_of_slots = 128;
-        std::shared_ptr<slots_t> slots(slots_init(number_of_slots), slots_shutdown);
+        std::shared_ptr<slots_t> slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
         ASSERT_NE(slots, nullptr);
 
         size_t slot = slots_allocate(slots.get());
@@ -48,7 +48,7 @@ namespace {
 
     TEST(SlotsAllocate, failonmaxplusone) {
         size_t number_of_slots = 128;
-        std::shared_ptr<slots_t> slots(slots_init(number_of_slots), slots_shutdown);
+        std::shared_ptr<slots_t> slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
         ASSERT_NE(slots, nullptr);
 
         std::vector<slot_t> allocated;
@@ -70,7 +70,7 @@ namespace {
 
     TEST(SlotsFree, doublemax) {
         size_t number_of_slots = 128;
-        std::shared_ptr<slots_t> slots(slots_init(number_of_slots), slots_shutdown);
+        std::shared_ptr<slots_t> slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
         ASSERT_NE(slots, nullptr);
 
         std::vector<slot_t> allocated;

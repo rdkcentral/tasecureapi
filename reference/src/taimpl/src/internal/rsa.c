@@ -17,7 +17,7 @@
  */
 
 #include "rsa.h" // NOLINT
-#include "digest_internal.h"
+#include "digest_util.h"
 #include "log.h"
 #include "pkcs8.h"
 #include "porting/memory.h"

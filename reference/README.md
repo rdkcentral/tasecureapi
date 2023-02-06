@@ -120,10 +120,11 @@ ctest -T memcheck
 
 ### Install
 
-To install SecApi 3 (libsaclient), run a cmake install
+To install SecApi 3 (libsaclient), run a cmake install with an optional --prefix argument to
+install in a non-standard directory.
 
 ```
-cmake --install cmake-build
+cmake --install cmake-build [--prefix <directory>]
 ```
 
 This copies the include files, the library, libsaclient.(so/dll/dylib) containing the SecAPI code (the

@@ -28,13 +28,13 @@ namespace {
 
     TEST(ObjectStoreInit, nominal) {
         size_t num = 128;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num), object_store_shutdown);
+        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_NE(store, nullptr);
     }
 
     TEST(ObjectStoreInit, failsOnInvalidNumSlots) {
         size_t num = 129;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num), object_store_shutdown);
+        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_EQ(store, nullptr);
     }
 
@@ -44,7 +44,7 @@ namespace {
 
     TEST(ObjectStoreAdd, nominal) {
         size_t num = 128;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num), object_store_shutdown);
+        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_NE(store, nullptr);
 
         slot_t slot = SLOT_INVALID;
@@ -55,7 +55,7 @@ namespace {
 
     TEST(ObjectStoreAdd, failsWhenFull) {
         size_t num = 128;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num), object_store_shutdown);
+        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_NE(store, nullptr);
 
         slot_t slot = SLOT_INVALID;
@@ -71,7 +71,7 @@ namespace {
 
     TEST(ObjectStoreAcquire, nominal) {
         size_t num = 128;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num), object_store_shutdown);
+        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_NE(store, nullptr);
 
         slot_t slot = SLOT_INVALID;
@@ -91,7 +91,7 @@ namespace {
 
     TEST(ObjectStoreAcquire, failsWithInvalidUuid) {
         size_t num = 128;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num), object_store_shutdown);
+        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_NE(store, nullptr);
 
         slot_t slot = SLOT_INVALID;
@@ -113,7 +113,7 @@ namespace {
 
     TEST(ObjectStoreRemove, nominal) {
         size_t num = 128;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num), object_store_shutdown);
+        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_NE(store, nullptr);
 
         std::vector<slot_t> allocated;
@@ -145,7 +145,7 @@ namespace {
 
     TEST(ObjectStoreSize, nominal) {
         size_t num = 128;
-        std::shared_ptr<object_store_t> store(object_store_init(noop, num), object_store_shutdown);
+        std::shared_ptr<object_store_t> store(object_store_init(noop, num, "TEST"), object_store_shutdown);
         ASSERT_NE(store, nullptr);
 
         ASSERT_EQ(num, object_store_size(store.get()));

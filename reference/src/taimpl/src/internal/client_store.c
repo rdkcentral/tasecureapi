@@ -148,7 +148,7 @@ static client_t* client_init(
 }
 
 static client_store_t* client_store_init(size_t size) {
-    client_store_t* store = object_store_init(client_free, size);
+    client_store_t* store = object_store_init(client_free, size, "client");
     if (store == NULL) {
         ERROR("object_store_init failed");
         return NULL;

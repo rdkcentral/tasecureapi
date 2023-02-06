@@ -362,7 +362,7 @@ static stored_key_t* wrapped_key_unwrap(const wrapped_key_t* wrapped_key) {
 }
 
 key_store_t* key_store_init(size_t size) {
-    key_store_t* store = object_store_init(wrapped_key_free, size);
+    key_store_t* store = object_store_init(wrapped_key_free, size, "key");
     if (store == NULL) {
         ERROR("object_store_init failed");
         return NULL;
