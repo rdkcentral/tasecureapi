@@ -111,12 +111,15 @@ static sa_status ta_invoke_get_name(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (param_types[1] != TA_PARAM_NULL && params[1].mem_ref_size != get_name->name_length) {
+    size_t name_length = get_name->name_length;
+    if (param_types[1] != TA_PARAM_NULL && params[1].mem_ref_size != name_length) {
         ERROR("Invalid params[1].mem_ref_size");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_get_name((char*) params[1].mem_ref, &get_name->name_length, context->client, uuid);
+    sa_status status = ta_sa_get_name((char*) params[1].mem_ref, &name_length, context->client, uuid);
+    get_name->name_length = name_length;
+    return status;
 }
 
 static sa_status ta_invoke_get_device_id(
@@ -328,13 +331,16 @@ static sa_status ta_invoke_key_export(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (param_types[1] != TA_PARAM_NULL && params[1].mem_ref_size != key_export->out_length) {
+    size_t out_length = key_export->out_length;
+    if (param_types[1] != TA_PARAM_NULL && params[1].mem_ref_size != out_length) {
         ERROR("Invalid params[1].mem_ref_size");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_key_export(params[1].mem_ref, &key_export->out_length, params[2].mem_ref, params[2].mem_ref_size,
+    sa_status status = ta_sa_key_export(params[1].mem_ref, &out_length, params[2].mem_ref, params[2].mem_ref_size,
             key_export->key, context->client, uuid);
+    key_export->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_key_import(
@@ -709,13 +715,16 @@ static sa_status ta_invoke_key_get_public(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (param_types[1] != TA_PARAM_NULL && params[1].mem_ref_size != key_get_public->out_length) {
+    size_t out_length = key_get_public->out_length;
+    if (param_types[1] != TA_PARAM_NULL && params[1].mem_ref_size != out_length) {
         ERROR("Invalid params[1].mem_ref_size");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_key_get_public(params[1].mem_ref, &key_get_public->out_length, key_get_public->key, context->client,
+    sa_status status = ta_sa_key_get_public(params[1].mem_ref, &out_length, key_get_public->key, context->client,
             uuid);
+    key_get_public->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_key_derive(
@@ -1068,13 +1077,16 @@ static sa_status ta_invoke_key_digest(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (param_types[1] != TA_PARAM_NULL && params[1].mem_ref_size != key_digest->out_length) {
+    size_t out_length = key_digest->out_length;
+    if (param_types[1] != TA_PARAM_NULL && params[1].mem_ref_size != out_length) {
         ERROR("Invalid params[1].mem_ref_size");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_key_digest(params[1].mem_ref, &key_digest->out_length, key_digest->key, key_digest->digest_algorithm,
+    sa_status status = ta_sa_key_digest(params[1].mem_ref, &out_length, key_digest->key, key_digest->digest_algorithm,
             context->client, uuid);
+    key_digest->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_crypto_random(
@@ -1634,13 +1646,16 @@ static sa_status ta_invoke_crypto_mac_compute(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (param_types[1] != TA_PARAM_NULL && params[1].mem_ref_size != mac_compute->out_length) {
+    size_t out_length = mac_compute->out_length;
+    if (param_types[1] != TA_PARAM_NULL && params[1].mem_ref_size != out_length) {
         ERROR("Invalid params[1].mem_ref_size");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_crypto_mac_compute(params[1].mem_ref, &mac_compute->out_length, mac_compute->context, context->client,
+    sa_status status = ta_sa_crypto_mac_compute(params[1].mem_ref, &out_length, mac_compute->context, context->client,
             uuid);
+    mac_compute->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_crypto_mac_release(
@@ -1756,13 +1771,16 @@ static sa_status ta_invoke_crypto_sign(
             parameters = NULL;
     }
 
-    if (param_types[1] != TA_PARAM_NULL && params[1].mem_ref_size != sign->out_length) {
+    size_t out_length = sign->out_length;
+    if (param_types[1] != TA_PARAM_NULL && params[1].mem_ref_size != out_length) {
         ERROR("Invalid params[1].mem_ref_size");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_crypto_sign(params[1].mem_ref, &sign->out_length, signature_algorithm, sign->key, params[2].mem_ref,
+    sa_status status = ta_sa_crypto_sign(params[1].mem_ref, &out_length, signature_algorithm, sign->key, params[2].mem_ref,
             params[2].mem_ref_size, parameters, context->client, uuid);
+    sign->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_svp_supported(
