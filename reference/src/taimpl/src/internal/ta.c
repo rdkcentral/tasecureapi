@@ -1924,7 +1924,7 @@ sa_status ta_invoke_command_handler(
                 status = SA_STATUS_OPERATION_NOT_SUPPORTED;
         }
 
-        // Cache the command parameter to prevent Time-of-use Time-of-check errors.
+        // Release the cached command parameter.
         if (CHECK_TA_PARAM_INOUT(param_types[0]))
             memcpy(params[0].mem_ref, command_parameter, params[0].mem_ref_size);
     } while (false);

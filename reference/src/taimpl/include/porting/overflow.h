@@ -35,11 +35,11 @@ extern "C" {
 #endif
 
 /**
- * Adds to unsigned long values together and checks for overflow. The result is placed in res.
+ * Adds two unsigned long values together and checks for overflow. The result is placed in result.
  *
  * @param[in] a left value to add.
  * @param[in] b right value to add
- * @param[out] res result of addition if no overflow occurs.
+ * @param[out] result result of addition if no overflow occurs.
  * @return false if no overflow and true if there is.
  */
 bool add_overflow(

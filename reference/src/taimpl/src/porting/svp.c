@@ -291,14 +291,14 @@ bool svp_digest(
         size_t offset,
         size_t length) {
 
-    // here
-    if (offset + length < offset) {
+    size_t range;
+    if (add_overflow(offset, length, &range)) {
         ERROR("Integer overflow");
         return false;
     }
 
-    if (offset + length > svp_buffer->size) {
-        ERROR("Buffer overflow");
+    if (range > svp_buffer->size) {
+        ERROR("attempting to write outside the bounds of output secure buffer");
         return false;
     }
 
