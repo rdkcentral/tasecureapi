@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -573,89 +573,5 @@ sa_status rsa_sign_pss(
     EVP_PKEY_free(evp_pkey);
     EVP_PKEY_CTX_free(evp_pkey_ctx);
 
-    return status;
-}
-
-sa_status rsa_generate_key(
-        stored_key_t** stored_key,
-        const sa_rights* rights,
-        sa_generate_parameters_rsa* parameters) {
-
-    if (stored_key == NULL) {
-        ERROR("NULL stored_key");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (rights == NULL) {
-        ERROR("NULL rights");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (parameters == NULL) {
-        ERROR("NULL parameters");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    sa_status status = SA_STATUS_INTERNAL_ERROR;
-    uint8_t* key = NULL;
-    EVP_PKEY_CTX* evp_pkey_ctx = NULL;
-    EVP_PKEY* evp_pkey = NULL;
-    size_t key_length = 0;
-    do {
-
-        evp_pkey_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
-        if (evp_pkey_ctx == NULL) {
-            ERROR("EVP_PKEY_CTX_new failed");
-            break;
-        }
-
-        if (EVP_PKEY_keygen_init(evp_pkey_ctx) != 1) {
-            ERROR("EVP_PKEY_keygen_init failed");
-            break;
-        }
-
-        if (EVP_PKEY_CTX_set_rsa_keygen_bits(evp_pkey_ctx, (int) parameters->modulus_length * 8) != 1) {
-            ERROR("EVP_PKEY_CTX_set_ec_paramgen_curve_nid failed");
-            break;
-        }
-
-        if (EVP_PKEY_keygen(evp_pkey_ctx, &evp_pkey) != 1) {
-            ERROR("EVP_PKEY_keygen failed");
-            break;
-        }
-
-        if (!evp_pkey_to_pkcs8(NULL, &key_length, evp_pkey)) {
-            ERROR("evp_pkey_to_pkcs8 failed");
-            break;
-        }
-
-        key = memory_secure_alloc(key_length);
-        if (key == NULL) {
-            ERROR("memory_secure_alloc failed");
-            break;
-        }
-
-        if (!evp_pkey_to_pkcs8(key, &key_length, evp_pkey)) {
-            ERROR("evp_pkey_to_pkcs8 failed");
-            break;
-        }
-
-        sa_type_parameters type_parameters;
-        memory_memset_unoptimizable(&type_parameters, 0, sizeof(type_parameters));
-        status = stored_key_create(stored_key, rights, NULL, SA_KEY_TYPE_RSA, &type_parameters,
-                parameters->modulus_length, key, key_length);
-        if (status != SA_STATUS_OK) {
-            ERROR("stored_key_create failed");
-            break;
-        }
-    } while (false);
-
-    if (key != NULL) {
-        memory_memset_unoptimizable(key, 0, key_length);
-        memory_secure_free(key);
-    }
-
-    EVP_PKEY_CTX_free(evp_pkey_ctx);
-    EVP_PKEY_free(evp_pkey);
     return status;
 }

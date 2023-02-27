@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2022 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -165,18 +165,6 @@ sa_status rsa_sign_pss(
         const void* in,
         size_t in_length,
         bool precomputed_digest);
-
-/**
- * Generate an RSA key.
- * @param[out] stored_key the generated RSA key.
- * @param[in] rights the key rights.
- * @param[in] parameters the RSA key parameters
- * @return status of the operation.
- */
-sa_status rsa_generate_key(
-        stored_key_t** stored_key,
-        const sa_rights* rights,
-        sa_generate_parameters_rsa* parameters);
 
 #ifdef __cplusplus
 }
