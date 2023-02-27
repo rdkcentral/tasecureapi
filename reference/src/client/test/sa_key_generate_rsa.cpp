@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,16 +24,14 @@
 using namespace client_test_helpers;
 
 namespace {
-    TEST_F(SaKeyGenerateTest, failsRsaOperationNotSupported) {
+    TEST_F(SaKeyGenerateTest, failsRsaNullParameters) {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
-        sa_generate_parameters_rsa parameters = {256};
-
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_RSA, &parameters);
-        ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_SUPPORTED);
+        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_EC, nullptr);
+        ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

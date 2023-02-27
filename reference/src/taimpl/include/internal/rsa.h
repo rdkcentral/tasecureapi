@@ -166,6 +166,19 @@ sa_status rsa_sign_pss(
         size_t in_length,
         bool precomputed_digest);
 
+/**
+ * Generate an RSA key. This is an optional feature and this function can return SA_STATUS_OPERATION_NOT_SUPPORTED.
+ *
+ * @param[out] stored_key the generated RSA key.
+ * @param[in] rights the key rights.
+ * @param[in] parameters the RSA key parameters
+ * @return status of the operation.
+ */
+sa_status rsa_generate_key(
+        stored_key_t** stored_key,
+        const sa_rights* rights,
+        sa_generate_parameters_rsa* parameters);
+
 #ifdef __cplusplus
 }
 #endif
