@@ -89,6 +89,11 @@ target_include_directories(saclient
 
 if (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
     # using Clang
+    target_include_directories(saclient
+            PRIVATE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
+            )
+
     target_link_libraries(saclient
             PRIVATE
             -Wl,-all_load
@@ -204,6 +209,7 @@ add_executable(saclienttest
         test/sa_key_derive_concat.cpp
         test/sa_key_derive_hkdf.cpp
         test/sa_key_derive_netflix.cpp
+        test/sa_key_derive_common_root_key_ladder.cpp
         test/sa_key_derive_root_key_ladder.cpp
         test/sa_key_digest.cpp
         test/sa_key_exchange.cpp

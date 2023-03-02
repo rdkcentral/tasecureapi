@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ extern "C" {
 bool load_pkcs12_secret_key(
         void* key,
         size_t* key_length,
-        uint8_t* name,
+        char* name,
         size_t* name_length);
 
 #ifdef __cplusplus

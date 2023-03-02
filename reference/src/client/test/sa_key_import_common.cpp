@@ -520,7 +520,11 @@ std::string SaKeyImportSocBase::generate_encrypted_key(
     tag.resize(AES_BLOCK_SIZE);
 
     std::vector<uint8_t> empty;
-    auto derived_key = derive_test_key_ladder(c1, c2, c3, empty);
+    std::vector<uint8_t> root_key;
+    if(!get_root_key(root_key))
+        return "";
+
+    auto derived_key = derive_test_key_ladder(root_key, c1, c2, c3, empty);
     if (derived_key == nullptr)
         return "";
 

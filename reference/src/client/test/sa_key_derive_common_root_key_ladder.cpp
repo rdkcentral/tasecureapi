@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ static std::vector<uint8_t> C3 = random(AES_BLOCK_SIZE);
 static std::vector<uint8_t> C4 = random(AES_BLOCK_SIZE);
 
 namespace {
-    TEST_F(SaKeyDeriveRootKeyLadderTest, nominal) {
-        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_ROOT_KEY_LADDER;
+    TEST_F(SaKeyDeriveCommonRootKeyLadderTest, nominal) {
+        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER;
         // clang-format off
         sa_kdf_parameters_root_key_ladder parameters = {
                 .c1 = C1.data(), .c1_length = C1.size(),
@@ -47,15 +47,18 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, kdf_algorithm, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER not supported. Skipping test";
+
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        std::vector<uint8_t> root_key;
-        ASSERT_TRUE(get_root_key(root_key));
-        auto derived_key = derive_test_key_ladder(root_key, C1, C2, C3, C4);
+        std::vector<uint8_t> common_root_key;
+        ASSERT_TRUE(get_common_root_key(common_root_key));
+        auto derived_key = derive_test_key_ladder(common_root_key, C1, C2, C3, C4);
         ASSERT_TRUE(key_check_sym(*key, *derived_key));
     }
 
-    TEST_F(SaKeyDeriveRootKeyLadderTest, failsNullKey) {
+    TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsNullKey) {
         // clang-format off
         sa_kdf_parameters_root_key_ladder parameters = {
                 .c1 = C1.data(), .c1_length = C1.size(),
@@ -67,11 +70,14 @@ namespace {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
-        sa_status status = sa_key_derive(nullptr, &rights, SA_KDF_ALGORITHM_ROOT_KEY_LADDER, &parameters);
+        sa_status status = sa_key_derive(nullptr, &rights, SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER not supported. Skipping test";
+
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveRootKeyLadderTest, failsNullRights) {
+    TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsNullRights) {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
@@ -89,11 +95,14 @@ namespace {
                 .c4 = C4.data(), .c4_length = C4.size()};
         // clang-format on
 
-        status = sa_key_derive(key.get(), nullptr, SA_KDF_ALGORITHM_ROOT_KEY_LADDER, &parameters);
+        status = sa_key_derive(key.get(), nullptr, SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER not supported. Skipping test";
+
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveRootKeyLadderTest, failsNullParameters) {
+    TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsNullParameters) {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
@@ -103,12 +112,15 @@ namespace {
         sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, &key_parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_ROOT_KEY_LADDER, nullptr);
+        status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER, nullptr);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER not supported. Skipping test";
+
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveRootKeyLadderTest, failsNullC1) {
-        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_ROOT_KEY_LADDER;
+    TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsNullC1) {
+        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER;
         // clang-format off
         sa_kdf_parameters_root_key_ladder parameters = {
                 .c1 = nullptr, .c1_length = C1.size(),
@@ -123,11 +135,14 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, kdf_algorithm, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER not supported. Skipping test";
+
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveRootKeyLadderTest, failsNullC2) {
-        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_ROOT_KEY_LADDER;
+    TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsNullC2) {
+        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER;
         // clang-format off
         sa_kdf_parameters_root_key_ladder parameters = {
                 .c1 = C1.data(), .c1_length = C1.size(),
@@ -141,11 +156,14 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, kdf_algorithm, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER not supported. Skipping test";
+
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveRootKeyLadderTest, failsNullC3) {
-        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_ROOT_KEY_LADDER;
+    TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsNullC3) {
+        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER;
         // clang-format off
         sa_kdf_parameters_root_key_ladder parameters = {
                 .c1 = C1.data(), .c1_length = C1.size(),
@@ -160,11 +178,14 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, kdf_algorithm, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER not supported. Skipping test";
+
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveRootKeyLadderTest, failsNullC4) {
-        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_ROOT_KEY_LADDER;
+    TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsNullC4) {
+        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER;
         // clang-format off
         sa_kdf_parameters_root_key_ladder parameters = {
                 .c1 = C1.data(), .c1_length = C1.size(),
@@ -179,11 +200,14 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, kdf_algorithm, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER not supported. Skipping test";
+
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveRootKeyLadderTest, failsC1Length) {
-        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_ROOT_KEY_LADDER;
+    TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsC1Length) {
+        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER;
         // clang-format off
         sa_kdf_parameters_root_key_ladder parameters = {
                 .c1 = C1.data(), .c1_length = 0,
@@ -198,11 +222,14 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, kdf_algorithm, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER not supported. Skipping test";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveRootKeyLadderTest, failsC2Length) {
-        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_ROOT_KEY_LADDER;
+    TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsC2Length) {
+        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER;
         // clang-format off
         sa_kdf_parameters_root_key_ladder parameters = {
                 .c1 = C1.data(), .c1_length = C1.size(),
@@ -217,11 +244,14 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, kdf_algorithm, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER not supported. Skipping test";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveRootKeyLadderTest, failsC3Length) {
-        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_ROOT_KEY_LADDER;
+    TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsC3Length) {
+        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER;
         // clang-format off
         sa_kdf_parameters_root_key_ladder parameters = {
                 .c1 = C1.data(), .c1_length = C1.size(),
@@ -236,11 +266,14 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, kdf_algorithm, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER not supported. Skipping test";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(SaKeyDeriveRootKeyLadderTest, failsC4Length) {
-        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_ROOT_KEY_LADDER;
+    TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsC4Length) {
+        sa_kdf_algorithm kdf_algorithm = SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER;
         // clang-format off
         sa_kdf_parameters_root_key_ladder parameters = {
                 .c1 = C1.data(), .c1_length = C1.size(),
@@ -255,6 +288,9 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
         sa_status status = sa_key_derive(key.get(), &rights, kdf_algorithm, &parameters);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER not supported. Skipping test";
+
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

@@ -39,10 +39,12 @@ using namespace client_test_helpers;
 
 std::vector<uint8_t> SaKeyBase::root_key;
 
+std::vector<uint8_t> SaKeyBase::common_root_key;
+
 bool SaKeyBase::get_root_key(std::vector<uint8_t>& key) {
     bool status;
     if (root_key.empty()) {
-        uint8_t name[16];
+        char name[16];
         size_t name_length = 16;
         root_key.resize(SYM_256_KEY_SIZE);
         size_t key_length = SYM_256_KEY_SIZE;
@@ -59,6 +61,25 @@ bool SaKeyBase::get_root_key(std::vector<uint8_t>& key) {
 
     key = root_key;
     return status;
+}
+
+bool SaKeyBase::get_common_root_key(std::vector<uint8_t>& key) {
+    if (common_root_key.empty()) {
+        char name[16];
+        size_t name_length = 16;
+        strcpy(name, COMMON_ROOT_NAME);
+        common_root_key.resize(SYM_256_KEY_SIZE);
+        size_t key_length = SYM_256_KEY_SIZE;
+        if (!load_pkcs12_secret_key(common_root_key.data(), &key_length, name, &name_length)) {
+            ERROR("load_pkcs12_secret_key failed");
+            return false;
+        }
+
+        common_root_key.resize(key_length);
+    }
+
+    key = common_root_key;
+    return true;
 }
 
 bool SaKeyBase::dh_generate_key(
@@ -203,9 +224,7 @@ bool SaKeyBase::dh_generate_key(
 bool SaKeyBase::dh_compute_secret(
         std::vector<uint8_t>& shared_secret,
         const std::shared_ptr<EVP_PKEY>& private_key,
-        const std::shared_ptr<EVP_PKEY>& other_public_key,
-        const std::vector<uint8_t>& p,
-        const std::vector<uint8_t>& g) {
+        const std::shared_ptr<EVP_PKEY>& other_public_key) {
 
     auto evp_pkey_ctx = std::shared_ptr<EVP_PKEY_CTX>(EVP_PKEY_CTX_new(private_key.get(), nullptr), EVP_PKEY_CTX_free);
     if (evp_pkey_ctx == nullptr) {
@@ -296,7 +315,6 @@ sa_status SaKeyBase::ec_generate_key(
 }
 
 bool SaKeyBase::ecdh_compute_secret(
-        sa_elliptic_curve curve,
         std::vector<uint8_t>& shared_secret,
         const std::shared_ptr<EVP_PKEY>& private_key,
         const std::shared_ptr<EVP_PKEY>& other_public_key) {
@@ -380,7 +398,7 @@ bool SaKeyBase::execute_dh(
         return false;
     }
 
-    if (!dh_compute_secret(clear_shared_secret, other_private_key, public_evp_pkey, dhp, dhg)) {
+    if (!dh_compute_secret(clear_shared_secret, other_private_key, public_evp_pkey)) {
         ERROR("dh_compute_secret failed");
         return false;
     }
@@ -424,7 +442,7 @@ sa_status SaKeyBase::execute_ecdh(
     }
 
     /* Derive the shared secret */
-    if (!ecdh_compute_secret(curve, clear_shared_secret, private_key, other_public_key)) {
+    if (!ecdh_compute_secret(clear_shared_secret, private_key, other_public_key)) {
         ERROR("ecdh_compute_secret failed");
         return SA_STATUS_INTERNAL_ERROR;
     }
@@ -433,32 +451,29 @@ sa_status SaKeyBase::execute_ecdh(
 }
 
 std::shared_ptr<std::vector<uint8_t>> SaKeyBase::derive_test_key_ladder(
+        std::vector<uint8_t>& key,
         std::vector<uint8_t>& c1,
         std::vector<uint8_t>& c2,
         std::vector<uint8_t>& c3,
         std::vector<uint8_t>& c4) {
-    size_t key_length = 16;
-    std::vector<uint8_t> key;
-    if (!get_root_key(key))
+
+    std::vector<uint8_t> stage1(SYM_128_KEY_SIZE);
+    if (!decrypt_aes_ecb_openssl(stage1, c1, key, false))
         return nullptr;
 
-    std::vector<uint8_t> stage1(key_length);
-    if (!decrypt_aes_ecb_openssl(stage1, c1, key, false) || key_length != SYM_128_KEY_SIZE)
+    std::vector<uint8_t> stage2(SYM_128_KEY_SIZE);
+    if (!decrypt_aes_ecb_openssl(stage2, c2, stage1, false))
         return nullptr;
 
-    std::vector<uint8_t> stage2(key_length);
-    if (!decrypt_aes_ecb_openssl(stage2, c2, stage1, false) || key_length != SYM_128_KEY_SIZE)
+    std::vector<uint8_t> stage3(SYM_128_KEY_SIZE);
+    if (!decrypt_aes_ecb_openssl(stage3, c3, stage2, false))
         return nullptr;
 
-    std::vector<uint8_t> stage3(key_length);
-    if (!decrypt_aes_ecb_openssl(stage3, c3, stage2, false) || key_length != SYM_128_KEY_SIZE)
-        return nullptr;
-
-    std::shared_ptr<std::vector<uint8_t>> stage4(new std::vector<uint8_t>(key_length),
+    std::shared_ptr<std::vector<uint8_t>> stage4(new std::vector<uint8_t>(SYM_128_KEY_SIZE),
             [](std::vector<uint8_t>* p) { delete p; });
     if (c4.empty())
         *stage4 = stage3;
-    else if (!decrypt_aes_ecb_openssl(*stage4, c4, stage3, false) || key_length != SYM_128_KEY_SIZE)
+    else if (!decrypt_aes_ecb_openssl(*stage4, c4, stage3, false))
         return nullptr;
 
     return stage4;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ extern "C" {
  * @param[out] id device id.
  * @return true if the call succeeded, false otherwise.
  */
-bool otp_device_id(uint64_t* id);
+sa_status otp_device_id(uint64_t* id);
 
 /**
  * Derive a key from OTP based root key using a 4 stage key ladder. First 3 stages will be performed
@@ -61,9 +61,30 @@ bool otp_device_id(uint64_t* id);
  * @param[in] c2 16 byte input for the second stage of the key ladder.
  * @param[in] c3 16 byte input for the third stage of the key ladder.
  * @param[in] c4 16 byte input for the fourth stage of the key ladder.
- * @return true if the call succeeded, false otherwise.
+ * @return SA_STATUS_OK if the call succeeded.
  */
-bool otp_root_key_ladder(
+sa_status otp_root_key_ladder(
+        stored_key_t** stored_key_derived,
+        const sa_rights* rights,
+        const void* c1,
+        const void* c2,
+        const void* c3,
+        const void* c4);
+
+/**
+ * Derive a key from common based root key using a 4 stage key ladder. First 3 stages will be performed
+ * in a hardware key ladder. SOCs that do not support a common root key should return false.
+ *
+ * @param[out] stored_key_derived the derived 16 byte key.
+ * @param[in] rights rights for the derived key.
+ * @param[in] c1 16 byte input for the first stage of the key ladder.
+ * @param[in] c2 16 byte input for the second stage of the key ladder.
+ * @param[in] c3 16 byte input for the third stage of the key ladder.
+ * @param[in] c4 16 byte input for the fourth stage of the key ladder.
+ * @return SA_STATUS_OK if the call succeeded, SA_STATUS_OPERATION_NOT_SUPPORTED if the SOC does not support a common
+ * root key.
+ */
+sa_status otp_common_root_key_ladder(
         stored_key_t** stored_key_derived,
         const sa_rights* rights,
         const void* c1,

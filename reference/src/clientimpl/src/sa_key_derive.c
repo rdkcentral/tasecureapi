@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,6 +70,7 @@ sa_status sa_key_derive(
         ta_param_type param3_type;
         switch (kdf_algorithm) {
             case SA_KDF_ALGORITHM_ROOT_KEY_LADDER:
+            case SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER:
                 if (parameters == NULL) {
                     ERROR("NULL parameters");
                     status = SA_STATUS_NULL_PARAMETER;

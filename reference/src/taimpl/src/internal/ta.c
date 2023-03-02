@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@
 #include "log.h"
 #include "ta_sa.h"
 #include "transport.h"
-#include <malloc.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 typedef struct {
     ta_client client;
@@ -532,7 +532,8 @@ static sa_status ta_invoke_key_derive(
     sa_kdf_parameters_ansi_x963 parameters_ansi_x963;
     sa_kdf_parameters_cmac parameters_cmac;
     switch (key_derive->kdf_algorithm) {
-        case SA_KDF_ALGORITHM_ROOT_KEY_LADDER: {
+        case SA_KDF_ALGORITHM_ROOT_KEY_LADDER:
+        case SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER: {
             sa_kdf_parameters_root_key_ladder_s* parameters_root_key_ladder_s =
                     (sa_kdf_parameters_root_key_ladder_s*) params[1].mem_ref;
             parameters_root_key_ladder.c1 = parameters_root_key_ladder_s->c1;

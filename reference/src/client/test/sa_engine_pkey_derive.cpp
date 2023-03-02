@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,10 +50,10 @@ TEST_P(SaEnginePkeyDeriveTest, deriveTest) {
         auto p = std::get<0>(dh_parameters);
         auto g = std::get<1>(dh_parameters);
         ASSERT_TRUE(dh_generate_key(other_private_key, other_public_key, p, g));
-        ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_private_key, evp_pkey, p, g));
+        ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_private_key, evp_pkey));
     } else if (key_type == SA_KEY_TYPE_EC) {
         ASSERT_EQ(ec_generate_key(curve, other_private_key, other_public_key), SA_STATUS_OK);
-        ASSERT_TRUE(ecdh_compute_secret(curve, clear_shared_secret, other_private_key, evp_pkey));
+        ASSERT_TRUE(ecdh_compute_secret(clear_shared_secret, other_private_key, evp_pkey));
     }
 
     auto info = random(AES_BLOCK_SIZE);
