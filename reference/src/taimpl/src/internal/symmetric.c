@@ -19,6 +19,7 @@
 #include "symmetric.h" // NOLINT
 #include "common.h"
 #include "log.h"
+#include "pad.h"
 #include "porting/memory.h"
 #include "porting/rand.h"
 #include "sa_types.h"
@@ -100,7 +101,9 @@ sa_status symmetric_verify_cipher(
     return SA_STATUS_OK;
 }
 
-symmetric_context_t* symmetric_create_aes_ecb_encrypt_context(const stored_key_t* stored_key) {
+symmetric_context_t* symmetric_create_aes_ecb_encrypt_context(
+        const stored_key_t* stored_key,
+        bool padded) {
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
@@ -127,7 +130,8 @@ symmetric_context_t* symmetric_create_aes_ecb_encrypt_context(const stored_key_t
             ERROR("memory_internal_alloc failed");
             break;
         }
-        context->cipher_algorithm = SA_CIPHER_ALGORITHM_AES_ECB;
+
+        context->cipher_algorithm = padded ? SA_CIPHER_ALGORITHM_AES_ECB_PKCS7 : SA_CIPHER_ALGORITHM_AES_ECB;
         context->cipher_mode = SA_CIPHER_MODE_ENCRYPT;
 
         context->evp_cipher = EVP_CIPHER_CTX_new();
@@ -152,8 +156,7 @@ symmetric_context_t* symmetric_create_aes_ecb_encrypt_context(const stored_key_t
             break;
         }
 
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, 0) != 1) {
+        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, padded) != 1) {
             ERROR("EVP_CIPHER_CTX_set_padding failed");
             break;
         }
@@ -172,7 +175,8 @@ symmetric_context_t* symmetric_create_aes_ecb_encrypt_context(const stored_key_t
 symmetric_context_t* symmetric_create_aes_cbc_encrypt_context(
         const stored_key_t* stored_key,
         const void* iv,
-        size_t iv_length) {
+        size_t iv_length,
+        bool padded) {
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
@@ -209,7 +213,8 @@ symmetric_context_t* symmetric_create_aes_cbc_encrypt_context(
             ERROR("memory_internal_alloc failed");
             break;
         }
-        context->cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+
+        context->cipher_algorithm = padded ? SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 : SA_CIPHER_ALGORITHM_AES_CBC;
         context->cipher_mode = SA_CIPHER_MODE_ENCRYPT;
 
         context->evp_cipher = EVP_CIPHER_CTX_new();
@@ -234,8 +239,7 @@ symmetric_context_t* symmetric_create_aes_cbc_encrypt_context(
             break;
         }
 
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, 0) != 1) {
+        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, padded) != 1) {
             ERROR("EVP_CIPHER_CTX_set_padding failed");
             break;
         }
@@ -291,6 +295,7 @@ symmetric_context_t* symmetric_create_aes_ctr_encrypt_context(
             ERROR("memory_internal_alloc failed");
             break;
         }
+
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
         context->cipher_mode = SA_CIPHER_MODE_ENCRYPT;
 
@@ -380,6 +385,7 @@ symmetric_context_t* symmetric_create_aes_gcm_encrypt_context(
             ERROR("memory_internal_alloc failed");
             break;
         }
+
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
         context->cipher_mode = SA_CIPHER_MODE_ENCRYPT;
 
@@ -499,6 +505,7 @@ symmetric_context_t* symmetric_create_chacha20_encrypt_context(
             ERROR("memory_internal_alloc failed");
             break;
         }
+
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20;
         context->cipher_mode = SA_CIPHER_MODE_ENCRYPT;
 
@@ -590,6 +597,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_encrypt_context(
             ERROR("memory_internal_alloc failed");
             break;
         }
+
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20_POLY1305;
         context->cipher_mode = SA_CIPHER_MODE_ENCRYPT;
 
@@ -650,7 +658,9 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_encrypt_context(
 #endif
 }
 
-symmetric_context_t* symmetric_create_aes_ecb_decrypt_context(const stored_key_t* stored_key) {
+symmetric_context_t* symmetric_create_aes_ecb_decrypt_context(
+        const stored_key_t* stored_key,
+        bool padded) {
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
         return NULL;
@@ -676,7 +686,8 @@ symmetric_context_t* symmetric_create_aes_ecb_decrypt_context(const stored_key_t
             ERROR("memory_internal_alloc failed");
             break;
         }
-        context->cipher_algorithm = SA_CIPHER_ALGORITHM_AES_ECB;
+
+        context->cipher_algorithm = padded ? SA_CIPHER_ALGORITHM_AES_ECB_PKCS7 : SA_CIPHER_ALGORITHM_AES_ECB;
         context->cipher_mode = SA_CIPHER_MODE_DECRYPT;
 
         context->evp_cipher = EVP_CIPHER_CTX_new();
@@ -701,8 +712,7 @@ symmetric_context_t* symmetric_create_aes_ecb_decrypt_context(const stored_key_t
             break;
         }
 
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, 0) != 1) {
+        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, padded) != 1) {
             ERROR("EVP_CIPHER_CTX_set_padding failed");
             break;
         }
@@ -721,7 +731,8 @@ symmetric_context_t* symmetric_create_aes_ecb_decrypt_context(const stored_key_t
 symmetric_context_t* symmetric_create_aes_cbc_decrypt_context(
         const stored_key_t* stored_key,
         const void* iv,
-        size_t iv_length) {
+        size_t iv_length,
+        bool padded) {
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
@@ -758,7 +769,8 @@ symmetric_context_t* symmetric_create_aes_cbc_decrypt_context(
             ERROR("memory_internal_alloc failed");
             break;
         }
-        context->cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+
+        context->cipher_algorithm = padded ? SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 : SA_CIPHER_ALGORITHM_AES_CBC;
         context->cipher_mode = SA_CIPHER_MODE_DECRYPT;
 
         context->evp_cipher = EVP_CIPHER_CTX_new();
@@ -783,8 +795,7 @@ symmetric_context_t* symmetric_create_aes_cbc_decrypt_context(
             break;
         }
 
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, 0) != 1) {
+        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, padded) != 1) {
             ERROR("EVP_CIPHER_CTX_set_padding failed");
             break;
         }
@@ -840,6 +851,7 @@ symmetric_context_t* symmetric_create_aes_ctr_decrypt_context(
             ERROR("memory_internal_alloc failed");
             break;
         }
+
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
         context->cipher_mode = SA_CIPHER_MODE_DECRYPT;
 
@@ -929,6 +941,7 @@ symmetric_context_t* symmetric_create_aes_gcm_decrypt_context(
             ERROR("memory_internal_alloc failed");
             break;
         }
+
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
         context->cipher_mode = SA_CIPHER_MODE_DECRYPT;
 
@@ -1048,6 +1061,7 @@ symmetric_context_t* symmetric_create_chacha20_decrypt_context(
             ERROR("memory_internal_alloc failed");
             break;
         }
+
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20;
         context->cipher_mode = SA_CIPHER_MODE_DECRYPT;
 
@@ -1139,6 +1153,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_decrypt_context(
             ERROR("memory_internal_alloc failed");
             break;
         }
+
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20_POLY1305;
         context->cipher_mode = SA_CIPHER_MODE_DECRYPT;
 
@@ -1202,6 +1217,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_decrypt_context(
 sa_status symmetric_context_encrypt(
         const symmetric_context_t* context,
         void* out,
+        size_t* out_length,
         const void* in,
         size_t in_length) {
 
@@ -1235,12 +1251,13 @@ sa_status symmetric_context_encrypt(
         }
     }
 
-    int length = (int) in_length;
+    int length = (int) *out_length;
     if (EVP_EncryptUpdate(context->evp_cipher, out, &length, in, (int) in_length) != 1) {
         ERROR("EVP_EncryptUpdate failed");
         return SA_STATUS_INTERNAL_ERROR;
     }
 
+    *out_length = length;
     return SA_STATUS_OK;
 }
 
@@ -1261,9 +1278,8 @@ sa_status symmetric_context_encrypt_last(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_GCM &&
-            context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CTR &&
-            context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
+    if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB ||
+            context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC) {
         ERROR("Invalid context algorithm");
         return SA_STATUS_INVALID_PARAMETER;
     }
@@ -1273,13 +1289,14 @@ sa_status symmetric_context_encrypt_last(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 && in_length > AES_BLOCK_SIZE) {
+    if ((context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7 ||
+                context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7) && in_length > AES_BLOCK_SIZE) {
         ERROR("Invalid in_length");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (out == NULL) {
-        *out_length = in_length;
+        *out_length = PADDED_SIZE(in_length);
         return SA_STATUS_OK;
     }
 
@@ -1288,19 +1305,26 @@ sa_status symmetric_context_encrypt_last(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    int length = (int) in_length;
-    if (EVP_EncryptUpdate(context->evp_cipher, out, &length, in, (int) in_length) != 1) {
+    int update_length = (int) in_length;
+    if (EVP_EncryptUpdate(context->evp_cipher, out, &update_length, in, (int) in_length) != 1) {
         ERROR("EVP_EncryptUpdate failed");
         return SA_STATUS_INTERNAL_ERROR;
     }
 
-    *out_length = length;
+    int final_length = 0;
+    if (EVP_EncryptFinal(context->evp_cipher, out + update_length, &final_length) != 1) {
+        ERROR("EVP_EncryptFinal failed");
+        return SA_STATUS_INTERNAL_ERROR;
+    }
+
+    *out_length = update_length + final_length;
     return SA_STATUS_OK;
 }
 
 sa_status symmetric_context_decrypt(
         const symmetric_context_t* context,
         void* out,
+        size_t* out_length,
         const void* in,
         size_t in_length) {
 
@@ -1334,12 +1358,13 @@ sa_status symmetric_context_decrypt(
         }
     }
 
-    int length = (int) in_length;
+    int length = (int) *out_length;
     if (EVP_DecryptUpdate(context->evp_cipher, out, &length, in, (int) in_length) != 1) {
         ERROR("EVP_DecryptUpdate failed");
         return SA_STATUS_INTERNAL_ERROR;
     }
 
+    *out_length = length;
     return SA_STATUS_OK;
 }
 
@@ -1360,9 +1385,8 @@ sa_status symmetric_context_decrypt_last(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_GCM &&
-            context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CTR &&
-            context->cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
+    if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB ||
+            context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC) {
         ERROR("Invalid context algorithm");
         return SA_STATUS_INVALID_PARAMETER;
     }
@@ -1387,13 +1411,19 @@ sa_status symmetric_context_decrypt_last(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    int length = (int) in_length;
-    if (EVP_DecryptUpdate(context->evp_cipher, out, &length, in, (int) in_length) != 1) {
+    int update_length = (int) in_length;
+    if (EVP_DecryptUpdate(context->evp_cipher, out, &update_length, in, (int) in_length) != 1) {
         ERROR("EVP_DecryptUpdate failed");
         return SA_STATUS_INTERNAL_ERROR;
     }
 
-    *out_length = length;
+    int final_length = 0;
+    if (EVP_DecryptFinal(context->evp_cipher, out + update_length, &final_length) != 1) {
+        ERROR("EVP_DecryptFinal failed");
+        return SA_STATUS_INTERNAL_ERROR;
+    }
+
+    *out_length = update_length + final_length;
     return SA_STATUS_OK;
 }
 
@@ -1478,14 +1508,7 @@ sa_status symmetric_context_get_tag(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    int length = 0;
-    if (EVP_EncryptFinal_ex(context->evp_cipher, NULL, &length) != 1) {
-        ERROR("EVP_EncryptFinal_ex failed");
-        return SA_STATUS_INTERNAL_ERROR;
-    }
-
     uint8_t local_tag[AES_BLOCK_SIZE];
-
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
     if (EVP_CIPHER_CTX_ctrl(context->evp_cipher, EVP_CTRL_GCM_GET_TAG, sizeof(local_tag), local_tag) != 1) {
 #else
@@ -1500,7 +1523,7 @@ sa_status symmetric_context_get_tag(
     return SA_STATUS_OK;
 }
 
-sa_status symmetric_context_check_tag(
+sa_status symmetric_context_set_tag(
         const symmetric_context_t* context,
         const void* tag,
         size_t tag_length) {
@@ -1543,13 +1566,6 @@ sa_status symmetric_context_check_tag(
 #endif
         ERROR("EVP_CIPHER_CTX_ctrl failed");
         return SA_STATUS_INTERNAL_ERROR;
-    }
-
-    int length = 0;
-    if (EVP_DecryptFinal_ex(context->evp_cipher, NULL, &length) != 1) {
-        ERROR("EVP_DecryptFinal_ex failed");
-        // Failed the tag check, so the tag is invalid.
-        return SA_STATUS_INVALID_PARAMETER;
     }
 
     return SA_STATUS_OK;

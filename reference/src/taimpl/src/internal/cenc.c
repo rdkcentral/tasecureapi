@@ -59,8 +59,9 @@ static sa_status decrypt(
             // This is an AES-CTR cipher and the counter portion of the IV is going to rollover, so encrypt all blocks
             // up to the rollover block and manually increment the IV.
             if (leading_partial_block_size > 0) {
+                size_t length = leading_partial_block_size;
                 sa_status status = symmetric_context_decrypt(symmetric_context, out_bytes + bytes_encrypted,
-                        in_bytes + bytes_encrypted, leading_partial_block_size);
+                        &length, in_bytes + bytes_encrypted, leading_partial_block_size);
                 if (status != SA_STATUS_OK) {
                     ERROR("symmetric_context_decrypt failed");
                     return status;
@@ -74,15 +75,16 @@ static sa_status decrypt(
                     return status;
                 }
 
-                *enc_byte_count += leading_partial_block_size;
-                bytes_encrypted += leading_partial_block_size;
+                *enc_byte_count += length;
+                bytes_encrypted += length;
                 leading_partial_block_size = 0;
             }
 
             size_t full_blocks_to_encrypt = MIN(num_blocks_before_rollover, number_of_full_blocks);
             if (full_blocks_to_encrypt > 0) {
+                size_t length = full_blocks_to_encrypt * AES_BLOCK_SIZE;
                 sa_status status = symmetric_context_decrypt(symmetric_context, out_bytes + bytes_encrypted,
-                        in_bytes + bytes_encrypted, full_blocks_to_encrypt * AES_BLOCK_SIZE);
+                        &length, in_bytes + bytes_encrypted, full_blocks_to_encrypt * AES_BLOCK_SIZE);
                 if (status != SA_STATUS_OK) {
                     ERROR("symmetric_context_decrypt failed");
                     return status;
@@ -96,8 +98,8 @@ static sa_status decrypt(
                     return status;
                 }
 
-                *enc_byte_count += full_blocks_to_encrypt * AES_BLOCK_SIZE;
-                bytes_encrypted += full_blocks_to_encrypt * AES_BLOCK_SIZE;
+                *enc_byte_count += length;
+                bytes_encrypted += length;
                 number_of_full_blocks -= full_blocks_to_encrypt;
                 num_blocks_before_rollover = 0;
             }
@@ -106,8 +108,9 @@ static sa_status decrypt(
         } else {
             // The IV counter is not going to rollover or this is an AES-CBC CIPHER. Openssl and other implementations
             // handle this automatically.
+            size_t length = bytes_to_process - bytes_encrypted;
             sa_status status = symmetric_context_decrypt(symmetric_context, out_bytes + bytes_encrypted,
-                    in_bytes + bytes_encrypted, bytes_to_process - bytes_encrypted);
+                    &length, in_bytes + bytes_encrypted, bytes_to_process - bytes_encrypted);
             if (status != SA_STATUS_OK) {
                 ERROR("symmetric_context_decrypt failed");
                 return status;
@@ -116,8 +119,8 @@ static sa_status decrypt(
             uint64_t new_iv = be64toh(*counter_buffer);
             new_iv += number_of_full_blocks + (leading_partial_block_size > 0 ? 1 : 0);
             (*counter_buffer) = htobe64(new_iv);
-            *enc_byte_count += (bytes_to_process - bytes_encrypted);
-            bytes_encrypted = bytes_to_process;
+            *enc_byte_count += length;
+            bytes_encrypted = bytes_to_process; // length?
         }
     }
 

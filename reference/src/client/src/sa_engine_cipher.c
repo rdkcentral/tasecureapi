@@ -109,7 +109,7 @@ typedef struct {
     sa_cipher_algorithm cipher_algorithm;
     bool padding;
     sa_crypto_cipher_context cipher_context;
-    uint8_t tag[16];
+    uint8_t tag[MAX_GCM_TAG_LENGTH];
 } cipher_app_data;
 
 static int cipher_nids[] = {
@@ -309,7 +309,7 @@ static int cipher_do_cipher(
                 sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {&temp, 0, 0}}};
                 bytes_to_process = 0;
 
-                sa_cipher_end_parameters_aes_gcm end_parameters = {app_data->tag, 16};
+                sa_cipher_end_parameters_aes_gcm end_parameters = {app_data->tag, MAX_GCM_TAG_LENGTH};
                 status = sa_crypto_cipher_process_last(&out_buffer, app_data->cipher_context, &in_buffer,
                         &bytes_to_process, &end_parameters);
             }
@@ -378,7 +378,7 @@ static int cipher_ctrl(
             return 0;
         }
 
-        memset(app_data->tag, 0, 16);
+        memset(app_data->tag, 0, MAX_GCM_TAG_LENGTH);
         memcpy(app_data->tag, ptr, arg);
         return 1;
     }

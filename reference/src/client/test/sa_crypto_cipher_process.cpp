@@ -111,7 +111,12 @@ namespace {
         bytes_to_process = checked_length;
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OK);
-        ASSERT_EQ(bytes_to_process, clear.size());
+        if (pkcs7) {
+            ASSERT_EQ(bytes_to_process + AES_BLOCK_SIZE, clear.size());
+            clear.resize(bytes_to_process);
+        } else {
+            ASSERT_EQ(bytes_to_process, clear.size());
+        }
 
         // Verify the decryption.
         ASSERT_TRUE(verify_decrypt(out_buffer.get(), clear));

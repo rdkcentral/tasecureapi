@@ -36,6 +36,8 @@ extern "C" {
 #include <stdint.h>
 #endif
 
+#define PADDED_SIZE(size) AES_BLOCK_SIZE*(((size) / AES_BLOCK_SIZE) + 1)
+
 /**
  * Check pkcs7 padding of a block of data.
  *
