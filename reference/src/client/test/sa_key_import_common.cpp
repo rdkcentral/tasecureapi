@@ -599,15 +599,19 @@ void SaKeyImportSocBase::set_key_usage_flags(
         uint8_t key_usage,
         uint8_t decrypted_key_usage,
         sa_rights& rights,
-        sa_key_type key_type) {
+        sa_key_type key_type,
+        bool hmac) {
     uint64_t usage_flags = 0;
     switch (key_usage) {
         case DATA_ONLY:
             if (key_type == SA_KEY_TYPE_DH || key_type == SA_KEY_TYPE_EC)
                 SA_USAGE_BIT_SET(usage_flags, SA_USAGE_FLAG_KEY_EXCHANGE);
 
-            SA_USAGE_BIT_SET(usage_flags, SA_USAGE_FLAG_DECRYPT);
-            SA_USAGE_BIT_SET(usage_flags, SA_USAGE_FLAG_ENCRYPT);
+            if (!hmac) {
+                SA_USAGE_BIT_SET(usage_flags, SA_USAGE_FLAG_DECRYPT);
+                SA_USAGE_BIT_SET(usage_flags, SA_USAGE_FLAG_ENCRYPT);
+            }
+
             SA_USAGE_BIT_SET(usage_flags, SA_USAGE_FLAG_SIGN);
             SA_USAGE_BIT_SET(usage_flags, SA_USAGE_FLAG_DERIVE);
             break;
@@ -694,8 +698,9 @@ sa_status SaKeyImportSocBase::import_key(
             entitled_ta_ids, c1, c2, c3, tag);
     std::string key_container = jwt_header + "." + jwt_payload + "." + b64_encode(tag.data(), tag.size(), true);
 
+    bool hmac = memcmp(key_type.data(), "HMAC", 4) == 0;
     sa_rights_set_allow_all(&key_rights);
-    set_key_usage_flags(key_usage, decrypted_key_usage, key_rights, clear_key_type);
+    set_key_usage_flags(key_usage, decrypted_key_usage, key_rights, clear_key_type, hmac);
     int i = 0;
     for (auto& entitled_ta_id : entitled_ta_ids) {
         if (i < MAX_NUM_ALLOWED_TA_IDS)

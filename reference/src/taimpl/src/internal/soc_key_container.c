@@ -190,6 +190,7 @@ static soc_kc_unpacked_t* unpack_soc_kc(
 static sa_status fields_to_rights(
         sa_rights* rights,
         sa_key_type key_type,
+        key_subtype subtype,
         soc_kc_payload_t* payload,
         void* parameters) {
 
@@ -231,14 +232,14 @@ static sa_status fields_to_rights(
     SA_USAGE_BIT_SET(rights->usage_flags, SA_USAGE_FLAG_CACHEABLE);
     rights->usage_flags |= SA_USAGE_OUTPUT_PROTECTIONS_MASK;
 
-    sa_status status = key_usage_to_usage_flags(&rights->usage_flags, payload->key_usage, key_type);
+    sa_status status = key_usage_to_usage_flags(&rights->usage_flags, payload->key_usage, key_type, subtype);
     if (status != SA_STATUS_OK) {
         ERROR("key_usage_to_usage_flags failed");
         return status;
     }
 
     if (payload->key_usage == KEY_ONLY) {
-        status = key_usage_to_usage_flags(&rights->child_usage_flags, payload->decrypted_key_usage, key_type);
+        status = key_usage_to_usage_flags(&rights->child_usage_flags, payload->decrypted_key_usage, key_type, subtype);
         if (status != SA_STATUS_OK) {
             ERROR("key_usage_to_usage_flags failed");
             return status;
@@ -577,6 +578,7 @@ static bool get_key_type_and_size(
         size_t key_type_string_length,
         sa_key_type* key_type,
         size_t* key_size,
+        key_subtype* subtype,
         sa_elliptic_curve* curve) {
 
     if (key_type_string == NULL) {
@@ -594,76 +596,105 @@ static bool get_key_type_and_size(
         return false;
     }
 
-    if (memcmp(key_type_string, "AES-128", key_type_string_length) == 0 ||
-            memcmp(key_type_string, "HMAC-128", key_type_string_length) == 0) {
+    if (memcmp(key_type_string, "AES-128", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_SYMMETRIC;
         *key_size = SYM_128_KEY_SIZE;
+        *subtype = AES_SUBTYPE;
         *curve = UINT32_MAX;
-    } else if (memcmp(key_type_string, "AES-256", key_type_string_length) == 0 ||
-               memcmp(key_type_string, "HMAC-256", key_type_string_length) == 0 ||
-               memcmp(key_type_string, "CHACHA20-256", key_type_string_length) == 0) {
+    } else if (memcmp(key_type_string, "HMAC-128", key_type_string_length) == 0) {
+            *key_type = SA_KEY_TYPE_SYMMETRIC;
+            *key_size = SYM_128_KEY_SIZE;
+            *subtype = HMAC_SUBTYPE;
+            *curve = UINT32_MAX;
+    } else if (memcmp(key_type_string, "AES-256", key_type_string_length) == 0) {
+            *key_type = SA_KEY_TYPE_SYMMETRIC;
+            *key_size = SYM_256_KEY_SIZE;
+            *subtype = AES_SUBTYPE;
+            *curve = UINT32_MAX;
+    } else if (memcmp(key_type_string, "CHACHA20-256", key_type_string_length) == 0) {
+            *key_type = SA_KEY_TYPE_SYMMETRIC;
+            *key_size = SYM_256_KEY_SIZE;
+            *subtype = CHACHA20_SUBTYPE;
+            *curve = UINT32_MAX;
+    } else if (memcmp(key_type_string, "HMAC-256", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_SYMMETRIC;
         *key_size = SYM_256_KEY_SIZE;
+        *subtype = HMAC_SUBTYPE;
         *curve = UINT32_MAX;
     } else if (memcmp(key_type_string, "HMAC-160", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_SYMMETRIC;
         *key_size = SYM_160_KEY_SIZE;
+        *subtype = HMAC_SUBTYPE;
         *curve = UINT32_MAX;
     } else if (memcmp(key_type_string, "RSA-1024", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_RSA;
         *key_size = RSA_1024_BYTE_LENGTH;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = UINT32_MAX;
     } else if (memcmp(key_type_string, "RSA-2048", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_RSA;
         *key_size = RSA_2048_BYTE_LENGTH;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = UINT32_MAX;
     } else if (memcmp(key_type_string, "RSA-3072", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_RSA;
         *key_size = RSA_3072_BYTE_LENGTH;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = UINT32_MAX;
     } else if (memcmp(key_type_string, "RSA-4096", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_RSA;
         *key_size = RSA_4096_BYTE_LENGTH;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = UINT32_MAX;
     } else if (memcmp(key_type_string, "ECC-P192", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_P192_KEY_SIZE;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_NIST_P192;
     } else if (memcmp(key_type_string, "ECC-P224", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_P224_KEY_SIZE;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_NIST_P224;
     } else if (memcmp(key_type_string, "ECC-P256", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_P256_KEY_SIZE;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_NIST_P256;
     } else if (memcmp(key_type_string, "ECC-P384", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_P384_KEY_SIZE;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_NIST_P384;
     } else if (memcmp(key_type_string, "ECC-P521", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_P521_KEY_SIZE;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_NIST_P521;
     } else if (memcmp(key_type_string, "ECC-ED25519", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_25519_KEY_SIZE;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_ED25519;
     } else if (memcmp(key_type_string, "ECC-ED448", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_ED448_KEY_SIZE;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_ED448;
     } else if (memcmp(key_type_string, "ECC-X25519", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_25519_KEY_SIZE;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_X25519;
     } else if (memcmp(key_type_string, "ECC-X448", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_X448_KEY_SIZE;
+        *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_X448;
     } else {
         *key_type = SA_KEY_TYPE_SYMMETRIC;
         *key_size = 0;
+        *subtype = AES_SUBTYPE;
         *curve = UINT32_MAX;
     }
 
@@ -706,9 +737,10 @@ static sa_status decrypt_key_and_verify_mac(
 
     sa_key_type key_type;
     size_t key_size;
+    key_subtype subtype;
     sa_elliptic_curve curve;
     if (!get_key_type_and_size(payload->key_type_string, payload->key_type_string_length, &key_type, &key_size,
-                &curve)) {
+                &subtype, &curve)) {
         ERROR("get_key_type_and_size failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
@@ -733,7 +765,7 @@ static sa_status decrypt_key_and_verify_mac(
         }
 
         sa_rights rights;
-        status = fields_to_rights(&rights, key_type, payload, parameters);
+        status = fields_to_rights(&rights, key_type, subtype, payload, parameters);
         if (status != SA_STATUS_OK) {
             ERROR("fields_to_rights failed");
             status = SA_STATUS_INVALID_KEY_FORMAT;

@@ -405,7 +405,7 @@ static sa_status fields_to_rights(
     }
 
     long long usage = json_value_as_integer(usage_field->value);
-    status = key_usage_to_usage_flags(&rights->usage_flags, usage, SA_KEY_TYPE_SYMMETRIC);
+    status = key_usage_to_usage_flags(&rights->usage_flags, usage, SA_KEY_TYPE_SYMMETRIC, AES_SUBTYPE);
     if (status != SA_STATUS_OK) {
         ERROR("content_key_usage_to_usage_flags failed");
         return status;

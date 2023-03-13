@@ -169,7 +169,8 @@ protected:
             uint8_t key_usage,
             uint8_t decrypted_key_usage,
             sa_rights& rights,
-            sa_key_type key_type);
+            sa_key_type key_type,
+            bool hmac);
 
     static sa_status import_key(
             sa_key* key,
