@@ -306,7 +306,7 @@ static int cipher_do_cipher(
                 uint8_t temp;
                 sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR,
                         {.clear = {out, EVP_CIPHER_CTX_block_size(cipher_ctx), 0}}};
-                sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {&temp, 1, 0}}};
+                sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {&temp, 0, 0}}};
                 bytes_to_process = 0;
 
                 sa_cipher_end_parameters_aes_gcm end_parameters = {app_data->tag, 16};
