@@ -326,7 +326,8 @@ bool rights_allowed_uuid(
 sa_status key_usage_to_usage_flags(
         uint64_t* usage_flags,
         int64_t key_usage,
-        sa_key_type key_type) {
+        sa_key_type key_type,
+        key_subtype subtype) {
 
     if (usage_flags == NULL) {
         ERROR("NULL usage_flags");
@@ -358,8 +359,11 @@ sa_status key_usage_to_usage_flags(
             if (key_type == SA_KEY_TYPE_DH || key_type == SA_KEY_TYPE_EC)
                 SA_USAGE_BIT_SET(*usage_flags, SA_USAGE_FLAG_KEY_EXCHANGE);
 
-            SA_USAGE_BIT_SET(*usage_flags, SA_USAGE_FLAG_DECRYPT);
-            SA_USAGE_BIT_SET(*usage_flags, SA_USAGE_FLAG_ENCRYPT);
+            if (subtype != HMAC_SUBTYPE) {
+                SA_USAGE_BIT_SET(*usage_flags, SA_USAGE_FLAG_DECRYPT);
+                SA_USAGE_BIT_SET(*usage_flags, SA_USAGE_FLAG_ENCRYPT);
+            }
+
             SA_USAGE_BIT_SET(*usage_flags, SA_USAGE_FLAG_SIGN);
             SA_USAGE_BIT_SET(*usage_flags, SA_USAGE_FLAG_DERIVE);
             break;

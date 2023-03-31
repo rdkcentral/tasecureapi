@@ -57,6 +57,13 @@ typedef enum {
     SOC_DATA_AND_KEY = 3
 } key_usage;
 
+typedef enum {
+    PRIVATE_SUBTYPE = 0,
+    AES_SUBTYPE,
+    HMAC_SUBTYPE,
+    CHACHA20_SUBTYPE
+} key_subtype;
+
 /**
  * UUID value that matches no TA IDs.
  */
@@ -172,12 +179,14 @@ bool rights_allowed_uuid(
  * @param usage_flags usage flags bitfield.
  * @param key_usage key usage byte.
  * @param key_type the type of the key.
+ * @param subtype the subtype of the key.
  * @return
  */
 sa_status key_usage_to_usage_flags(
         uint64_t* usage_flags,
         int64_t key_usage,
-        sa_key_type key_type);
+        sa_key_type key_type,
+        key_subtype subtype);
 
 /**
  * Converts a UUID from string form to uint_8 array form.
