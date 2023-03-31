@@ -96,7 +96,7 @@ target_clangformat_setup(utiltest)
 add_custom_command(
         TARGET utiltest POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/root_keystore.p12
+        ${CMAKE_SOURCE_DIR}/test/root_keystore.p12
         ${CMAKE_CURRENT_BINARY_DIR}/root_keystore.p12)
 
 gtest_discover_tests(utiltest)

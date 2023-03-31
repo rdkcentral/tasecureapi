@@ -64,6 +64,6 @@
 #endif
 
 #define DEFAULT_ROOT_KEYSTORE_PASSWORD "password01234567"
-#define COMMON_ROOT_NAME "common"
+#define COMMON_ROOT_NAME "commonroot"
 
 #endif // COMMON_H
