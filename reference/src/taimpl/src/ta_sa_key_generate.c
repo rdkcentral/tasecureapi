@@ -154,7 +154,7 @@ static sa_status ta_sa_key_generate_rsa(
     *key = INVALID_HANDLE;
 
     if (rights == NULL) {
-        ERROR("NULL parameters");
+        ERROR("NULL rights");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -178,7 +178,7 @@ static sa_status ta_sa_key_generate_rsa(
     do {
         status = rsa_generate_key(&stored_key, rights, parameters);
         if (status != SA_STATUS_OK) {
-            ERROR("ec_generate_key failed");
+            ERROR("rsa_generate_key failed");
             break;
         }
 

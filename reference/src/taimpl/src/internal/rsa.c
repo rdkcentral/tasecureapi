@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -605,7 +605,7 @@ sa_status rsa_generate_key(
 
         evp_pkey_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
         if (evp_pkey_ctx == NULL) {
-            ERROR("EVP_PKEY_CTX_new failed");
+            ERROR("EVP_PKEY_CTX_new_id failed");
             break;
         }
 
@@ -615,7 +615,7 @@ sa_status rsa_generate_key(
         }
 
         if (EVP_PKEY_CTX_set_rsa_keygen_bits(evp_pkey_ctx, (int) parameters->modulus_length * 8) != 1) {
-            ERROR("EVP_PKEY_CTX_set_ec_paramgen_curve_nid failed");
+            ERROR("EVP_PKEY_CTX_set_rsa_keygen_bits failed");
             break;
         }
 
