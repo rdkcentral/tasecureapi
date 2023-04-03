@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,9 +71,12 @@ sa_status symmetric_verify_cipher(
  * Create an AES ECB encryption context.
  *
  * @param[in] stored_key cipher key.
+ * @param[in] padded true if using PKCS7 padding.
  * @return created AES context. NULL if the operation failed.
  */
-symmetric_context_t* symmetric_create_aes_ecb_encrypt_context(const stored_key_t* stored_key);
+symmetric_context_t* symmetric_create_aes_ecb_encrypt_context(
+        const stored_key_t* stored_key,
+        bool padded);
 
 /**
  * Create an AES CBC encryption context.
@@ -81,12 +84,14 @@ symmetric_context_t* symmetric_create_aes_ecb_encrypt_context(const stored_key_t
  * @param[in] stored_key cipher key.
  * @param[in] iv initialization vector.
  * @param[in] iv_length initialization vector length. Has to be 16 bytes.
+ * @param[in] padded true if using PKCS7 padding.
  * @return created AES context. NULL if the operation failed.
  */
 symmetric_context_t* symmetric_create_aes_cbc_encrypt_context(
         const stored_key_t* stored_key,
         const void* iv,
-        size_t iv_length);
+        size_t iv_length,
+        bool padded);
 
 /**
  * Create an AES CTR encryption context.
@@ -156,9 +161,12 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_encrypt_context(
  * Create an AES ECB decrypt context.
  *
  * @param[in] stored_key cipher key.
+ * @param[in] padded true if using PKCS7 padding.
  * @return created AES context. NULL if the operation failed.
  */
-symmetric_context_t* symmetric_create_aes_ecb_decrypt_context(const stored_key_t* stored_key);
+symmetric_context_t* symmetric_create_aes_ecb_decrypt_context(
+        const stored_key_t* stored_key,
+        bool padded);
 
 /**
  * Create an AES CBC decrypt context.
@@ -166,12 +174,14 @@ symmetric_context_t* symmetric_create_aes_ecb_decrypt_context(const stored_key_t
  * @param[in] stored_key cipher key.
  * @param[in] iv initialization vector.
  * @param[in] iv_length initialization vector length. Has to be 16 bytes.
+ * @param[in] padded true if using PKCS7 padding.
  * @return created AES context. NULL if the operation failed.
  */
 symmetric_context_t* symmetric_create_aes_cbc_decrypt_context(
         const stored_key_t* stored_key,
         const void* iv,
-        size_t iv_length);
+        size_t iv_length,
+        bool padded);
 
 /**
  * Create an AES CTR decrypt context.
@@ -242,6 +252,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_decrypt_context(
  *
  * @param[in] context AES context.
  * @param[out] out output buffer.
+ * @param[in,out] out_length output buffer length. Set to bytes written on return.
  * @param[in] in input buffer.
  * @param[in] in_length input buffer length. Had to be a multiple of 16.
  * @return status of the operation.
@@ -249,6 +260,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_decrypt_context(
 sa_status symmetric_context_encrypt(
         const symmetric_context_t* context,
         void* out,
+        size_t* out_length,
         const void* in,
         size_t in_length);
 
@@ -274,6 +286,7 @@ sa_status symmetric_context_encrypt_last(
  *
  * @param[in] context AES context.
  * @param[out] out output buffer.
+ * @param[in,out] out_length output buffer length. Set to bytes written on return.
  * @param[in] in input buffer.
  * @param[in] in_length input buffer length. Had to be a multiple of 16.
  * @return status of the operation.
@@ -281,6 +294,7 @@ sa_status symmetric_context_encrypt_last(
 sa_status symmetric_context_decrypt(
         const symmetric_context_t* context,
         void* out,
+        size_t* out_length,
         const void* in,
         size_t in_length);
 
@@ -315,7 +329,7 @@ sa_status symmetric_context_set_iv(
         size_t iv_length);
 
 /**
- * Obtain the authentication tag. Can only be called on the AES GCM context.
+ * Gets the authentication tag after the process_last call. Can only be called on AES GCM & ChaCha20-Poly1305 context.
  *
  * @param[in] context AES context.
  * @param[out] tag authentication tag.
@@ -327,14 +341,14 @@ sa_status symmetric_context_get_tag(
         size_t tag_length);
 
 /**
- * Check the authentication tag. Can only be called on AES GCM context.
+ * Sets the authentication tag before the process_last call. Can only be called on AES GCM & ChaCha20-Poly1305 context.
  *
  * @param[in] context AES context.
  * @param[in] tag authentication tag.
  * @param[in] tag_length authentication tag length. Has to be less then or equal to 16.
  * @return status of the operation.
  */
-sa_status symmetric_context_check_tag(
+sa_status symmetric_context_set_tag(
         const symmetric_context_t* context,
         const void* tag,
         size_t tag_length);

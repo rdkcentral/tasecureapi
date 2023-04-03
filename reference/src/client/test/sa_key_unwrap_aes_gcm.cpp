@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -129,7 +129,7 @@ namespace {
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> aad = random(1024);
-        std::vector<uint8_t> tag = random(AES_BLOCK_SIZE);
+        std::vector<uint8_t> tag = random(MAX_GCM_TAG_LENGTH);
         sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
                 .iv = nullptr,
                 .iv_length = GCM_IV_LENGTH,
@@ -157,7 +157,7 @@ namespace {
 
         std::vector<uint8_t> iv = random(GCM_IV_LENGTH + 1);
         std::vector<uint8_t> aad = random(1024);
-        std::vector<uint8_t> tag = random(AES_BLOCK_SIZE);
+        std::vector<uint8_t> tag = random(MAX_GCM_TAG_LENGTH);
         sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
                 .iv = iv.data(),
                 .iv_length = iv.size(),
@@ -184,7 +184,7 @@ namespace {
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> iv = random(GCM_IV_LENGTH);
-        std::vector<uint8_t> tag = random(AES_BLOCK_SIZE);
+        std::vector<uint8_t> tag = random(MAX_GCM_TAG_LENGTH);
         sa_unwrap_parameters_aes_gcm unwrap_parameters_aes_gcm = {
                 .iv = iv.data(),
                 .iv_length = iv.size(),

@@ -33,8 +33,10 @@ extern "C" {
 
 #define AES_BLOCK_SIZE 16
 #define GCM_IV_LENGTH 12
+#define MAX_GCM_TAG_LENGTH 16
 #define CHACHA20_COUNTER_LENGTH 4
 #define CHACHA20_NONCE_LENGTH 12
+#define CHACHA20_TAG_LENGTH 16
 #define API_VERSION 1
 
 /**
@@ -182,7 +184,7 @@ typedef struct {
 typedef struct {
     uint8_t iv[GCM_IV_LENGTH];
     size_t iv_length;
-    uint8_t tag[AES_BLOCK_SIZE];
+    uint8_t tag[MAX_GCM_TAG_LENGTH];
     uint8_t tag_length;
 } sa_unwrap_parameters_aes_gcm_s;
 
@@ -196,7 +198,7 @@ typedef struct {
 typedef struct {
     uint8_t nonce[CHACHA20_NONCE_LENGTH];
     size_t nonce_length;
-    uint8_t tag[AES_BLOCK_SIZE];
+    uint8_t tag[CHACHA20_TAG_LENGTH];
     uint8_t tag_length;
 } sa_unwrap_parameters_chacha20_poly1305_s;
 

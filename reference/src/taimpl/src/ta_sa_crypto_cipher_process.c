@@ -60,7 +60,7 @@ static sa_status ta_sa_crypto_cipher_process_symmetric(
         void* out,
         cipher_t* cipher,
         const void* in,
-        const size_t* bytes_to_process,
+        size_t* bytes_to_process,
         const sa_uuid* caller_uuid) {
 
     if (caller_uuid == NULL) {
@@ -116,22 +116,28 @@ static sa_status ta_sa_crypto_cipher_process_symmetric(
             return SA_STATUS_OPERATION_NOT_ALLOWED;
         }
 
-        sa_status status = symmetric_context_encrypt(symmetric_context, out, in, *bytes_to_process);
+        size_t length = *bytes_to_process;
+        sa_status status = symmetric_context_encrypt(symmetric_context, out, &length, in, *bytes_to_process);
         if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_encrypt failed");
             return status;
         }
+
+        *bytes_to_process = length;
     } else if (cipher_mode == SA_CIPHER_MODE_DECRYPT) {
         if (!rights_allowed_decrypt(rights, SA_KEY_TYPE_SYMMETRIC)) {
             ERROR("rights_allowed_decrypt failed");
             return SA_STATUS_OPERATION_NOT_ALLOWED;
         }
 
-        sa_status status = symmetric_context_decrypt(symmetric_context, out, in, *bytes_to_process);
+        size_t length = *bytes_to_process;
+        sa_status status = symmetric_context_decrypt(symmetric_context, out, &length, in, *bytes_to_process);
         if (status != SA_STATUS_OK) {
             ERROR("symmetric_context_decrypt failed");
             return status;
         }
+
+        *bytes_to_process = length;
     } else {
         ERROR("Unknown mode encountered");
         return SA_STATUS_INTERNAL_ERROR;

@@ -97,7 +97,7 @@ void SaCipherCryptoBase::get_cipher_parameters(cipher_parameters& parameters) {
         case SA_CIPHER_ALGORITHM_AES_GCM: {
             parameters.iv = random(GCM_IV_LENGTH);
             parameters.aad = random(1024);
-            parameters.tag.resize(AES_BLOCK_SIZE);
+            parameters.tag.resize(MAX_GCM_TAG_LENGTH);
             auto* cipher_parameters_aes_gcm = new sa_cipher_parameters_aes_gcm;
             cipher_parameters_aes_gcm->iv = parameters.iv.data();
             cipher_parameters_aes_gcm->iv_length = parameters.iv.size();
@@ -126,7 +126,7 @@ void SaCipherCryptoBase::get_cipher_parameters(cipher_parameters& parameters) {
         case SA_CIPHER_ALGORITHM_CHACHA20_POLY1305: {
             parameters.iv = random(CHACHA20_NONCE_LENGTH);
             parameters.aad = random(1024);
-            parameters.tag.resize(AES_BLOCK_SIZE);
+            parameters.tag.resize(MAX_GCM_TAG_LENGTH);
             auto* cipher_parameters_chacha20_poly1305 = new sa_cipher_parameters_chacha20_poly1305;
             cipher_parameters_chacha20_poly1305->nonce = parameters.iv.data();
             cipher_parameters_chacha20_poly1305->nonce_length = parameters.iv.size();

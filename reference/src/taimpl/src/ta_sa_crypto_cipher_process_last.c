@@ -22,13 +22,9 @@
 #include "common.h"
 #include "log.h"
 #include "pad.h"
-#include "porting/memory.h"
 #include "rights.h"
 #include "symmetric.h"
 #include "ta_sa.h"
-#include <memory.h>
-
-#define PADDED_SIZE(size) AES_BLOCK_SIZE*(((size) / AES_BLOCK_SIZE) + 1)
 
 static size_t get_required_length(
         cipher_t* cipher,
@@ -82,6 +78,11 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
         return SA_STATUS_NULL_PARAMETER;
     }
 
+    if (*bytes_to_process > AES_BLOCK_SIZE) {
+        ERROR("Invalid bytes_to_process");
+        return SA_STATUS_INVALID_PARAMETER;
+    }
+
     const symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
     if (symmetric_context == NULL) {
         ERROR("cipher_get_symmetric_context failed");
@@ -97,7 +98,6 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
     sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
-    uint8_t* padded = NULL;
     do {
         if (cipher_mode == SA_CIPHER_MODE_ENCRYPT) {
             if (!rights_allowed_encrypt(rights, SA_KEY_TYPE_SYMMETRIC)) {
@@ -106,26 +106,13 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
                 break;
             }
 
-            size_t padded_size = PADDED_SIZE(*bytes_to_process);
-            padded = memory_secure_alloc(padded_size);
-            if (padded == NULL) {
-                ERROR("memory_secure_alloc failed");
-                break;
-            }
-
-            memcpy(padded, in, *bytes_to_process);
-            if (!pad_apply_pkcs7(padded + padded_size - AES_BLOCK_SIZE, padded_size - *bytes_to_process)) {
-                ERROR("pad_apply_pkcs7 failed");
-                status = SA_STATUS_VERIFICATION_FAILED;
-                break;
-            }
-
-            status = symmetric_context_encrypt(symmetric_context, out, padded, padded_size);
+            size_t out_length = *bytes_to_process;
+            status = symmetric_context_encrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
             if (status != SA_STATUS_OK) {
                 ERROR("symmetric_context_encrypt failed");
             }
 
-            *bytes_to_process = padded_size;
+            *bytes_to_process = out_length;
         } else if (cipher_mode == SA_CIPHER_MODE_DECRYPT) {
             if (*bytes_to_process % AES_BLOCK_SIZE != 0) {
                 ERROR("Invalid bytes_to_process");
@@ -135,31 +122,21 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
 
             if (!rights_allowed_decrypt(rights, SA_KEY_TYPE_SYMMETRIC)) {
                 ERROR("rights_allowed_decrypt failed");
-                status = SA_STATUS_OPERATION_NOT_ALLOWED;
-                break;
+                return SA_STATUS_OPERATION_NOT_ALLOWED;
             }
 
-            status = symmetric_context_decrypt(symmetric_context, out, in, *bytes_to_process);
+            size_t out_length = *bytes_to_process;
+            status = symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
             if (status != SA_STATUS_OK) {
-                ERROR("symmetric_context_decrypt failed");
-                break;
+                ERROR("symmetric_context_decrypt_last failed");
+                return status;
             }
 
-            uint8_t pad_value = 0;
-            if (!pad_check_pkcs7(&pad_value, out + *bytes_to_process - AES_BLOCK_SIZE)) {
-                ERROR("pad_check_pkcs7 failed");
-                status = SA_STATUS_VERIFICATION_FAILED;
-                break;
-            }
-
-            *bytes_to_process = *bytes_to_process - pad_value;
+            *bytes_to_process = out_length;
         } else {
             ERROR("Unknown mode encountered");
         }
     } while (false);
-
-    if (padded != NULL)
-        memory_secure_free(padded);
 
     return status;
 }
@@ -179,11 +156,6 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_ctr(
     if (cipher == NULL) {
         ERROR("NULL cipher");
         return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (*bytes_to_process > AES_BLOCK_SIZE) {
-        ERROR("Invalid in_length");
-        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (out == NULL) {
@@ -235,6 +207,83 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_ctr(
             ERROR("symmetric_context_decrypt_last failed");
             return status;
         }
+
+        *bytes_to_process = out_length;
+    } else {
+        ERROR("Unknown mode encountered");
+        return SA_STATUS_INTERNAL_ERROR;
+    }
+
+    return SA_STATUS_OK;
+}
+
+static sa_status ta_sa_crypto_cipher_process_last_chacha20(
+        void* out,
+        cipher_t* cipher,
+        const void* in,
+        size_t* bytes_to_process,
+        const sa_uuid* caller_uuid) {
+
+    if (caller_uuid == NULL) {
+        ERROR("NULL caller_uuid");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (cipher == NULL) {
+        ERROR("NULL cipher");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (out == NULL) {
+        ERROR("NULL out");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (in == NULL) {
+        ERROR("NULL in");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    const symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
+    if (symmetric_context == NULL) {
+        ERROR("cipher_get_symmetric_context failed");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    const sa_rights* rights = cipher_get_key_rights(cipher);
+    if (rights == NULL) {
+        ERROR("cipher_get_key_rights failed");
+        return SA_STATUS_INTERNAL_ERROR;
+    }
+
+    sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
+    if (cipher_mode == SA_CIPHER_MODE_ENCRYPT) {
+        if (!rights_allowed_encrypt(rights, SA_KEY_TYPE_SYMMETRIC)) {
+            ERROR("rights_allowed_encrypt failed");
+            return SA_STATUS_OPERATION_NOT_ALLOWED;
+        }
+
+        size_t out_length = *bytes_to_process;
+        sa_status status = symmetric_context_encrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
+        if (status != SA_STATUS_OK) {
+            ERROR("symmetric_context_encrypt_last failed");
+            return status;
+        }
+
+        *bytes_to_process = out_length;
+    } else if (cipher_mode == SA_CIPHER_MODE_DECRYPT) {
+        if (!rights_allowed_decrypt(rights, SA_KEY_TYPE_SYMMETRIC)) {
+            ERROR("rights_allowed_decrypt failed");
+            return SA_STATUS_OPERATION_NOT_ALLOWED;
+        }
+
+        size_t out_length = *bytes_to_process;
+        sa_status status = symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
+        if (status != SA_STATUS_OK) {
+            ERROR("symmetric_context_decrypt_last failed");
+            return status;
+        }
+
         *bytes_to_process = out_length;
     } else {
         ERROR("Unknown mode encountered");
@@ -331,16 +380,16 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_gcm(
             return SA_STATUS_OPERATION_NOT_ALLOWED;
         }
 
-        size_t out_length = *bytes_to_process;
-        sa_status status = symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
+        sa_status status = symmetric_context_set_tag(symmetric_context, parameters->tag, parameters->tag_length);
         if (status != SA_STATUS_OK) {
-            ERROR("symmetric_context_decrypt_last failed");
+            ERROR("symmetric_context_check_tag failed");
             return status;
         }
 
-        status = symmetric_context_check_tag(symmetric_context, parameters->tag, parameters->tag_length);
+        size_t out_length = *bytes_to_process;
+        status = symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
         if (status != SA_STATUS_OK) {
-            ERROR("symmetric_context_check_tag failed");
+            ERROR("symmetric_context_decrypt_last failed");
             return status;
         }
 
@@ -435,16 +484,16 @@ static sa_status ta_sa_crypto_cipher_process_last_chacha20_poly1305(
             return SA_STATUS_OPERATION_NOT_ALLOWED;
         }
 
-        size_t out_length = *bytes_to_process;
-        sa_status status = symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
+        sa_status status = symmetric_context_set_tag(symmetric_context, parameters->tag, parameters->tag_length);
         if (status != SA_STATUS_OK) {
-            ERROR("symmetric_context_decrypt_last failed");
+            ERROR("symmetric_context_check_tag failed");
             return status;
         }
 
-        status = symmetric_context_check_tag(symmetric_context, parameters->tag, parameters->tag_length);
+        size_t out_length = *bytes_to_process;
+        status = symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
         if (status != SA_STATUS_OK) {
-            ERROR("symmetric_context_check_tag failed");
+            ERROR("symmetric_context_decrypt_last failed");
             return status;
         }
 
@@ -577,6 +626,13 @@ sa_status ta_sa_crypto_cipher_process_last(
                     caller_uuid);
             if (status != SA_STATUS_OK) {
                 ERROR("ta_sa_crypto_cipher_process_last_aes_ctr failed");
+                break;
+            }
+        } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20) {
+            status = ta_sa_crypto_cipher_process_last_chacha20(out_bytes, cipher, in_bytes, bytes_to_process,
+                    caller_uuid);
+            if (status != SA_STATUS_OK) {
+                ERROR("ta_sa_crypto_cipher_process_last_chacha20 failed");
                 break;
             }
         } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM) {

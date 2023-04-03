@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,14 +77,16 @@ static sa_status ta_sa_crypto_cipher_init_aes_ecb(
         }
 
         if (cipher_mode == SA_CIPHER_MODE_ENCRYPT) {
-            symmetric_context = symmetric_create_aes_ecb_encrypt_context(stored_key);
+            symmetric_context = symmetric_create_aes_ecb_encrypt_context(stored_key,
+                    cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7);
             if (symmetric_context == NULL) {
                 ERROR("symmetric_create_aes_ecb_encrypt_context failed");
                 status = SA_STATUS_INTERNAL_ERROR;
                 break;
             }
         } else if (cipher_mode == SA_CIPHER_MODE_DECRYPT) {
-            symmetric_context = symmetric_create_aes_ecb_decrypt_context(stored_key);
+            symmetric_context = symmetric_create_aes_ecb_decrypt_context(stored_key,
+                    cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7);
             if (symmetric_context == NULL) {
                 ERROR("symmetric_create_aes_ecb_decrypt_context failed");
                 status = SA_STATUS_INTERNAL_ERROR;
@@ -180,7 +182,7 @@ static sa_status ta_sa_crypto_cipher_init_aes_cbc(
 
         if (cipher_mode == SA_CIPHER_MODE_ENCRYPT) {
             symmetric_context = symmetric_create_aes_cbc_encrypt_context(stored_key, parameters->iv,
-                    parameters->iv_length);
+                    parameters->iv_length, cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7);
             if (symmetric_context == NULL) {
                 ERROR("symmetric_create_aes_cbc_encrypt_context failed");
                 status = SA_STATUS_INTERNAL_ERROR;
@@ -188,7 +190,7 @@ static sa_status ta_sa_crypto_cipher_init_aes_cbc(
             }
         } else if (cipher_mode == SA_CIPHER_MODE_DECRYPT) {
             symmetric_context = symmetric_create_aes_cbc_decrypt_context(stored_key, parameters->iv,
-                    parameters->iv_length);
+                    parameters->iv_length, cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7);
             if (symmetric_context == NULL) {
                 ERROR("symmetric_create_aes_cbc_decrypt_context failed");
                 status = SA_STATUS_INTERNAL_ERROR;

@@ -26,6 +26,7 @@
 #include <chrono>
 
 #define PADDED_SIZE(size) AES_BLOCK_SIZE*(((size) / AES_BLOCK_SIZE) + 1)
+#define SUBSAMPLE_SIZE 256UL
 
 using namespace ta_test_helpers;
 
@@ -329,16 +330,31 @@ namespace {
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, bytes_to_process);
         ASSERT_NE(out_buffer, nullptr);
 
-        bytes_to_process = in.size();
-        if (pkcs7)
-            status = ta_sa_crypto_cipher_process_last(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process,
-                    nullptr, client(), ta_uuid());
-        else
+        size_t total_length = 0;
+        if (pkcs7) {
+            if (in.size() % AES_BLOCK_SIZE == 0)
+                bytes_to_process = in.size() - AES_BLOCK_SIZE;
+            else
+                bytes_to_process = in.size() - (in.size() % AES_BLOCK_SIZE);
+
             status = ta_sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process,
                     client(), ta_uuid());
+            ASSERT_EQ(status, SA_STATUS_OK);
+            total_length += bytes_to_process;
+            bytes_to_process = in.size() % AES_BLOCK_SIZE == 0 ? AES_BLOCK_SIZE : in.size() % AES_BLOCK_SIZE;
+            status = ta_sa_crypto_cipher_process_last(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process,
+                    nullptr, client(), ta_uuid());
+            ASSERT_EQ(status, SA_STATUS_OK);
+            total_length += bytes_to_process;
+        } else {
+            bytes_to_process = in.size();
+            status = ta_sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process,
+                    client(), ta_uuid());
+            ASSERT_EQ(status, SA_STATUS_OK);
+            total_length += bytes_to_process;
+        }
 
-        ASSERT_EQ(status, SA_STATUS_OK);
-        ASSERT_EQ(bytes_to_process, cipher_mode == SA_CIPHER_MODE_ENCRYPT ? required_length : clear.size());
+        ASSERT_EQ(total_length, cipher_mode == SA_CIPHER_MODE_ENCRYPT ? required_length : clear.size());
 
         // Verify the encryption.
         if (cipher_mode == SA_CIPHER_MODE_ENCRYPT) {
@@ -373,8 +389,7 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
         sa_status status = ta_sa_crypto_cipher_init(cipher.get(), cipher_algorithm, SA_CIPHER_MODE_DECRYPT, *key,
-                parameters.get(),
-                client(), ta_uuid());
+                parameters.get(), client(), ta_uuid());
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
