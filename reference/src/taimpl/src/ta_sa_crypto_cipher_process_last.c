@@ -632,7 +632,7 @@ sa_status ta_sa_crypto_cipher_process_last(
             status = ta_sa_crypto_cipher_process_last_chacha20(out_bytes, cipher, in_bytes, bytes_to_process,
                     caller_uuid);
             if (status != SA_STATUS_OK) {
-                ERROR("ta_sa_crypto_cipher_process_last_aes_ctr failed");
+                ERROR("ta_sa_crypto_cipher_process_last_chacha20 failed");
                 break;
             }
         } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM) {
