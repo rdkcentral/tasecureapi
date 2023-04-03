@@ -47,7 +47,7 @@ namespace {
         strcpy(name, COMMON_ROOT_NAME);
         ASSERT_EQ(load_pkcs12_secret_key(key, &key_length, name, &name_length), true);
         ASSERT_EQ(key_length, SYM_128_KEY_SIZE);
-        ASSERT_EQ(name_length, 6);
-        ASSERT_EQ(memcmp(name, "common", 6), 0);
+        ASSERT_EQ(name_length, 10);
+        ASSERT_EQ(memcmp(name, "commonroot", 10), 0);
     }
 } // namespace
