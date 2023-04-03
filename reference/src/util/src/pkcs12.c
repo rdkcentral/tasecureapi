@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ static int parse_pkcs12_safe_bag(
         const char* password,
         void* key,
         size_t* key_length,
-        uint8_t* name,
+        char* name,
         size_t* name_length) {
 
     if (key == NULL) {
@@ -181,7 +181,7 @@ static int parse_pkcs12_safe_bag(
 bool load_pkcs12_secret_key(
         void* key,
         size_t* key_length,
-        uint8_t* name,
+        char* name,
         size_t* name_length) {
 
     const char* filename = getenv("ROOT_KEYSTORE");
@@ -192,6 +192,8 @@ bool load_pkcs12_secret_key(
     if (password == NULL)
         password = DEFAULT_ROOT_KEYSTORE_PASSWORD;
 
+    size_t in_name_length = *name_length;
+    bool requested_common_root = strncmp(name, COMMON_ROOT_NAME, in_name_length) == 0;
     bool status = false;
     FILE* file = NULL;
     PKCS12* pkcs12 = NULL;
@@ -241,12 +243,16 @@ bool load_pkcs12_secret_key(
                     pkcs12_parse_failed = true;
                     ERROR("parse_pkcs12_safe_bag failed");
                 }
+
+                bool is_common_root = strncmp(COMMON_ROOT_NAME, name, strlen(COMMON_ROOT_NAME)) == 0;
+                if (is_common_root == requested_common_root) {
+                    status = true;
+                    break;
+                }
             }
 
             sk_PKCS12_SAFEBAG_pop_free(pkcs12_safebags, PKCS12_SAFEBAG_free);
         }
-
-        status = true;
     } while (false);
 
     PKCS12_free(pkcs12);

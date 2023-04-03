@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,8 @@ class SaKeyDeriveCmacTest : public ::testing::TestWithParam<SaKeyDeriveCmacTestT
 class SaKeyDeriveNetflixTest : public ::testing::Test, public SaKeyBase {};
 
 class SaKeyDeriveRootKeyLadderTest : public ::testing::Test, public SaKeyBase {};
+
+class SaKeyDeriveCommonRootKeyLadderTest : public ::testing::Test, public SaKeyBase {};
 
 // clang-format on
 #endif // SA_KEY_DERIVE_COMMON_H

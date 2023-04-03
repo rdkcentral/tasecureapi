@@ -189,7 +189,9 @@ typedef enum {
     SA_KDF_ALGORITHM_CONCAT,
     SA_KDF_ALGORITHM_ANSI_X963,
     SA_KDF_ALGORITHM_CMAC,
-    SA_KDF_ALGORITHM_NETFLIX
+    SA_KDF_ALGORITHM_NETFLIX,
+    /** Common Root Key Ladder Key Derivation Function Algorithm--derives a key from the common SOC root key */
+    SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER
 } sa_kdf_algorithm;
 
 /**

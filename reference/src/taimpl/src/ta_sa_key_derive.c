@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@
 
 static sa_status ta_sa_key_derive_root_key_ladder(
         sa_key* key,
+        sa_kdf_algorithm kdf_algorithm,
         const sa_rights* rights,
         sa_kdf_parameters_root_key_ladder* parameters,
         client_t* client,
@@ -104,9 +105,22 @@ static sa_status ta_sa_key_derive_root_key_ladder(
     sa_status status;
     stored_key_t* stored_key_derived = NULL;
     do {
-        if (!otp_root_key_ladder(&stored_key_derived, rights, parameters->c1, parameters->c2, parameters->c3,
-                    parameters->c4)) {
-            ERROR("otp_root_key_ladder failed");
+        if (kdf_algorithm == SA_KDF_ALGORITHM_ROOT_KEY_LADDER) {
+            status = otp_root_key_ladder(&stored_key_derived, rights, parameters->c1, parameters->c2,
+                    parameters->c3, parameters->c4);
+            if (status != SA_STATUS_OK) {
+                ERROR("otp_root_key_ladder failed");
+                break;
+            }
+        } else if (kdf_algorithm == SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER) {
+            status = otp_common_root_key_ladder(&stored_key_derived, rights, parameters->c1, parameters->c2,
+                    parameters->c3, parameters->c4);
+            if (status != SA_STATUS_OK) {
+                ERROR("otp_common_root_key_ladder failed");
+                break;
+            }
+        } else {
+            ERROR("Invalid KDF algorithm");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
@@ -691,48 +705,69 @@ sa_status ta_sa_key_derive(
             break;
         }
 
-        if (kdf_algorithm == SA_KDF_ALGORITHM_ROOT_KEY_LADDER) {
-            status = ta_sa_key_derive_root_key_ladder(key, rights, (sa_kdf_parameters_root_key_ladder*) parameters,
-                    client, caller_uuid);
-            if (status != SA_STATUS_OK) {
-                ERROR("ta_sa_key_derive_root_key_ladder failed");
+        switch (kdf_algorithm) {
+            case SA_KDF_ALGORITHM_ROOT_KEY_LADDER:
+            case SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER:
+                status = ta_sa_key_derive_root_key_ladder(key, kdf_algorithm, rights,
+                        (sa_kdf_parameters_root_key_ladder*) parameters, client, caller_uuid);
+                if (status != SA_STATUS_OK) {
+                    ERROR("ta_sa_key_derive_root_key_ladder failed");
+                    break;
+                }
+
                 break;
-            }
-        } else if (kdf_algorithm == SA_KDF_ALGORITHM_HKDF) {
-            status = ta_sa_key_derive_hkdf(key, rights, (sa_kdf_parameters_hkdf*) parameters, client, caller_uuid);
-            if (status != SA_STATUS_OK) {
-                ERROR("ta_sa_key_derive_hkdf failed");
+
+            case SA_KDF_ALGORITHM_HKDF:
+                status = ta_sa_key_derive_hkdf(key, rights, (sa_kdf_parameters_hkdf*) parameters, client, caller_uuid);
+                if (status != SA_STATUS_OK) {
+                    ERROR("ta_sa_key_derive_hkdf failed");
+                    break;
+                }
+
                 break;
-            }
-        } else if (kdf_algorithm == SA_KDF_ALGORITHM_CONCAT) {
-            status = ta_sa_key_derive_concat(key, rights, (sa_kdf_parameters_concat*) parameters, client, caller_uuid);
-            if (status != SA_STATUS_OK) {
-                ERROR("ta_sa_key_derive_concat failed");
+
+            case SA_KDF_ALGORITHM_CONCAT:
+                status = ta_sa_key_derive_concat(key, rights, (sa_kdf_parameters_concat*) parameters, client,
+                        caller_uuid);
+                if (status != SA_STATUS_OK) {
+                    ERROR("ta_sa_key_derive_concat failed");
+                    break;
+                }
+
                 break;
-            }
-        } else if (kdf_algorithm == SA_KDF_ALGORITHM_ANSI_X963) {
-            status = ta_sa_key_derive_ansi_x963(key, rights, (sa_kdf_parameters_ansi_x963*) parameters, client,
-                    caller_uuid);
-            if (status != SA_STATUS_OK) {
-                ERROR("ta_sa_key_derive_ansi_x963 failed");
+
+            case SA_KDF_ALGORITHM_ANSI_X963:
+                status = ta_sa_key_derive_ansi_x963(key, rights, (sa_kdf_parameters_ansi_x963*) parameters, client,
+                        caller_uuid);
+                if (status != SA_STATUS_OK) {
+                    ERROR("ta_sa_key_derive_ansi_x963 failed");
+                    break;
+                }
+
                 break;
-            }
-        } else if (kdf_algorithm == SA_KDF_ALGORITHM_CMAC) {
-            status = ta_sa_key_derive_cmac(key, rights, (sa_kdf_parameters_cmac*) parameters, client, caller_uuid);
-            if (status != SA_STATUS_OK) {
-                ERROR("ta_sa_key_derive_cmac failed");
+
+            case SA_KDF_ALGORITHM_CMAC:
+                status = ta_sa_key_derive_cmac(key, rights, (sa_kdf_parameters_cmac*) parameters, client, caller_uuid);
+                if (status != SA_STATUS_OK) {
+                    ERROR("ta_sa_key_derive_cmac failed");
+                    break;
+                }
+
                 break;
-            }
-        } else if (kdf_algorithm == SA_KDF_ALGORITHM_NETFLIX) {
-            status = ta_sa_key_derive_netflix(key, rights, (sa_kdf_parameters_netflix*) parameters, client,
-                    caller_uuid);
-            if (status != SA_STATUS_OK) {
-                ERROR("ta_sa_key_derive_netflix failed");
+
+            case SA_KDF_ALGORITHM_NETFLIX:
+                status = ta_sa_key_derive_netflix(key, rights, (sa_kdf_parameters_netflix*) parameters, client,
+                        caller_uuid);
+                if (status != SA_STATUS_OK) {
+                    ERROR("ta_sa_key_derive_netflix failed");
+                    break;
+                }
+
                 break;
-            }
-        } else {
-            ERROR("Invalid algorithm");
-            status = SA_STATUS_INVALID_PARAMETER;
+
+            default:
+                ERROR("Invalid algorithm");
+                status = SA_STATUS_INVALID_PARAMETER;
         }
     } while (false);
 

@@ -19,7 +19,6 @@
 #include "client_test_helpers.h"
 #include "sa.h"
 #include "sa_key_exchange_common.h"
-#include "sa_rights.h"
 #include "gtest/gtest.h"
 
 using namespace client_test_helpers;
@@ -69,7 +68,7 @@ namespace {
 
         std::vector<uint8_t> clear_key(SYM_128_KEY_SIZE);
         std::vector<uint8_t> clear_shared_secret;
-        ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_dh, public_evp_pkey, dhp, dhg));
+        ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_dh, public_evp_pkey));
         ASSERT_TRUE(concat_kdf(clear_key, clear_shared_secret, info, SA_DIGEST_ALGORITHM_SHA256));
         ASSERT_TRUE(key_check_sym(*key, clear_key));
     }

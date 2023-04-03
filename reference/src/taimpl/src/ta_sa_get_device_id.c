@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,10 +35,5 @@ sa_status ta_sa_get_device_id(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (!otp_device_id(id)) {
-        ERROR("otp_device_id failed");
-        return SA_STATUS_INTERNAL_ERROR;
-    }
-
-    return SA_STATUS_OK;
+    return otp_device_id(id);
 }

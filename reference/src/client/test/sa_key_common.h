@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,8 @@ class SaKeyBase {
 protected:
     static bool get_root_key(std::vector<uint8_t>& key);
 
+    static bool get_common_root_key(std::vector<uint8_t>& key);
+
     static bool dh_generate_key(
             std::shared_ptr<EVP_PKEY>& evp_pkey,
             std::vector<uint8_t>& public_key,
@@ -41,9 +43,7 @@ protected:
     static bool dh_compute_secret(
             std::vector<uint8_t>& shared_secret,
             const std::shared_ptr<EVP_PKEY>& private_key,
-            const std::shared_ptr<EVP_PKEY>& other_public_key,
-            const std::vector<uint8_t>& p,
-            const std::vector<uint8_t>& g);
+            const std::shared_ptr<EVP_PKEY>& other_public_key);
 
     static sa_status ec_generate_key(
             sa_elliptic_curve curve,
@@ -51,7 +51,6 @@ protected:
             std::vector<uint8_t>& public_key);
 
     static bool ecdh_compute_secret(
-            sa_elliptic_curve curve,
             std::vector<uint8_t>& shared_secret,
             const std::shared_ptr<EVP_PKEY>& private_key,
             const std::shared_ptr<EVP_PKEY>& other_public_key);
@@ -68,6 +67,7 @@ protected:
             std::vector<uint8_t>& clear_shared_secret);
 
     static std::shared_ptr<std::vector<uint8_t>> derive_test_key_ladder(
+            std::vector<uint8_t>& key,
             std::vector<uint8_t>& c1,
             std::vector<uint8_t>& c2,
             std::vector<uint8_t>& c3,
@@ -115,6 +115,7 @@ protected:
 
 private:
     static std::vector<uint8_t> root_key;
+    static std::vector<uint8_t> common_root_key;
 };
 
 using SaKeyType = std::tuple<sa_key_type, size_t>;

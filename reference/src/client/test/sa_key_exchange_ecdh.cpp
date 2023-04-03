@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ namespace {
 
         std::vector<uint8_t> clear_key(SYM_128_KEY_SIZE);
         std::vector<uint8_t> clear_shared_secret(key_size);
-        ASSERT_TRUE(ecdh_compute_secret(curve, clear_shared_secret, other_ec, ec_public_key));
+        ASSERT_TRUE(ecdh_compute_secret(clear_shared_secret, other_ec, ec_public_key));
         ASSERT_TRUE(concat_kdf(clear_key, clear_shared_secret, info, SA_DIGEST_ALGORITHM_SHA256));
         ASSERT_TRUE(key_check_sym(*key, clear_key));
     }

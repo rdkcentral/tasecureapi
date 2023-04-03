@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@
 static uint64_t device_id;
 
 static uint64_t convert_str_to_int(
-        const unsigned char* str,
+        const char* str,
         size_t str_length) {
     static const char lookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
@@ -81,7 +81,7 @@ static bool get_root_key(
     }
 
     if (key_length == 0) {
-        uint8_t name[MAX_NAME_LENGTH];
+        char name[MAX_NAME_LENGTH];
         size_t name_length = MAX_NAME_LENGTH;
         if (load_pkcs12_secret_key(key, &key_length, name, &name_length) != 1) {
             ERROR("load_pkcs12_secret_key failed");
@@ -102,6 +102,43 @@ static bool get_root_key(
 
     memcpy(root_key, key, key_length);
     *root_key_length = key_length;
+    return true;
+}
+
+static bool get_common_root_key(
+        void* common_root_key,
+        size_t* common_root_key_length) {
+    static size_t key_length = 0;
+    static uint8_t key[SYM_128_KEY_SIZE];
+
+    if (common_root_key_length == NULL) {
+        ERROR("NULL common_root_key_length");
+        return false;
+    }
+
+    if (common_root_key == NULL) {
+        ERROR("NULL common_root_key");
+        return false;
+    }
+
+    if (key_length == 0) {
+        char name[MAX_NAME_LENGTH];
+        size_t name_length = MAX_NAME_LENGTH;
+        strcpy(name, COMMON_ROOT_NAME);
+        if (load_pkcs12_secret_key(key, &key_length, name, &name_length) != 1) {
+            ERROR("load_pkcs12_secret_key failed");
+            return false;
+        }
+
+    }
+
+    if (*common_root_key_length < key_length) {
+        ERROR("root key too short");
+        return false;
+    }
+
+    memcpy(common_root_key, key, key_length);
+    *common_root_key_length = key_length;
     return true;
 }
 
@@ -246,6 +283,88 @@ static bool otp_hw_key_ladder(
         }
 
         if (!unwrap_aes_ecb_internal(k1, c1, AES_BLOCK_SIZE, root_key, root_key_length)) {
+            ERROR("unwrap_aes_ecb_internal failed");
+            break;
+        }
+
+        if (!unwrap_aes_ecb_internal(k2, c2, AES_BLOCK_SIZE, k1, k1_length)) {
+            ERROR("unwrap_aes_ecb_internal failed");
+            break;
+        }
+
+        if (!unwrap_aes_ecb_internal(derived, c3, AES_BLOCK_SIZE, k2, k2_length)) {
+            ERROR("unwrap_aes_ecb_internal failed");
+            break;
+        }
+
+        status = true;
+    } while (false);
+
+    memory_memset_unoptimizable(root_key, 0, SYM_256_KEY_SIZE);
+    if (k1 != NULL) {
+        memory_memset_unoptimizable(k1, 0, k1_length);
+        memory_secure_free(k1);
+    }
+
+    if (k2 != NULL) {
+        memory_memset_unoptimizable(k2, 0, k2_length);
+        memory_secure_free(k2);
+    }
+
+    return status;
+}
+static bool otp_common_key_ladder(
+        void* derived,
+        const void* c1,
+        const void* c2,
+        const void* c3) {
+
+    if (derived == NULL) {
+        ERROR("NULL derived");
+        return false;
+    }
+
+    if (c1 == NULL) {
+        ERROR("NULL c1");
+        return false;
+    }
+
+    if (c2 == NULL) {
+        ERROR("NULL c2");
+        return false;
+    }
+
+    if (c3 == NULL) {
+        ERROR("NULL c3");
+        return false;
+    }
+
+    bool status = false;
+    uint8_t* k1 = NULL;
+    size_t k1_length = SYM_128_KEY_SIZE;
+    uint8_t* k2 = NULL;
+    size_t k2_length = SYM_128_KEY_SIZE;
+    uint8_t root_key[SYM_256_KEY_SIZE];
+    do {
+        size_t common_root_key_length = SYM_256_KEY_SIZE;
+        if (!get_common_root_key(root_key, &common_root_key_length)) {
+            ERROR("get_root_key failed");
+            break;
+        }
+
+        k1 = memory_secure_alloc(k1_length);
+        if (k1 == NULL) {
+            ERROR("memory_secure_alloc failed");
+            break;
+        }
+
+        k2 = memory_secure_alloc(k2_length);
+        if (k2 == NULL) {
+            ERROR("memory_secure_alloc failed");
+            break;
+        }
+
+        if (!unwrap_aes_ecb_internal(k1, c1, AES_BLOCK_SIZE, root_key, common_root_key_length)) {
             ERROR("unwrap_aes_ecb_internal failed");
             break;
         }
@@ -575,10 +694,10 @@ bool unwrap_aes_gcm_internal(
     return status;
 }
 
-bool otp_device_id(uint64_t* id) {
+sa_status otp_device_id(uint64_t* id) {
     if (id == NULL) {
         ERROR("NULL id");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     // If not initialized yet, attempt to set the device id and ignore the result.
@@ -586,10 +705,10 @@ bool otp_device_id(uint64_t* id) {
         get_root_key(NULL, NULL);
 
     *id = device_id;
-    return true;
+    return SA_STATUS_OK;
 }
 
-bool otp_root_key_ladder(
+sa_status otp_root_key_ladder(
         stored_key_t** stored_key_derived,
         const sa_rights* rights,
         const void* c1,
@@ -599,35 +718,35 @@ bool otp_root_key_ladder(
 
     if (stored_key_derived == NULL) {
         ERROR("NULL stored_key_derived");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (rights == NULL) {
         ERROR("NULL rights");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (c1 == NULL) {
         ERROR("NULL c1");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (c2 == NULL) {
         ERROR("NULL c2");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (c3 == NULL) {
         ERROR("NULL c3");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (c4 == NULL) {
         ERROR("NULL c4");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* k3 = NULL;
     size_t k3_length = SYM_128_KEY_SIZE;
     uint8_t* derived = NULL;
@@ -663,7 +782,97 @@ bool otp_root_key_ladder(
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
+    } while (false);
+
+    if (k3 != NULL) {
+        memory_memset_unoptimizable(k3, 0, k3_length);
+        memory_secure_free(k3);
+    }
+
+    if (derived != NULL) {
+        memory_memset_unoptimizable(derived, 0, derived_length);
+        memory_secure_free(derived);
+    }
+
+    return status;
+}
+
+sa_status otp_common_root_key_ladder(
+        stored_key_t** stored_key_derived,
+        const sa_rights* rights,
+        const void* c1,
+        const void* c2,
+        const void* c3,
+        const void* c4) {
+
+    if (stored_key_derived == NULL) {
+        ERROR("NULL stored_key_derived");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (rights == NULL) {
+        ERROR("NULL rights");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (c1 == NULL) {
+        ERROR("NULL c1");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (c2 == NULL) {
+        ERROR("NULL c2");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (c3 == NULL) {
+        ERROR("NULL c3");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (c4 == NULL) {
+        ERROR("NULL c4");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
+    uint8_t* k3 = NULL;
+    size_t k3_length = SYM_128_KEY_SIZE;
+    uint8_t* derived = NULL;
+    size_t derived_length = AES_BLOCK_SIZE;
+    do {
+        derived = memory_secure_alloc(derived_length);
+        if (derived == NULL) {
+            ERROR("memory_secure_alloc failed");
+            break;
+        }
+
+        k3 = memory_secure_alloc(k3_length);
+        if (k3 == NULL) {
+            ERROR("memory_secure_alloc failed");
+            break;
+        }
+
+        if (!otp_common_key_ladder(k3, c1, c2, c3)) {
+            ERROR("otp_common_key_ladder failed");
+            break;
+        }
+
+        if (!unwrap_aes_ecb_internal(derived, c4, AES_BLOCK_SIZE, k3, k3_length)) {
+            ERROR("unwrap_aes_ecb_internal failed");
+            break;
+        }
+
+        sa_type_parameters type_parameters;
+        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
+        if (stored_key_create(stored_key_derived, rights, NULL, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
+                    derived_length, derived, derived_length) != SA_STATUS_OK) {
+            ERROR("stored_key_create failed");
+            break;
+        }
+
+        status = SA_STATUS_OK;
     } while (false);
 
     if (k3 != NULL) {

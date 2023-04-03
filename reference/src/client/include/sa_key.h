@@ -216,9 +216,11 @@ sa_status sa_key_get_public(
  * @param[in] rights Key rights to associate with the derived key.
  * @param[in] kdf_algorithm KDF algorithm.
  * @param[in] parameters Algorithm specific parameters. Use sa_kdf_parameters_root_key_ladder with
- * SA_KDF_ALGORITHM_ROOT_KEY_LADDER, sa_kdf_parameters_hkdf with SA_KDF_ALGORITHM_HKDF,
- * sa_kdf_parameters_concat with SA_KDF_ALGORITHM_CONCAT, sa_kdf_parameters_ansi_x963 with
- * SA_KDF_ALGORITHM_ANSI_X963, sa_kdf_parameters_cmac with SA_KDF_ALGORITHM_CMAC,
+ * SA_KDF_ALGORITHM_ROOT_KEY_LADDER or SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER,
+ * sa_kdf_parameters_hkdf with SA_KDF_ALGORITHM_HKDF,
+ * sa_kdf_parameters_concat with SA_KDF_ALGORITHM_CONCAT,
+ * sa_kdf_parameters_ansi_x963 with SA_KDF_ALGORITHM_ANSI_X963,
+ * sa_kdf_parameters_cmac with SA_KDF_ALGORITHM_CMAC,
  * sa_kdf_parameters_netflix with SA_KDF_ALGORITHM_NETFLIX.
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.

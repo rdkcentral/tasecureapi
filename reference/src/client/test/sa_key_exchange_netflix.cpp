@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ namespace {
         // Calculate the test side of the netflix key exchange.
         std::vector<uint8_t> clear_key(SYM_128_KEY_SIZE);
         std::vector<uint8_t> clear_shared_secret;
-        ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_dh, dh_public_key, dhp, dhg));
+        ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_dh, dh_public_key));
         std::vector<uint8_t> clear_kenc;
         std::vector<uint8_t> clear_khmac;
         std::vector<uint8_t> clear_kwrap;
