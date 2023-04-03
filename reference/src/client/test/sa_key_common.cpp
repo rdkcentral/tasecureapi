@@ -860,7 +860,11 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(SA_KEY_TYPE_DH, DH_1536_BYTE_LENGTH),
                 std::make_tuple(SA_KEY_TYPE_DH, DH_2048_BYTE_LENGTH),
                 std::make_tuple(SA_KEY_TYPE_DH, DH_3072_BYTE_LENGTH),
-                std::make_tuple(SA_KEY_TYPE_DH, DH_4096_BYTE_LENGTH)));
+                std::make_tuple(SA_KEY_TYPE_DH, DH_4096_BYTE_LENGTH),
+                std::make_tuple(SA_KEY_TYPE_RSA, RSA_1024_BYTE_LENGTH),
+                std::make_tuple(SA_KEY_TYPE_RSA, RSA_2048_BYTE_LENGTH),
+                std::make_tuple(SA_KEY_TYPE_RSA, RSA_3072_BYTE_LENGTH),
+                std::make_tuple(SA_KEY_TYPE_RSA, RSA_4096_BYTE_LENGTH)));
 
 INSTANTIATE_TEST_SUITE_P(
         SaKeyGetPublicTests,

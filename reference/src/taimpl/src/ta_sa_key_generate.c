@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include "key_store.h"
 #include "key_type.h"
 #include "log.h"
+#include "rsa.h"
 #include "symmetric.h"
 #include "ta_sa.h"
 
@@ -146,8 +147,52 @@ static sa_status ta_sa_key_generate_rsa(
         client_t* client,
         const sa_uuid* caller_uuid) {
 
-    ERROR("RSA key generation is not supported");
-    return SA_STATUS_OPERATION_NOT_SUPPORTED;
+    if (key == NULL) {
+        ERROR("NULL key");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+    *key = INVALID_HANDLE;
+
+    if (rights == NULL) {
+        ERROR("NULL rights");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (parameters == NULL) {
+        ERROR("NULL parameters");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (client == NULL) {
+        ERROR("NULL client");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (caller_uuid == NULL) {
+        ERROR("NULL caller_uuid");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    sa_status status;
+    stored_key_t* stored_key = NULL;
+    do {
+        status = rsa_generate_key(&stored_key, rights, parameters);
+        if (status != SA_STATUS_OK) {
+            ERROR("rsa_generate_key failed");
+            break;
+        }
+
+        key_store_t* key_store = client_get_key_store(client);
+        status = key_store_import_stored_key(key, key_store, stored_key, caller_uuid);
+        if (status != SA_STATUS_OK) {
+            ERROR("key_store_import_stored_key failed");
+            break;
+        }
+    } while (false);
+
+    stored_key_free(stored_key);
+
+    return status;
 }
 
 static sa_status ta_sa_key_generate_dh(
