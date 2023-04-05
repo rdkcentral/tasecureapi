@@ -348,7 +348,6 @@ static int keymgmt_import(
                 size_t pkcs8_length = 0;
                 // Check if a private key is available and if so import it. If not include only the public key.
                 if (evp_pkey_to_pkcs8(NULL, &pkcs8_length, evp_pkey)) {
-
                     pkcs8 = OPENSSL_malloc(pkcs8_length);
                     if (pkcs8 == NULL) {
                         ERROR("OPENSSL_malloc failed");
