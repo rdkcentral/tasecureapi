@@ -314,7 +314,7 @@ static int keymgmt_import(
     BIGNUM* p = NULL;
     BIGNUM* g = NULL;
     sa_key private_key = INVALID_HANDLE;
-    int delete_key = false;
+    int delete_key = 0;
     sa_header private_key_header;
     memset(&private_key_header, 0, sizeof(sa_header));
     do {
@@ -501,6 +501,7 @@ static int keymgmt_import(
         key_data->private_key = private_key;
         key_data->public_key = EVP_PKEY_dup(evp_pkey);
         memcpy(&key_data->private_key_header, &private_key_header, sizeof(sa_header));
+        key_data->delete_key = delete_key;
 
         result = 1;
     } while (false);
