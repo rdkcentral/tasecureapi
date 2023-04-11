@@ -318,7 +318,7 @@ int kdf_derive(
         sa_key derived_key;
         sa_status status = sa_key_derive(&derived_key, &rights, kdf_context->kdf_algorithm, parameters);
         if (status != SA_STATUS_OK) {
-            ERROR("sa_key_exchange failed");
+            ERROR("sa_key_derive failed");
             break;
         }
 

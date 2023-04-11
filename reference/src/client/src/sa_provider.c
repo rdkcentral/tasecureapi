@@ -194,7 +194,7 @@ static int sa_provider_init(
 
     *provctx = OPENSSL_malloc(sizeof(sa_provider_context));
     if (*provctx == NULL) {
-        ERROR("crypto_malloc failed");
+        ERROR("OPENSSL_malloc failed");
         return 0;
     }
 
@@ -281,7 +281,7 @@ OSSL_LIB_CTX* sa_get_provider() {
 
     OSSL_LIB_CTX* provider_context = lib_ctx;
     if (provider_context == NULL) {
-        ERROR("NULL sa_provider_lib_ctx");
+        ERROR("NULL provider_context");
     }
 
     mtx_unlock(&mutex);

@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ typedef struct {
 /**
  * Duplicates a sa_provider_key_data object.
  *
- * @param key_data the sa_provider_key_data object to duplicate.
+ * @param[in] key_data the sa_provider_key_data object to duplicate.
  * @return the duplicated sa_provider_key_data object.
  */
 sa_provider_key_data* sa_provider_key_data_dup(sa_provider_key_data* key_data);
@@ -56,7 +56,7 @@ sa_provider_key_data* sa_provider_key_data_dup(sa_provider_key_data* key_data);
 /**
  * Frees a sa_provider_key_data object.
  *
- * @param key_data the sa_provider_key_data object to free.
+ * @param[in] key_data the sa_provider_key_data object to free.
  * @return the duplicate sa_provider_key_data object.
  */
 void sa_provider_key_data_free(sa_provider_key_data* key_data);

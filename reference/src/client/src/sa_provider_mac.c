@@ -137,7 +137,7 @@ static int mac_init(
         }
 
         if (mac_set_ctx_params(mctx, params) != 1) {
-            ERROR("cipher_set_ctx_params failed");
+            ERROR("mac_set_ctx_params failed");
             break;
         }
 

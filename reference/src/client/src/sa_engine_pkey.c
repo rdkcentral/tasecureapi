@@ -221,7 +221,7 @@ static int pkey_sign(
                 signature_algorithm = SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15;
                 parameters_rsa_pkcs1v15.digest_algorithm = digest_algorithm_from_md(app_data->evp_md);
                 if (parameters_rsa_pkcs1v15.digest_algorithm == UINT32_MAX) {
-                    ERROR("digest_algorithm_from_name unknown");
+                    ERROR("digest_algorithm_from_md failed");
                     return 0;
                 }
 
@@ -230,14 +230,14 @@ static int pkey_sign(
             } else if (app_data->padding_mode == RSA_PKCS1_PSS_PADDING) {
                 signature_algorithm = SA_SIGNATURE_ALGORITHM_RSA_PSS;
                 parameters_rsa_pss.digest_algorithm = digest_algorithm_from_md(app_data->evp_md);
-                parameters_rsa_pss.mgf1_digest_algorithm = digest_algorithm_from_md(app_data->mgf1_md);
                 if (parameters_rsa_pss.digest_algorithm == UINT32_MAX) {
-                    ERROR("digest_algorithm_from_name unknown");
+                    ERROR("digest_algorithm_from_md failed");
                     return 0;
                 }
 
+                parameters_rsa_pss.mgf1_digest_algorithm = digest_algorithm_from_md(app_data->mgf1_md);
                 if (parameters_rsa_pss.mgf1_digest_algorithm == UINT32_MAX) {
-                    ERROR("digest_algorithm_from_name unknown");
+                    ERROR("digest_algorithm_from_md failed");
                     return 0;
                 }
 
@@ -276,7 +276,7 @@ static int pkey_sign(
             signature_algorithm = SA_SIGNATURE_ALGORITHM_ECDSA;
             parameters_ecdsa.digest_algorithm = digest_algorithm_from_md(app_data->evp_md);
             if (parameters_ecdsa.digest_algorithm == UINT32_MAX) {
-                ERROR("digest_algorithm_from_name unknown");
+                ERROR("digest_algorithm_from_md failed");
                 return 0;
             }
 

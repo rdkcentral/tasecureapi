@@ -408,7 +408,7 @@ static int keymgmt_import(
             }
 
             if (sa_key_header(&private_key_header, private_key) != SA_STATUS_OK) {
-                ERROR("sa_get_public_key failed");
+                ERROR("sa_key_header failed");
                 break;
             }
 
@@ -420,7 +420,7 @@ static int keymgmt_import(
                 }
             }
         } else {
-            // The private was not loaded, so then populate the header from the params.
+            // The private key was not loaded, so then populate the header from the params.
             private_key = INVALID_HANDLE;
             if (key_data->type == EVP_PKEY_DH) {
                 const OSSL_PARAM* p_param = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_FFC_P);
@@ -467,7 +467,7 @@ static int keymgmt_import(
                     if (param != NULL) {
                         int key_size;
                         if (OSSL_PARAM_get_int(param, &key_size) != 1) {
-                            ERROR("OSSL_PARAM_get_utf8_string failed");
+                            ERROR("OSSL_PARAM_get_int failed");
                             break;
                         }
 
@@ -558,7 +558,7 @@ static int keymgmt_export(
                 OSSL_PARAM_construct_end()};
 
         if (EVP_PKEY_todata(key_data->public_key, selection, &public_key_params) != 1) {
-            ERROR("EVP_PKEY_export failed");
+            ERROR("EVP_PKEY_todata failed");
             break;
         }
 
@@ -569,7 +569,7 @@ static int keymgmt_export(
         }
 
         if (param_cb(merged_params, cbarg) != 1) {
-            ERROR("export callback failed");
+            ERROR("param_cb failed");
             break;
         }
 
@@ -907,7 +907,7 @@ static void* keymgmt_gen(
         sa_rights_set_allow_all(&rights);
         key_data = keymgmt_new(key_gen_context->type, key_gen_context->name, key_gen_context->provider_context);
         if (key_data == NULL) {
-            ERROR("OPENSSL_zalloc failed");
+            ERROR("keymgmt_new failed");
             return NULL;
         }
 
@@ -926,14 +926,14 @@ static void* keymgmt_gen(
         }
 
         if (sa_key_header(&key_data->private_key_header, key_data->private_key) != SA_STATUS_OK) {
-            ERROR("sa_get_public_key failed");
+            ERROR("sa_key_header failed");
             keymgmt_free(key_data);
             return NULL;
         }
     } else {
         key_data = keymgmt_new(key_gen_context->type, key_gen_context->name, key_gen_context->provider_context);
         if (key_data == NULL) {
-            ERROR("OPENSSL_zalloc failed");
+            ERROR("keymgmt_new failed");
             return NULL;
         }
 
@@ -971,7 +971,7 @@ static int keymgmt_gen_set_params(
     if (param != NULL) {
         size_t key_size;
         if (!OSSL_PARAM_get_size_t(param, &key_size)) {
-            ERROR("OSSL_PARAM_set failed");
+            ERROR("OSSL_PARAM_get_size_t failed");
             return 0;
         }
 
@@ -983,7 +983,7 @@ static int keymgmt_gen_set_params(
     param = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_GROUP_NAME);
     if (param != NULL) {
         if (!OSSL_PARAM_get_utf8_string(param, &p_name, MAX_NAME_SIZE)) {
-            ERROR("OSSL_PARAM_set failed");
+            ERROR("OSSL_PARAM_get_utf8_string failed");
             return 0;
         }
 

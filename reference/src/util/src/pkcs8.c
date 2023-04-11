@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,9 @@
 #include "pkcs8.h"
 #include "log.h"
 #include <openssl/x509.h>
+#if OPENSSL_VERSION <= 0x10100000
 #include <stdint.h>
+#endif
 
 bool evp_pkey_to_pkcs8(
         void* out,

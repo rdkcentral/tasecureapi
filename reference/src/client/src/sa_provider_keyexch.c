@@ -82,7 +82,7 @@ void keyexch_freectx(void* ctx) {
 
 void* keyexch_dupctx(void* ctx) {
     if (ctx == NULL) {
-        ERROR("NULL cctx");
+        ERROR("NULL ctx");
         return NULL;
     }
 
@@ -106,7 +106,7 @@ int keyexch_init(
         const OSSL_PARAM params[]) {
 
     if (ctx == NULL) {
-        ERROR("NULL cctx");
+        ERROR("NULL ctx");
         return 0;
     }
 
@@ -127,7 +127,7 @@ int keyexch_derive(
         size_t outlen) {
 
     if (ctx == NULL) {
-        ERROR("NULL cctx");
+        ERROR("NULL ctx");
         return 0;
     }
 
@@ -210,7 +210,7 @@ int keyexch_set_peer(
         void* provkey) {
 
     if (ctx == NULL) {
-        ERROR("NULL cctx");
+        ERROR("NULL ctx");
         return 0;
     }
 

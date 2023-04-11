@@ -80,11 +80,11 @@ static uint8_t rsa_sha384_oid[] = {0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x8
         0x00};
 static uint8_t rsa_sha512_oid[] = {0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0d, 0x05,
         0x00};
-static uint8_t ecdsa_sha1_oid[] = {0x30, 0x09, 0x06, 0x07, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x04, 0x01};
-static uint8_t ecdsa_sha256_oid[] = {0x30, 0x0a, 0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x04, 0x03, 0x02};
-static uint8_t ecdsa_sha384_oid[] = {0x30, 0x0a, 0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x04, 0x03, 0x03};
-static uint8_t ecdsa_sha512_oid[] = {0x30, 0x0a, 0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x04, 0x03, 0x04};
-static uint8_t eddsa_ed25519_oid[] = {30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70};
+static uint8_t ecdsa_sha1_oid[] = {0x30, 0x09, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x01};
+static uint8_t ecdsa_sha256_oid[] = {0x30, 0x0a, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02};
+static uint8_t ecdsa_sha384_oid[] = {0x30, 0x0a, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x03};
+static uint8_t ecdsa_sha512_oid[] = {0x30, 0x0a, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x04};
+static uint8_t eddsa_ed25519_oid[] = {0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70};
 static uint8_t eddsa_ed448_oid[] = {0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x71};
 
 static void* signature_newctx(
@@ -659,7 +659,7 @@ static int signature_digest_verify_final(
     }
 
     if (signature_verify(ctx, sig, siglen, md, md_size) != 1) {
-        ERROR("signature_sign failed");
+        ERROR("signature_verify failed");
         return 0;
     }
 
@@ -711,7 +711,7 @@ static int signature_digest_verify(
         }
 
         if (EVP_DigestVerifyInit(verify_md_ctx, NULL, NULL, NULL, verify_pkey) != 1) {
-            ERROR("EVP_DigestVerifyinit failed");
+            ERROR("EVP_DigestVerifyInit failed");
             break;
         }
 
@@ -823,8 +823,8 @@ static int signature_get_ctx_params(
                     ERROR("OSSL_PARAM_set_utf8_string failed");
                     return 0;
                 }
-            } else if (signature_context->padding_mode == RSA_PKCS1_PADDING) {
-                if (!OSSL_PARAM_set_utf8_string(param, OSSL_PKEY_RSA_PAD_MODE_PSS)) {
+            } else if (signature_context->padding_mode == RSA_PKCS1_PSS_PADDING) {
+                if (OSSL_PARAM_set_utf8_string(param, OSSL_PKEY_RSA_PAD_MODE_PSS) != 1) {
                     ERROR("OSSL_PARAM_set_utf8_string failed");
                     return 0;
                 }
@@ -870,7 +870,7 @@ static int signature_get_ctx_params(
         }
 
         if (OSSL_PARAM_set_utf8_string(param, md_name) != 1) {
-            ERROR("NULL md_name");
+            ERROR("OSSL_PARAM_set_utf8_string failed");
             return 0;
         }
     }
@@ -1098,7 +1098,7 @@ static int signature_get_ctx_md_params(
 
     sa_provider_signature_context* signature_context = ctx;
     if (signature_context->evp_md_ctx == NULL) {
-        ERROR("NULL evp_md");
+        ERROR("NULL evp_md_ctx");
         return 0;
     }
 
@@ -1131,7 +1131,7 @@ static int signature_set_ctx_md_params(
 
     sa_provider_signature_context* signature_context = ctx;
     if (signature_context->evp_md_ctx == NULL) {
-        ERROR("NULL evp_md");
+        ERROR("NULL evp_md_ctx");
         return 0;
     }
 

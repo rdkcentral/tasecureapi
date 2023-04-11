@@ -59,7 +59,7 @@ size_t digest_length(sa_digest_algorithm digest_algorithm);
 /**
  * Retrieves the digest algorithm from the OpenSSL message digest.
  *
- * @param evp_md the OpenSSL message digest.
+ * @param[in] evp_md the OpenSSL message digest.
  * @return the digest algorithm.
  */
 sa_digest_algorithm digest_algorithm_from_md(const EVP_MD* evp_md);
