@@ -1,8 +1,8 @@
 - Feature Name: Hardening memory operations
 - Author(s): Bastien Simondi
 - Start Date: 2023-04-07
-- RFC PR: (leave this empty)
-- Leader(s): (leave this empty)
+- RFC PR: 0007
+- Leader(s): Eric Berry
 
 ## Introduction
 
