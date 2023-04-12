@@ -81,8 +81,6 @@ TEST_P(SaProviderAsymCipherTest, encryptTest) {
     encrypted_data.resize(encrypted_data_length);
     int result = EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), encrypted_data.data(), &encrypted_data_length, data.data(),
             data.size());
-    if (result == OPENSSL_NOT_SUPPORTED)
-        GTEST_SKIP() << "Operation not supported";
 
     ASSERT_EQ(result, 1);
 
@@ -99,8 +97,6 @@ TEST_P(SaProviderAsymCipherTest, encryptTest) {
     decrypted_data.resize(decrypted_data_length);
     result = EVP_PKEY_decrypt(decrypt_pkey_ctx.get(), decrypted_data.data(), &decrypted_data_length,
             encrypted_data.data(), encrypted_data.size());
-    if (result == OPENSSL_NOT_SUPPORTED)
-        GTEST_SKIP() << "Operation not supported";
 
     ASSERT_EQ(result, 1);
     decrypted_data.resize(decrypted_data_length);
@@ -133,8 +129,6 @@ TEST_F(SaProviderAsymCipherTest, defaultPaddingTest) {
     encrypted_data.resize(encrypted_data_length);
     int result = EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), encrypted_data.data(), &encrypted_data_length, data.data(),
             data.size());
-    if (result == OPENSSL_NOT_SUPPORTED)
-        GTEST_SKIP() << "Operation not supported";
 
     ASSERT_EQ(result, 1);
 
@@ -151,8 +145,6 @@ TEST_F(SaProviderAsymCipherTest, defaultPaddingTest) {
     size_t decrypted_data_length = 0;
     result = EVP_PKEY_decrypt(decrypt_pkey_ctx.get(), nullptr, &decrypted_data_length, encrypted_data.data(),
             encrypted_data.size());
-    if (result == OPENSSL_NOT_SUPPORTED)
-        GTEST_SKIP() << "Operation not supported";
 
     ASSERT_EQ(result, 1);
     decrypted_data.resize(decrypted_data_length);

@@ -188,7 +188,7 @@ int keyexch_derive(
                 keyexch_context->key_data->private_key, other_public, other_public_length, NULL);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
             ERROR("sa_key_exchange operation not supported");
-            result = OPENSSL_NOT_SUPPORTED;
+            result = 0;
             break;
         }
 

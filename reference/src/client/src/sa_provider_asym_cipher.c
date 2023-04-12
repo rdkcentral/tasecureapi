@@ -314,7 +314,7 @@ static int asym_cipher_decrypt(void* ctx,
             asym_cipher_context->key_data->private_key, parameters);
     if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
         ERROR("sa_crypto_cipher_init operation not supported");
-        return OPENSSL_NOT_SUPPORTED;
+        return 0;
     }
 
     if (status != SA_STATUS_OK) {
@@ -329,7 +329,7 @@ static int asym_cipher_decrypt(void* ctx,
     sa_crypto_cipher_release(cipher_context);
     if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
         ERROR("sa_crypto_cipher_process operation not supported");
-        return OPENSSL_NOT_SUPPORTED;
+        return 0;
     }
 
     if (status != SA_STATUS_OK) {
