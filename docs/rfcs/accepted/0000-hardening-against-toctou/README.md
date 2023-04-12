@@ -1,8 +1,8 @@
 - Feature Name: Hardening against TOCTOU
 - Author(s): Bastien Simondi
 - Start Date: 2023-04-07
-- RFC PR: (leave this empty)
-- Leader(s): (leave this empty)
+- RFC PR: 0006
+- Leader(s): Eric Berry
 
 ## Introduction
 
