@@ -1,8 +1,8 @@
 - Feature Name: REE/TEE boundary simplification and hardening
 - Author(s): Bastien Simondi
 - Start Date: 2023-04-07
-- RFC PR: (leave this empty)
-- Leader(s): (leave this empty)
+- RFC PR: 0008
+- Leader(s): Eric Berry
 
 ## Introduction
 
