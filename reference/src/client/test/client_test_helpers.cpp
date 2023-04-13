@@ -1654,8 +1654,8 @@ namespace client_test_helpers {
         }
 
         bool check_key_unwrap_rights(
-                std::shared_ptr<sa_header>& parent_header,
-                std::shared_ptr<sa_header>& child_header) {
+                const std::shared_ptr<sa_header>& parent_header,
+                const std::shared_ptr<sa_header>& child_header) {
 
             if ((parent_header->rights.usage_flags & KEY_ONLY_MASK) != 0 ||
                     parent_header->rights.child_usage_flags == 0) {
