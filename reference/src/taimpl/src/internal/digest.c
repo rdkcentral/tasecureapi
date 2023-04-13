@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,73 +17,10 @@
  */
 
 #include "digest.h" // NOLINT
-#include "common.h"
-#include "digest_internal.h"
+#include "digest_util.h"
 #include "log.h"
 #include "stored_key_internal.h"
 #include <openssl/evp.h>
-
-const EVP_MD* digest_mechanism(sa_digest_algorithm digest_algorithm) {
-    switch (digest_algorithm) {
-        case SA_DIGEST_ALGORITHM_SHA1:
-            return EVP_sha1();
-
-        case SA_DIGEST_ALGORITHM_SHA256:
-            return EVP_sha256();
-
-        case SA_DIGEST_ALGORITHM_SHA384:
-            return EVP_sha384();
-
-        case SA_DIGEST_ALGORITHM_SHA512:
-            return EVP_sha512();
-
-        default:
-            ERROR("Unknown digest encountered");
-            return NULL;
-    }
-}
-
-const char* digest_string(sa_digest_algorithm digest_algorithm) {
-    switch (digest_algorithm) {
-        case SA_DIGEST_ALGORITHM_SHA1:
-            return "sha1";
-
-        case SA_DIGEST_ALGORITHM_SHA256:
-            return "sha256";
-
-        case SA_DIGEST_ALGORITHM_SHA384:
-            return "sha384";
-
-        case SA_DIGEST_ALGORITHM_SHA512:
-            return "sha512";
-
-        default:
-            ERROR("Unknown digest encountered");
-            return NULL;
-    }
-}
-
-size_t digest_length(sa_digest_algorithm digest_algorithm) {
-    switch (digest_algorithm) {
-        case SA_DIGEST_ALGORITHM_SHA1:
-            return SHA1_DIGEST_LENGTH;
-
-        case SA_DIGEST_ALGORITHM_SHA256:
-            return SHA256_DIGEST_LENGTH;
-
-        case SA_DIGEST_ALGORITHM_SHA384:
-            return SHA384_DIGEST_LENGTH;
-
-        case SA_DIGEST_ALGORITHM_SHA512:
-            return SHA512_DIGEST_LENGTH;
-
-        default:
-            ERROR("Unknown digest encountered");
-            break;
-    }
-
-    return (size_t) -1;
-}
 
 bool digest_sha(
         void* out,

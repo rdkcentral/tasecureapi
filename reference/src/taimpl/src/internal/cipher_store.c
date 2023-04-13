@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -241,7 +241,7 @@ static void cipher_unlock(cipher_t* cipher) {
 }
 
 cipher_store_t* cipher_store_init(size_t size) {
-    cipher_store_t* store = object_store_init(cipher_free, size);
+    cipher_store_t* store = object_store_init(cipher_free, size, "cipher");
     if (store == NULL) {
         ERROR("object_store_init failed");
         return NULL;

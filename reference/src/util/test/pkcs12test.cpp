@@ -28,8 +28,8 @@ namespace {
 
         uint8_t key[SYM_256_KEY_SIZE];
         size_t key_length = SYM_256_KEY_SIZE;
-        char name[MAX_SIGNATURE_LENGTH];
-        size_t name_length = MAX_SIGNATURE_LENGTH;
+        char name[MAX_NAME_SIZE];
+        size_t name_length = MAX_NAME_SIZE;
         ASSERT_EQ(load_pkcs12_secret_key(key, &key_length, name, &name_length), true);
         ASSERT_EQ(key_length, SYM_128_KEY_SIZE);
         ASSERT_EQ(name_length, 16);
@@ -42,8 +42,8 @@ namespace {
 
         uint8_t key[SYM_256_KEY_SIZE];
         size_t key_length = SYM_256_KEY_SIZE;
-        char name[MAX_SIGNATURE_LENGTH];
-        size_t name_length = MAX_SIGNATURE_LENGTH;
+        char name[MAX_NAME_SIZE];
+        size_t name_length = MAX_NAME_SIZE;
         strcpy(name, COMMON_ROOT_NAME);
         ASSERT_EQ(load_pkcs12_secret_key(key, &key_length, name, &name_length), true);
         ASSERT_EQ(key_length, SYM_128_KEY_SIZE);

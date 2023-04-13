@@ -38,6 +38,7 @@ find_package(OpenSSL REQUIRED)
 
 add_library(util STATIC
         include/common.h
+        include/digest_util.h
         include/log.h
         include/pkcs8.h
         include/pkcs12.h
@@ -45,13 +46,14 @@ add_library(util STATIC
         include/test_helpers.h
         include/test_process_common_encryption.h
 
+        src/digest_util.c
         src/log.c
         src/pkcs8.c
         src/pkcs12.c
         src/sa_rights.c
         src/test_helpers.cpp
         src/test_process_common_encryption.cpp
-)
+        )
 
 target_include_directories(util
         PUBLIC

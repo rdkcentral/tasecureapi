@@ -157,7 +157,7 @@ sa_status sa_svp_buffer_release(
  * @param[in] in_length The length of the source data.
  * @param[in] offsets a list of offsets into the source and destination of the block to copy and the length of the
  * block.
- * @param[in] offset_length Number of offset blocks to copy.
+ * @param[in] offsets_length Number of offset blocks to copy.
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - out, out_offset, or in is NULL.
@@ -183,7 +183,7 @@ sa_status sa_svp_buffer_write(
  * @param[in] in Source data to write.
  * @param[in] offsets a list of offsets into the source and destination of the block to copy and the length of the
  * block.
- * @param[in] offset_length Number of offset blocks to copy.
+ * @param[in] offsets_length Number of offset blocks to copy.
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - out, out_offset or in is NULL.

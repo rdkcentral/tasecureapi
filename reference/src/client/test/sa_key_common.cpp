@@ -32,6 +32,7 @@
 #endif
 
 #include "client_test_helpers.h"
+#include "digest_util.h"
 #include "pkcs12.h"
 #include "sa_key_common.h"
 
@@ -44,7 +45,7 @@ std::vector<uint8_t> SaKeyBase::common_root_key;
 bool SaKeyBase::get_root_key(std::vector<uint8_t>& key) {
     bool status;
     if (root_key.empty()) {
-        char name[16];
+        char name[MAX_NAME_SIZE];
         size_t name_length = 16;
         root_key.resize(SYM_256_KEY_SIZE);
         size_t key_length = SYM_256_KEY_SIZE;
@@ -65,8 +66,8 @@ bool SaKeyBase::get_root_key(std::vector<uint8_t>& key) {
 
 bool SaKeyBase::get_common_root_key(std::vector<uint8_t>& key) {
     if (common_root_key.empty()) {
-        char name[16];
-        size_t name_length = 16;
+        char name[MAX_NAME_SIZE];
+        size_t name_length = MAX_NAME_SIZE;
         strcpy(name, COMMON_ROOT_NAME);
         common_root_key.resize(SYM_256_KEY_SIZE);
         size_t key_length = SYM_256_KEY_SIZE;

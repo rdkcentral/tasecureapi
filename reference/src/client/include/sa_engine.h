@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,13 +111,17 @@
 #ifndef SA_ENGINE_H
 #define SA_ENGINE_H
 
-#include "sa.h"
 #include <openssl/engine.h>
+#if OPENSSL_VERSION_NUMBER < 0x30000000
+#include "sa.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/**
+ * The return value indiciating a function is NOT SUPPORTED.
+ */
 #define OPENSSL_NOT_SUPPORTED -2
 
 /**
@@ -138,4 +142,5 @@ void sa_engine_free(ENGINE* engine);
 }
 #endif
 
+#endif
 #endif //SA_ENGINE_H

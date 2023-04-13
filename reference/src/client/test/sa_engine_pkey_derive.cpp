@@ -16,9 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "sa_engine_common.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
 #include "client_test_helpers.h"
 #include "sa.h"
-#include "sa_engine_common.h"
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
 
@@ -44,15 +45,15 @@ TEST_P(SaEnginePkeyDeriveTest, deriveTest) {
     std::vector<uint8_t> clear_derived_key(SYM_128_KEY_SIZE);
     std::vector<uint8_t> clear_shared_secret;
     std::shared_ptr<EVP_PKEY> other_private_key;
-    std::vector<uint8_t> other_public_key;
+    std::vector<uint8_t> other_public_key_bytes;
     if (key_type == SA_KEY_TYPE_DH) {
         std::tuple<std::vector<uint8_t>, std::vector<uint8_t>> dh_parameters = get_dh_parameters(key_length);
         auto p = std::get<0>(dh_parameters);
         auto g = std::get<1>(dh_parameters);
-        ASSERT_TRUE(dh_generate_key(other_private_key, other_public_key, p, g));
+        ASSERT_TRUE(dh_generate_key(other_private_key, other_public_key_bytes, p, g));
         ASSERT_TRUE(dh_compute_secret(clear_shared_secret, other_private_key, evp_pkey));
     } else if (key_type == SA_KEY_TYPE_EC) {
-        ASSERT_EQ(ec_generate_key(curve, other_private_key, other_public_key), SA_STATUS_OK);
+        ASSERT_EQ(ec_generate_key(curve, other_private_key, other_public_key_bytes), SA_STATUS_OK);
         ASSERT_TRUE(ecdh_compute_secret(clear_shared_secret, other_private_key, evp_pkey));
     }
 
@@ -63,28 +64,26 @@ TEST_P(SaEnginePkeyDeriveTest, deriveTest) {
     ASSERT_NE(evp_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_derive_init(evp_pkey_ctx.get()), 1);
     if (key_type == SA_KEY_TYPE_DH) {
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-        // EVP_PKEY_CTX_set_dh_pad doesn't seem to work correctly in OpenSSL 3 with an engine.
-        int result = EVP_PKEY_CTX_ctrl(evp_pkey_ctx.get(), EVP_PKEY_DH, EVP_PKEY_OP_DERIVE, EVP_PKEY_CTRL_DH_PAD, 1,
-                nullptr);
-        ASSERT_EQ(result, 1);
-#elif OPENSSL_VERSION_NUMBER >= 0x10100000
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
         ASSERT_EQ(EVP_PKEY_CTX_set_dh_pad(evp_pkey_ctx.get(), 1), 1);
 #endif
     }
 
-    ASSERT_EQ(EVP_PKEY_derive_set_peer(evp_pkey_ctx.get(), other_private_key.get()), 1);
+    temp = sa_import_public_key(other_public_key_bytes.data(), other_public_key_bytes.size());
+    auto other_public_key = std::shared_ptr<EVP_PKEY>(temp, EVP_PKEY_free);
+    ASSERT_EQ(EVP_PKEY_derive_set_peer(evp_pkey_ctx.get(), other_public_key.get()), 1);
     size_t shared_secret_size = 0;
     ASSERT_EQ(EVP_PKEY_derive(evp_pkey_ctx.get(), nullptr, &shared_secret_size), 1);
     std::vector<uint8_t> shared_secret(shared_secret_size);
     size_t written = shared_secret_size;
     ASSERT_EQ(EVP_PKEY_derive(evp_pkey_ctx.get(), shared_secret.data(), &written), 1);
 
-    sa_key shared_secret_key = *reinterpret_cast<sa_key*>(shared_secret.data());
+    auto shared_secret_key = create_uninitialized_sa_key();
+    *shared_secret_key = *reinterpret_cast<sa_key*>(shared_secret.data());
     sa_kdf_parameters_concat kdf_parameters_concat = {
             .key_length = SYM_128_KEY_SIZE,
             .digest_algorithm = SA_DIGEST_ALGORITHM_SHA256,
-            .parent = shared_secret_key,
+            .parent = *shared_secret_key,
             .info = info.data(),
             .info_length = info.size()};
     auto derived_key = create_uninitialized_sa_key();
@@ -122,3 +121,4 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_ELLIPTIC_CURVE_X25519, SA_ELLIPTIC_CURVE_X448)));
 #endif
 // clang-format on
+#endif

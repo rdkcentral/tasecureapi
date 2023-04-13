@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,11 +45,14 @@ typedef void (*object_free_function)(void*);
  *
  * @param[in] object_free function to be used for freeing contained objects.
  * @param[in] count size of the object store.
+ * @param[in] name the name of the object store. The object store holds a pointer to the name, so the caller should call
+ * with a string literal.
  * @return create store instance.
  */
 object_store_t* object_store_init(
         object_free_function object_free,
-        size_t count);
+        size_t count,
+        const char* name);
 
 /**
  * Shutdown object store. Releases any remaining objects.

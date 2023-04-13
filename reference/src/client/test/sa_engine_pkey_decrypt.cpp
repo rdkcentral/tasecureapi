@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "client_test_helpers.h"
-#include "sa.h"
 #include "sa_engine_common.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
+#include "client_test_helpers.h"
+#include "digest_util.h"
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-#define EVP_MD_CTX_new EVP_MD_CTX_create
-#define EVP_MD_CTX_free EVP_MD_CTX_destroy
-#endif
 
 using namespace client_test_helpers;
 
@@ -68,27 +64,17 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
             }
 
             memcpy(new_label, label.data(), label.size());
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-            if (EVP_PKEY_CTX_ctrl(encrypt_pkey_ctx.get(), EVP_PKEY_RSA, EVP_PKEY_OP_ENCRYPT,
-                        EVP_PKEY_CTRL_RSA_OAEP_LABEL, static_cast<int>(label.size()), new_label) != 1) {
-                free(new_label);
-                GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_ctrl failed");
-            }
-#else
-
             if (EVP_PKEY_CTX_set0_rsa_oaep_label(encrypt_pkey_ctx.get(), new_label,
                         static_cast<int>(label.size())) != 1) {
                 free(new_label);
                 GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
             }
-#endif
         }
     }
 
     size_t encrypted_data_length = 0;
     ASSERT_EQ(EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), nullptr, &encrypted_data_length, data.data(), data.size()), 1);
     encrypted_data.resize(encrypted_data_length);
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     int result = EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), encrypted_data.data(), &encrypted_data_length, data.data(),
             data.size());
     if (result == OPENSSL_NOT_SUPPORTED)
@@ -112,19 +98,11 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
             }
 
             memcpy(new_label, label.data(), label.size());
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-            if (EVP_PKEY_CTX_ctrl(decrypt_pkey_ctx.get(), EVP_PKEY_RSA, EVP_PKEY_OP_DECRYPT,
-                        EVP_PKEY_CTRL_RSA_OAEP_LABEL, static_cast<int>(label.size()), new_label) != 1) {
-                free(new_label);
-                GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_ctrl failed");
-            }
-#else
             if (EVP_PKEY_CTX_set0_rsa_oaep_label(decrypt_pkey_ctx.get(), new_label,
                         static_cast<int>(label.size())) != 1) {
                 free(new_label);
                 GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
             }
-#endif
         }
     }
 
@@ -169,7 +147,6 @@ TEST_F(SaEnginePkeyEncryptTest, defaultPaddingTest) {
     size_t encrypted_data_length = 0;
     ASSERT_EQ(EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), nullptr, &encrypted_data_length, data.data(), data.size()), 1);
     encrypted_data.resize(encrypted_data_length);
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     int result = EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), encrypted_data.data(), &encrypted_data_length, data.data(),
             data.size());
     if (result == OPENSSL_NOT_SUPPORTED)
@@ -261,3 +238,4 @@ INSTANTIATE_TEST_SUITE_P(
                     SA_DIGEST_ALGORITHM_SHA512),
                 ::testing::Values(0, 16)));
 // clang-format on
+#endif

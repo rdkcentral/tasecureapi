@@ -36,7 +36,7 @@ MaxEmptyLinesToKeep: 1
 NamespaceIndentation: All
 PointerAlignment: Left
 ReflowComments: false
-SortIncludes: true
+SortIncludes: CaseInsensitive
 SpaceAfterCStyleCast: true
 SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: false

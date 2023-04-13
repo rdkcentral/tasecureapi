@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -362,7 +362,7 @@ static stored_key_t* wrapped_key_unwrap(const wrapped_key_t* wrapped_key) {
 }
 
 key_store_t* key_store_init(size_t size) {
-    key_store_t* store = object_store_init(wrapped_key_free, size);
+    key_store_t* store = object_store_init(wrapped_key_free, size, "key");
     if (store == NULL) {
         ERROR("object_store_init failed");
         return NULL;

@@ -41,11 +41,13 @@ struct object_store_s {
     bool is_shutting_down;
     // track how many release operations are currently running
     size_t release_count;
+    const char* name;
 };
 
 object_store_t* object_store_init(
         object_free_function object_free,
-        size_t count) {
+        size_t count,
+        const char* name) {
 
     if (object_free == NULL) {
         ERROR("NULL object_free");
@@ -62,7 +64,7 @@ object_store_t* object_store_init(
     store_object_t* objects = NULL;
     object_store_t* store = NULL;
     do {
-        slots = slots_init(count);
+        slots = slots_init(count, name);
         if (slots == NULL) {
             ERROR("slots_init failed");
             break;
@@ -87,6 +89,7 @@ object_store_t* object_store_init(
         store->slot_count = count;
         store->is_shutting_down = false;
         store->release_count = 0;
+        store->name = name;
 
         // slots and objects are not owned by the store
         slots = NULL;
@@ -208,7 +211,8 @@ static sa_status store_remove(
 
         if (store_object->reference_count == 0) {
             if (is_shutting_down) {
-                WARN("Releasing object %" PRIu32 " from the store %p on shutdown", slot, store);
+                ERROR("Resource leak detected. Releasing object %" PRIu32 " from the %s store on shutdown", slot,
+                        store->name);
             }
 
             // reference count is 0, ok to delete

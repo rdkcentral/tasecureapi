@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,7 +114,7 @@ svp_buffer_t* svp_get_buffer(const svp_t* svp) {
 }
 
 svp_store_t* svp_store_init(size_t size) {
-    svp_store_t* store = object_store_init(svp_free, size);
+    svp_store_t* store = object_store_init(svp_free, size, "svp");
     if (store == NULL) {
         ERROR("object_store_init failed");
         return NULL;

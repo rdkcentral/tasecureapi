@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sa_engine.h"
-#include "log.h"
 #include "sa_engine_internal.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
+#include "log.h"
 #include <openssl/engine.h>
 #include <stdbool.h>
 #include <threads.h>
@@ -48,6 +48,7 @@ static void sa_engine_init() {
         ERROR("mtx_init failed");
     }
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
     ENGINE* engine = ENGINE_by_id(OPENSSL_ENGINE_ID);
     if (engine == NULL) {
         ENGINE_load_openssl();
@@ -59,6 +60,7 @@ static void sa_engine_init() {
             ENGINE_free(engine);
         }
     }
+#endif
 
     if (atexit(sa_engine_shutdown) != 0) {
         ERROR("atexit failed");
@@ -136,3 +138,4 @@ void sa_engine_free(ENGINE* engine) {
         ENGINE_free(engine);
     }
 }
+#endif

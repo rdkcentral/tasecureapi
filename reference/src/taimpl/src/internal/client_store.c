@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -148,7 +148,7 @@ static client_t* client_init(
 }
 
 static client_store_t* client_store_init(size_t size) {
-    client_store_t* store = object_store_init(client_free, size);
+    client_store_t* store = object_store_init(client_free, size, "client");
     if (store == NULL) {
         ERROR("object_store_init failed");
         return NULL;

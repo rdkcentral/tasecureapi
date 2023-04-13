@@ -48,9 +48,13 @@ typedef struct slots_s slots_t;
  * Create and initialize slots object.
  *
  * @param[in] count number of slots.
+ * @param[in] name the name of the slots. The slots object holds a pointer to the name, so the caller should call
+ * with a string literal.
  * @return created slots instance.
  */
-slots_t* slots_init(size_t count);
+slots_t* slots_init(
+        size_t count,
+        const char* name);
 
 /**
  * Release the slots instance.

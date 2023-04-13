@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "sa_engine_common.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
 #include "client_test_helpers.h"
 #include "sa.h"
-#include "sa_engine_common.h"
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
 
 using namespace client_test_helpers;
 
 static sa_status check_algorithm_supported(
-        int nid,
-        std::shared_ptr<sa_key>& key) {
+        ossl_unused int nid,
+        ossl_unused std::shared_ptr<sa_key>& key) {
 
     sa_status status = SA_STATUS_OK;
 
@@ -52,6 +53,7 @@ static sa_status check_algorithm_supported(
 
     return status;
 }
+
 TEST_P(SaEngineCipherTest, encryptTest) {
     int nid = std::get<0>(GetParam());
     int padded = std::get<1>(GetParam());
@@ -75,7 +77,7 @@ TEST_P(SaEngineCipherTest, encryptTest) {
     if (check_algorithm_supported(nid, key) == SA_STATUS_OPERATION_NOT_SUPPORTED)
         GTEST_SKIP() << "algorithm not supported";
 
-    auto data = random(16);
+    auto data = random((padded == 1) ? 18 : 16);
     auto iv = random(iv_length);
     auto aad = include_aad ? random(256) : std::vector<uint8_t>(0);
     std::vector<uint8_t> encrypted(128);
@@ -130,7 +132,7 @@ TEST_P(SaEngineCipherTest, decryptTest) {
     if (check_algorithm_supported(nid, key) == SA_STATUS_OPERATION_NOT_SUPPORTED)
         GTEST_SKIP() << "algorithm not supported";
 
-    auto data = random(16);
+    auto data = random((padded == 1) ? 20 : 16);
     auto iv = random(iv_length);
     auto aad = include_aad ? random(256) : std::vector<uint8_t>(0);
     std::vector<uint8_t> tag(include_aad ? 16 : 0);
@@ -177,7 +179,7 @@ TEST_F(SaEngineCipherTest, initSeparateParams) {
     sa_rights rights;
     sa_rights_set_allow_all(&rights);
     auto key = create_sa_key_symmetric(&rights, clear_key);
-    auto data = random(16);
+    auto data = random(23);
     auto iv = random(iv_length);
     auto aad = std::vector<uint8_t>(0);
     std::vector<uint8_t> encrypted(128);
@@ -226,3 +228,4 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(NID_aes_256_ctr, false, 32, 16),
                 std::make_tuple(NID_aes_128_gcm, false, 16, 12),
                 std::make_tuple(NID_aes_256_gcm, false, 32, 12)));
+#endif

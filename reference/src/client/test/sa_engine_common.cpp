@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
  */
 
 #include "sa_engine_common.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
 #include <openssl/evp.h>
 
 using namespace client_test_helpers;
@@ -132,3 +133,5 @@ bool SaEngineTest::doEncrypt(
     encrypted.resize(total_length);
     return true;
 }
+
+#endif

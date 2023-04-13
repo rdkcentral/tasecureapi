@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "client_test_helpers.h"
 #include "sa_engine_common.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
+#include "client_test_helpers.h"
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
 
@@ -106,3 +107,5 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224, SA_ELLIPTIC_CURVE_NIST_P256,
                     SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521)));
 // clang-format on
+
+#endif
