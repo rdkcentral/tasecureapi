@@ -232,7 +232,7 @@ typedef enum {
     SA_KDF_ALGORITHM_CMAC,
     /** Netflix Key Derivation Function Algorithm.
      * See https://github.com/Netflix/msl/wiki/Pre-shared-Keys-or-Model-Group-Keys-Entity-Authentication for
-     * definition .*/
+     * definition. */
     SA_KDF_ALGORITHM_NETFLIX,
     /** Common Root Key Ladder Key Derivation Function Algorithm--derives a key from the common SOC root key */
     SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER
