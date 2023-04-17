@@ -20,7 +20,7 @@
  * @file sa_cenc.h
  *
  * This file contains the function declaration for processing content encrypted as specified in the document
- * ISO/IEC 23001-7 Common encryption.
+ * ISO/IEC 23001-7 Common encryption in ISO base media file format files.
  */
 
 #ifndef SA_CENC_H

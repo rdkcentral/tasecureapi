@@ -878,7 +878,7 @@ sa_status soc_kc_unwrap(
 
         status = parse_header(header_fields, header_fields_count, &header);
         if (status != SA_STATUS_OK) {
-            ERROR("unpack_soc_kc failed");
+            ERROR("parse_header failed");
             break;
         }
 
@@ -900,7 +900,7 @@ sa_status soc_kc_unwrap(
 
         status = parse_payload(payload_fields, payload_fields_count, &payload);
         if (status != SA_STATUS_OK) {
-            ERROR("unpack_soc_kc failed");
+            ERROR("parse_payload failed");
             break;
         }
 

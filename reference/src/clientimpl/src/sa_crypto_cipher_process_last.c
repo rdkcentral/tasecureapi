@@ -68,12 +68,6 @@ sa_status sa_crypto_cipher_process_last(
                     break;
                 }
 
-                if (out->context.clear.offset > out->context.clear.length) {
-                    ERROR("Integer overflow");
-                    status = SA_STATUS_INVALID_PARAMETER;
-                    break;
-                }
-
                 cipher_process->out_offset = 0;
                 param1_size = out->context.clear.length - out->context.clear.offset;
                 param1_type = TA_PARAM_OUT;
@@ -98,12 +92,6 @@ sa_status sa_crypto_cipher_process_last(
             if (in->context.clear.buffer == NULL) {
                 ERROR("NULL in.context.clear.buffer");
                 status = SA_STATUS_NULL_PARAMETER;
-                break;
-            }
-
-            if (in->context.clear.offset > in->context.clear.length) {
-                ERROR("Integer overflow");
-                status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
 

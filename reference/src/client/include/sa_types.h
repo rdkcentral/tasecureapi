@@ -265,7 +265,7 @@ typedef enum {
     SA_KEY_FORMAT_EXPORTED,
     /** SOC Key Format - encoded according to the SOC Specific Key Specification */
     SA_KEY_FORMAT_SOC,
-    /** TypeJ Key Format - encoded according to the SecApi Key Specification */
+    /** TypeJ Key Format - encoded according to the SecApi Key Container Specification */
     SA_KEY_FORMAT_TYPEJ
 } sa_key_format;
 

@@ -1678,7 +1678,7 @@ namespace client_test_helpers {
 
             std::vector<uint8_t> sa3hmac(clear_key.size());
             if (!hmac_sa(sa3hmac, key, input, SA_DIGEST_ALGORITHM_SHA256)) {
-                ERROR("hmac_sha256_sa failed");
+                ERROR("hmac_sa failed");
                 return false;
             }
 
@@ -1836,7 +1836,7 @@ namespace client_test_helpers {
             size_t length = in.size();
             sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
             if (sa_crypto_cipher_process(nullptr, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
-                ERROR("sa_crypto_cipher_init failed");
+                ERROR("sa_crypto_cipher_process failed");
                 return false;
             }
 
@@ -1844,7 +1844,7 @@ namespace client_test_helpers {
             sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
             length = in.size();
             if (sa_crypto_cipher_process(&out_buffer, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
-                ERROR("sa_crypto_cipher_init failed");
+                ERROR("sa_crypto_cipher_process failed");
                 return false;
             }
 
