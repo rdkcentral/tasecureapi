@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,12 +39,6 @@ sa_status sa_get_device_id(uint64_t* id) {
     sa_status status;
     do {
         CREATE_COMMAND(sa_get_device_id_s, get_device_id);
-        if (get_device_id == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         get_device_id->api_version = API_VERSION;
         get_device_id->id = *id;
 

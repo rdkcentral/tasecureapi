@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,7 +39,7 @@ std::shared_ptr<sa_svp_buffer> SaSvpBase::create_sa_svp_buffer(size_t size) {
                 }
             });
 
-    sa_status status = sa_svp_buffer_alloc(svp_buffer.get(), size);
+    sa_status const status = sa_svp_buffer_alloc(svp_buffer.get(), size);
     if (status != SA_STATUS_OK) {
         ERROR("sa_svp_buffer_alloc failed");
         return nullptr;

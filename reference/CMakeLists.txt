@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2022 Comcast Cable Communications Management, LLC
+# Copyright 2020-2023 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ include(FetchContent)
 FetchContent_Declare(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG release-1.12.1
+        GIT_TAG v1.13.0
 )
 
 FetchContent_GetProperties(googletest)

@@ -1,20 +1,20 @@
-/**
-* Copyright 2023 Comcast Cable Communications Management, LLC
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+/*
+ * Copyright 2023 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #include "sa_provider_common.h"
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
@@ -53,7 +53,7 @@ TEST_P(SaProviderKeyExchangeTest, deriveTest) {
     auto info = random(AES_BLOCK_SIZE);
     ASSERT_TRUE(concat_kdf(clear_derived_key, clear_shared_secret, info, SA_DIGEST_ALGORITHM_SHA256));
 
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx(EVP_PKEY_CTX_new_from_pkey(lib_ctx, evp_pkey.get(), nullptr),
             EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_derive_init(evp_pkey_ctx.get()), 1);
@@ -82,7 +82,7 @@ TEST_P(SaProviderKeyExchangeTest, deriveTest) {
     ASSERT_NE(derived_key, nullptr);
     sa_rights rights;
     sa_rights_set_allow_all(&rights);
-    sa_status status = sa_key_derive(derived_key.get(), &rights, SA_KDF_ALGORITHM_CONCAT, &kdf_parameters_concat);
+    sa_status const status = sa_key_derive(derived_key.get(), &rights, SA_KDF_ALGORITHM_CONCAT, &kdf_parameters_concat);
     ASSERT_EQ(status, SA_STATUS_OK);
     ASSERT_TRUE(key_check_sym(*derived_key, clear_derived_key));
 }

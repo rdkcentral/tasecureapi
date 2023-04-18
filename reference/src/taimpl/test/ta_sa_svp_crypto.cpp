@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ std::shared_ptr<sa_key> TaCryptoCipherBase::import_key(std::vector<uint8_t>& cle
 
     auto key = create_uninitialized_sa_key();
     sa_import_parameters_symmetric params = {&rights};
-    sa_status status = ta_sa_key_import(key.get(), SA_KEY_FORMAT_SYMMETRIC_BYTES, clear_key.data(),
+    sa_status const status = ta_sa_key_import(key.get(), SA_KEY_FORMAT_SYMMETRIC_BYTES, clear_key.data(),
             clear_key.size(), &params, client(), ta_uuid());
     if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
         ERROR("Unsupported key type");
@@ -281,8 +281,8 @@ namespace {
     TEST_P(TaCryptoCipherTest, processNominal) {
         auto cipher_algorithm = std::get<0>(GetParam());
         auto cipher_mode = std::get<1>(GetParam());
-        size_t key_size = std::get<2>(GetParam());
-        size_t data_size = std::get<3>(GetParam());
+        size_t const key_size = std::get<2>(GetParam());
+        size_t const data_size = std::get<3>(GetParam());
 
         std::shared_ptr<void> parameters;
         std::vector<uint8_t> iv;
@@ -313,8 +313,8 @@ namespace {
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, in);
         ASSERT_NE(in_buffer, nullptr);
 
-        bool pkcs7 = cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 ||
-                     cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7;
+        bool const pkcs7 = cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 ||
+                           cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7;
         size_t bytes_to_process = in.size();
         if (pkcs7)
             status = ta_sa_crypto_cipher_process_last(nullptr, *cipher, in_buffer.get(), &bytes_to_process, nullptr,
@@ -324,7 +324,7 @@ namespace {
                     client(), ta_uuid());
 
         ASSERT_EQ(status, SA_STATUS_OK);
-        size_t required_length = get_required_length(cipher_algorithm, cipher_mode, key_size, in.size());
+        size_t const required_length = get_required_length(cipher_algorithm, cipher_mode, key_size, in.size());
         ASSERT_EQ(bytes_to_process, required_length);
 
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, bytes_to_process);
@@ -412,20 +412,25 @@ namespace {
         status = ta_sa_process_common_encryption(samples.size(), samples.data(), client(), ta_uuid());
         auto end_time = std::chrono::high_resolution_clock::now();
         ASSERT_EQ(status, SA_STATUS_OK);
-        std::chrono::milliseconds duration =
+        std::chrono::milliseconds const duration =
                 std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-        INFO("sa_process_common_encryption ((%d, %d), %d, %d, %d, %d, (%d, %d)) execution time: %lld ms", sample_size,
-                sample_time, crypt_byte_block, subsample_count, bytes_of_clear_data, cipher_algorithm,
-                SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_SVP, duration.count());
-#ifndef DISABLE_CENC_TIMING
-        ASSERT_LE(duration.count(), sample_time);
-#endif
-
+        if (duration.count() > sample_time) {
+            WARN("sa_process_common_encryption ((%d, %d), %d, %d, %d, %d, (%d, %d)) execution time: %lld ms",
+                    sample_size, sample_time, crypt_byte_block, subsample_count, bytes_of_clear_data, cipher_algorithm,
+                    SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_SVP, duration.count());
+        } else {
+            INFO("sa_process_common_encryption ((%d, %d), %d, %d, %d, %d, (%d, %d)) execution time: %lld ms",
+                    sample_size, sample_time, crypt_byte_block, subsample_count, bytes_of_clear_data, cipher_algorithm,
+                    SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_SVP, duration.count());
+        }
         std::vector<uint8_t> digest;
         ASSERT_TRUE(digest_openssl(digest, SA_DIGEST_ALGORITHM_SHA256, sample_data.clear, {}, {}));
         status = ta_sa_svp_buffer_check(sample_data.out->context.svp.buffer, 0, sample_data.clear.size(),
                 SA_DIGEST_ALGORITHM_SHA256, digest.data(), digest.size(), client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
+#ifndef DISABLE_CENC_TIMING
+        ASSERT_LE(duration.count(), sample_time);
+#endif
     }
 
 } // namespace

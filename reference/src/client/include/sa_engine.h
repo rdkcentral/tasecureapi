@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,8 +29,11 @@
  * to the sa_key value should passed in with sizeof(sa_key) as its length. For asymmetric keys,
  * ENGINE_load_private_key should be called passing in the engine and a pointer to the sa_key value.
  *
- * *Examples:*
- * *Signing (RSA, EC, ED25519, ED448)*
+ * Examples:
+ * =========
+ * Signing (RSA, EC, ED25519, ED448)
+ * ---------------------------------
+ * ```
  * sa_key key = // Load key into SecApi 3;
  * ENGINE* engine = sa_get_engine();
  * EVP_PKEY* evp_pkey = ENGINE_load_private_key(engine, (char*)&key, NULL, NULL);
@@ -44,8 +47,11 @@
  * EVP_MD_CTX_free(evp_md_ctx);
  * EVP_PKEY_free(evp_pkey);
  * sa_engine_free(engine);
+ * ```
  *
- * *Signing Predigested Content (RSA, EC)*
+ * Signing Predigested Content (RSA, EC)
+ * -------------------------------------
+ * ```
  * sa_key key = // Load key into SecApi 3;
  * ENGINE* engine = sa_get_engine();
  * EVP_PKEY* evp_pkey = ENGINE_load_private_key(engine, (char*)&key, NULL, NULL);
@@ -59,8 +65,11 @@
  * EVP_MD_CTX_free(evp_md_ctx);
  * EVP_PKEY_free(evp_pkey);
  * sa_engine_free(engine);
+ * ```
  *
- * *Decryption (RSA)*
+ * Decryption (RSA)
+ * ----------------
+ * ```
  * ENGINE* engine = sa_get_engine();
  * EVP_PKEY* evp_pkey = ENGINE_load_private_key(engine, (char*)&key, NULL, NULL);
  * EVP_PKEY_CTX* evp_pkey_ctx = EVP_PKEY_CTX_new(evp_pkey, engine);
@@ -70,8 +79,11 @@
  * EVP_PKEY_CTX_free(evp_pkey_ctx);
  * EVP_PKEY_free(evp_pkey);
  * sa_engine_free(engine);
+ * ```
  *
- * *Derivation (DH, EC, X25519, X448)*
+ * Derivation (DH, EC, X25519, X448)
+ * ---------------------------------
+ * ```
  * ENGINE* engine = sa_get_engine();
  * EVP_PKEY* evp_pkey = ENGINE_load_private_key(engine, (char*)&key, NULL, NULL);
  * EVP_PKEY_CTX* evp_pkey_ctx = EVP_PKEY_CTX_new(evp_pkey, engine);
@@ -82,8 +94,11 @@
  * EVP_PKEY_CTX_free(evp_pkey_ctx);
  * EVP_PKEY_free(evp_pkey);
  * sa_engine_free(engine);
+ * ```
  *
- * *MAC (HMAC, CMAC with a symmetric key) - Only OpenSSL 1.1.1 and higher*
+ * MAC (HMAC, CMAC with a symmetric key) - Only OpenSSL 1.1.1
+ * ----------------------------------------------------------
+ * ```
  * sa_key key = // Load key into SecApi 3;
  * ENGINE* engine = sa_get_engine();
  * EVP_PKEY* evp_pkey = ENGINE_load_private_key(engine, (char*)&key, NULL, NULL);
@@ -96,16 +111,20 @@
  * EVP_MD_CTX_free(evp_md_ctx);
  * EVP_PKEY_free(evp_pkey);
  * sa_engine_free(engine);
+ * ```
  *
- * *Encryption/Decryption (AES, CHACHA20)*
+ * Encryption/Decryption (AES, CHACHA20)
+ * -------------------------------------
+ * ```
  * sa_key key = // Load key into SecApi 3;
  * ENGINE* engine = sa_get_engine();
  * EVP_CIPHER_CTX* evp_cipher_ctx = EVP_CIPHER_CTX_new();
- * EVP_CipherInit_ex(evp_cipher_ctx, EVP_aes_128_cbc(), engine, (const unsigned char*)&key, iv, 1); // 1 = enc, 0 = dec
+ * EVP_CipherInit_ex(evp_cipher_ctx, EVP_aes_128_cbc(), engine, (const unsigned char*)&key, iv, 1); // 1=enc, 0=dec
  * EVP_CipherUpdate(evp_cipher_ctx, encrypted_data, &length, data, data_length);
  * EVP_CipherFinal(evp_cipher_ctx, encrypted_data + total_length, &length);
  * EVP_CIPHER_CTX_free(evp_cipher_ctx);
  * sa_engine_free(engine);
+ * ```
  */
 
 #ifndef SA_ENGINE_H
@@ -122,10 +141,10 @@ extern "C" {
 /**
  * The return value indiciating a function is NOT SUPPORTED.
  */
-#define OPENSSL_NOT_SUPPORTED -2
+#define OPENSSL_NOT_SUPPORTED (-2)
 
 /**
- * Returns the SecApi3 engine and initializes it if it hasn't been created.2s
+ * Returns the SecApi3 engine and initializes it if it hasn't been created.
  *
  * @return a new ENGINE if successful or NULL if not.
  */

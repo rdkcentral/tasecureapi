@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,6 +89,28 @@ sa_status symmetric_verify_cipher(
         sa_cipher_algorithm cipher_algorithm,
         sa_cipher_mode cipher_mode,
         const stored_key_t* stored_key) {
+
+    DEBUG("stored_key %p", stored_key);
+    if (cipher_algorithm != SA_CIPHER_ALGORITHM_AES_ECB &&
+            cipher_algorithm != SA_CIPHER_ALGORITHM_AES_ECB_PKCS7 &&
+            cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CBC &&
+            cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 &&
+            cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CTR &&
+            cipher_algorithm != SA_CIPHER_ALGORITHM_AES_GCM &&
+            cipher_algorithm != SA_CIPHER_ALGORITHM_RSA_PKCS1V15 &&
+            cipher_algorithm != SA_CIPHER_ALGORITHM_RSA_OAEP &&
+            cipher_algorithm != SA_CIPHER_ALGORITHM_EC_ELGAMAL &&
+            cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20 &&
+            cipher_algorithm != SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
+        ERROR("Invalid cipher_algorithm");
+        return SA_STATUS_INVALID_PARAMETER;
+    }
+
+    if (cipher_mode != SA_CIPHER_MODE_DECRYPT &&
+            cipher_mode != SA_CIPHER_MODE_ENCRYPT) {
+        ERROR("Invalid cipher_mode");
+        return SA_STATUS_INVALID_PARAMETER;
+    }
 
     if (cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20 || cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
@@ -1290,7 +1312,8 @@ sa_status symmetric_context_encrypt_last(
     }
 
     if ((context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7 ||
-                context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7) && in_length > AES_BLOCK_SIZE) {
+                context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7) &&
+            in_length > AES_BLOCK_SIZE) {
         ERROR("Invalid in_length");
         return SA_STATUS_INVALID_PARAMETER;
     }

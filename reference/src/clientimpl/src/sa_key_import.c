@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,12 +51,6 @@ sa_status sa_key_import(
     sa_status status;
     do {
         CREATE_COMMAND(sa_key_import_s, key_import);
-        if (key_import == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         key_import->api_version = API_VERSION;
         key_import->key = *key;
         key_import->key_format = key_format;
@@ -66,11 +60,6 @@ sa_status sa_key_import(
         ta_param_type param1_type;
         if (in != NULL) {
             CREATE_PARAM(param1, (void*) in, in_length);
-            if (param1 == NULL) {
-                ERROR("CREATE_PARAM failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-                break;
-            }
             param1_size = in_length;
             param1_type = TA_PARAM_IN;
         } else {
@@ -96,12 +85,6 @@ sa_status sa_key_import(
                 }
 
                 CREATE_PARAM(param2, (void*) parameters_symmetric->rights, sizeof(sa_rights));
-                if (param2 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 param2_size = sizeof(sa_rights);
                 param2_type = TA_PARAM_IN;
                 break;
@@ -122,12 +105,6 @@ sa_status sa_key_import(
                 }
 
                 CREATE_PARAM(param2, (void*) parameters_rsa->rights, sizeof(sa_rights));
-                if (param2 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 param2_size = sizeof(sa_rights);
                 param2_type = TA_PARAM_IN;
                 break;
@@ -148,12 +125,6 @@ sa_status sa_key_import(
                 }
 
                 CREATE_PARAM(param2, (void*) parameters_ec->rights, sizeof(sa_rights));
-                if (param2 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 param2_size = sizeof(sa_rights);
                 param2_type = TA_PARAM_IN;
                 key_import->curve = parameters_ec->curve;
@@ -173,12 +144,6 @@ sa_status sa_key_import(
                 }
 
                 CREATE_PARAM(param2, parameters, sizeof(sa_import_parameters_typej));
-                if (param2 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 param2_size = sizeof(sa_import_parameters_typej);
                 param2_type = TA_PARAM_IN;
                 break;
@@ -187,12 +152,6 @@ sa_status sa_key_import(
                 if (parameters != NULL) {
                     param2_size = ((size_t) ((uint8_t*) parameters)[0] << 8) + (size_t) ((uint8_t*) parameters)[1];
                     CREATE_PARAM(param2, parameters, param2_size);
-                    if (param2 == NULL) {
-                        ERROR("CREATE_PARAM failed");
-                        status = SA_STATUS_INTERNAL_ERROR;
-                        continue; // NOLINT
-                    }
-
                     param2_type = TA_PARAM_IN;
                 } else {
                     param2 = NULL;

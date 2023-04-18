@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ namespace {
 
         std::vector<uint8_t> clear_base_key;
         std::shared_ptr<sa_key> base_key;
-        size_t base_key_length = std::get<1>(key_info);
+        size_t const base_key_length = std::get<1>(key_info);
         switch (std::get<0>(key_info)) {
             case SA_KEY_TYPE_SYMMETRIC: {
                 clear_base_key = random(base_key_length);
@@ -58,7 +58,7 @@ namespace {
                 auto curve = static_cast<sa_elliptic_curve>(base_key_length);
                 base_key = create_uninitialized_sa_key();
                 ASSERT_NE(base_key, nullptr);
-                sa_status status = execute_ecdh(curve, base_key, clear_base_key);
+                sa_status const status = execute_ecdh(curve, base_key, clear_base_key);
                 if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
                     GTEST_SKIP() << "Curve not supported";
 
@@ -82,7 +82,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
         ASSERT_EQ(status, SA_STATUS_OK);
 
         std::vector<uint8_t> clear_key(key_size);
@@ -112,7 +112,7 @@ namespace {
                 .info = info.data(),
                 .info_length = info.size()};
 
-        sa_status status = sa_key_derive(nullptr, &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
+        sa_status const status = sa_key_derive(nullptr, &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -139,7 +139,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), nullptr, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
+        sa_status const status = sa_key_derive(key.get(), nullptr, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -149,7 +149,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, nullptr);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -176,7 +176,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -203,7 +203,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -224,7 +224,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -250,7 +250,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -276,7 +276,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -304,7 +304,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
@@ -331,7 +331,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_HKDF, &kdf_parameters_hkdf);
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 } // namespace

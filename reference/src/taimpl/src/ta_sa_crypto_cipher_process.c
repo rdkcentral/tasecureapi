@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -250,11 +250,6 @@ static sa_status ta_sa_crypto_cipher_process_rsa_oaep(
     if (*bytes_to_process != key_size) {
         ERROR("Invalid bytes_to_process");
         return SA_STATUS_INVALID_PARAMETER;
-    }
-
-    if (out == NULL) {
-        // bytes_to_process already contains the required size.
-        return SA_STATUS_OK;
     }
 
     if (in == NULL) {

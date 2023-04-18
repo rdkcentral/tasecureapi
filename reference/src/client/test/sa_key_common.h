@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -118,7 +118,7 @@ private:
     static std::vector<uint8_t> common_root_key;
 };
 
-using SaKeyType = std::tuple<sa_key_type, size_t>;
+typedef std::tuple<sa_key_type, size_t> SaKeyType;
 
 class SaKeyGetPublicTest : public ::testing::TestWithParam<SaKeyType>, public SaKeyBase {};
 
@@ -130,7 +130,7 @@ class SaKeyHeaderTest : public ::testing::Test {};
 
 class SaKeyReleaseTest : public ::testing::Test {};
 
-using SaKeyDigestType = std::tuple<sa_key_type, size_t, sa_digest_algorithm>;
+typedef std::tuple<sa_key_type, size_t, sa_digest_algorithm> SaKeyDigestType;
 
 class SaKeyDigestTest : public ::testing::TestWithParam<SaKeyDigestType> {};
 

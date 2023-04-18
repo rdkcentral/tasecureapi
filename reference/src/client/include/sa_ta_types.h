@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 /** @section Description
  * @file sa_ta_types.h
  *
- * This file contains the TA specific structures and constants.
+ * This file contains the TA specific structures and constants used in the REE to TEE communication.
  */
 
 #ifndef SA_TA_TYPES_H

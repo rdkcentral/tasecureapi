@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -83,6 +83,7 @@ static bool get_root_key(
     if (key_length == 0) {
         char device_name[MAX_DEVICE_NAME_LENGTH];
         size_t device_name_length = MAX_DEVICE_NAME_LENGTH;
+        device_name[0] = '\0';
         if (load_pkcs12_secret_key(key, &key_length, device_name, &device_name_length) != 1) {
             ERROR("load_pkcs12_secret_key failed");
             return false;
@@ -129,7 +130,6 @@ static bool get_common_root_key(
             ERROR("load_pkcs12_secret_key failed");
             return false;
         }
-
     }
 
     if (*common_root_key_length < key_length) {
@@ -701,8 +701,10 @@ sa_status otp_device_id(uint64_t* id) {
     }
 
     // If not initialized yet, attempt to set the device id and ignore the result.
+    uint8_t root_key[SYM_256_KEY_SIZE];
+    size_t root_key_length = SYM_256_KEY_SIZE;
     if (device_id == 0)
-        get_root_key(NULL, NULL);
+        get_root_key(root_key, &root_key_length);
 
     *id = device_id;
     return SA_STATUS_OK;

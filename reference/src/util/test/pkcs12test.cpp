@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "pkcs12.h"
+#include "pkcs12.h" // NOLINT
 #include "common.h"
-#include "gtest/gtest.h" // NOLINT
+#include "gtest/gtest.h"
 #include <cstdlib>
 
 namespace {
@@ -30,6 +30,7 @@ namespace {
         size_t key_length = SYM_256_KEY_SIZE;
         char name[MAX_NAME_SIZE];
         size_t name_length = MAX_NAME_SIZE;
+        name[0] = '\0';
         ASSERT_EQ(load_pkcs12_secret_key(key, &key_length, name, &name_length), true);
         ASSERT_EQ(key_length, SYM_128_KEY_SIZE);
         ASSERT_EQ(name_length, 16);

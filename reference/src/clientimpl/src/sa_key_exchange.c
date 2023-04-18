@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,12 +58,6 @@ sa_status sa_key_exchange(
     sa_status status;
     do {
         CREATE_COMMAND(sa_key_exchange_s, key_exchange);
-        if (key_exchange == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         key_exchange->api_version = API_VERSION;
         key_exchange->key = *key;
         key_exchange->rights = *rights;
@@ -71,12 +65,6 @@ sa_status sa_key_exchange(
         key_exchange->private_key = private_key;
 
         CREATE_PARAM(param1, (void*) other_public, other_public_length);
-        if (param1 == NULL) {
-            ERROR("CREATE_PARAM failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         size_t param1_size = other_public_length;
         ta_param_type param1_type = TA_PARAM_IN;
 
@@ -117,12 +105,6 @@ sa_status sa_key_exchange(
             }
 
             CREATE_COMMAND(sa_key_exchange_parameters_netflix_authenticated_dh_s, param2);
-            if (param2 == NULL) {
-                ERROR("CREATE_COMMAND failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-                break;
-            }
-
             netflix_authenticated_dh_s = (sa_key_exchange_parameters_netflix_authenticated_dh_s*) param2;
             netflix_authenticated_dh_s->in_kw = netflix_authenticated_dh->in_kw;
             netflix_authenticated_dh_s->out_ke = *netflix_authenticated_dh->out_ke;

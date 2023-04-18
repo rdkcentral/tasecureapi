@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -57,7 +57,8 @@ namespace {
         ASSERT_NE(out_buffer, nullptr);
         auto in = random(AES_BLOCK_SIZE);
         sa_svp_offset offset = {1, 0, in.size()};
-        sa_status status = ta_sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &offset, 1, client(), ta_uuid());
+        sa_status const status = ta_sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &offset, 1, client(),
+                ta_uuid());
         ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
     }
 
@@ -65,14 +66,15 @@ namespace {
         auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(out_buffer, nullptr);
         auto in = random(AES_BLOCK_SIZE);
-        sa_status status = ta_sa_svp_buffer_write(*out_buffer, in.data(), in.size(), nullptr, 0, client(), ta_uuid());
+        sa_status const status = ta_sa_svp_buffer_write(*out_buffer, in.data(), in.size(), nullptr, 0, client(),
+                ta_uuid());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
     TEST_F(TaSvpBufferWriteTest, failsInvalidOut) {
         auto in = random(AES_BLOCK_SIZE);
         sa_svp_offset offset = {0, 0, in.size()};
-        sa_status status = ta_sa_svp_buffer_write(INVALID_HANDLE, in.data(), in.size(), &offset, 1, client(),
+        sa_status const status = ta_sa_svp_buffer_write(INVALID_HANDLE, in.data(), in.size(), &offset, 1, client(),
                 ta_uuid());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
@@ -81,7 +83,7 @@ namespace {
         auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(out_buffer, nullptr);
         sa_svp_offset offset = {0, 0, 1};
-        sa_status status = ta_sa_svp_buffer_write(*out_buffer, nullptr, 0, &offset, 1, client(), ta_uuid());
+        sa_status const status = ta_sa_svp_buffer_write(*out_buffer, nullptr, 0, &offset, 1, client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

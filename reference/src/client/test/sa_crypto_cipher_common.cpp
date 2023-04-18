@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -197,7 +197,7 @@ bool SaCipherCryptoBase::verify_decrypt(
         std::vector<uint8_t>& clear) {
 
     if (decrypted->buffer_type == SA_BUFFER_TYPE_CLEAR) {
-        std::vector<uint8_t> decrypted_data = {static_cast<uint8_t*>(decrypted->context.clear.buffer),
+        std::vector<uint8_t> const decrypted_data = {static_cast<uint8_t*>(decrypted->context.clear.buffer),
                 static_cast<uint8_t*>(decrypted->context.clear.buffer) + clear.size()};
 
         return decrypted_data == clear;
@@ -230,8 +230,8 @@ std::shared_ptr<sa_crypto_cipher_context> SaCipherCryptoBase::initialize_cipher(
     }
 
     get_cipher_parameters(parameters);
-    sa_status status = sa_crypto_cipher_init(cipher.get(), parameters.cipher_algorithm, cipher_mode, *parameters.key,
-            parameters.parameters.get());
+    sa_status const status = sa_crypto_cipher_init(cipher.get(), parameters.cipher_algorithm, cipher_mode,
+            *parameters.key, parameters.parameters.get());
     if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
         *cipher = UNSUPPORTED_CIPHER;
     } else if (status != SA_STATUS_OK) {
@@ -419,7 +419,7 @@ bool SaCipherCryptoBase::ec_is_valid_x_coordinate(
         return false;
     }
 
-    std::shared_ptr<BIGNUM> x_bignum(BN_new(), BN_free);
+    std::shared_ptr<BIGNUM> const x_bignum(BN_new(), BN_free);
     if (x_bignum == nullptr) {
         ERROR("BN_new failed");
         return false;
@@ -430,13 +430,13 @@ bool SaCipherCryptoBase::ec_is_valid_x_coordinate(
         return false;
     }
 
-    std::shared_ptr<BN_CTX> context(BN_CTX_new(), BN_CTX_free);
+    std::shared_ptr<BN_CTX> const context(BN_CTX_new(), BN_CTX_free);
     if (context == nullptr) {
         ERROR("BN_CTX_new failed");
         return false;
     }
 
-    std::shared_ptr<EC_POINT> ec_point(EC_POINT_new(ec_group.get()), EC_POINT_free);
+    std::shared_ptr<EC_POINT> const ec_point(EC_POINT_new(ec_group.get()), EC_POINT_free);
     if (ec_point == nullptr) {
         ERROR("EC_POINT_new failed");
         return false;

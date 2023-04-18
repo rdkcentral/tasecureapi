@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,12 +39,6 @@ sa_status sa_get_ta_uuid(sa_uuid* uuid) {
     sa_status status;
     do {
         CREATE_COMMAND(sa_get_ta_uuid_s, get_ta_uuid);
-        if (get_ta_uuid == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         get_ta_uuid->api_version = API_VERSION;
         get_ta_uuid->uuid = *uuid;
 

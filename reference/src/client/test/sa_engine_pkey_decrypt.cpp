@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,16 +40,17 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
     if (*key == UNSUPPORTED_KEY)
         GTEST_SKIP() << "key type, key size, or curve not supported";
 
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
     auto data = random(32);
     auto label = random(oaep_label);
     std::vector<uint8_t> encrypted_data;
-    std::shared_ptr<EVP_PKEY_CTX> encrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY_CTX> const encrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+            EVP_PKEY_CTX_free);
     ASSERT_NE(encrypt_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_encrypt_init(encrypt_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(encrypt_pkey_ctx.get(), padding), 1);
@@ -83,7 +84,8 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
     ASSERT_EQ(result, 1);
 
     std::vector<uint8_t> decrypted_data;
-    std::shared_ptr<EVP_PKEY_CTX> decrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY_CTX> const decrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+            EVP_PKEY_CTX_free);
     ASSERT_NE(decrypt_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_decrypt_init(decrypt_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(decrypt_pkey_ctx.get(), padding), 1);
@@ -122,9 +124,9 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
 }
 
 TEST_F(SaEnginePkeyEncryptTest, defaultPaddingTest) {
-    sa_key_type key_type = SA_KEY_TYPE_RSA;
+    sa_key_type const key_type = SA_KEY_TYPE_RSA;
     size_t key_length = RSA_2048_BYTE_LENGTH;
-    int padding = RSA_PKCS1_PADDING;
+    int const padding = RSA_PKCS1_PADDING;
 
     std::vector<uint8_t> clear_key;
     sa_elliptic_curve curve;
@@ -133,15 +135,16 @@ TEST_F(SaEnginePkeyEncryptTest, defaultPaddingTest) {
     if (*key == UNSUPPORTED_KEY)
         GTEST_SKIP() << "key type, key size, or curve not supported";
 
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
     auto data = random(32);
     std::vector<uint8_t> encrypted_data;
-    std::shared_ptr<EVP_PKEY_CTX> encrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY_CTX> const encrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+            EVP_PKEY_CTX_free);
     ASSERT_NE(encrypt_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_encrypt_init(encrypt_pkey_ctx.get()), 1);
     size_t encrypted_data_length = 0;
@@ -155,7 +158,8 @@ TEST_F(SaEnginePkeyEncryptTest, defaultPaddingTest) {
     ASSERT_EQ(result, 1);
 
     std::vector<uint8_t> decrypted_data;
-    std::shared_ptr<EVP_PKEY_CTX> decrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY_CTX> const decrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+            EVP_PKEY_CTX_free);
     ASSERT_NE(decrypt_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_decrypt_init(decrypt_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(decrypt_pkey_ctx.get(), padding), 1);

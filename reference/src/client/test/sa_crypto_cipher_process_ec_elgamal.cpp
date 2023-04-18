@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,8 +25,8 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFailsInvalidInLength) {
-        sa_elliptic_curve curve = std::get<0>(GetParam());
-        size_t key_size = ec_get_key_size(curve);
+        sa_elliptic_curve const curve = std::get<0>(GetParam());
+        size_t const key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
 
         auto evp_pkey = ec_import_private(curve, clear_key);
@@ -83,8 +83,8 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFailsInvalidOutLength) {
-        sa_elliptic_curve curve = std::get<0>(GetParam());
-        size_t key_size = ec_get_key_size(curve);
+        sa_elliptic_curve const curve = std::get<0>(GetParam());
+        size_t const key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
 
         auto evp_pkey = ec_import_private(curve, clear_key);
@@ -141,8 +141,8 @@ namespace {
         if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
 
-        sa_elliptic_curve curve = std::get<0>(GetParam());
-        size_t key_size = ec_get_key_size(curve);
+        sa_elliptic_curve const curve = std::get<0>(GetParam());
+        size_t const key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
 
         auto evp_pkey = ec_import_private(curve, clear_key);

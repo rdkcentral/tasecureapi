@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,12 +49,6 @@ sa_status sa_process_common_encryption(
     sa_status status;
     do {
         CREATE_COMMAND(sa_process_common_encryption_s, process_common_encryption);
-        if (process_common_encryption == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         for (size_t i = 0; i < samples_length; i++) {
             if (samples[i].iv == NULL) {
                 ERROR("NULL iv");
@@ -97,12 +91,6 @@ sa_status sa_process_common_encryption(
 
             size_t param1_size = samples[i].subsample_count * sizeof(sa_subsample_length);
             CREATE_PARAM(param1, samples[i].subsample_lengths, param1_size);
-            if (param1 == NULL) {
-                ERROR("CREATE_PARAM failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-                break;
-            }
-
             ta_param_type param1_type = TA_PARAM_IN;
 
             size_t param2_size;
@@ -121,21 +109,11 @@ sa_status sa_process_common_encryption(
                 CREATE_OUT_PARAM(param2,
                         ((uint8_t*) samples[i].out->context.clear.buffer) + samples[i].out->context.clear.offset,
                         param2_size);
-                if (param2 == NULL) {
-                    ERROR("CREATE_OUT_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    break;
-                }
             } else {
                 process_common_encryption->out_offset = samples[i].out->context.svp.offset;
                 param2_size = sizeof(sa_svp_buffer);
                 param2_type = TA_PARAM_IN;
                 CREATE_PARAM(param2, &samples[i].out->context.svp.buffer, param2_size);
-                if (param2 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    break;
-                }
             }
 
             size_t param3_size;
@@ -152,20 +130,10 @@ sa_status sa_process_common_encryption(
                 CREATE_PARAM(param3,
                         ((uint8_t*) samples[i].in->context.clear.buffer) + samples[i].in->context.clear.offset,
                         param3_size);
-                if (param3 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    break;
-                }
             } else {
                 process_common_encryption->in_offset = samples[i].in->context.svp.offset;
                 param3_size = sizeof(sa_svp_buffer);
                 CREATE_PARAM(param3, &samples[i].in->context.svp.buffer, param3_size);
-                if (param3 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    break;
-                }
             }
 
             // clang-format off

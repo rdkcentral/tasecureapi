@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ namespace {
 
         auto clear = random(65);
         auto in = std::vector<uint8_t>(EVP_PKEY_bits(rsa.get()) / 8);
-        size_t in_length = in.size();
+        size_t const in_length = in.size();
         ASSERT_TRUE(encrypt_rsa_pkcs1v15_openssl(in, clear, rsa));
         in.resize(in_length - 1);
 
@@ -74,7 +74,7 @@ namespace {
 
         auto clear = random(65);
         auto in = std::vector<uint8_t>(EVP_PKEY_bits(rsa.get()) / 8);
-        size_t in_length = in.size();
+        size_t const in_length = in.size();
         ASSERT_TRUE(encrypt_rsa_pkcs1v15_openssl(in, clear, rsa));
         in.resize(in_length);
 
@@ -152,7 +152,7 @@ namespace {
 
         auto clear = random(65);
         auto in = std::vector<uint8_t>(EVP_PKEY_bits(rsa.get()) / 8);
-        size_t in_length = in.size();
+        size_t const in_length = in.size();
         ASSERT_TRUE(encrypt_rsa_oaep_openssl(in, clear, rsa, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, {}));
         in.resize(in_length);
 

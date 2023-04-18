@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -745,7 +745,6 @@ sa_status unwrap_rsa(
         const void* in,
         size_t in_length,
         const sa_rights* rights,
-        sa_key_type key_type,
         sa_cipher_algorithm cipher_algorithm,
         void* algorithm_parameters,
         const stored_key_t* stored_key_wrapping) {
@@ -843,7 +842,6 @@ sa_status unwrap_ec(
         const void* in,
         size_t in_length,
         const sa_rights* rights,
-        sa_key_type key_type,
         sa_unwrap_parameters_ec_elgamal* algorithm_parameters,
         const stored_key_t* stored_key_wrapping) {
 
@@ -919,12 +917,12 @@ sa_status unwrap_ec(
         size_t written = unwrapped_key_length;
         status = ec_decrypt_elgamal(unwrapped_key, &written, stored_key_wrapping, in, in_length);
         if (status != SA_STATUS_OK) {
-            ERROR("ecp256_dec_elgamal failed");
+            ERROR("ec_decrypt_elgamal failed");
             break;
         }
 
         if (written != unwrapped_key_length) {
-            ERROR("ecp256_dec_elgamal failed");
+            ERROR("ec_decrypt_elgamal failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }

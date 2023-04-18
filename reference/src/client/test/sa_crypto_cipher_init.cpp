@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,10 +28,10 @@ namespace {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
         parameters.svp_required = false;
-        sa_key_type key_type = std::get<1>(GetParam());
-        size_t key_size = std::get<2>(GetParam());
+        sa_key_type const key_type = std::get<1>(GetParam());
+        size_t const key_size = std::get<2>(GetParam());
 
-        std::shared_ptr<sa_key> key;
+        std::shared_ptr<sa_key> const key;
         auto cipher = initialize_cipher(SA_CIPHER_MODE_ENCRYPT, key_type, key_size, parameters);
         ASSERT_NE(cipher, nullptr);
         if (*cipher == UNSUPPORTED_CIPHER)
@@ -41,8 +41,8 @@ namespace {
     TEST_P(SaCryptoCipherDecryptTest, initNominal) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
-        sa_key_type key_type = std::get<1>(GetParam());
-        size_t key_size = std::get<2>(GetParam());
+        sa_key_type const key_type = std::get<1>(GetParam());
+        size_t const key_size = std::get<2>(GetParam());
         parameters.oaep_digest_algorithm = std::get<4>(GetParam());
         parameters.oaep_mgf1_digest_algorithm = std::get<5>(GetParam());
         parameters.oaep_label_length = std::get<6>(GetParam());
@@ -57,8 +57,8 @@ namespace {
     TEST_P(SaCryptoCipherDecryptTest, nominalNoAvailableResourceSlot) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
-        sa_key_type key_type = std::get<1>(GetParam());
-        size_t key_size = std::get<2>(GetParam());
+        sa_key_type const key_type = std::get<1>(GetParam());
+        size_t const key_size = std::get<2>(GetParam());
         parameters.oaep_digest_algorithm = std::get<4>(GetParam());
         parameters.oaep_mgf1_digest_algorithm = std::get<5>(GetParam());
         parameters.oaep_label_length = std::get<6>(GetParam());
@@ -97,8 +97,8 @@ namespace {
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(nullptr, SA_CIPHER_ALGORITHM_AES_ECB, SA_CIPHER_MODE_ENCRYPT, *key,
-                nullptr);
+        sa_status const status = sa_crypto_cipher_init(nullptr, SA_CIPHER_ALGORITHM_AES_ECB, SA_CIPHER_MODE_ENCRYPT,
+                *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -117,7 +117,7 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), static_cast<sa_cipher_algorithm>(UINT8_MAX),
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), static_cast<sa_cipher_algorithm>(UINT8_MAX),
                 SA_CIPHER_MODE_ENCRYPT, *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
@@ -136,7 +136,7 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB,
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB,
                 static_cast<sa_cipher_mode>(UINT8_MAX), *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
@@ -147,8 +147,8 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB, SA_CIPHER_MODE_ENCRYPT,
-                INVALID_HANDLE, nullptr);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB,
+                SA_CIPHER_MODE_ENCRYPT, INVALID_HANDLE, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
@@ -167,8 +167,8 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB, SA_CIPHER_MODE_ENCRYPT,
-                *key, nullptr);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB,
+                SA_CIPHER_MODE_ENCRYPT, *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
@@ -187,8 +187,8 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB, SA_CIPHER_MODE_DECRYPT,
-                *key, nullptr);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB,
+                SA_CIPHER_MODE_DECRYPT, *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
@@ -207,8 +207,8 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB, SA_CIPHER_MODE_ENCRYPT,
-                *key, nullptr);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB,
+                SA_CIPHER_MODE_ENCRYPT, *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
@@ -227,8 +227,8 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB, SA_CIPHER_MODE_ENCRYPT,
-                *key, nullptr);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_ECB,
+                SA_CIPHER_MODE_ENCRYPT, *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);

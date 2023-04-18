@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ using namespace client_test_helpers;
 namespace {
     TEST(SaCryptoSign, nominal2048RsaPssSha256Salt32EmptyIn) {
         auto clear_key = sample_rsa_2048_pkcs8();
-        sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
-        sa_digest_algorithm mgf1_digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
+        sa_digest_algorithm const digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
+        sa_digest_algorithm const mgf1_digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -66,8 +66,8 @@ namespace {
 
     TEST(SaCryptoSign, failsRsaPssInvalidOutLength) {
         auto clear_key = sample_rsa_2048_pkcs8();
-        sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
-        sa_digest_algorithm mgf1_digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
+        sa_digest_algorithm const digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
+        sa_digest_algorithm const mgf1_digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -112,8 +112,8 @@ namespace {
         auto out = std::vector<uint8_t>(512);
         size_t out_length = out.size();
         auto in = random(25);
-        sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key, in.data(),
-                in.size(), nullptr);
+        sa_status const status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key,
+                in.data(), in.size(), nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Unsupported signature algorithm";
 
@@ -122,8 +122,8 @@ namespace {
 
     TEST(SaCryptoSign, failsRsaPssInvalidSaltLength) {
         auto clear_key = sample_rsa_2048_pkcs8();
-        sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
-        sa_digest_algorithm mgf1_digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
+        sa_digest_algorithm const digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
+        sa_digest_algorithm const mgf1_digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -138,8 +138,8 @@ namespace {
         auto out = std::vector<uint8_t>(512);
         size_t out_length = out.size();
         auto in = random(25);
-        sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key, in.data(),
-                in.size(), &parameters);
+        sa_status const status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key,
+                in.data(), in.size(), &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Unsupported signature algorithm";
 

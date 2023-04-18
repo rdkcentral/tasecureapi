@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,12 +52,6 @@ sa_status sa_crypto_cipher_process_last(
     sa_status status;
     do {
         CREATE_COMMAND(sa_crypto_cipher_process_s, cipher_process);
-        if (cipher_process == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         cipher_process->api_version = API_VERSION;
         cipher_process->context = context;
         cipher_process->bytes_to_process = *bytes_to_process;
@@ -76,26 +70,14 @@ sa_status sa_crypto_cipher_process_last(
 
                 cipher_process->out_offset = 0;
                 param1_size = out->context.clear.length - out->context.clear.offset;
-
                 param1_type = TA_PARAM_OUT;
                 CREATE_OUT_PARAM(param1, ((uint8_t*) out->context.clear.buffer) + out->context.clear.offset,
                         param1_size);
-                if (param1 == NULL) {
-                    ERROR("CREATE_OUT_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    break;
-                }
             } else {
                 cipher_process->out_offset = out->context.svp.offset;
                 param1_size = sizeof(sa_svp_buffer);
-
                 param1_type = TA_PARAM_IN;
                 CREATE_PARAM(param1, &out->context.svp.buffer, param1_size);
-                if (param1 == NULL) {
-                    ERROR("CREATE_PARAM failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    break;
-                }
             }
         } else {
             cipher_process->out_offset = 0;
@@ -115,23 +97,12 @@ sa_status sa_crypto_cipher_process_last(
 
             cipher_process->in_offset = 0;
             param2_size = in->context.clear.length - in->context.clear.offset;
-
             CREATE_PARAM(param2, ((uint8_t*) in->context.clear.buffer) + in->context.clear.offset, param2_size);
-            if (param2 == NULL) {
-                ERROR("CREATE_PARAM failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-                break;
-            }
         } else {
             cipher_process->in_offset = in->context.svp.offset;
             param2_size = sizeof(sa_svp_buffer);
 
             CREATE_PARAM(param2, &in->context.svp.buffer, param2_size);
-            if (param2 == NULL) {
-                ERROR("CREATE_PARAM failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-                break;
-            }
         }
 
         size_t param3_size;
@@ -145,12 +116,6 @@ sa_status sa_crypto_cipher_process_last(
             }
 
             CREATE_PARAM(param3, parameters_aes_gcm->tag, parameters_aes_gcm->tag_length);
-            if (param3 == NULL) {
-                ERROR("CREATE_PARAM failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-                break;
-            }
-
             param3_size = parameters_aes_gcm->tag_length;
             param3_type = TA_PARAM_INOUT;
         } else {

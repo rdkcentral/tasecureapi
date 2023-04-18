@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,12 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_P(SaCryptoCipherWithSvpTest, processAesCtrEncryptResumePartialBlock) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+        sa_buffer_type const buffer_type = std::get<0>(GetParam());
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
         parameters.svp_required = false;
-        sa_key_type key_type = SA_KEY_TYPE_SYMMETRIC;
-        size_t key_size = SYM_128_KEY_SIZE;
+        sa_key_type const key_type = SA_KEY_TYPE_SYMMETRIC;
+        size_t const key_size = SYM_128_KEY_SIZE;
 
         auto cipher = initialize_cipher(SA_CIPHER_MODE_ENCRYPT, key_type, key_size, parameters);
         ASSERT_NE(cipher, nullptr);
@@ -59,12 +59,12 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherWithSvpTest, processAesCtrDecryptResumePartialBlock) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
+        sa_buffer_type const buffer_type = std::get<0>(GetParam());
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
         parameters.svp_required = false;
-        sa_key_type key_type = SA_KEY_TYPE_SYMMETRIC;
-        size_t key_size = SYM_128_KEY_SIZE;
+        sa_key_type const key_type = SA_KEY_TYPE_SYMMETRIC;
+        size_t const key_size = SYM_128_KEY_SIZE;
 
         auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, key_type, key_size, parameters);
         ASSERT_NE(cipher, nullptr);
@@ -98,8 +98,8 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherWithSvpTest, processAesCtrFailsInvalidOutLength) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+        sa_buffer_type const buffer_type = std::get<0>(GetParam());
+        sa_cipher_mode const cipher_mode = std::get<1>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -120,7 +120,7 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto in_buffer = buffer_alloc(buffer_type, clear);
         ASSERT_NE(in_buffer, nullptr);
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size() - 1);
@@ -153,7 +153,7 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size() - 1);

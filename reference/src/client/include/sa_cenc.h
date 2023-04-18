@@ -1,5 +1,5 @@
-/**
- * Copyright 2019-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,13 @@
  * limitations under the License.
  *
  * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
+ * @file sa_cenc.h
+ *
+ * This file contains the function declaration for processing content encrypted as specified in the document
+ * ISO/IEC 23001-7 Common encryption in ISO base media file format files.
  */
 
 #ifndef SA_CENC_H

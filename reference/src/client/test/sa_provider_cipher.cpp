@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,18 +27,18 @@ using namespace client_test_helpers;
 
 TEST_P(SaProviderCipherTest, encryptTest) {
     const char* algorithm_name = std::get<0>(GetParam());
-    int padded = std::get<1>(GetParam());
-    int key_length = std::get<2>(GetParam());
-    int iv_length = std::get<3>(GetParam());
+    int const padded = std::get<1>(GetParam());
+    int const key_length = std::get<2>(GetParam());
+    int const iv_length = std::get<3>(GetParam());
 
     OSSL_LIB_CTX* lib_ctx = sa_get_provider();
     ASSERT_NE(lib_ctx, nullptr);
-    std::shared_ptr<EVP_CIPHER> cipher = {EVP_CIPHER_fetch(lib_ctx, algorithm_name, nullptr), EVP_CIPHER_free};
+    std::shared_ptr<EVP_CIPHER> const cipher = {EVP_CIPHER_fetch(lib_ctx, algorithm_name, nullptr), EVP_CIPHER_free};
     ASSERT_NE(cipher, nullptr);
 
-    bool include_aad = strcmp(algorithm_name, SN_aes_128_gcm) == 0 ||
-                       strcmp(algorithm_name, SN_aes_256_gcm) == 0 ||
-                       strcmp(algorithm_name, SN_chacha20_poly1305) == 0;
+    bool const include_aad = strcmp(algorithm_name, SN_aes_128_gcm) == 0 ||
+                             strcmp(algorithm_name, SN_aes_256_gcm) == 0 ||
+                             strcmp(algorithm_name, SN_chacha20_poly1305) == 0;
     auto clear_key = random(key_length);
     sa_rights rights;
     sa_rights_set_allow_all(&rights);
@@ -88,18 +88,18 @@ TEST_P(SaProviderCipherTest, encryptTest) {
 
 TEST_P(SaProviderCipherTest, decryptTest) {
     const char* algorithm_name = std::get<0>(GetParam());
-    int padded = std::get<1>(GetParam());
-    int key_length = std::get<2>(GetParam());
-    int iv_length = std::get<3>(GetParam());
+    int const padded = std::get<1>(GetParam());
+    int const key_length = std::get<2>(GetParam());
+    int const iv_length = std::get<3>(GetParam());
 
     OSSL_LIB_CTX* lib_ctx = sa_get_provider();
     ASSERT_NE(lib_ctx, nullptr);
-    std::shared_ptr<EVP_CIPHER> cipher = {EVP_CIPHER_fetch(lib_ctx, algorithm_name, nullptr), EVP_CIPHER_free};
+    std::shared_ptr<EVP_CIPHER> const cipher = {EVP_CIPHER_fetch(lib_ctx, algorithm_name, nullptr), EVP_CIPHER_free};
     ASSERT_NE(cipher, nullptr);
 
-    bool include_aad = strcmp(algorithm_name, SN_aes_128_gcm) == 0 ||
-                       strcmp(algorithm_name, SN_aes_256_gcm) == 0 ||
-                       strcmp(algorithm_name, SN_chacha20_poly1305) == 0;
+    bool const include_aad = strcmp(algorithm_name, SN_aes_128_gcm) == 0 ||
+                             strcmp(algorithm_name, SN_aes_256_gcm) == 0 ||
+                             strcmp(algorithm_name, SN_chacha20_poly1305) == 0;
     auto clear_key = random(key_length);
     sa_rights rights;
     sa_rights_set_allow_all(&rights);
@@ -150,18 +150,18 @@ TEST_P(SaProviderCipherTest, decryptTest) {
 
 TEST_P(SaProviderCipherTest, initSeparateParams) {
     const char* algorithm_name = std::get<0>(GetParam());
-    int padded = std::get<1>(GetParam());
-    int key_length = std::get<2>(GetParam());
-    int iv_length = std::get<3>(GetParam());
+    int const padded = std::get<1>(GetParam());
+    int const key_length = std::get<2>(GetParam());
+    int const iv_length = std::get<3>(GetParam());
 
     OSSL_LIB_CTX* lib_ctx = sa_get_provider();
     ASSERT_NE(lib_ctx, nullptr);
-    std::shared_ptr<EVP_CIPHER> cipher = {EVP_CIPHER_fetch(lib_ctx, algorithm_name, nullptr), EVP_CIPHER_free};
+    std::shared_ptr<EVP_CIPHER> const cipher = {EVP_CIPHER_fetch(lib_ctx, algorithm_name, nullptr), EVP_CIPHER_free};
     ASSERT_NE(cipher, nullptr);
 
-    bool include_aad = strcmp(algorithm_name, SN_aes_128_gcm) == 0 ||
-                       strcmp(algorithm_name, SN_aes_256_gcm) == 0 ||
-                       strcmp(algorithm_name, SN_chacha20_poly1305) == 0;
+    bool const include_aad = strcmp(algorithm_name, SN_aes_128_gcm) == 0 ||
+                             strcmp(algorithm_name, SN_aes_256_gcm) == 0 ||
+                             strcmp(algorithm_name, SN_chacha20_poly1305) == 0;
     auto clear_key = random(key_length);
     auto data = random((padded == 1) ? 23 : 16);
     auto iv = random(iv_length);

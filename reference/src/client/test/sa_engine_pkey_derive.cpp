@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,11 +36,11 @@ TEST_P(SaEnginePkeyDeriveTest, deriveTest) {
     if (*key == UNSUPPORTED_KEY)
         GTEST_SKIP() << "key type, key size, or curve not supported";
 
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
     std::vector<uint8_t> clear_derived_key(SYM_128_KEY_SIZE);
     std::vector<uint8_t> clear_shared_secret;
@@ -60,7 +60,7 @@ TEST_P(SaEnginePkeyDeriveTest, deriveTest) {
     auto info = random(AES_BLOCK_SIZE);
     ASSERT_TRUE(concat_kdf(clear_derived_key, clear_shared_secret, info, SA_DIGEST_ALGORITHM_SHA256));
 
-    std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
     ASSERT_NE(evp_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_derive_init(evp_pkey_ctx.get()), 1);
     if (key_type == SA_KEY_TYPE_DH) {
@@ -90,7 +90,7 @@ TEST_P(SaEnginePkeyDeriveTest, deriveTest) {
     ASSERT_NE(derived_key, nullptr);
     sa_rights rights;
     sa_rights_set_allow_all(&rights);
-    sa_status status = sa_key_derive(derived_key.get(), &rights, SA_KDF_ALGORITHM_CONCAT, &kdf_parameters_concat);
+    sa_status const status = sa_key_derive(derived_key.get(), &rights, SA_KDF_ALGORITHM_CONCAT, &kdf_parameters_concat);
     ASSERT_EQ(status, SA_STATUS_OK);
     ASSERT_TRUE(key_check_sym(*derived_key, clear_derived_key));
 }

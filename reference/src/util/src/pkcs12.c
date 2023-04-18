@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,10 +20,12 @@
 #include "log.h"
 #include <openssl/pkcs12.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #if OPENSSL_VERSION_NUMBER < 0x30000000
 #include <memory.h>
+#if OPENSSL_VERSION_NUMBER < 0x10100000
+#include <stdint.h>
+#endif
 #endif
 
 static int find_asn1_item_length(const uint8_t* data, int* offset) {

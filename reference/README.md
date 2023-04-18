@@ -156,6 +156,19 @@ SoC vendor and it conforms to the interfaces specified in saclient.
 This component is the SecAPI TA that is responsible for processing client requests. The TA is
 intended to run in a TEE.
 
+#### taimpltest
+
+This is a SecAPI unit test suite that must be run from inside a TA against the TA code directly.
+It executes tests as if another TA were calling into the SecApi 3 TA.
+
+#### util
+
+This is a library that implements utility functions used by the other libraries.
+
+#### utiltest
+
+This is a unit test suite for testing the utility library functions.
+
 ## Versioning
 
 SecAPI version is specified using 4 numbers. The first 3 contain the major, minor, and point release
@@ -188,7 +201,9 @@ The secure heap shall be used for storing unencrypted key material while in use.
 
 ## Coding Standards
 
-The clang-format library is used to format all code according to the settings in the associated 
+clang-format is used to format all code according to the settings in the associated 
 .clang-format file. All attempts were used to use descriptive variable names and predefined
 constants instead of magic numbers. When the OpenSSL library is used, standard OpenSSL usage
 convention is followed by testing return values against the value 1 which represents success.
+
+clang-tidy is a linting tool used to diagnose and fixing typical programming errors.

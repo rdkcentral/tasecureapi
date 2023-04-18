@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,7 +39,7 @@ namespace {
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
-        std::shared_ptr<EVP_PKEY> ec_public_key(sa_get_public_key(*ec_key), EVP_PKEY_free);
+        std::shared_ptr<EVP_PKEY> const ec_public_key(sa_get_public_key(*ec_key), EVP_PKEY_free);
 
         std::shared_ptr<EVP_PKEY> other_ec;
         std::vector<uint8_t> other_public_key;
@@ -187,7 +187,7 @@ namespace {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
-        std::vector<uint8_t> rsa_2048 = sample_rsa_2048_pkcs8();
+        std::vector<uint8_t> const rsa_2048 = sample_rsa_2048_pkcs8();
         auto rsa_key = create_sa_key_rsa(&rights, rsa_2048);
         ASSERT_NE(rsa_key, nullptr);
         if (*rsa_key == UNSUPPORTED_KEY)

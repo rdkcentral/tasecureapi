@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -140,10 +140,8 @@ int sa_set_pkey_data(
                 memset(new_data, 0, sizeof(pkey_data));
 
                 // Copy the original key data structure into another larger data structure.
-                if (temp_key != NULL) {
-                    size_t temp_key_length = memory_size(temp_key, MAX_KEY_DATA_LEN);
-                    memcpy(new_data->data, temp_key, temp_key_length);
-                }
+                size_t temp_key_length = memory_size(temp_key, MAX_KEY_DATA_LEN);
+                memcpy(new_data->data, temp_key, temp_key_length);
 
                 // Free the original data structure (unless it's an ED or X key), but don't free any of it's contents
                 // which are now pointed to by the key_data.

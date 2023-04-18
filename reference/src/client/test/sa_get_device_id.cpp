@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,12 @@
 namespace {
     TEST(SaGetDeviceId, nominal) {
         uint64_t id;
-        sa_status status = sa_get_device_id(&id);
+        sa_status const status = sa_get_device_id(&id);
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
     TEST(SaGetDeviceId, failsNullId) {
-        sa_status status = sa_get_device_id(nullptr);
+        sa_status const status = sa_get_device_id(nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

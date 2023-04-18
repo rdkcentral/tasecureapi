@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,9 +34,9 @@ namespace {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
         parameters.svp_required = false;
-        sa_key_type key_type = std::get<1>(GetParam());
-        size_t key_size = std::get<2>(GetParam());
-        sa_buffer_type buffer_type = std::get<3>(GetParam());
+        sa_key_type const key_type = std::get<1>(GetParam());
+        size_t const key_size = std::get<2>(GetParam());
+        sa_buffer_type const buffer_type = std::get<3>(GetParam());
 
         if (!supports_update_iv(parameters.cipher_algorithm))
             return;
@@ -50,7 +50,7 @@ namespace {
         sa_status status = sa_crypto_cipher_update_iv(*cipher, parameters.iv.data(), parameters.iv.size());
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
 
         auto in_buffer = buffer_alloc(buffer_type, clear);
         ASSERT_NE(in_buffer, nullptr);
@@ -59,7 +59,7 @@ namespace {
         size_t bytes_to_process = clear.size();
         status = sa_crypto_cipher_process(nullptr, *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OK);
-        size_t required_length = get_required_length(parameters.cipher_algorithm, key_size, clear.size(), true);
+        size_t const required_length = get_required_length(parameters.cipher_algorithm, key_size, clear.size(), true);
         ASSERT_EQ(bytes_to_process, required_length);
 
         // encrypt using SecApi
@@ -77,9 +77,9 @@ namespace {
     TEST_P(SaCryptoCipherDecryptTest, updateIvNominal) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
-        sa_key_type key_type = std::get<1>(GetParam());
-        size_t key_size = std::get<2>(GetParam());
-        sa_buffer_type buffer_type = std::get<3>(GetParam());
+        sa_key_type const key_type = std::get<1>(GetParam());
+        size_t const key_size = std::get<2>(GetParam());
+        sa_buffer_type const buffer_type = std::get<3>(GetParam());
         parameters.oaep_digest_algorithm = std::get<4>(GetParam());
         parameters.oaep_mgf1_digest_algorithm = std::get<5>(GetParam());
         parameters.oaep_label_length = std::get<6>(GetParam());
@@ -97,7 +97,7 @@ namespace {
         sa_status status = sa_crypto_cipher_update_iv(*cipher, parameters.iv.data(), parameters.iv.size());
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
 
         // encrypt using OpenSSL
         auto encrypted = encrypt_openssl(clear, parameters);
@@ -107,13 +107,13 @@ namespace {
         ASSERT_NE(in_buffer, nullptr);
 
         // Exclude the padding block since we are not calling sa_crypto_cipher_process_last.
-        bool pkcs7 = parameters.cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 ||
-                     parameters.cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7;
-        size_t checked_length = pkcs7 ? encrypted.size() - AES_BLOCK_SIZE : encrypted.size();
+        bool const pkcs7 = parameters.cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 ||
+                           parameters.cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7;
+        size_t const checked_length = pkcs7 ? encrypted.size() - AES_BLOCK_SIZE : encrypted.size();
         size_t bytes_to_process = checked_length;
         status = sa_crypto_cipher_process(nullptr, *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OK);
-        size_t required_length = get_required_length(parameters.cipher_algorithm, key_size, clear.size(), false);
+        size_t const required_length = get_required_length(parameters.cipher_algorithm, key_size, clear.size(), false);
         ASSERT_EQ(bytes_to_process, required_length);
 
         // encrypt using SecApi
@@ -135,12 +135,12 @@ namespace {
 
     TEST_F(SaCryptoCipherWithoutSvpTest, updateIvFailsInvalidContext) {
         auto iv = random(AES_BLOCK_SIZE);
-        sa_status status = sa_crypto_cipher_update_iv(INVALID_HANDLE, iv.data(), iv.size());
+        sa_status const status = sa_crypto_cipher_update_iv(INVALID_HANDLE, iv.data(), iv.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaCryptoCipherWithSvpTest, updateIvFailsInvalidContext) {
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+        sa_cipher_mode const cipher_mode = std::get<1>(GetParam());
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_ECB;
         parameters.svp_required = false;
@@ -150,7 +150,7 @@ namespace {
         if (*cipher == UNSUPPORTED_CIPHER)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
-        sa_status status = sa_crypto_cipher_update_iv(*cipher, nullptr, 0);
+        sa_status const status = sa_crypto_cipher_update_iv(*cipher, nullptr, 0);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

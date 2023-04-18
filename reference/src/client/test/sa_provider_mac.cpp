@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,9 +35,9 @@ TEST_P(SaProviderMacTest, mac) {
 
     OSSL_LIB_CTX* lib_ctx = sa_get_provider();
     ASSERT_NE(lib_ctx, nullptr);
-    std::shared_ptr<EVP_MAC> evp_mac(EVP_MAC_fetch(lib_ctx, mac_algorithm, nullptr), EVP_MAC_free);
+    std::shared_ptr<EVP_MAC> const evp_mac(EVP_MAC_fetch(lib_ctx, mac_algorithm, nullptr), EVP_MAC_free);
     ASSERT_NE(evp_mac, nullptr);
-    std::shared_ptr<EVP_MAC_CTX> evp_mac_ctx(EVP_MAC_CTX_new(evp_mac.get()), EVP_MAC_CTX_free);
+    std::shared_ptr<EVP_MAC_CTX> const evp_mac_ctx(EVP_MAC_CTX_new(evp_mac.get()), EVP_MAC_CTX_free);
 
     auto clear_key = random(key_length);
     sa_rights rights;
@@ -77,9 +77,9 @@ TEST_P(SaProviderMacTest, macWithKeyImport) {
 
     OSSL_LIB_CTX* lib_ctx = sa_get_provider();
     ASSERT_NE(lib_ctx, nullptr);
-    std::shared_ptr<EVP_MAC> evp_mac(EVP_MAC_fetch(lib_ctx, mac_algorithm, nullptr), EVP_MAC_free);
+    std::shared_ptr<EVP_MAC> const evp_mac(EVP_MAC_fetch(lib_ctx, mac_algorithm, nullptr), EVP_MAC_free);
     ASSERT_NE(evp_mac, nullptr);
-    std::shared_ptr<EVP_MAC_CTX> evp_mac_ctx(EVP_MAC_CTX_new(evp_mac.get()), EVP_MAC_CTX_free);
+    std::shared_ptr<EVP_MAC_CTX> const evp_mac_ctx(EVP_MAC_CTX_new(evp_mac.get()), EVP_MAC_CTX_free);
 
     auto clear_key = random(key_length);
     sa_rights rights;

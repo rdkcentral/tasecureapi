@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -57,40 +57,42 @@ protected:
             int padded);
 };
 
-using SaEngineCipherTestType = std::tuple<int, int, int, int>;
+typedef std::tuple<int, int, int, int> SaEngineCipherTestType;
 
 class SaEngineCipherTest : public ::testing::TestWithParam<SaEngineCipherTestType>,
                            public SaEngineTest {};
 
-using SaEnginePkeySignTestType = std::tuple<sa_key_type, size_t, int, int, int, int>;
+typedef std::tuple<sa_key_type, size_t, int, int, int, int> SaEnginePkeySignTestType;
 
 class SaEnginePkeySignTest : public ::testing::TestWithParam<SaEnginePkeySignTestType>,
                              public SaEngineTest {};
 
-using SaEnginePkeySignEdTestType = std::tuple<sa_key_type, size_t>;
+typedef std::tuple<sa_key_type, size_t> SaEnginePkeySignEdTestType;
 
 class SaEnginePkeySignEdTest : public ::testing::TestWithParam<SaEnginePkeySignEdTestType>,
                                public SaEngineTest {};
 
-using SaEnginePkcs7TestType = std::tuple<sa_key_type, size_t>;
+typedef std::tuple<sa_key_type, size_t> SaEnginePkcs7TestType;
 
 class SaEnginePkcs7Test : public ::testing::TestWithParam<SaEnginePkcs7TestType>,
                           public SaEngineTest {};
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
 class SaEnginePkcs7EdTest : public ::testing::TestWithParam<SaEnginePkcs7TestType>,
                             public SaEngineTest {};
+#endif
 
-using SaEnginePkeyEncryptTestType = std::tuple<sa_key_type, size_t, int, sa_digest_algorithm, sa_digest_algorithm, int>;
+typedef std::tuple<sa_key_type, size_t, int, sa_digest_algorithm, sa_digest_algorithm, int> SaEnginePkeyEncryptTestType;
 
 class SaEnginePkeyEncryptTest : public ::testing::TestWithParam<SaEnginePkeyEncryptTestType>,
                                 public SaEngineTest {};
 
-using SaEnginePkeyDeriveTestType = std::tuple<sa_key_type, size_t>;
+typedef std::tuple<sa_key_type, size_t> SaEnginePkeyDeriveTestType;
 
 class SaEnginePkeyDeriveTest : public ::testing::TestWithParam<SaEnginePkeyDeriveTestType>,
                                public SaKeyBase {};
 
-using SaEnginePkeyMacTestType = std::tuple<sa_key_type, size_t, sa_digest_algorithm, sa_mac_algorithm>;
+typedef std::tuple<sa_key_type, size_t, sa_digest_algorithm, sa_mac_algorithm> SaEnginePkeyMacTestType;
 
 class SaEnginePkeyMacTest : public ::testing::TestWithParam<SaEnginePkeyMacTestType> {};
 

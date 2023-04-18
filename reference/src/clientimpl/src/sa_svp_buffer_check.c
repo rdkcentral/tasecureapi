@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,12 +46,6 @@ sa_status sa_svp_buffer_check(
     sa_status status;
     do {
         CREATE_COMMAND(sa_svp_buffer_check_s, svp_buffer_check);
-        if (svp_buffer_check == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         svp_buffer_check->api_version = API_VERSION;
         svp_buffer_check->svp_buffer = svp_buffer;
         svp_buffer_check->offset = offset;
@@ -59,12 +53,6 @@ sa_status sa_svp_buffer_check(
         svp_buffer_check->digest_algorithm = digest_algorithm;
 
         CREATE_PARAM(param1, (void*) hash, hash_length);
-        if (param1 == NULL) {
-            ERROR("CREATE_PARAM failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         size_t param1_size = hash_length;
         ta_param_type param1_type = TA_PARAM_IN;
 

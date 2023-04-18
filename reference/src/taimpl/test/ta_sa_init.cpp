@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ namespace {
         size_t i = 0;
         sa_status status;
         do {
-            std::shared_ptr<ta_client> client(new ta_client,
+            std::shared_ptr<ta_client> const client(new ta_client,
                     [](const ta_client* p) {
                         if (p != nullptr) {
                             if (*p != INVALID_HANDLE) {

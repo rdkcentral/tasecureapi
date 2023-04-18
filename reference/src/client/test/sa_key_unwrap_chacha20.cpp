@@ -1,5 +1,5 @@
-/**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_F(SaKeyUnwrapChacha20Test, failsNullKey) {
-        std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> const clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
@@ -50,7 +50,7 @@ namespace {
     }
 
     TEST_F(SaKeyUnwrapChacha20Test, failsNullRights) {
-        std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> const clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
@@ -72,7 +72,7 @@ namespace {
     }
 
     TEST_F(SaKeyUnwrapChacha20Test, failsNullIn) {
-        std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> const clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
@@ -97,7 +97,7 @@ namespace {
     }
 
     TEST_F(SaKeyUnwrapChacha20Test, failsNullAlgorithmParameters) {
-        std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> const clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
@@ -126,8 +126,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_256_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> nonce = random(CHACHA20_NONCE_LENGTH);
@@ -139,7 +139,7 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
@@ -150,8 +150,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_256_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> counter = {0, 0, 0, 0};
@@ -163,7 +163,7 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
@@ -174,8 +174,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_256_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> counter = {0, 0, 0, 0, 0};
@@ -188,7 +188,7 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
@@ -199,8 +199,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_256_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> counter = {0, 0, 0, 0};
@@ -213,14 +213,14 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyUnwrapChacha20Test, failsUnknownWrappingKey) {
-        std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+        std::vector<uint8_t> const clear_key = random(SYM_128_KEY_SIZE);
         std::shared_ptr<sa_key> wrapping_key;
         std::vector<uint8_t> clear_wrapping_key;
         std::shared_ptr<void> wrapping_parameters;
@@ -250,8 +250,8 @@ namespace {
         sa_rights wrapping_key_rights;
         sa_rights_set_allow_all(&wrapping_key_rights);
         SA_USAGE_BIT_CLEAR(wrapping_key_rights.usage_flags, SA_USAGE_FLAG_UNWRAP);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_256_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> counter = {0, 0, 0, 0};
@@ -266,7 +266,7 @@ namespace {
         sa_rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
@@ -278,8 +278,8 @@ namespace {
         sa_rights wrapping_key_rights;
         sa_rights_set_allow_all(&wrapping_key_rights);
         wrapping_key_rights.not_before = time(nullptr) + 60;
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_256_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> counter = {0, 0, 0, 0};
@@ -294,7 +294,7 @@ namespace {
         sa_rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
@@ -306,8 +306,8 @@ namespace {
         sa_rights wrapping_key_rights;
         sa_rights_set_allow_all(&wrapping_key_rights);
         wrapping_key_rights.not_on_or_after = time(nullptr) - 60;
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_256_KEY_SIZE);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&wrapping_key_rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> counter = {0, 0, 0, 0};
@@ -322,7 +322,7 @@ namespace {
         sa_rights_set_allow_all(&rights);
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
@@ -334,8 +334,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = ec_generate_key_bytes(curve);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_ec(&rights, curve,
+        std::vector<uint8_t> const clear_wrapping_key = ec_generate_key_bytes(curve);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_ec(&rights, curve,
                 clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
         if (*wrapping_key == UNSUPPORTED_KEY)
@@ -351,7 +351,7 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
@@ -362,8 +362,8 @@ namespace {
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
-        std::vector<uint8_t> clear_wrapping_key = random(SYM_256_KEY_SIZE + 1);
-        std::shared_ptr<sa_key> wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
+        std::vector<uint8_t> const clear_wrapping_key = random(SYM_256_KEY_SIZE + 1);
+        std::shared_ptr<sa_key> const wrapping_key = create_sa_key_symmetric(&rights, clear_wrapping_key);
         ASSERT_NE(wrapping_key, nullptr);
 
         std::vector<uint8_t> counter = {0, 0, 0, 0};
@@ -376,7 +376,7 @@ namespace {
 
         auto unwrapped_key = create_uninitialized_sa_key();
         ASSERT_NE(unwrapped_key, nullptr);
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+        sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
                 SA_CIPHER_ALGORITHM_CHACHA20, &unwrap_parameters_chacha20, *wrapping_key,
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);

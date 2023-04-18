@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,8 +27,8 @@
 #include <vector>
 
 // clang-format off
-using SaProcessCommonEncryptionType = std::tuple<std::tuple<size_t, size_t>, size_t, size_t, size_t,
-        sa_cipher_algorithm, std::tuple<sa_buffer_type, sa_buffer_type>>;
+typedef std::tuple<std::tuple<size_t, int64_t>, size_t, size_t, size_t, sa_cipher_algorithm,
+    std::tuple<sa_buffer_type, sa_buffer_type>> SaProcessCommonEncryptionType;
 
 class SaProcessCommonEncryptionBase : public ProcessCommonEncryptionBase {
 protected:
@@ -36,6 +36,8 @@ protected:
         sa_svp_buffer out,
         const void* in,
         size_t in_length) override;
+
+    ~SaProcessCommonEncryptionBase() = default;
 };
 
 class SaProcessCommonEncryptionTest : public ::testing::TestWithParam<SaProcessCommonEncryptionType>,

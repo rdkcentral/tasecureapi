@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -128,7 +128,7 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherWithoutSvpTest, processLastAesGcmFailsInvalidOutLength) {
-        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
+        sa_cipher_mode const cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -166,7 +166,7 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherWithoutSvpTest, processLastAesGcmFailsInvalidInLength) {
-        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
+        sa_cipher_mode const cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -204,7 +204,7 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherWithoutSvpTest, processLastAesGcmFailsNullParameters) {
-        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
+        sa_cipher_mode const cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -238,7 +238,7 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherWithoutSvpTest, processLastAesGcmFailsNullTag) {
-        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
+        sa_cipher_mode const cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -275,7 +275,7 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherWithoutSvpTest, processLastAesGcmFailsInvalidTagLength) {
-        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
+        sa_cipher_mode const cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -705,7 +705,7 @@ static const OSSL_PARAM* cipher_settable_ctx_params(
 }
 
 #define SA_PROVIDER_CIPHER_FUNCTIONS(algorithm, mode, size, sa_cipher, evp_ciph, iv_length, block_length, aead) \
-    static void* cipher_##algorithm##_##mode##_##size##_newctx(void* provctx) { \
+    static void* cipher_##algorithm##_##mode##_##size##_newctx(void* provctx) { /* NOLINT */ \
         return cipher_newctx(sa_cipher, (size) / 8, block_length, iv_length, aead, provctx); \
     } \
 \

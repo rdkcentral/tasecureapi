@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,6 +50,8 @@ protected:
             sa_svp_buffer out,
             const void* in,
             size_t in_length) = 0;
+
+    ~ProcessCommonEncryptionBase() = default;
 
 private:
     static EVP_CIPHER_CTX* openssl_init(

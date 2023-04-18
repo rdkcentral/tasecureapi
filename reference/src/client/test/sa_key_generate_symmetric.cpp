@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ namespace {
 
         sa_generate_parameters_symmetric parameters = {15};
 
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, &parameters);
+        sa_status const status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -47,7 +47,7 @@ namespace {
 
         sa_generate_parameters_symmetric parameters = {513};
 
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, &parameters);
+        sa_status const status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -58,7 +58,7 @@ namespace {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr);
+        sa_status const status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

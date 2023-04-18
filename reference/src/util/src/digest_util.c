@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "digest_util.h"
+#include "digest_util.h" // NOLINT
 #include "common.h"
 #include "log.h"
 #include <openssl/evp.h>

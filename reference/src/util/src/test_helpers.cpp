@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "test_helpers.h"
+#include "test_helpers.h" // NOLINT
 #include "digest_util.h"
 #include "log.h"
-#include "sa.h"
 #include <openssl/rand.h>
 
 namespace test_helpers {
@@ -41,7 +40,7 @@ namespace test_helpers {
             const std::vector<uint8_t>& in2,
             const std::vector<uint8_t>& in3) {
 
-        size_t required_length = digest_length(digest_algorithm);
+        size_t const required_length = digest_length(digest_algorithm);
 
         bool status = false;
         EVP_MD_CTX* context;

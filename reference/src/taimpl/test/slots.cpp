@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,14 +21,14 @@
 
 namespace {
     TEST(SlotsInit, nominal) {
-        size_t number_of_slots = 128;
-        std::shared_ptr<slots_t> slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
+        size_t const number_of_slots = 128;
+        std::shared_ptr<slots_t> const slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
         ASSERT_NE(slots, nullptr);
     }
 
     TEST(SlotsInit, invalidnumberOfSlots) {
-        size_t number_of_slots = 129;
-        std::shared_ptr<slots_t> slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
+        size_t const number_of_slots = 129;
+        std::shared_ptr<slots_t> const slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
         ASSERT_EQ(slots, nullptr);
     }
 
@@ -37,61 +37,61 @@ namespace {
     }
 
     TEST(SlotsAllocate, nominal) {
-        size_t number_of_slots = 128;
-        std::shared_ptr<slots_t> slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
+        size_t const number_of_slots = 128;
+        std::shared_ptr<slots_t> const slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
         ASSERT_NE(slots, nullptr);
 
-        size_t slot = slots_allocate(slots.get());
+        size_t const slot = slots_allocate(slots.get());
         EXPECT_NE(slot, SLOT_INVALID);
         slots_free(slots.get(), slot);
     }
 
     TEST(SlotsAllocate, failonmaxplusone) {
-        size_t number_of_slots = 128;
-        std::shared_ptr<slots_t> slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
+        size_t const number_of_slots = 128;
+        std::shared_ptr<slots_t> const slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
         ASSERT_NE(slots, nullptr);
 
         std::vector<slot_t> allocated;
         for (size_t i = 0; i < number_of_slots; ++i) {
-            size_t slot = slots_allocate(slots.get());
+            size_t const slot = slots_allocate(slots.get());
             EXPECT_NE(slot, SLOT_INVALID);
             allocated.push_back(slot);
         }
 
         // allocate one past the limit
-        size_t slot = slots_allocate(slots.get());
+        size_t const slot = slots_allocate(slots.get());
         EXPECT_EQ(slot, SLOT_INVALID);
         slots_free(slots.get(), slot);
 
-        for (unsigned int i : allocated) {
+        for (unsigned int const i : allocated) {
             slots_free(slots.get(), i);
         }
     }
 
     TEST(SlotsFree, doublemax) {
-        size_t number_of_slots = 128;
-        std::shared_ptr<slots_t> slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
+        size_t const number_of_slots = 128;
+        std::shared_ptr<slots_t> const slots(slots_init(number_of_slots, "TEST"), slots_shutdown);
         ASSERT_NE(slots, nullptr);
 
         std::vector<slot_t> allocated;
         for (size_t i = 0; i < number_of_slots; ++i) {
-            size_t slot = slots_allocate(slots.get());
+            size_t const slot = slots_allocate(slots.get());
             EXPECT_NE(slot, SLOT_INVALID);
             allocated.push_back(slot);
         }
 
-        for (unsigned int i : allocated) {
+        for (unsigned int const i : allocated) {
             slots_free(slots.get(), i);
         }
 
         std::vector<slot_t> allocated2;
         for (size_t i = 0; i < number_of_slots; ++i) {
-            size_t slot = slots_allocate(slots.get());
+            size_t const slot = slots_allocate(slots.get());
             EXPECT_NE(slot, SLOT_INVALID);
             allocated2.push_back(slot);
         }
 
-        for (unsigned int i : allocated2) {
+        for (unsigned int const i : allocated2) {
             slots_free(slots.get(), i);
         }
     }
