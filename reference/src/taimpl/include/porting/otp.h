@@ -81,7 +81,7 @@ sa_status otp_root_key_ladder(
  * @param[in] c2 16 byte input for the second stage of the key ladder.
  * @param[in] c3 16 byte input for the third stage of the key ladder.
  * @param[in] c4 16 byte input for the fourth stage of the key ladder.
- * @return SA_STATUS_OK if the call succeeded, SA_STATUS_OPERATION_NOT_SUPPORTED if the SOC does not support a common
+ * @return SA_STATUS_OK if the call succeeded, SA_STATUS_OPERATION_NOT_SUPPORTED if the SoC does not support a common
  * root key.
  */
 sa_status otp_common_root_key_ladder(

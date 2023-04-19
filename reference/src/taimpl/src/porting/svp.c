@@ -36,7 +36,7 @@ static bool svp_validate_buffer(const svp_buffer_t* svp_buffer) {
         return false;
     }
 
-    // TODO Soc Vendor: insert code for validating whether the passed in pointer and size are fully contained within the
+    // TODO SoC Vendor: insert code for validating whether the passed in pointer and size are fully contained within the
     // protected svp memory space
 
     return true;

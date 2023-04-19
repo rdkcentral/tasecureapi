@@ -16,25 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "log.h"
 #include "sa.h"
 #include "ta_client.h"
 
-sa_status sa_svp_memory_alloc(
-        void** svp_memory,
-        size_t size) {
+sa_status sa_svp_memory_free(void* svp_memory) {
 
-    if (svp_memory == NULL) {
-        ERROR("NULL svp_memory");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    // TODO Soc Vendor: replace this call with a call to allocate secure memory.
-    *svp_memory = malloc(size);
-    if (*svp_memory == NULL) {
-        ERROR("malloc failed");
-        return SA_STATUS_INTERNAL_ERROR;
-    }
+    // TODO SoC Vendor: replace this call to a call to free secure memory.
+    if (svp_memory != NULL)
+        free(svp_memory);
 
     return SA_STATUS_OK;
 }

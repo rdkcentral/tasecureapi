@@ -20,7 +20,7 @@
  * @section Description
  * @file ta.h
  *
- * This file contains declarations for functions that implement the TA handling code. SOC vendors should write
+ * This file contains declarations for functions that implement the TA handling code. SoC vendors should write
  * functions that call ta_open_session_handler, ta_close_session_handler, ta_invoke_command_handler.
  */
 

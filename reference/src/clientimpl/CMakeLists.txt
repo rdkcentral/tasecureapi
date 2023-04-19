@@ -47,10 +47,10 @@ find_package(Threads REQUIRED)
 add_library(saclientimpl STATIC
         src/internal/client.c
         src/internal/client.h
-        src/internal/sa_svp_memory_alloc.c
-        src/internal/sa_svp_memory_free.c
-        src/internal/ta_client.c
-        src/internal/ta_client.h
+        src/porting/sa_svp_memory_alloc.c
+        src/porting/sa_svp_memory_free.c
+        src/porting/ta_client.c
+        src/porting/ta_client.h
         src/sa_crypto_cipher_init.c
         src/sa_crypto_cipher_process.c
         src/sa_crypto_cipher_process_last.c
@@ -96,6 +96,7 @@ target_include_directories(saclientimpl
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/internal>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/porting>
         ${OPENSSL_INCLUDE_DIR}
         ${YAJL_INCLUDE_DIR}
         )
