@@ -293,6 +293,14 @@ target_include_directories(saclienttest
         ${OPENSSL_INCLUDE_DIR}
         )
 
+if (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+    # using Clang
+    target_include_directories(saclienttest
+            PRIVATE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
+            )
+endif ()
+
 target_link_libraries(saclienttest
         PRIVATE
         gtest_main

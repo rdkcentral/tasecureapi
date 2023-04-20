@@ -719,14 +719,14 @@ sa_status SaKeyImportSocBase::import_key(
         parameters_soc.version = secapi_version;
         memset(&parameters_soc.default_rights, 0, sizeof(sa_rights));
         parameters_soc.object_id = 0x123456789abcdef0;
-        key_rights.id[0] = parameters_soc.object_id >> 56 & 0xff;
-        key_rights.id[1] = parameters_soc.object_id >> 48 & 0xff;
-        key_rights.id[2] = parameters_soc.object_id >> 40 & 0xff;
-        key_rights.id[3] = parameters_soc.object_id >> 32 & 0xff;
-        key_rights.id[4] = parameters_soc.object_id >> 24 & 0xff;
-        key_rights.id[5] = parameters_soc.object_id >> 16 & 0xff;
-        key_rights.id[6] = parameters_soc.object_id >> 8 & 0xff;
-        key_rights.id[7] = parameters_soc.object_id & 0xff;
+        key_rights.id[0] = static_cast<char>(parameters_soc.object_id >> 56 & 0xff);
+        key_rights.id[1] = static_cast<char>(parameters_soc.object_id >> 48 & 0xff);
+        key_rights.id[2] = static_cast<char>(parameters_soc.object_id >> 40 & 0xff);
+        key_rights.id[3] = static_cast<char>(parameters_soc.object_id >> 32 & 0xff);
+        key_rights.id[4] = static_cast<char>(parameters_soc.object_id >> 24 & 0xff);
+        key_rights.id[5] = static_cast<char>(parameters_soc.object_id >> 16 & 0xff);
+        key_rights.id[6] = static_cast<char>(parameters_soc.object_id >> 8 & 0xff);
+        key_rights.id[7] = static_cast<char>(parameters_soc.object_id & 0xff);
         parameters = &parameters_soc;
     }
 
