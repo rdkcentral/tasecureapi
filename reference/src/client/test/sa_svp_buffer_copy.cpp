@@ -62,8 +62,18 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
     }
 
-    TEST_F(SaSvpBufferCopyTest, failsInBufferTooSmall) {
+    TEST_F(SaSvpBufferCopyTest, failsOffsetOverflow) {
         auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
+        ASSERT_NE(out_buffer, nullptr);
+        auto in_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
+        ASSERT_NE(in_buffer, nullptr);
+        sa_svp_offset offset = {SIZE_MAX - 4, 0, AES_BLOCK_SIZE};
+        sa_status status = sa_svp_buffer_copy(*out_buffer, *in_buffer, &offset, 1);
+        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
+    }
+
+    TEST_F(SaSvpBufferCopyTest, failsInBufferTooSmall) {
+        auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE + 1);
         ASSERT_NE(out_buffer, nullptr);
         auto in_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(in_buffer, nullptr);

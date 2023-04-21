@@ -54,6 +54,7 @@ add_library(taimpl STATIC
         include/porting/memory.h
         include/porting/otp.h
         include/porting/otp_internal.h
+        include/porting/overflow.h
         include/porting/rand.h
         include/porting/svp.h
         include/porting/video_output.h
@@ -61,6 +62,7 @@ add_library(taimpl STATIC
         src/porting/init.c
         src/porting/memory.c
         src/porting/otp.c
+        src/porting/overflow.c
         src/porting/rand.c
         src/porting/svp.c
         src/porting/video_output.c
