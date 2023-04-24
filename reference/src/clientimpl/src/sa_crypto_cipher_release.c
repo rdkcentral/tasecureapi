@@ -38,7 +38,7 @@ sa_status sa_crypto_cipher_release(sa_crypto_cipher_context context) {
         cipher_release->cipher_context = context;
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{cipher_release, sizeof(sa_crypto_cipher_release_s)},
                                           {NULL, 0},
                                           {NULL, 0},

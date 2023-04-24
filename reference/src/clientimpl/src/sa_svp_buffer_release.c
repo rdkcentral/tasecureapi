@@ -51,7 +51,7 @@ sa_status sa_svp_buffer_release(
         svp_buffer_release->svp_buffer = svp_buffer;
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{svp_buffer_release, sizeof(sa_svp_buffer_release_s)},
                                           {NULL, 0},
                                           {NULL, 0},

@@ -57,7 +57,7 @@ sa_status sa_crypto_cipher_process(
         cipher_process->in_buffer_type = in->buffer_type;
 
         size_t param1_size;
-        ta_param_type param1_type;
+        uint32_t param1_type;
         if (out != NULL) {
             if (out->buffer_type == SA_BUFFER_TYPE_CLEAR) {
                 if (out->context.clear.buffer == NULL) {
@@ -86,7 +86,7 @@ sa_status sa_crypto_cipher_process(
         }
 
         size_t param2_size;
-        ta_param_type param2_type = TA_PARAM_IN;
+        uint32_t param2_type = TA_PARAM_IN;
         if (in->buffer_type == SA_BUFFER_TYPE_CLEAR) {
             if (in->context.clear.buffer == NULL) {
                 ERROR("NULL in.context.clear.buffer");
@@ -105,7 +105,7 @@ sa_status sa_crypto_cipher_process(
         }
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{cipher_process, sizeof(sa_crypto_cipher_process_s)},
                                           {param1, param1_size},
                                           {param2, param2_size},

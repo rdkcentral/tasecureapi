@@ -40,6 +40,11 @@ static sa_status ta_sa_key_generate_symmetric(
     }
     *key = INVALID_HANDLE;
 
+    if (rights == NULL) {
+        ERROR("NULL parameters");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
     if (parameters == NULL) {
         ERROR("NULL parameters");
         return SA_STATUS_NULL_PARAMETER;
@@ -94,6 +99,11 @@ static sa_status ta_sa_key_generate_ec(
         return SA_STATUS_NULL_PARAMETER;
     }
     *key = INVALID_HANDLE;
+
+    if (rights == NULL) {
+        ERROR("NULL parameters");
+        return SA_STATUS_NULL_PARAMETER;
+    }
 
     if (parameters == NULL) {
         ERROR("NULL parameters");
@@ -207,6 +217,11 @@ static sa_status ta_sa_key_generate_dh(
         return SA_STATUS_NULL_PARAMETER;
     }
     *key = INVALID_HANDLE;
+
+    if (rights == NULL) {
+        ERROR("NULL parameters");
+        return SA_STATUS_NULL_PARAMETER;
+    }
 
     if (parameters == NULL) {
         ERROR("NULL parameters");

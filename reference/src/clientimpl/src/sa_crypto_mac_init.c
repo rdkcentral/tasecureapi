@@ -62,7 +62,7 @@ sa_status sa_crypto_mac_init(
         }
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{mac_init, sizeof(sa_crypto_mac_init_s)},
                                           {NULL, 0},
                                           {NULL, 0},

@@ -313,6 +313,7 @@ static bool otp_hw_key_ladder(
 
     return status;
 }
+
 static bool otp_common_key_ladder(
         void* derived,
         const void* c1,

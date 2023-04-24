@@ -53,7 +53,7 @@ sa_status sa_svp_buffer_copy(
         CREATE_PARAM(param1, offsets, param1_size);
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_IN, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{svp_buffer_copy, sizeof(sa_svp_buffer_copy_s)},
                                           {param1, param1_size},
                                           {NULL, 0},
