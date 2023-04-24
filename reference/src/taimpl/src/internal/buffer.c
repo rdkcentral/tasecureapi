@@ -19,6 +19,7 @@
 #include "buffer.h"
 #include "client_store.h"
 #include "log.h"
+#include "porting/memory.h"
 #include "porting/overflow.h"
 
 sa_status convert_buffer(
@@ -101,6 +102,11 @@ sa_status convert_buffer(
 
         if (memory_range > buffer->context.clear.length) {
             ERROR("buffer not large enough");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        if (!memory_is_valid_clear(buffer->context.clear.buffer, buffer->context.clear.length)) {
+            ERROR("memory location is not within SVP memory");
             return SA_STATUS_INVALID_PARAMETER;
         }
 

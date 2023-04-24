@@ -18,6 +18,7 @@
 
 #include "transport.h" // NOLINT
 #include "log.h"
+#include "porting/memory.h"
 #include <memory.h>
 
 // This is the default value to be used when the TA is not able to authenticate the calling entity as another
@@ -46,5 +47,5 @@ sa_status transport_authenticate_caller(sa_uuid* uuid) {
 }
 
 bool is_ree(const sa_uuid* uuid) {
-    return memcmp(uuid, &REE_UUID, sizeof(sa_uuid)) == 0;
+    return memory_memcmp_constant(uuid, &REE_UUID, sizeof(sa_uuid)) == 0;
 }

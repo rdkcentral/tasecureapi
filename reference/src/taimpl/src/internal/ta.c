@@ -18,6 +18,7 @@
 
 #include "ta.h" // NOLINT
 #include "log.h"
+#include "porting/memory.h"
 #include "ta_sa.h"
 #include "transport.h"
 #include <stdbool.h>
@@ -1574,7 +1575,7 @@ sa_status ta_open_session_handler(void** session_context) {
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    ta_session_context* context = malloc(sizeof(ta_session_context));
+    ta_session_context* context = memory_secure_alloc(sizeof(ta_session_context));
     if (context == NULL) {
         return SA_STATUS_INTERNAL_ERROR;
     }
@@ -1583,14 +1584,14 @@ sa_status ta_open_session_handler(void** session_context) {
     sa_status status = transport_authenticate_caller(&uuid);
     if (status != SA_STATUS_OK) {
         ERROR("transport_authenticate_caller failed: %d", status);
-        free(context);
+        memory_secure_free(context);
         return status;
     }
 
     status = ta_sa_init(&context->client, &uuid);
     if (status != SA_STATUS_OK) {
         ERROR("ta_sa_init failed");
-        free(context);
+        memory_secure_free(context);
         return status;
     }
 
@@ -1615,5 +1616,5 @@ void ta_close_session_handler(void* session_context) {
         }
     } while (false);
 
-    free(context);
+    memory_secure_free(context);
 }
