@@ -18,7 +18,7 @@ safe outcomes. Memory operations come in flavors, some are very explicit via cal
 like memset(), memcpy() or direct assignment like variable X = Y; at times, it can be more 
 subtle and delegated to the compiler, like structure assignments.
 
-Either way, at all time the source, destination involved in the memory operation, as well as the 
+Either way, at all times the source, destination involved in the memory operation, as well as the 
 number of bytes, should all be sanitized and of acceptable values. For each operation, it should 
 be straight to answer a few questions like
 - what is the memory type of the source, is it a secure memory, is it a shared memory accessible 
