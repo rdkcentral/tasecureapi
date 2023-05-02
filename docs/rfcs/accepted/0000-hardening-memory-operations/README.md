@@ -15,7 +15,7 @@ Memory operations, like setting memory to 0s, or copying memory blocks, when abu
 disastrous vulnerabilies that are the cornerstones of exploits.
 It is crucial for a piece of code to control the memory operations, so they have deterministicly 
 safe outcomes. Memory operations come in flavors, some are very explicit via calls to functions 
-like memset(), memcopy() or direct assignment like variable X = Y; at times, it can be more 
+like memset(), memcpy() or direct assignment like variable X = Y; at times, it can be more 
 subtle and delegated to the compiler, like structure assignments.
 
 Either way, at all time the source, destination involved in the memory operation, as well as the 
