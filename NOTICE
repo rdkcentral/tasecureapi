@@ -1,6 +1,6 @@
 tasecureapi
 
-Copyright 2020-2022 Comcast Cable Communications Management, LLC
+Copyright 2020-2023 Comcast Cable Communications Management, LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,3 +37,7 @@ Distributed under the Boost Software License, Version 1.0.
 
 threads.h is authored by John Tsiombikas <nuclear@member.fsf.org>
 "I place this piece of code in the public domain. Feel free to use as you see fit."
+
+Some code in this project is based off OpenSSL which is:
+Copyright 2019-2021 The OpenSSL Project Authors
+Licensed under the Apache License, Version 2.0

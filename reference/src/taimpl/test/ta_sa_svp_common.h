@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@
 
 #include "sa_types.h"
 #include "ta_sa_svp_crypto.h"
-#include <cstddef>
+#include <cstddef> // NOLINT
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -35,7 +35,7 @@ class TaSvpBufferCheckTest : public ::testing::WithParamInterface<sa_digest_algo
 
 class TaSvpKeyCheckTest : public TaSvpBase, public TaCryptoCipherBase {};
 
-using TaSvpBufferTestType = std::tuple<long>;
+typedef std::tuple<long> TaSvpBufferTestType; // NOLINT
 
 class TaSvpBufferCopyTest : public ::testing::WithParamInterface<TaSvpBufferTestType>, public TaSvpBase {};
 

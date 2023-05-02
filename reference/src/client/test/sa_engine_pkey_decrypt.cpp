@@ -1,5 +1,5 @@
-/**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "client_test_helpers.h"
-#include "sa.h"
 #include "sa_engine_common.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
+#include "client_test_helpers.h"
+#include "digest_util.h"
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-#define EVP_MD_CTX_new EVP_MD_CTX_create
-#define EVP_MD_CTX_free EVP_MD_CTX_destroy
-#endif
 
 using namespace client_test_helpers;
 
@@ -44,16 +40,17 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
     if (*key == UNSUPPORTED_KEY)
         GTEST_SKIP() << "key type, key size, or curve not supported";
 
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
     auto data = random(32);
     auto label = random(oaep_label);
     std::vector<uint8_t> encrypted_data;
-    std::shared_ptr<EVP_PKEY_CTX> encrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY_CTX> const encrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+            EVP_PKEY_CTX_free);
     ASSERT_NE(encrypt_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_encrypt_init(encrypt_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(encrypt_pkey_ctx.get(), padding), 1);
@@ -68,27 +65,17 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
             }
 
             memcpy(new_label, label.data(), label.size());
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-            if (EVP_PKEY_CTX_ctrl(encrypt_pkey_ctx.get(), EVP_PKEY_RSA, EVP_PKEY_OP_ENCRYPT,
-                        EVP_PKEY_CTRL_RSA_OAEP_LABEL, static_cast<int>(label.size()), new_label) != 1) {
-                free(new_label);
-                GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_ctrl failed");
-            }
-#else
-
             if (EVP_PKEY_CTX_set0_rsa_oaep_label(encrypt_pkey_ctx.get(), new_label,
                         static_cast<int>(label.size())) != 1) {
                 free(new_label);
                 GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
             }
-#endif
         }
     }
 
     size_t encrypted_data_length = 0;
     ASSERT_EQ(EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), nullptr, &encrypted_data_length, data.data(), data.size()), 1);
     encrypted_data.resize(encrypted_data_length);
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     int result = EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), encrypted_data.data(), &encrypted_data_length, data.data(),
             data.size());
     if (result == OPENSSL_NOT_SUPPORTED)
@@ -97,7 +84,8 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
     ASSERT_EQ(result, 1);
 
     std::vector<uint8_t> decrypted_data;
-    std::shared_ptr<EVP_PKEY_CTX> decrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY_CTX> const decrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+            EVP_PKEY_CTX_free);
     ASSERT_NE(decrypt_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_decrypt_init(decrypt_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(decrypt_pkey_ctx.get(), padding), 1);
@@ -112,19 +100,11 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
             }
 
             memcpy(new_label, label.data(), label.size());
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-            if (EVP_PKEY_CTX_ctrl(decrypt_pkey_ctx.get(), EVP_PKEY_RSA, EVP_PKEY_OP_DECRYPT,
-                        EVP_PKEY_CTRL_RSA_OAEP_LABEL, static_cast<int>(label.size()), new_label) != 1) {
-                free(new_label);
-                GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_ctrl failed");
-            }
-#else
             if (EVP_PKEY_CTX_set0_rsa_oaep_label(decrypt_pkey_ctx.get(), new_label,
                         static_cast<int>(label.size())) != 1) {
                 free(new_label);
                 GTEST_FATAL_FAILURE_("EVP_PKEY_CTX_set0_rsa_oaep_label failed");
             }
-#endif
         }
     }
 
@@ -144,9 +124,9 @@ TEST_P(SaEnginePkeyEncryptTest, encryptTest) {
 }
 
 TEST_F(SaEnginePkeyEncryptTest, defaultPaddingTest) {
-    sa_key_type key_type = SA_KEY_TYPE_RSA;
+    sa_key_type const key_type = SA_KEY_TYPE_RSA;
     size_t key_length = RSA_2048_BYTE_LENGTH;
-    int padding = RSA_PKCS1_PADDING;
+    int const padding = RSA_PKCS1_PADDING;
 
     std::vector<uint8_t> clear_key;
     sa_elliptic_curve curve;
@@ -155,21 +135,21 @@ TEST_F(SaEnginePkeyEncryptTest, defaultPaddingTest) {
     if (*key == UNSUPPORTED_KEY)
         GTEST_SKIP() << "key type, key size, or curve not supported";
 
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
 
     auto data = random(32);
     std::vector<uint8_t> encrypted_data;
-    std::shared_ptr<EVP_PKEY_CTX> encrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY_CTX> const encrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+            EVP_PKEY_CTX_free);
     ASSERT_NE(encrypt_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_encrypt_init(encrypt_pkey_ctx.get()), 1);
     size_t encrypted_data_length = 0;
     ASSERT_EQ(EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), nullptr, &encrypted_data_length, data.data(), data.size()), 1);
     encrypted_data.resize(encrypted_data_length);
-    std::shared_ptr<EVP_MD_CTX> evp_md_verify_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     int result = EVP_PKEY_encrypt(encrypt_pkey_ctx.get(), encrypted_data.data(), &encrypted_data_length, data.data(),
             data.size());
     if (result == OPENSSL_NOT_SUPPORTED)
@@ -178,7 +158,8 @@ TEST_F(SaEnginePkeyEncryptTest, defaultPaddingTest) {
     ASSERT_EQ(result, 1);
 
     std::vector<uint8_t> decrypted_data;
-    std::shared_ptr<EVP_PKEY_CTX> decrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY_CTX> const decrypt_pkey_ctx(EVP_PKEY_CTX_new(evp_pkey.get(), engine.get()),
+            EVP_PKEY_CTX_free);
     ASSERT_NE(decrypt_pkey_ctx, nullptr);
     ASSERT_EQ(EVP_PKEY_decrypt_init(decrypt_pkey_ctx.get()), 1);
     ASSERT_EQ(EVP_PKEY_CTX_set_rsa_padding(decrypt_pkey_ctx.get(), padding), 1);
@@ -261,3 +242,4 @@ INSTANTIATE_TEST_SUITE_P(
                     SA_DIGEST_ALGORITHM_SHA512),
                 ::testing::Values(0, 16)));
 // clang-format on
+#endif

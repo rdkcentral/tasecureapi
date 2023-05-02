@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,11 +40,36 @@
 #include "sa_types.h"
 
 /**
- * SecAPI specification version
+ * SecAPI specification major version
  */
 #define SA_SPECIFICATION_MAJOR 3
-#define SA_SPECIFICATION_MINOR 1
-#define SA_SPECIFICATION_REVISION 2
+
+/**
+ * SecAPI specification minor version
+ */
+#define SA_SPECIFICATION_MINOR 2
+
+/**
+ * SecAPI specification revision
+ */
+#define SA_SPECIFICATION_REVISION 0
+
+/**
+ * Stringify helper macro.
+ */
+#define STR(arg) #arg
+
+/**
+ * Stringify helper macro.
+ */
+// clang-format off
+#define VERSION_STR(x, y, z) STR(x) "." STR(y) "." STR(z)
+// clang-format on
+
+/**
+ * SecAPI version string.
+ */
+#define SA_SPECIFICATION_STR VERSION_STR(SA_SPECIFICATION_MAJOR, SA_SPECIFICATION_MINOR, SA_SPECIFICATION_REVISION)
 
 #ifdef __cplusplus
 extern "C" {

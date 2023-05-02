@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,22 +29,6 @@
 #define UNSUPPORTED_CIPHER (sa_crypto_cipher_context)(INVALID_HANDLE - 1)
 
 namespace test_helpers {
-    /**
-     * Converts a digest algorithm into an OpenSSL mechanism.
-     * @param[in] digest_algorithm the digest to convert.
-     * @return the OpenSSL mechanism.
-     */
-    const EVP_MD* digest_mechanism(sa_digest_algorithm digest_algorithm);
-
-    /**
-     * Obtain digest length for specified algorithm.
-     *
-     * @param[in] digest_algorithm digest algorithm.
-     * @return length required to store the digest value. Returns (size_t) -1 if invalid digest
-     * algorithm is specified.
-     */
-    size_t digest_length(sa_digest_algorithm digest_algorithm);
-
     /**
      * Compute SHA digest value over inputs.
      *

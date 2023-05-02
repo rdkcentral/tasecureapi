@@ -1,5 +1,5 @@
-/**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "log.h"
 #include "sa_engine_internal.h"
-
 #if OPENSSL_VERSION_NUMBER < 0x30000000
+#include "log.h"
 #include <memory.h>
 
 #define EVP_PKEY_SECAPI3 0x53415F33
 
 #if defined(__linux__)
 #include <malloc.h>
-static size_t memory_size(const void* ptr, size_t default_size) {
+static size_t memory_size(const void* ptr, ossl_unused size_t default_size) {
     return malloc_usable_size((void*) ptr);
 }
 #elif defined(__APPLE__)
@@ -141,10 +140,8 @@ int sa_set_pkey_data(
                 memset(new_data, 0, sizeof(pkey_data));
 
                 // Copy the original key data structure into another larger data structure.
-                if (temp_key != NULL) {
-                    size_t temp_key_length = memory_size(temp_key, MAX_KEY_DATA_LEN);
-                    memcpy(new_data->data, temp_key, temp_key_length);
-                }
+                size_t temp_key_length = memory_size(temp_key, MAX_KEY_DATA_LEN);
+                memcpy(new_data->data, temp_key, temp_key_length);
 
                 // Free the original data structure (unless it's an ED or X key), but don't free any of it's contents
                 // which are now pointed to by the key_data.
@@ -176,92 +173,4 @@ int sa_set_pkey_data(
     return result;
 }
 
-#else
-
-static void pkey_key_data_new(
-        void* parent,
-        void* ptr,
-        CRYPTO_EX_DATA* ad,
-        int idx,
-        long argl,
-        void* argp) {
-
-    CRYPTO_set_ex_data(ad, idx, OPENSSL_malloc(sizeof(pkey_data)));
-}
-
-static int pkey_key_data_dup(
-        CRYPTO_EX_DATA* to,
-        const CRYPTO_EX_DATA* from,
-        void** from_d,
-        int idx,
-        long argl,
-        void* argp) {
-
-    pkey_data* from_key_data = CRYPTO_get_ex_data(from, idx);
-    pkey_data* to_key_data = OPENSSL_malloc(sizeof(pkey_data));
-    if (to_key_data == NULL) {
-        ERROR("OPENSSL_malloc failed");
-        return 0;
-    }
-
-    to_key_data->private_key = from_key_data->private_key;
-    CRYPTO_set_ex_data(to, idx, OPENSSL_malloc(sizeof(pkey_data)));
-    return 1;
-}
-
-static void pkey_key_data_free(
-        void* parent,
-        void* ptr,
-        CRYPTO_EX_DATA* ad,
-        int idx,
-        long argl,
-        void* argp) {
-
-    pkey_data* key_data = CRYPTO_get_ex_data(ad, idx);
-    OPENSSL_free(key_data);
-}
-
-int sa_get_ex_data_index() {
-    static int index = 0;
-
-    if (mtx_lock(&engine_mutex) != 0) {
-        ERROR("mtx_lock failed");
-        return 0;
-    }
-
-    if (index == 0) {
-        index = EVP_PKEY_get_ex_new_index(0, NULL, pkey_key_data_new, pkey_key_data_dup, pkey_key_data_free);
-    }
-
-    mtx_unlock(&engine_mutex);
-    return index;
-}
-
-const pkey_data* sa_get_pkey_data(EVP_PKEY* evp_pkey) {
-    pkey_data* data = NULL;
-    if (EVP_PKEY_id(evp_pkey) == EVP_PKEY_SYM) {
-        data = EVP_PKEY_get0(evp_pkey);
-        if (data == NULL)
-            ERROR("EVP_PKEY_get_ex_data failed");
-    } else {
-        data = EVP_PKEY_get_ex_data(evp_pkey, sa_get_ex_data_index());
-        if (data == NULL)
-            ERROR("EVP_PKEY_get_ex_data failed");
-    }
-
-    return data;
-}
-
-int sa_set_pkey_data(
-        EVP_PKEY** evp_pkey,
-        const pkey_data* data) {
-    pkey_data* new_data = EVP_PKEY_get_ex_data(*evp_pkey, sa_get_ex_data_index());
-    if (new_data == NULL) {
-        ERROR("EVP_PKEY_get_ex_data failed");
-        return 0;
-    }
-
-    memcpy(new_data, data, sizeof(pkey_data));
-    return 1;
-}
 #endif

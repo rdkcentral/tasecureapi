@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,11 +58,6 @@ static sa_status ta_sa_key_unwrap_aes_ecb(
     if (rights == NULL) {
         ERROR("NULL rights");
         return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (cipher_algorithm != SA_CIPHER_ALGORITHM_AES_ECB && cipher_algorithm != SA_CIPHER_ALGORITHM_AES_ECB_PKCS7) {
-        ERROR("Invalid algorithm");
-        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (in == NULL) {
@@ -158,11 +153,6 @@ static sa_status ta_sa_key_unwrap_aes_cbc(
     if (rights == NULL) {
         ERROR("NULL rights");
         return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CBC && cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CBC_PKCS7) {
-        ERROR("Invalid algorithm");
-        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (algorithm_parameters == NULL) {
@@ -735,11 +725,6 @@ static sa_status ta_sa_key_unwrap_rsa(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (cipher_algorithm != SA_CIPHER_ALGORITHM_RSA_OAEP && cipher_algorithm != SA_CIPHER_ALGORITHM_RSA_PKCS1V15) {
-        ERROR("Invalid algorithm");
-        return SA_STATUS_INVALID_PARAMETER;
-    }
-
     if (in == NULL) {
         ERROR("NULL in");
         return SA_STATUS_NULL_PARAMETER;
@@ -781,8 +766,8 @@ static sa_status ta_sa_key_unwrap_rsa(
             break;
         }
 
-        status = unwrap_rsa(&stored_key_unwrapped, in, in_length, rights, key_type, cipher_algorithm,
-                algorithm_parameters, stored_key_wrapping);
+        status = unwrap_rsa(&stored_key_unwrapped, in, in_length, rights, cipher_algorithm, algorithm_parameters,
+                stored_key_wrapping);
         if (status != SA_STATUS_OK) {
             ERROR("unwrap_rsa failed");
             break;
@@ -879,8 +864,7 @@ static sa_status ta_sa_key_unwrap_ec(
             break;
         }
 
-        status = unwrap_ec(&stored_key_unwrapped, in, in_length, rights, key_type, algorithm_parameters,
-                stored_key_wrapping);
+        status = unwrap_ec(&stored_key_unwrapped, in, in_length, rights, algorithm_parameters, stored_key_wrapping);
         if (status != SA_STATUS_OK) {
             ERROR("unwrap_ec failed");
             break;

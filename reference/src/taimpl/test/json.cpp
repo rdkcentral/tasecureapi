@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,7 +83,7 @@ namespace {
 
     TEST(Json, parseArrayEmpty) {
         const char* json = "[]";
-        size_t array_size = 0;
+        size_t const array_size = 0;
 
         json_value_t* value;
         json_value_t** array = nullptr;
@@ -110,7 +110,7 @@ namespace {
 
     TEST(Json, parseArrayInt) {
         const char* json = "[1, 2, 3, 4]";
-        size_t array_size = 4;
+        size_t const array_size = 4;
 
         json_value_t* value;
         json_value_t** array = nullptr;
@@ -146,7 +146,7 @@ namespace {
 
     TEST(Json, parseMapEmpty) {
         const char* json = "{}";
-        size_t map_size = 0;
+        size_t const map_size = 0;
 
         json_value_t* value;
         json_key_value_t* map = nullptr;
@@ -173,7 +173,7 @@ namespace {
 
     TEST(Json, parseMapSimple) {
         const char* json = R"({ "first" : 1, "second" : 2, "third" : 3, "fourth" : 4 })";
-        size_t map_size = 4;
+        size_t const map_size = 4;
 
         json_value_t* value;
         json_key_value_t* map = nullptr;

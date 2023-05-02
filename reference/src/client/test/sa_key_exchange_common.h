@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,15 +28,15 @@
 
 class SaKeyExchangeTest : public ::testing::Test {};
 
-using SaKeyExchangeDhTestType = std::tuple<std::vector<uint8_t>, std::vector<uint8_t>>;
+typedef std::tuple<std::vector<uint8_t>, std::vector<uint8_t>> SaKeyExchangeDhTestType;
 
 class SaKeyExchangeDhTest : public ::testing::TestWithParam<SaKeyExchangeDhTestType>, public SaKeyBase {};
 
-using SaKeyExchangeEcdhTestType = std::tuple<sa_elliptic_curve>;
+typedef std::tuple<sa_elliptic_curve> SaKeyExchangeEcdhTestType;
 
 class SaKeyExchangeEcdhTest : public ::testing::TestWithParam<SaKeyExchangeEcdhTestType>, public SaKeyBase {};
 
-using SaKeyExchangeNetflixTestType = std::tuple<std::vector<uint8_t>, std::vector<uint8_t>>;
+typedef std::tuple<std::vector<uint8_t>, std::vector<uint8_t>> SaKeyExchangeNetflixTestType;
 
 class SaKeyExchangeNetflixTest : public ::testing::TestWithParam<SaKeyExchangeNetflixTestType>, public SaKeyBase {
 protected:

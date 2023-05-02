@@ -1,5 +1,5 @@
-/**
- * Copyright 2019-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ struct svp_buffer_s {
 };
 
 static bool svp_validate_buffer(const svp_buffer_t* svp_buffer) {
-
     if (svp_buffer == NULL) {
         ERROR("NULL svp_buffer");
         return false;
@@ -277,7 +276,7 @@ void* svp_get_svp_memory(const svp_buffer_t* svp_buffer) {
 
     if (!svp_validate_buffer(svp_buffer)) {
         ERROR("svp_validate_buffer failed");
-        return false;
+        return NULL;
     }
 
     return svp_buffer->svp_memory;

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -106,8 +106,8 @@ namespace {
             ASSERT_EQ(sa_key_get_public(nullptr, &public_key_length, *key), SA_STATUS_OK);
             std::vector<uint8_t> public_key(public_key_length);
             ASSERT_EQ(sa_key_get_public(public_key.data(), &public_key_length, *key), SA_STATUS_OK);
-            std::shared_ptr<EVP_PKEY> evp_public_key = {sa_import_public_key(public_key.data(), public_key.size()),
-                    EVP_PKEY_free};
+            std::shared_ptr<EVP_PKEY> const evp_public_key =
+                    {sa_import_public_key(public_key.data(), public_key.size()), EVP_PKEY_free};
             ASSERT_NE(evp_public_key, nullptr);
 
             if (key_type == SA_KEY_TYPE_RSA) {
@@ -161,7 +161,7 @@ namespace {
 
         sa_generate_parameters_symmetric parameters = {AES_BLOCK_SIZE};
 
-        sa_status status = sa_key_generate(nullptr, &rights, SA_KEY_TYPE_SYMMETRIC, &parameters);
+        sa_status const status = sa_key_generate(nullptr, &rights, SA_KEY_TYPE_SYMMETRIC, &parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -171,7 +171,7 @@ namespace {
 
         sa_generate_parameters_symmetric parameters = {AES_BLOCK_SIZE};
 
-        sa_status status = sa_key_generate(key.get(), nullptr, SA_KEY_TYPE_SYMMETRIC, &parameters);
+        sa_status const status = sa_key_generate(key.get(), nullptr, SA_KEY_TYPE_SYMMETRIC, &parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -184,7 +184,7 @@ namespace {
 
         sa_generate_parameters_symmetric parameters = {128};
 
-        sa_status status = sa_key_generate(key.get(), &rights, static_cast<sa_key_type>(UINT8_MAX), &parameters);
+        sa_status const status = sa_key_generate(key.get(), &rights, static_cast<sa_key_type>(UINT8_MAX), &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

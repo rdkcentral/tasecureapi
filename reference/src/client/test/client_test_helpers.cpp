@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
  */
 
 #include "client_test_helpers.h"
+#include "digest_util.h"
 #include "pkcs8.h"
 #include "sa_public_key.h"
 #include <cstring>
@@ -24,22 +25,16 @@
 #include <openssl/cmac.h>
 #include <openssl/dh.h>
 #include <openssl/hmac.h>
-#include <openssl/rand.h>
 #include <openssl/x509.h>
-#if OPENSSL_VERSION_NUMBER >= 0x30000000
-#include <openssl/core_names.h>
-#else
+#if OPENSSL_VERSION_NUMBER < 0x30000000
 #include <openssl/ecdsa.h>
+#include <openssl/rand.h>
 #endif
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 #define EVP_MD_CTX_free EVP_MD_CTX_destroy
 #endif
 
 #define KEY_ONLY_MASK (~SA_USAGE_BIT_MASK(SA_USAGE_FLAG_UNWRAP) & SA_KEY_USAGE_MASK)
-
-#define EC_P256_KEY_SIZE 32
-#define EC_P384_KEY_SIZE 48
-#define EC_P521_KEY_SIZE 66 // Only 1 bit of the ms byte is used
 
 namespace client_test_helpers {
     static const uint8_t RSA1024[] = {
@@ -1568,482 +1563,488 @@ namespace client_test_helpers {
             0x90, 0xA6, 0xC0, 0x8F, 0x4D, 0xF4, 0x35, 0xC9, 0x34, 0x06, 0x31, 0x99,
             0xFF, 0xFF, 0xFF, 0xFF, 0x08, 0x08, 0x08, 0x08};
 
-    static bool hmac_sa(
-            std::vector<uint8_t>& out,
-            sa_key key,
-            const std::vector<uint8_t>& in,
-            sa_digest_algorithm digest_algorithm) {
+    namespace {
+        bool hmac_sa(
+                std::vector<uint8_t>& out,
+                sa_key key,
+                const std::vector<uint8_t>& in,
+                sa_digest_algorithm digest_algorithm) {
 
-        auto context = create_uninitialized_sa_crypto_mac_context();
-        if (context == nullptr) {
-            ERROR("create_uninitialized_sa_crypto_mac_context failed");
-            return false;
-        }
-
-        sa_mac_parameters_hmac parameters = {digest_algorithm};
-        if (sa_crypto_mac_init(context.get(), SA_MAC_ALGORITHM_HMAC, key, &parameters) != SA_STATUS_OK) {
-            ERROR("sa_crypto_mac_init failed");
-            return false;
-        }
-
-        if (sa_crypto_mac_process(*context, in.data(), in.size()) != SA_STATUS_OK) {
-            ERROR("sa_crypto_mac_process failed");
-            return false;
-        }
-
-        size_t out_length = digest_length(digest_algorithm);
-        out.resize(out_length);
-        if (sa_crypto_mac_compute(out.data(), &out_length, *context) != SA_STATUS_OK) {
-            ERROR("sa_crypto_mac_compute failed");
-            return false;
-        }
-
-        return true;
-    }
-
-    static bool decrypt_aes_ecb_sa(
-            std::vector<uint8_t>& out,
-            std::vector<uint8_t>& in,
-            sa_key key) {
-
-        auto context = create_uninitialized_sa_crypto_cipher_context();
-        if (context == nullptr) {
-            ERROR("create_uninitialized_sa_crypto_cipher_context failed");
-            return false;
-        }
-
-        if (sa_crypto_cipher_init(context.get(), SA_CIPHER_ALGORITHM_AES_ECB, SA_CIPHER_MODE_DECRYPT, key,
-                    nullptr) != SA_STATUS_OK) {
-            ERROR("sa_crypto_cipher_init failed");
-            return false;
-        }
-
-        size_t length = in.size();
-        sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
-        sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
-        if (sa_crypto_cipher_process(&out_buffer, *context, &in_buffer, &length) != SA_STATUS_OK) {
-            ERROR("sa_crypto_cipher_process failed");
-            return false;
-        }
-
-        return true;
-    }
-
-    static bool encrypt_aes_ecb_sa(
-            std::vector<uint8_t>& out,
-            std::vector<uint8_t>& in,
-            sa_key key) {
-
-        auto context = create_uninitialized_sa_crypto_cipher_context();
-        if (context == nullptr) {
-            ERROR("create_uninitialized_sa_crypto_cipher_context failed");
-            return false;
-        }
-
-        if (sa_crypto_cipher_init(context.get(), SA_CIPHER_ALGORITHM_AES_ECB, SA_CIPHER_MODE_ENCRYPT, key,
-                    nullptr) != SA_STATUS_OK) {
-            ERROR("sa_crypto_cipher_init failed");
-            return false;
-        }
-
-        size_t length = in.size();
-        sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
-        sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
-        if (sa_crypto_cipher_process(&out_buffer, *context, &in_buffer, &length) != SA_STATUS_OK) {
-            ERROR("sa_crypto_cipher_process failed");
-            return false;
-        }
-
-        return true;
-    }
-
-    static bool check_key_unwrap_rights(
-            std::shared_ptr<sa_header>& parent_header,
-            std::shared_ptr<sa_header>& child_header) {
-
-        if ((parent_header->rights.usage_flags & KEY_ONLY_MASK) != 0 || parent_header->rights.child_usage_flags == 0) {
-            uint64_t disallowed = ~parent_header->rights.usage_flags & SA_USAGE_OUTPUT_PROTECTIONS_MASK;
-            if ((child_header->rights.usage_flags & ~disallowed) != 0)
-                return false;
-        } else {
-            uint64_t disallowed = ~parent_header->rights.child_usage_flags & SA_KEY_USAGE_MASK;
-            if ((child_header->rights.usage_flags & ~disallowed) != 0)
-                return false;
-        }
-
-        return true;
-    }
-
-    static bool key_check_hmac(
-            sa_key key,
-            const std::vector<uint8_t>& clear_key) {
-        auto input = random(AES_BLOCK_SIZE);
-
-        std::vector<uint8_t> sa3hmac(clear_key.size());
-        if (!hmac_sa(sa3hmac, key, input, SA_DIGEST_ALGORITHM_SHA256)) {
-            ERROR("hmac_sha256_sa failed");
-            return false;
-        }
-
-        std::vector<uint8_t> sslhmac(clear_key.size());
-        if (!hmac_openssl(sslhmac, clear_key, input, SA_DIGEST_ALGORITHM_SHA256)) {
-            ERROR("hmac_openssl failed");
-            return false;
-        }
-
-        if (sa3hmac != sslhmac) {
-            ERROR("hash values do not match");
-            return false;
-        }
-
-        return true;
-    }
-
-    static bool key_check_decrypt_aes_ecb(
-            sa_key key,
-            const std::vector<uint8_t>& clear_key) {
-
-        auto clear = random(AES_BLOCK_SIZE);
-        auto encrypted = std::vector<uint8_t>(clear.size());
-        size_t encrypted_length = clear.size();
-
-        if (!encrypt_aes_ecb_openssl(encrypted, clear, clear_key, false)) {
-            ERROR("encrypt_aes_ecb_openssl failed");
-            return false;
-        }
-
-        encrypted.resize(encrypted_length);
-
-        auto decrypted = std::vector<uint8_t>(encrypted.size());
-        if (!decrypt_aes_ecb_sa(decrypted, encrypted, key)) {
-            ERROR("decrypt_aes_ecb_sa failed");
-            return false;
-        }
-
-        if (clear != decrypted) {
-            ERROR("values do not match");
-            return false;
-        }
-
-        return true;
-    }
-
-    static bool key_check_encrypt_aes_ecb(
-            sa_key key,
-            const std::vector<uint8_t>& clear_key) {
-
-        auto clear = random(AES_BLOCK_SIZE);
-        auto encrypted = std::vector<uint8_t>(clear.size());
-
-        if (!encrypt_aes_ecb_sa(encrypted, clear, key)) {
-            ERROR("encrypt_aes_ecb_sa failed");
-            return false;
-        }
-
-        auto decrypted = std::vector<uint8_t>(encrypted.size());
-        if (!decrypt_aes_ecb_openssl(decrypted, encrypted, clear_key, false)) {
-            ERROR("decrypt_aes_ecb_openssl failed");
-            return false;
-        }
-
-        if (clear != decrypted) {
-            ERROR("values do not match");
-            return false;
-        }
-
-        return true;
-    }
-
-    static bool key_check_aes_ecb_unwrap(
-            sa_key key,
-            const std::vector<uint8_t>& clear_key) {
-        auto clear = random(AES_BLOCK_SIZE);
-        auto encrypted = std::vector<uint8_t>(clear.size());
-        if (!encrypt_aes_ecb_openssl(encrypted, clear, clear_key, false)) {
-            ERROR("encrypt_aes_ecb_openssl failed");
-            return false;
-        }
-
-        sa_rights rights;
-        sa_rights_set_allow_all(&rights);
-
-        auto unwrapped_key = create_uninitialized_sa_key();
-        if (unwrapped_key == nullptr) {
-            ERROR("create_uninitialized_sa_key failed");
-            return false;
-        }
-
-        if (sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, SA_CIPHER_ALGORITHM_AES_ECB,
-                    nullptr, key, encrypted.data(), encrypted.size()) != SA_STATUS_OK) {
-            ERROR("sa_key_unwrap failed");
-            return false;
-        }
-
-        auto parent_header = key_header(key);
-        if (parent_header == nullptr) {
-            ERROR("Could not get key header");
-            return false;
-        }
-
-        auto unwrapped_key_header = key_header(*unwrapped_key);
-        if (unwrapped_key_header == nullptr) {
-            ERROR("Could not get key header");
-            return false;
-        }
-
-        check_key_unwrap_rights(parent_header, unwrapped_key_header);
-        if (SA_USAGE_BIT_TEST(unwrapped_key_header->rights.usage_flags, SA_USAGE_FLAG_ENCRYPT)) {
-            if (!key_check_encrypt_aes_ecb(*unwrapped_key, clear)) {
-                ERROR("key_check_encrypt_aes_ecb failed");
+            auto context = create_uninitialized_sa_crypto_mac_context();
+            if (context == nullptr) {
+                ERROR("create_uninitialized_sa_crypto_mac_context failed");
                 return false;
             }
-        } else if (SA_USAGE_BIT_TEST(unwrapped_key_header->rights.usage_flags, SA_USAGE_FLAG_UNWRAP)) {
-            if (!key_check_aes_ecb_unwrap(*unwrapped_key, clear)) {
-                ERROR("key_check_aes_ecb_unwrap failed");
+
+            sa_mac_parameters_hmac parameters = {digest_algorithm};
+            if (sa_crypto_mac_init(context.get(), SA_MAC_ALGORITHM_HMAC, key, &parameters) != SA_STATUS_OK) {
+                ERROR("sa_crypto_mac_init failed");
                 return false;
             }
-        }
 
-        return true;
-    }
+            if (sa_crypto_mac_process(*context, in.data(), in.size()) != SA_STATUS_OK) {
+                ERROR("sa_crypto_mac_process failed");
+                return false;
+            }
 
-    static bool key_check_rsa_decrypt(sa_key key) {
-        auto clear = random(65);
-        std::vector<uint8_t> in(4096);
+            size_t out_length = digest_length(digest_algorithm);
+            out.resize(out_length);
+            if (sa_crypto_mac_compute(out.data(), &out_length, *context) != SA_STATUS_OK) {
+                ERROR("sa_crypto_mac_compute failed");
+                return false;
+            }
 
-        auto evp_pkey = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
-        if (evp_pkey == nullptr) {
-            ERROR("sa_get_public_key failed");
-            return false;
-        }
-
-        if (!encrypt_rsa_oaep_openssl(in, clear, evp_pkey, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, {})) {
-            ERROR("encrypt_rsa_oaep_openssl failed");
-            return false;
-        }
-
-        auto cipher = create_uninitialized_sa_crypto_cipher_context();
-        if (cipher == nullptr) {
-            ERROR("create_uninitialized_sa_crypto_cipher_context failed");
-            return false;
-        }
-
-        sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
-        if (sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_RSA_OAEP, SA_CIPHER_MODE_DECRYPT, key,
-                    &parameters) != SA_STATUS_OK) {
-            ERROR("sa_crypto_cipher_init failed");
-            return false;
-        }
-
-        size_t length = in.size();
-        sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
-        if (sa_crypto_cipher_process(nullptr, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
-            ERROR("sa_crypto_cipher_init failed");
-            return false;
-        }
-
-        auto out = std::vector<uint8_t>(length);
-        sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
-        length = in.size();
-        if (sa_crypto_cipher_process(&out_buffer, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
-            ERROR("sa_crypto_cipher_init failed");
-            return false;
-        }
-
-        out.resize(length);
-
-        if (clear != out) {
-            ERROR("RSA decrypt failed");
-            return false;
-        }
-
-        return true;
-    }
-
-    static bool key_check_rsa_oaep_unwrap(sa_key key) {
-        auto clear = random(AES_BLOCK_SIZE);
-
-        auto rsa = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
-        if (rsa == nullptr) {
-            ERROR("sa_get_public_key failed");
-            return false;
-        }
-
-        auto encrypted = std::vector<uint8_t>(EVP_PKEY_bits(rsa.get()) / 8);
-        if (!encrypt_rsa_oaep_openssl(encrypted, clear, rsa, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, {})) {
-            ERROR("encrypt_rsa_oaep_openssl failed");
-            return false;
-        }
-
-        sa_rights rights;
-        sa_rights_set_allow_all(&rights);
-
-        auto unwrapped_key = create_uninitialized_sa_key();
-        if (unwrapped_key == nullptr) {
-            ERROR("create_uninitialized_sa_key failed");
-            return false;
-        }
-
-        sa_unwrap_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
-        if (sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, SA_CIPHER_ALGORITHM_RSA_OAEP,
-                    &parameters, key, encrypted.data(), encrypted.size()) != SA_STATUS_OK) {
-            ERROR("sa_key_unwrap failed");
-            return false;
-        }
-
-        auto parent_header = key_header(key);
-        if (parent_header == nullptr) {
-            ERROR("Could not get key header");
-            return false;
-        }
-
-        auto unwrapped_key_header = key_header(*unwrapped_key);
-        if (unwrapped_key_header == nullptr) {
-            ERROR("Could not get key header");
-            return false;
-        }
-
-        check_key_unwrap_rights(parent_header, unwrapped_key_header);
-
-        if (!key_check_sym(*unwrapped_key, clear)) {
-            ERROR("key_check_sym failed");
-            return false;
-        }
-
-        return true;
-    }
-
-    static bool key_check_ec_elgamal_decrypt(sa_key key) {
-        auto header = key_header(key);
-        auto curve = header->type_parameters.curve;
-        size_t key_size = ec_get_key_size(curve);
-
-        auto ec = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
-        if (ec == nullptr) {
-            ERROR("sa_get_public_key failed");
-            return false;
-        }
-
-        auto clear = random(key_size);
-        if (curve == SA_ELLIPTIC_CURVE_NIST_P521)
-            clear[0] &= 0x1;
-
-        std::vector<uint8_t> in;
-        if (!encrypt_ec_elgamal_openssl(in, clear, curve, ec)) {
-            ERROR("encrypt_ec_elgamal_openssl failed");
-            return false;
-        }
-
-        auto cipher = create_uninitialized_sa_crypto_cipher_context();
-        if (cipher == nullptr) {
-            ERROR("create_uninitialized_sa_crypto_cipher_context failed");
-            return false;
-        }
-
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_EC_ELGAMAL, SA_CIPHER_MODE_DECRYPT,
-                key, nullptr);
-        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             return true;
-
-        if (status != SA_STATUS_OK) {
-            ERROR("sa_crypto_cipher_init failed");
-            return false;
         }
 
-        size_t length = in.size();
-        sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
-        if (sa_crypto_cipher_process(nullptr, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
-            ERROR("sa_crypto_cipher_process failed");
-            return false;
-        }
+        bool decrypt_aes_ecb_sa(
+                std::vector<uint8_t>& out,
+                std::vector<uint8_t>& in,
+                sa_key key) {
 
-        auto out = std::vector<uint8_t>(length);
-        sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
-        length = in.size();
-        if (sa_crypto_cipher_process(&out_buffer, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
-            ERROR("sa_crypto_cipher_process failed");
-            return false;
-        }
+            auto context = create_uninitialized_sa_crypto_cipher_context();
+            if (context == nullptr) {
+                ERROR("create_uninitialized_sa_crypto_cipher_context failed");
+                return false;
+            }
 
-        out.resize(length);
+            if (sa_crypto_cipher_init(context.get(), SA_CIPHER_ALGORITHM_AES_ECB, SA_CIPHER_MODE_DECRYPT, key,
+                        nullptr) != SA_STATUS_OK) {
+                ERROR("sa_crypto_cipher_init failed");
+                return false;
+            }
 
-        if (clear != out) {
-            ERROR("EC decrypt failed");
-            return false;
-        }
+            size_t length = in.size();
+            sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
+            sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
+            if (sa_crypto_cipher_process(&out_buffer, *context, &in_buffer, &length) != SA_STATUS_OK) {
+                ERROR("sa_crypto_cipher_process failed");
+                return false;
+            }
 
-        return true;
-    }
-
-    static bool key_check_ec_elgamal_unwrap(sa_key key) {
-        const int COUNTER_SIZE = 4;
-        auto header = key_header(key);
-        auto curve = header->type_parameters.curve;
-
-        auto clear_key = random(SYM_128_KEY_SIZE);
-        size_t key_size = ec_get_key_size(curve);
-        std::vector<uint8_t> clear(key_size);
-        std::vector<uint8_t> in(128);
-
-        // Calculates an offset that is always a multiple of 8. Some SecApi 3 implementations require the offset to
-        // always be a multiple of 8. For P192, the offset will be 0 due to the key size. All others will be non-zero to
-        // vary the test. encrypt_ec_elgamal_openssl uses the last 32 bits of the clear data as a counter to allow
-        // multiple tries to find a valid point when performing the El Gamal encrypt algorithm.
-        size_t offset = ((key_size - COUNTER_SIZE - SYM_128_KEY_SIZE) / 8) * 8;
-        clear.assign(clear.size(), 0);
-        memcpy(clear.data() + offset, clear_key.data(), clear_key.size());
-        auto ec = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
-        if (ec == nullptr) {
-            ERROR("sa_get_public_key failed");
-            return false;
-        }
-
-        if (!encrypt_ec_elgamal_openssl(in, clear, curve, ec)) {
-            ERROR("encrypt_ec_elgamal_openssl failed");
-            return false;
-        }
-
-        sa_rights rights;
-        sa_rights_set_allow_all(&rights);
-
-        auto unwrapped_key = create_uninitialized_sa_key();
-        if (unwrapped_key == nullptr) {
-            ERROR("create_uninitialized_sa_key failed");
-            return false;
-        }
-
-        sa_unwrap_parameters_ec_elgamal params = {offset, clear_key.size()};
-        sa_status status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
-                SA_CIPHER_ALGORITHM_EC_ELGAMAL, &params, key, in.data(), in.size());
-        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             return true;
-
-        if (status != SA_STATUS_OK) {
-            ERROR("sa_key_unwrap failed");
-            return false;
         }
 
-        auto parent_header = key_header(key);
-        if (parent_header == nullptr) {
-            ERROR("Could not get key header");
-            return false;
+        bool encrypt_aes_ecb_sa(
+                std::vector<uint8_t>& out,
+                std::vector<uint8_t>& in,
+                sa_key key) {
+
+            auto context = create_uninitialized_sa_crypto_cipher_context();
+            if (context == nullptr) {
+                ERROR("create_uninitialized_sa_crypto_cipher_context failed");
+                return false;
+            }
+
+            if (sa_crypto_cipher_init(context.get(), SA_CIPHER_ALGORITHM_AES_ECB, SA_CIPHER_MODE_ENCRYPT, key,
+                        nullptr) != SA_STATUS_OK) {
+                ERROR("sa_crypto_cipher_init failed");
+                return false;
+            }
+
+            size_t length = in.size();
+            sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
+            sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
+            if (sa_crypto_cipher_process(&out_buffer, *context, &in_buffer, &length) != SA_STATUS_OK) {
+                ERROR("sa_crypto_cipher_process failed");
+                return false;
+            }
+
+            return true;
         }
 
-        auto unwrapped_key_header = key_header(*unwrapped_key);
-        if (unwrapped_key_header == nullptr) {
-            ERROR("Could not get key header");
-            return false;
+        bool check_key_unwrap_rights(
+                const std::shared_ptr<sa_header>& parent_header,
+                const std::shared_ptr<sa_header>& child_header) {
+
+            if ((parent_header->rights.usage_flags & KEY_ONLY_MASK) != 0 ||
+                    parent_header->rights.child_usage_flags == 0) {
+                uint64_t const disallowed = ~parent_header->rights.usage_flags & SA_USAGE_OUTPUT_PROTECTIONS_MASK;
+                if ((child_header->rights.usage_flags & ~disallowed) != 0)
+                    return false;
+            } else {
+                uint64_t const disallowed = ~parent_header->rights.child_usage_flags & SA_KEY_USAGE_MASK;
+                if ((child_header->rights.usage_flags & ~disallowed) != 0)
+                    return false;
+            }
+
+            return true;
         }
 
-        check_key_unwrap_rights(parent_header, unwrapped_key_header);
+        bool key_check_hmac(
+                sa_key key,
+                const std::vector<uint8_t>& clear_key) {
+            auto input = random(AES_BLOCK_SIZE);
 
-        if (!key_check_sym(*unwrapped_key, clear_key)) {
-            ERROR("key_check_sym failed");
-            return false;
+            std::vector<uint8_t> sa3hmac(clear_key.size());
+            if (!hmac_sa(sa3hmac, key, input, SA_DIGEST_ALGORITHM_SHA256)) {
+                ERROR("hmac_sa failed");
+                return false;
+            }
+
+            std::vector<uint8_t> sslhmac(clear_key.size());
+            if (!hmac_openssl(sslhmac, clear_key, input, SA_DIGEST_ALGORITHM_SHA256)) {
+                ERROR("hmac_openssl failed");
+                return false;
+            }
+
+            if (sa3hmac != sslhmac) {
+                ERROR("hash values do not match");
+                return false;
+            }
+
+            return true;
         }
 
-        return true;
-    }
+        bool key_check_decrypt_aes_ecb(
+                sa_key key,
+                const std::vector<uint8_t>& clear_key) {
+
+            auto clear = random(AES_BLOCK_SIZE);
+            auto encrypted = std::vector<uint8_t>(clear.size());
+            size_t const encrypted_length = clear.size();
+
+            if (!encrypt_aes_ecb_openssl(encrypted, clear, clear_key, false)) {
+                ERROR("encrypt_aes_ecb_openssl failed");
+                return false;
+            }
+
+            encrypted.resize(encrypted_length);
+
+            auto decrypted = std::vector<uint8_t>(encrypted.size());
+            if (!decrypt_aes_ecb_sa(decrypted, encrypted, key)) {
+                ERROR("decrypt_aes_ecb_sa failed");
+                return false;
+            }
+
+            if (clear != decrypted) {
+                ERROR("values do not match");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool key_check_encrypt_aes_ecb(
+                sa_key key,
+                const std::vector<uint8_t>& clear_key) {
+
+            auto clear = random(AES_BLOCK_SIZE);
+            auto encrypted = std::vector<uint8_t>(clear.size());
+
+            if (!encrypt_aes_ecb_sa(encrypted, clear, key)) {
+                ERROR("encrypt_aes_ecb_sa failed");
+                return false;
+            }
+
+            auto decrypted = std::vector<uint8_t>(encrypted.size());
+            if (!decrypt_aes_ecb_openssl(decrypted, encrypted, clear_key, false)) {
+                ERROR("decrypt_aes_ecb_openssl failed");
+                return false;
+            }
+
+            if (clear != decrypted) {
+                ERROR("values do not match");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool key_check_aes_ecb_unwrap(
+                sa_key key,
+                const std::vector<uint8_t>& clear_key) {
+            auto clear = random(AES_BLOCK_SIZE);
+            auto encrypted = std::vector<uint8_t>(clear.size());
+            if (!encrypt_aes_ecb_openssl(encrypted, clear, clear_key, false)) {
+                ERROR("encrypt_aes_ecb_openssl failed");
+                return false;
+            }
+
+            sa_rights rights;
+            sa_rights_set_allow_all(&rights);
+
+            auto unwrapped_key = create_uninitialized_sa_key();
+            if (unwrapped_key == nullptr) {
+                ERROR("create_uninitialized_sa_key failed");
+                return false;
+            }
+
+            if (sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr, SA_CIPHER_ALGORITHM_AES_ECB,
+                        nullptr, key, encrypted.data(), encrypted.size()) != SA_STATUS_OK) {
+                ERROR("sa_key_unwrap failed");
+                return false;
+            }
+
+            auto parent_header = key_header(key);
+            if (parent_header == nullptr) {
+                ERROR("Could not get key header");
+                return false;
+            }
+
+            auto unwrapped_key_header = key_header(*unwrapped_key);
+            if (unwrapped_key_header == nullptr) {
+                ERROR("Could not get key header");
+                return false;
+            }
+
+            check_key_unwrap_rights(parent_header, unwrapped_key_header);
+            if (SA_USAGE_BIT_TEST(unwrapped_key_header->rights.usage_flags, SA_USAGE_FLAG_ENCRYPT)) {
+                if (!key_check_encrypt_aes_ecb(*unwrapped_key, clear)) {
+                    ERROR("key_check_encrypt_aes_ecb failed");
+                    return false;
+                }
+            } else if (SA_USAGE_BIT_TEST(unwrapped_key_header->rights.usage_flags, SA_USAGE_FLAG_UNWRAP)) {
+                if (!key_check_aes_ecb_unwrap(*unwrapped_key, clear)) {
+                    ERROR("key_check_aes_ecb_unwrap failed");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        bool key_check_rsa_decrypt(sa_key key) {
+            auto clear = random(65);
+            std::vector<uint8_t> in(4096);
+
+            auto evp_pkey = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
+            if (evp_pkey == nullptr) {
+                ERROR("sa_get_public_key failed");
+                return false;
+            }
+
+            if (!encrypt_rsa_oaep_openssl(in, clear, evp_pkey, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1,
+                        {})) {
+                ERROR("encrypt_rsa_oaep_openssl failed");
+                return false;
+            }
+
+            auto cipher = create_uninitialized_sa_crypto_cipher_context();
+            if (cipher == nullptr) {
+                ERROR("create_uninitialized_sa_crypto_cipher_context failed");
+                return false;
+            }
+
+            sa_cipher_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
+            if (sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_RSA_OAEP, SA_CIPHER_MODE_DECRYPT, key,
+                        &parameters) != SA_STATUS_OK) {
+                ERROR("sa_crypto_cipher_init failed");
+                return false;
+            }
+
+            size_t length = in.size();
+            sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
+            if (sa_crypto_cipher_process(nullptr, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
+                ERROR("sa_crypto_cipher_process failed");
+                return false;
+            }
+
+            auto out = std::vector<uint8_t>(length);
+            sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
+            length = in.size();
+            if (sa_crypto_cipher_process(&out_buffer, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
+                ERROR("sa_crypto_cipher_process failed");
+                return false;
+            }
+
+            out.resize(length);
+
+            if (clear != out) {
+                ERROR("RSA decrypt failed");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool key_check_rsa_oaep_unwrap(sa_key key) {
+            auto clear = random(AES_BLOCK_SIZE);
+
+            auto rsa = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
+            if (rsa == nullptr) {
+                ERROR("sa_get_public_key failed");
+                return false;
+            }
+
+            auto encrypted = std::vector<uint8_t>(EVP_PKEY_bits(rsa.get()) / 8);
+            if (!encrypt_rsa_oaep_openssl(encrypted, clear, rsa, SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1,
+                        {})) {
+                ERROR("encrypt_rsa_oaep_openssl failed");
+                return false;
+            }
+
+            sa_rights rights;
+            sa_rights_set_allow_all(&rights);
+
+            auto unwrapped_key = create_uninitialized_sa_key();
+            if (unwrapped_key == nullptr) {
+                ERROR("create_uninitialized_sa_key failed");
+                return false;
+            }
+
+            sa_unwrap_parameters_rsa_oaep parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, nullptr, 0};
+            if (sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+                        SA_CIPHER_ALGORITHM_RSA_OAEP, &parameters, key, encrypted.data(),
+                        encrypted.size()) != SA_STATUS_OK) {
+                ERROR("sa_key_unwrap failed");
+                return false;
+            }
+
+            auto parent_header = key_header(key);
+            if (parent_header == nullptr) {
+                ERROR("Could not get key header");
+                return false;
+            }
+
+            auto unwrapped_key_header = key_header(*unwrapped_key);
+            if (unwrapped_key_header == nullptr) {
+                ERROR("Could not get key header");
+                return false;
+            }
+
+            check_key_unwrap_rights(parent_header, unwrapped_key_header);
+
+            if (!key_check_sym(*unwrapped_key, clear)) {
+                ERROR("key_check_sym failed");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool key_check_ec_elgamal_decrypt(sa_key key) {
+            auto header = key_header(key);
+            auto curve = header->type_parameters.curve;
+            size_t const key_size = ec_get_key_size(curve);
+
+            auto ec = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
+            if (ec == nullptr) {
+                ERROR("sa_get_public_key failed");
+                return false;
+            }
+
+            auto clear = random(key_size);
+            if (curve == SA_ELLIPTIC_CURVE_NIST_P521)
+                clear[0] &= 0x1;
+
+            std::vector<uint8_t> in;
+            if (!encrypt_ec_elgamal_openssl(in, clear, curve, ec)) {
+                ERROR("encrypt_ec_elgamal_openssl failed");
+                return false;
+            }
+
+            auto cipher = create_uninitialized_sa_crypto_cipher_context();
+            if (cipher == nullptr) {
+                ERROR("create_uninitialized_sa_crypto_cipher_context failed");
+                return false;
+            }
+
+            sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_EC_ELGAMAL,
+                    SA_CIPHER_MODE_DECRYPT, key, nullptr);
+            if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+                return true;
+
+            if (status != SA_STATUS_OK) {
+                ERROR("sa_crypto_cipher_init failed");
+                return false;
+            }
+
+            size_t length = in.size();
+            sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {in.data(), in.size(), 0}}};
+            if (sa_crypto_cipher_process(nullptr, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
+                ERROR("sa_crypto_cipher_process failed");
+                return false;
+            }
+
+            auto out = std::vector<uint8_t>(length);
+            sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out.data(), out.size(), 0}}};
+            length = in.size();
+            if (sa_crypto_cipher_process(&out_buffer, *cipher, &in_buffer, &length) != SA_STATUS_OK) {
+                ERROR("sa_crypto_cipher_process failed");
+                return false;
+            }
+
+            out.resize(length);
+
+            if (clear != out) {
+                ERROR("EC decrypt failed");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool key_check_ec_elgamal_unwrap(sa_key key) {
+            const int COUNTER_SIZE = 4;
+            auto header = key_header(key);
+            auto curve = header->type_parameters.curve;
+
+            auto clear_key = random(SYM_128_KEY_SIZE);
+            size_t const key_size = ec_get_key_size(curve);
+            std::vector<uint8_t> clear(key_size);
+            std::vector<uint8_t> in(128);
+
+            // Calculates an offset that is always a multiple of 8. Some SecApi 3 implementations require the offset to
+            // always be a multiple of 8. For P192, the offset will be 0 due to the key size. All others will be
+            // non-zero to vary the test. encrypt_ec_elgamal_openssl uses the last 32 bits of the clear data as a
+            // counter to allow multiple tries to find a valid point when performing the El Gamal encrypt algorithm.
+            size_t const offset = ((key_size - COUNTER_SIZE - SYM_128_KEY_SIZE) / 8) * 8;
+            clear.assign(clear.size(), 0);
+            memcpy(clear.data() + offset, clear_key.data(), clear_key.size());
+            auto ec = std::shared_ptr<EVP_PKEY>(sa_get_public_key(key), EVP_PKEY_free);
+            if (ec == nullptr) {
+                ERROR("sa_get_public_key failed");
+                return false;
+            }
+
+            if (!encrypt_ec_elgamal_openssl(in, clear, curve, ec)) {
+                ERROR("encrypt_ec_elgamal_openssl failed");
+                return false;
+            }
+
+            sa_rights rights;
+            sa_rights_set_allow_all(&rights);
+
+            auto unwrapped_key = create_uninitialized_sa_key();
+            if (unwrapped_key == nullptr) {
+                ERROR("create_uninitialized_sa_key failed");
+                return false;
+            }
+
+            sa_unwrap_parameters_ec_elgamal params = {offset, clear_key.size()};
+            sa_status const status = sa_key_unwrap(unwrapped_key.get(), &rights, SA_KEY_TYPE_SYMMETRIC, nullptr,
+                    SA_CIPHER_ALGORITHM_EC_ELGAMAL, &params, key, in.data(), in.size());
+            if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+                return true;
+
+            if (status != SA_STATUS_OK) {
+                ERROR("sa_key_unwrap failed");
+                return false;
+            }
+
+            auto parent_header = key_header(key);
+            if (parent_header == nullptr) {
+                ERROR("Could not get key header");
+                return false;
+            }
+
+            auto unwrapped_key_header = key_header(*unwrapped_key);
+            if (unwrapped_key_header == nullptr) {
+                ERROR("Could not get key header");
+                return false;
+            }
+
+            check_key_unwrap_rights(parent_header, unwrapped_key_header);
+
+            if (!key_check_sym(*unwrapped_key, clear_key)) {
+                ERROR("key_check_sym failed");
+                return false;
+            }
+
+            return true;
+        }
+    } // namespace
 
     std::vector<uint8_t> sample_dh_p_768() {
         return {MODP_768_P, MODP_768_P + sizeof(MODP_768_P)};
@@ -2223,8 +2224,8 @@ namespace client_test_helpers {
 
         auto key = create_uninitialized_sa_key();
         sa_import_parameters_symmetric params = {rights};
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_SYMMETRIC_BYTES, clear_key.data(), clear_key.size(),
-                &params);
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_SYMMETRIC_BYTES, clear_key.data(),
+                clear_key.size(), &params);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
             ERROR("Unsupported key type");
             *key = UNSUPPORTED_KEY;
@@ -2242,7 +2243,7 @@ namespace client_test_helpers {
 
         auto key = create_uninitialized_sa_key();
         sa_import_parameters_rsa_private_key_info params = {rights};
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, clear_key.data(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, clear_key.data(),
                 clear_key.size(), &params);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
             ERROR("Unsupported key type");
@@ -2267,8 +2268,8 @@ namespace client_test_helpers {
         }
 
         sa_import_parameters_ec_private_bytes params = {rights, curve};
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_EC_PRIVATE_BYTES, clear_key.data(), clear_key.size(),
-                &params);
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_EC_PRIVATE_BYTES, clear_key.data(),
+                clear_key.size(), &params);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
             ERROR("Unsupported key type");
             *key = UNSUPPORTED_KEY;
@@ -2287,7 +2288,7 @@ namespace client_test_helpers {
         auto key = create_uninitialized_sa_key();
         sa_generate_parameters_dh params = {std::get<0>(dh_parameters).data(), std::get<0>(dh_parameters).size(),
                 std::get<1>(dh_parameters).data(), std::get<1>(dh_parameters).size()};
-        sa_status status = sa_key_generate(key.get(), rights, SA_KEY_TYPE_DH, &params);
+        sa_status const status = sa_key_generate(key.get(), rights, SA_KEY_TYPE_DH, &params);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
             ERROR("Unsupported key type");
             *key = UNSUPPORTED_KEY;
@@ -2342,8 +2343,7 @@ namespace client_test_helpers {
     }
 
     std::shared_ptr<sa_header> key_header(sa_key key) {
-        std::shared_ptr<sa_header> hdr(static_cast<sa_header*>(malloc(sizeof(sa_header))), free);
-
+        std::shared_ptr<sa_header> hdr(new sa_header);
         if (sa_key_header(hdr.get(), key) != SA_STATUS_OK) {
             ERROR("sa_key_header failed");
             return nullptr;
@@ -2674,7 +2674,7 @@ namespace client_test_helpers {
     bool export_public_key(
             std::vector<uint8_t>& out,
             std::shared_ptr<EVP_PKEY>& evp_pkey) {
-        int required_length = i2d_PUBKEY(evp_pkey.get(), nullptr);
+        int const required_length = i2d_PUBKEY(evp_pkey.get(), nullptr);
         if (required_length <= 0) {
             ERROR("i2d_PUBKEY failed");
             return false;
@@ -2683,7 +2683,7 @@ namespace client_test_helpers {
         out.resize(required_length);
 
         auto* buf = out.data();
-        int written = i2d_PUBKEY(evp_pkey.get(), &buf);
+        int const written = i2d_PUBKEY(evp_pkey.get(), &buf);
         if (written <= 0) {
             ERROR("i2d_PUBKEY failed");
             return false;
@@ -2712,7 +2712,7 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& in,
             const std::vector<uint8_t>& signature) {
 
-        std::shared_ptr<EVP_MD_CTX> context = {EVP_MD_CTX_create(), EVP_MD_CTX_free};
+        std::shared_ptr<EVP_MD_CTX> const context = {EVP_MD_CTX_create(), EVP_MD_CTX_free};
         if (context == nullptr) {
             ERROR("EVP_MD_CTX_create failed");
             return false;
@@ -2759,7 +2759,7 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& in,
             const std::vector<uint8_t>& signature) {
 
-        std::shared_ptr<EVP_MD_CTX> context = {EVP_MD_CTX_create(), EVP_MD_CTX_free};
+        std::shared_ptr<EVP_MD_CTX> const context = {EVP_MD_CTX_create(), EVP_MD_CTX_free};
         if (context == nullptr) {
             ERROR("EVP_MD_CTX_create failed");
             return false;
@@ -2798,15 +2798,16 @@ namespace client_test_helpers {
             sa_digest_algorithm mgf1_digest_algorithm,
             const std::vector<uint8_t>& label) {
 
-        size_t digest_len = digest_length(digest_algorithm);
-        size_t key_size = EVP_PKEY_bits(evp_pkey.get()) / 8;
+        size_t const digest_len = digest_length(digest_algorithm);
+        size_t const key_size = EVP_PKEY_bits(evp_pkey.get()) / 8;
         out.resize(key_size);
         if (in.size() > key_size - 2 * digest_len - 1) {
             ERROR("Invalid in.size()");
             return false;
         }
 
-        std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx = {EVP_PKEY_CTX_new(evp_pkey.get(), nullptr), EVP_PKEY_CTX_free};
+        std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx = {EVP_PKEY_CTX_new(evp_pkey.get(), nullptr),
+                EVP_PKEY_CTX_free};
         if (evp_pkey_ctx == nullptr) {
             ERROR("EVP_PKEY_CTX_new failed");
             return false;
@@ -2861,14 +2862,15 @@ namespace client_test_helpers {
             const std::vector<uint8_t>& in,
             const std::shared_ptr<EVP_PKEY>& evp_pkey) {
 
-        size_t key_size = EVP_PKEY_bits(evp_pkey.get()) / 8;
+        size_t const key_size = EVP_PKEY_bits(evp_pkey.get()) / 8;
         out.resize(key_size);
         if (in.size() > key_size - RSA_PKCS1_PADDING_SIZE) {
             ERROR("Invalid in.size()");
             return false;
         }
 
-        std::shared_ptr<EVP_PKEY_CTX> evp_pkey_ctx = {EVP_PKEY_CTX_new(evp_pkey.get(), nullptr), EVP_PKEY_CTX_free};
+        std::shared_ptr<EVP_PKEY_CTX> const evp_pkey_ctx = {EVP_PKEY_CTX_new(evp_pkey.get(), nullptr),
+                EVP_PKEY_CTX_free};
         if (evp_pkey_ctx == nullptr) {
             ERROR("EVP_PKEY_CTX_new failed");
             return false;
@@ -2925,7 +2927,7 @@ namespace client_test_helpers {
     }
 
     std::vector<uint8_t> ec_generate_key_bytes(sa_elliptic_curve curve) {
-        int type = ec_get_nid(curve);
+        int const type = ec_get_nid(curve);
         if (type == 0) {
             ERROR("ec_get_nid failed");
             return {};
@@ -3011,7 +3013,7 @@ namespace client_test_helpers {
             return false;
         }
 
-        size_t key_size = ec_get_key_size(curve);
+        size_t const key_size = ec_get_key_size(curve);
         if (signature.size() != key_size * 2) {
             ERROR("Invalid signature length");
             return false;
@@ -3085,7 +3087,7 @@ namespace client_test_helpers {
             return false;
         }
 
-        size_t key_size = ec_get_key_size(curve);
+        size_t const key_size = ec_get_key_size(curve);
         if (signature.size() != key_size * 2) {
             ERROR("Invalid signature length");
             return false;
@@ -3138,7 +3140,7 @@ namespace client_test_helpers {
             return false;
         }
 
-        int key_size = EC_KEY_SIZE(ec_group.get());
+        int const key_size = EC_KEY_SIZE(ec_group.get());
         if (in.size() != static_cast<size_t>(key_size)) {
             ERROR("Invalid in_length");
             return false;
@@ -3187,7 +3189,7 @@ namespace client_test_helpers {
 
         std::shared_ptr<EC_POINT> input_point;
         do {
-            std::shared_ptr<BIGNUM> input_x(BN_bin2bn(in.data(), static_cast<int>(in.size()), nullptr), BN_free);
+            std::shared_ptr<BIGNUM> const input_x(BN_bin2bn(in.data(), static_cast<int>(in.size()), nullptr), BN_free);
             if (input_x == nullptr) {
                 ERROR("BN_bin2bn failed");
                 return false;
@@ -3212,7 +3214,7 @@ namespace client_test_helpers {
             (*counter)++;
         } while (true);
 
-        std::shared_ptr<EC_POINT> ss(EC_POINT_new(ec_group.get()), EC_POINT_free);
+        std::shared_ptr<EC_POINT> const ss(EC_POINT_new(ec_group.get()), EC_POINT_free);
         if (ss == nullptr) {
             ERROR("EC_POINT_new failed");
             return false;
@@ -3229,7 +3231,7 @@ namespace client_test_helpers {
             ERROR("EC_POINT_mul failed");
             return false;
         }
-        std::shared_ptr<EC_POINT> c2(EC_POINT_new(ec_group.get()), EC_POINT_free);
+        std::shared_ptr<EC_POINT> const c2(EC_POINT_new(ec_group.get()), EC_POINT_free);
         if (c2 == nullptr) {
             ERROR("EC_POINT_new failed");
             return false;
@@ -4330,7 +4332,7 @@ namespace client_test_helpers {
             return false;
         }
 
-        size_t coordinate_length = EC_KEY_SIZE(ec_group);
+        size_t const coordinate_length = EC_KEY_SIZE(ec_group);
         bool status = false;
         do {
             std::vector<uint8_t> temp_point(coordinate_length * 2 + 1);

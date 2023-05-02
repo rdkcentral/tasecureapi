@@ -1,5 +1,5 @@
-/**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <openssl/evp.h>
+#include "sa_engine_internal.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
 #if OPENSSL_VERSION_NUMBER < 0x10100000
 #include <memory.h>
 #endif
@@ -48,7 +49,7 @@ EVP_MD* EVP_MD_meth_dup(const EVP_MD* md) {
 #endif
 
 int sa_get_engine_digests(
-        ENGINE* engine,
+        ossl_unused ENGINE* engine,
         const EVP_MD** evp_md,
         const int** nids,
         int nid) {
@@ -120,3 +121,5 @@ void sa_free_engine_digests() {
     EVP_MD_meth_free(digest_undef);
     digest_undef = NULL;
 }
+
+#endif

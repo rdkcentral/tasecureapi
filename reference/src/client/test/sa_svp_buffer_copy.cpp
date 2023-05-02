@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,7 +58,7 @@ namespace {
         auto in_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(in_buffer, nullptr);
         sa_svp_offset offset = {1, 0, AES_BLOCK_SIZE};
-        sa_status status = sa_svp_buffer_copy(*out_buffer, *in_buffer, &offset, 1);
+        sa_status const status = sa_svp_buffer_copy(*out_buffer, *in_buffer, &offset, 1);
         ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
     }
 
@@ -68,17 +68,17 @@ namespace {
         auto in_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(in_buffer, nullptr);
         sa_svp_offset offset = {0, 1, AES_BLOCK_SIZE};
-        sa_status status = sa_svp_buffer_copy(*out_buffer, *in_buffer, &offset, 1);
+        sa_status const status = sa_svp_buffer_copy(*out_buffer, *in_buffer, &offset, 1);
         ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
     }
 
     TEST_F(SaSvpBufferCopyTest, failsNullOffset) {
-        auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE * 2);
+        auto out_buffer = create_sa_svp_buffer(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         ASSERT_NE(out_buffer, nullptr);
         auto in_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(in_buffer, nullptr);
         auto in = random(AES_BLOCK_SIZE);
-        sa_status status = sa_svp_buffer_copy(*out_buffer, *in_buffer, nullptr, 0);
+        sa_status const status = sa_svp_buffer_copy(*out_buffer, *in_buffer, nullptr, 0);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -86,7 +86,7 @@ namespace {
         auto in_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(in_buffer, nullptr);
         sa_svp_offset offset = {0, 0, 1};
-        sa_status status = sa_svp_buffer_copy(INVALID_HANDLE, *in_buffer, &offset, 1);
+        sa_status const status = sa_svp_buffer_copy(INVALID_HANDLE, *in_buffer, &offset, 1);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -94,7 +94,7 @@ namespace {
         auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(out_buffer, nullptr);
         sa_svp_offset offset = {0, 0, 1};
-        sa_status status = sa_svp_buffer_copy(*out_buffer, INVALID_HANDLE, &offset, 1);
+        sa_status const status = sa_svp_buffer_copy(*out_buffer, INVALID_HANDLE, &offset, 1);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

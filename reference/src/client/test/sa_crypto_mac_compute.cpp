@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_P(SaCryptoMacComputeMatchesOpenssl, nominal) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_length = std::get<2>(GetParam());
-        int data_length = std::get<3>(GetParam());
+        int const key_length = std::get<2>(GetParam());
+        int const data_length = std::get<3>(GetParam());
         MacFunctionType mac_func = std::get<4>(GetParam());
 
         auto clear_key = random(key_length);
@@ -62,14 +62,14 @@ namespace {
         mac_func(tag_test, clear_key, clear);
 
         // compare tag_test and tag
-        int result = memcmp(tag.data(), tag_test.data(), tag_test.size());
+        int const result = memcmp(tag.data(), tag_test.data(), tag_test.size());
         ASSERT_EQ(result, 0);
     }
 
     TEST_P(SaCryptoMacComputeMatchesOpenssl, nominalKey) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_length = std::get<2>(GetParam());
+        int const key_length = std::get<2>(GetParam());
         MacFunctionType mac_func = std::get<4>(GetParam());
 
         auto clear_key = random(key_length);
@@ -105,15 +105,15 @@ namespace {
         mac_func(tag_test, clear_key, clear_mac_key);
 
         // compare tag_test and tag
-        int result = memcmp(tag.data(), tag_test.data(), tag_test.size());
+        int const result = memcmp(tag.data(), tag_test.data(), tag_test.size());
         ASSERT_EQ(result, 0);
     }
 
     TEST_P(SaCryptoMacComputeOutLength, nominal) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_length = std::get<2>(GetParam());
-        size_t expected_out_length = std::get<3>(GetParam());
+        int const key_length = std::get<2>(GetParam());
+        size_t const expected_out_length = std::get<3>(GetParam());
 
         auto clear_key = random(key_length);
 
@@ -140,9 +140,9 @@ namespace {
     }
 
     TEST_P(SaCryptoMacComputeOutLength, failsWithNullOutLength) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_length = std::get<2>(GetParam());
+        int const key_length = std::get<2>(GetParam());
 
         auto clear_key = random(key_length);
 
@@ -167,9 +167,9 @@ namespace {
     }
 
     TEST_P(SaCryptoMacComputeArgChecks, failsWithInvalidContext) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_length = std::get<2>(GetParam());
+        int const key_length = std::get<2>(GetParam());
 
         auto clear_key = random(key_length);
 
@@ -200,9 +200,9 @@ namespace {
     }
 
     TEST_P(SaCryptoMacComputeArgChecks, failsWhenProcessCalledAfterCompute) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_length = std::get<2>(GetParam());
+        int const key_length = std::get<2>(GetParam());
 
         auto clear_key = random(key_length);
 
@@ -236,9 +236,9 @@ namespace {
     }
 
     TEST_P(SaCryptoMacComputeArgChecks, failsWhenMultipleCompute) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_length = std::get<2>(GetParam());
+        int const key_length = std::get<2>(GetParam());
 
         auto clear_key = random(key_length);
 
@@ -272,9 +272,9 @@ namespace {
     }
 
     TEST_P(SaCryptoMacComputeArgChecks, failsWithNullOutLengthWithNonNullData) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_length = std::get<2>(GetParam());
+        int const key_length = std::get<2>(GetParam());
 
         auto clear_key = random(key_length);
 
@@ -305,9 +305,9 @@ namespace {
     }
 
     TEST_P(SaCryptoMacComputeArgChecks, failsInvalidOutLength) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_length = std::get<2>(GetParam());
+        int const key_length = std::get<2>(GetParam());
 
         auto clear_key = random(key_length);
 

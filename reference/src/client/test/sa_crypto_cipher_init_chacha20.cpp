@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,8 +42,8 @@ namespace {
         std::vector<uint8_t> counter = {1, 0, 0, 0};
         auto nonce = random(CHACHA20_NONCE_LENGTH);
         sa_cipher_parameters_chacha20 parameters = {counter.data(), counter.size(), nonce.data(), nonce.size()};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -62,8 +62,8 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20, SA_CIPHER_MODE_ENCRYPT,
-                *key, nullptr);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20,
+                SA_CIPHER_MODE_ENCRYPT, *key, nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -85,8 +85,8 @@ namespace {
         std::vector<uint8_t> counter = {1, 0, 0, 0};
         auto nonce = random(CHACHA20_NONCE_LENGTH);
         sa_cipher_parameters_chacha20 parameters = {counter.data(), counter.size(), nonce.data(), nonce.size()};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -107,8 +107,8 @@ namespace {
 
         std::vector<uint8_t> counter = {1, 0, 0, 0};
         sa_cipher_parameters_chacha20 parameters = {counter.data(), counter.size(), nullptr, CHACHA20_NONCE_LENGTH};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -130,8 +130,8 @@ namespace {
         std::vector<uint8_t> counter = {1, 0, 0, 0};
         auto nonce = random(CHACHA20_NONCE_LENGTH + 1);
         sa_cipher_parameters_chacha20 parameters = {counter.data(), counter.size(), nonce.data(), nonce.size()};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -150,11 +150,11 @@ namespace {
         auto cipher = create_uninitialized_sa_crypto_cipher_context();
         ASSERT_NE(cipher, nullptr);
 
-        std::vector<uint8_t> counter = {1, 0, 0, 0};
+        std::vector<uint8_t> const counter = {1, 0, 0, 0};
         auto nonce = random(CHACHA20_NONCE_LENGTH);
         sa_cipher_parameters_chacha20 parameters = {nullptr, counter.size(), nonce.data(), nonce.size()};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 
@@ -176,8 +176,8 @@ namespace {
         std::vector<uint8_t> counter = {1, 0, 0, 0, 0};
         auto nonce = random(CHACHA20_NONCE_LENGTH + 1);
         sa_cipher_parameters_chacha20 parameters = {counter.data(), counter.size(), nonce.data(), nonce.size()};
-        sa_status status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20, SA_CIPHER_MODE_ENCRYPT,
-                *key, &parameters);
+        sa_status const status = sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_CHACHA20,
+                SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Cipher algorithm not supported";
 

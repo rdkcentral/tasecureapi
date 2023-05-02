@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sa_crypto_mac_common.h"
+#include "sa_crypto_mac_common.h" // NOLINT
 #include "client_test_helpers.h"
 
 using namespace client_test_helpers;
 
-static int cmac_key_lengths[] = {16, 32};
-static int hmac_key_lengths[] = {16, 32, 64, 512};
+namespace {
+    int cmac_key_lengths[] = {16, 32};
+    int hmac_key_lengths[] = {16, 32, 64, 512};
 
-static sa_mac_parameters_hmac hmac_sha1_params = {SA_DIGEST_ALGORITHM_SHA1};
-static sa_mac_parameters_hmac hmac_sha256_params = {SA_DIGEST_ALGORITHM_SHA256};
-static sa_mac_parameters_hmac hmac_sha384_params = {SA_DIGEST_ALGORITHM_SHA384};
-static sa_mac_parameters_hmac hmac_sha512_params = {SA_DIGEST_ALGORITHM_SHA512};
+    sa_mac_parameters_hmac hmac_sha1_params = {SA_DIGEST_ALGORITHM_SHA1};
+    sa_mac_parameters_hmac hmac_sha256_params = {SA_DIGEST_ALGORITHM_SHA256};
+    sa_mac_parameters_hmac hmac_sha384_params = {SA_DIGEST_ALGORITHM_SHA384};
+    sa_mac_parameters_hmac hmac_sha512_params = {SA_DIGEST_ALGORITHM_SHA512};
 
-static void* hmac_params_list[] = {
-        static_cast<void*>(&hmac_sha1_params),
-        static_cast<void*>(&hmac_sha256_params),
-        static_cast<void*>(&hmac_sha384_params),
-        static_cast<void*>(&hmac_sha512_params),
-};
+    void* hmac_params_list[] = {
+            static_cast<void*>(&hmac_sha1_params),
+            static_cast<void*>(&hmac_sha256_params),
+            static_cast<void*>(&hmac_sha384_params),
+            static_cast<void*>(&hmac_sha512_params),
+    };
+} // namespace
 
 bool SaCryptoMacBase::hmac_sha1_openssl(
         std::vector<uint8_t>& out,

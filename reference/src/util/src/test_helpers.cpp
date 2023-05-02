@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "test_helpers.h"
-#include "sa.h"
-#include <cstdio>
-#include <cstring>
+#include "test_helpers.h" // NOLINT
+#include "digest_util.h"
+#include "log.h"
 #include <openssl/rand.h>
-
-#define ERROR(msg) printf("%s:%d %s\n", __FILE__, __LINE__, msg);
 
 namespace test_helpers {
     std::vector<uint8_t> random(size_t size) {
@@ -36,48 +33,6 @@ namespace test_helpers {
         return data;
     }
 
-    const EVP_MD* digest_mechanism(sa_digest_algorithm digest_algorithm) {
-        switch (digest_algorithm) {
-            case SA_DIGEST_ALGORITHM_SHA1:
-                return EVP_sha1();
-
-            case SA_DIGEST_ALGORITHM_SHA256:
-                return EVP_sha256();
-
-            case SA_DIGEST_ALGORITHM_SHA384:
-                return EVP_sha384();
-
-            case SA_DIGEST_ALGORITHM_SHA512:
-                return EVP_sha512();
-
-            default:
-                ERROR("Unknown digest_algorithm encountered");
-                return nullptr;
-        }
-    }
-
-    size_t digest_length(sa_digest_algorithm digest_algorithm) {
-        switch (digest_algorithm) {
-            case SA_DIGEST_ALGORITHM_SHA1:
-                return SHA1_DIGEST_LENGTH;
-
-            case SA_DIGEST_ALGORITHM_SHA256:
-                return SHA256_DIGEST_LENGTH;
-
-            case SA_DIGEST_ALGORITHM_SHA384:
-                return SHA384_DIGEST_LENGTH;
-
-            case SA_DIGEST_ALGORITHM_SHA512:
-                return SHA512_DIGEST_LENGTH;
-
-            default:
-                ERROR("Unknown digest_algorithm encountered");
-                break;
-        }
-
-        return 0;
-    }
-
     bool digest_openssl(
             std::vector<uint8_t>& out,
             sa_digest_algorithm digest_algorithm,
@@ -85,7 +40,7 @@ namespace test_helpers {
             const std::vector<uint8_t>& in2,
             const std::vector<uint8_t>& in3) {
 
-        size_t required_length = digest_length(digest_algorithm);
+        size_t const required_length = digest_length(digest_algorithm);
 
         bool status = false;
         EVP_MD_CTX* context;

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
  */
 
 #include "common.h"
+#include "digest_util.h"
 #include "ta_sa.h"
 #include "ta_sa_svp_common.h"
 #include "ta_test_helpers.h"
@@ -34,7 +35,7 @@ namespace {
         sa_status status = ta_sa_svp_buffer_write(*buffer, in.data(), in.size(), &offset, 1, client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        size_t length = digest_length(digest);
+        size_t const length = digest_length(digest);
         std::vector<uint8_t> hash(length);
         ASSERT_TRUE(digest_openssl(hash, digest, in, {}, {}));
         status = ta_sa_svp_buffer_check(*buffer, 0, 1024, digest, hash.data(), hash.size(), client(), ta_uuid());
@@ -50,7 +51,7 @@ namespace {
         sa_status status = ta_sa_svp_buffer_write(*buffer, in.data(), in.size(), &offset, 1, client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        size_t length = digest_length(digest);
+        size_t const length = digest_length(digest);
         std::vector<uint8_t> hash(length);
         ASSERT_TRUE(digest_openssl(hash, digest, in, {}, {}));
         hash[0]++;
@@ -62,23 +63,23 @@ namespace {
         auto buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(buffer, nullptr);
         std::vector<uint8_t> hash(SHA1_DIGEST_LENGTH);
-        sa_status status = ta_sa_svp_buffer_check(*buffer, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256, hash.data(),
-                hash.size(), client(), ta_uuid());
+        sa_status const status = ta_sa_svp_buffer_check(*buffer, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
+                hash.data(), hash.size(), client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(TaSvpBufferCheckTest, failsNullHash) {
         auto buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(buffer, nullptr);
-        sa_status status = ta_sa_svp_buffer_check(*buffer, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256, nullptr, 0,
-                client(), ta_uuid());
+        sa_status const status = ta_sa_svp_buffer_check(*buffer, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256, nullptr,
+                0, client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
     TEST_F(TaSvpBufferCheckTest, failsInvalidBuffer) {
         auto in = random(AES_BLOCK_SIZE);
         std::vector<uint8_t> hash(SHA256_DIGEST_LENGTH);
-        sa_status status = ta_sa_svp_buffer_check(INVALID_HANDLE, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
+        sa_status const status = ta_sa_svp_buffer_check(INVALID_HANDLE, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
                 hash.data(), hash.size(), client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
@@ -87,8 +88,8 @@ namespace {
         auto buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(buffer, nullptr);
         std::vector<uint8_t> hash(SHA1_DIGEST_LENGTH);
-        sa_status status = ta_sa_svp_buffer_check(*buffer, 1, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256, hash.data(),
-                hash.size(), client(), ta_uuid());
+        sa_status const status = ta_sa_svp_buffer_check(*buffer, 1, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
+                hash.data(), hash.size(), client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

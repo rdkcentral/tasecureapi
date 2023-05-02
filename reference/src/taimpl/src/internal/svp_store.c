@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,7 +114,7 @@ svp_buffer_t* svp_get_buffer(const svp_t* svp) {
 }
 
 svp_store_t* svp_store_init(size_t size) {
-    svp_store_t* store = object_store_init(svp_free, size);
+    svp_store_t* store = object_store_init(svp_free, size, "svp");
     if (store == NULL) {
         ERROR("object_store_init failed");
         return NULL;
@@ -240,34 +240,6 @@ sa_status svp_store_release(
     if (status != SA_STATUS_OK) {
         ERROR("svp_store_acquire_exclusive failed");
         return status;
-    }
-
-    status = object_store_remove(store, svp_buffer, caller_uuid);
-    if (status != SA_STATUS_OK) {
-        ERROR("object_store_remove failed");
-        return status;
-    }
-
-    return SA_STATUS_OK;
-}
-
-sa_status svp_store_free(
-        svp_store_t* store,
-        sa_svp_buffer svp_buffer,
-        const sa_uuid* caller_uuid) {
-
-    sa_status status = svp_supported();
-    if (status != SA_STATUS_OK)
-        return status;
-
-    if (store == NULL) {
-        ERROR("NULL store");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (caller_uuid == NULL) {
-        ERROR("NULL caller_uuid");
-        return SA_STATUS_NULL_PARAMETER;
     }
 
     status = object_store_remove(store, svp_buffer, caller_uuid);

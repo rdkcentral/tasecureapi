@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -183,7 +183,7 @@ namespace {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
-        std::vector<uint8_t> rsa_2048 = sample_rsa_2048_pkcs8();
+        std::vector<uint8_t> const rsa_2048 = sample_rsa_2048_pkcs8();
         auto rsa_key = create_sa_key_rsa(&rights, rsa_2048);
         ASSERT_NE(rsa_key, nullptr);
         if (*rsa_key == UNSUPPORTED_KEY)
@@ -194,7 +194,7 @@ namespace {
         ASSERT_TRUE(dh_generate_key(other_dh, other_public_key, sample_dh_p_3072(), sample_dh_g_3072()));
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_exchange(key.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_DH, *rsa_key,
+        sa_status const status = sa_key_exchange(key.get(), &rights, SA_KEY_EXCHANGE_ALGORITHM_DH, *rsa_key,
                 other_public_key.data(), other_public_key.size(), nullptr);
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }

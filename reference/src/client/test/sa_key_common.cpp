@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,6 +32,7 @@
 #endif
 
 #include "client_test_helpers.h"
+#include "digest_util.h"
 #include "pkcs12.h"
 #include "sa_key_common.h"
 
@@ -44,8 +45,9 @@ std::vector<uint8_t> SaKeyBase::common_root_key;
 bool SaKeyBase::get_root_key(std::vector<uint8_t>& key) {
     bool status;
     if (root_key.empty()) {
-        char name[16];
-        size_t name_length = 16;
+        char name[MAX_NAME_SIZE];
+        size_t name_length = MAX_NAME_SIZE;
+        name[0] = '\0';
         root_key.resize(SYM_256_KEY_SIZE);
         size_t key_length = SYM_256_KEY_SIZE;
         if (!load_pkcs12_secret_key(root_key.data(), &key_length, name, &name_length)) {
@@ -65,8 +67,8 @@ bool SaKeyBase::get_root_key(std::vector<uint8_t>& key) {
 
 bool SaKeyBase::get_common_root_key(std::vector<uint8_t>& key) {
     if (common_root_key.empty()) {
-        char name[16];
-        size_t name_length = 16;
+        char name[MAX_NAME_SIZE];
+        size_t name_length = MAX_NAME_SIZE;
         strcpy(name, COMMON_ROOT_NAME);
         common_root_key.resize(SYM_256_KEY_SIZE);
         size_t key_length = SYM_256_KEY_SIZE;
@@ -285,7 +287,7 @@ sa_status SaKeyBase::ec_generate_key(
         std::shared_ptr<EVP_PKEY>& private_key,
         std::vector<uint8_t>& public_key) {
 
-    std::vector<uint8_t> private_key_bytes = ec_generate_key_bytes(curve);
+    auto private_key_bytes = ec_generate_key_bytes(curve);
     if (private_key_bytes.empty()) {
         ERROR("ec_generate_key_bytes failed");
         return SA_STATUS_OPERATION_NOT_SUPPORTED;
@@ -420,7 +422,7 @@ sa_status SaKeyBase::execute_ecdh(
     if (status != SA_STATUS_OK)
         return status;
 
-    std::shared_ptr<EVP_PKEY> other_public_key(sa_get_public_key(*other_private_key), EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const other_public_key(sa_get_public_key(*other_private_key), EVP_PKEY_free);
     if (other_public_key == nullptr) {
         ERROR("other_public_key failed");
         return status;
@@ -504,26 +506,26 @@ bool SaKeyBase::hkdf(
     }
 
     /* Expand */
-    size_t digest_size = digest_length(digest_algorithm);
-    size_t out_len = out.size();
-    size_t r = out_len / digest_size + ((out_len % digest_size == 0) ? 0 : 1);
+    size_t const digest_size = digest_length(digest_algorithm);
+    size_t const out_len = out.size();
+    size_t const r = out_len / digest_size + ((out_len % digest_size == 0) ? 0 : 1);
     size_t i;
 
     uint8_t t[SHA512_DIGEST_LENGTH];
     unsigned int t_len = 0;
 
     for (i = 1; i <= r; i++) {
-        uint8_t loop = i;
+        uint8_t const loop = i;
         size_t cp_len;
 
         if (i == r) {
-            size_t mod = out_len % digest_size;
+            size_t const mod = out_len % digest_size;
             cp_len = (mod == 0) ? digest_size : mod;
         } else {
             cp_len = digest_size;
         }
 
-        std::shared_ptr<HMAC_CTX> ctx(new HMAC_CTX(),
+        std::shared_ptr<HMAC_CTX> const ctx(new HMAC_CTX(),
                 [](HMAC_CTX* p) {
                     HMAC_CTX_cleanup(p);
                     delete p;
@@ -560,7 +562,7 @@ bool SaKeyBase::hkdf(
     memset(t, 0, sizeof(t));
     return true;
 #else
-    std::shared_ptr<EVP_PKEY_CTX> pctx(EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr), EVP_PKEY_CTX_free);
+    std::shared_ptr<EVP_PKEY_CTX> const pctx(EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr), EVP_PKEY_CTX_free);
 
     if (EVP_PKEY_derive_init(pctx.get()) <= 0) {
         return false;
@@ -599,7 +601,7 @@ bool SaKeyBase::ansi_x963_kdf(
     counter.push_back(0);
     counter.push_back(1);
 
-    size_t key_length = out.size();
+    size_t const key_length = out.size();
     out.resize(0);
     for (size_t i = 0; i < key_length;) {
         std::vector<uint8_t> temp;
@@ -628,7 +630,7 @@ bool SaKeyBase::concat_kdf(
     counter.push_back(0);
     counter.push_back(1);
 
-    size_t key_length = out.size();
+    size_t const key_length = out.size();
     out.resize(0);
     for (size_t i = 0; i < key_length;) {
         std::vector<uint8_t> temp;
@@ -650,7 +652,7 @@ bool SaKeyBase::cmac_kdf(
         std::vector<uint8_t>& key,
         std::vector<uint8_t>& other_data,
         uint8_t counter) {
-    size_t key_length = out.size();
+    size_t const key_length = out.size();
     if ((key_length / SYM_128_KEY_SIZE) > static_cast<size_t>(5 - counter))
         return false;
 
@@ -669,7 +671,7 @@ bool SaKeyBase::cmac_kdf(
                     const_cast<char*>((key_length == SYM_128_KEY_SIZE) ? "aes-128-cbc" : "aes-256-cbc"), 0),
             OSSL_PARAM_construct_end()};
 
-    std::vector<uint8_t> temp(AES_BLOCK_SIZE * 4);
+    std::vector<uint8_t> temp(static_cast<size_t>(AES_BLOCK_SIZE) * 4);
     for (uint8_t i = 1; i <= 4; ++i) {
         auto evp_mac_ctx = std::shared_ptr<EVP_MAC_CTX>(EVP_MAC_CTX_new(evp_mac.get()), EVP_MAC_CTX_free);
         if (evp_mac_ctx == nullptr) {
@@ -693,18 +695,19 @@ bool SaKeyBase::cmac_kdf(
         }
 
         size_t length = AES_BLOCK_SIZE;
-        if (EVP_MAC_final(evp_mac_ctx.get(), temp.data() + ((i - 1) * AES_BLOCK_SIZE), &length, length) != 1) {
+        if (EVP_MAC_final(evp_mac_ctx.get(), temp.data() + (static_cast<ptrdiff_t>(i - 1) * AES_BLOCK_SIZE), &length,
+                    length) != 1) {
             ERROR("EVP_MAC_final failed");
             return false;
         }
     }
 #else
-    std::shared_ptr<CMAC_CTX> ctx(CMAC_CTX_new(), CMAC_CTX_free);
+    std::shared_ptr<CMAC_CTX> const ctx(CMAC_CTX_new(), CMAC_CTX_free);
     if (ctx == nullptr)
         return false;
 
     const EVP_CIPHER* cipher = (key.size() == SYM_128_KEY_SIZE) ? EVP_aes_128_cbc() : EVP_aes_256_cbc();
-    std::vector<uint8_t> temp(AES_BLOCK_SIZE * 4);
+    std::vector<uint8_t> temp(static_cast<size_t>(AES_BLOCK_SIZE) * 4);
     for (uint8_t i = 1; i <= 4; ++i) {
         if (CMAC_Init(ctx.get(), key.data(), key.size(), cipher, nullptr) != 1)
             return false;
@@ -716,12 +719,12 @@ bool SaKeyBase::cmac_kdf(
             return false;
 
         size_t length;
-        if (CMAC_Final(ctx.get(), temp.data() + ((i - 1) * AES_BLOCK_SIZE), &length) != 1)
+        if (CMAC_Final(ctx.get(), temp.data() + (static_cast<ptrdiff_t>(i - 1) * AES_BLOCK_SIZE), &length) != 1)
             return false;
     }
 #endif
 
-    memcpy(out.data(), temp.data() + ((counter - 1) * AES_BLOCK_SIZE), key_length);
+    memcpy(out.data(), temp.data() + (static_cast<ptrdiff_t>(counter - 1) * AES_BLOCK_SIZE), key_length);
     return true;
 }
 
@@ -729,9 +732,9 @@ bool SaKeyBase::netflix_wrapping_key_kdf(
         std::vector<uint8_t>& out,
         const std::vector<uint8_t>& encryption_key,
         const std::vector<uint8_t>& hmac_key) {
-    std::vector<uint8_t> salt({0x02, 0x76, 0x17, 0x98, 0x4f, 0x62, 0x27, 0x53,
+    std::vector<uint8_t> const salt({0x02, 0x76, 0x17, 0x98, 0x4f, 0x62, 0x27, 0x53,
             0x9a, 0x63, 0x0b, 0x89, 0x7c, 0x01, 0x7d, 0x69});
-    std::vector<uint8_t> info({0x80, 0x9f, 0x82, 0xa7, 0xad, 0xdf, 0x54, 0x8d,
+    std::vector<uint8_t> const info({0x80, 0x9f, 0x82, 0xa7, 0xad, 0xdf, 0x54, 0x8d,
             0x3e, 0xa9, 0xdd, 0x06, 0x7f, 0xf9, 0xbb, 0x91});
 
     std::vector<uint8_t> temp_key;
@@ -758,7 +761,7 @@ std::string SaKeyBase::b64_encode(
         throw;
     }
 
-    std::shared_ptr<BIO> b64(BIO_new(BIO_f_base64()), BIO_free_all);
+    std::shared_ptr<BIO> const b64(BIO_new(BIO_f_base64()), BIO_free_all);
     BIO_set_flags(b64.get(), BIO_FLAGS_BASE64_NO_NL);
 
     BIO* sink = BIO_new(BIO_s_mem());

@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ sa_status ta_sa_crypto_random(
     }
 
     if (!rand_bytes(out, length)) {
-        ERROR("rand_bytes failed");
+        ERROR("rand_bytes failed: client slot %d", client_slot);
         return SA_STATUS_INTERNAL_ERROR;
     }
 

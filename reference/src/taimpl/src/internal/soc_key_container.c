@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -602,20 +602,20 @@ static bool get_key_type_and_size(
         *subtype = AES_SUBTYPE;
         *curve = UINT32_MAX;
     } else if (memcmp(key_type_string, "HMAC-128", key_type_string_length) == 0) {
-            *key_type = SA_KEY_TYPE_SYMMETRIC;
-            *key_size = SYM_128_KEY_SIZE;
-            *subtype = HMAC_SUBTYPE;
-            *curve = UINT32_MAX;
+        *key_type = SA_KEY_TYPE_SYMMETRIC;
+        *key_size = SYM_128_KEY_SIZE;
+        *subtype = HMAC_SUBTYPE;
+        *curve = UINT32_MAX;
     } else if (memcmp(key_type_string, "AES-256", key_type_string_length) == 0) {
-            *key_type = SA_KEY_TYPE_SYMMETRIC;
-            *key_size = SYM_256_KEY_SIZE;
-            *subtype = AES_SUBTYPE;
-            *curve = UINT32_MAX;
+        *key_type = SA_KEY_TYPE_SYMMETRIC;
+        *key_size = SYM_256_KEY_SIZE;
+        *subtype = AES_SUBTYPE;
+        *curve = UINT32_MAX;
     } else if (memcmp(key_type_string, "CHACHA20-256", key_type_string_length) == 0) {
-            *key_type = SA_KEY_TYPE_SYMMETRIC;
-            *key_size = SYM_256_KEY_SIZE;
-            *subtype = CHACHA20_SUBTYPE;
-            *curve = UINT32_MAX;
+        *key_type = SA_KEY_TYPE_SYMMETRIC;
+        *key_size = SYM_256_KEY_SIZE;
+        *subtype = CHACHA20_SUBTYPE;
+        *curve = UINT32_MAX;
     } else if (memcmp(key_type_string, "HMAC-256", key_type_string_length) == 0) {
         *key_type = SA_KEY_TYPE_SYMMETRIC;
         *key_size = SYM_256_KEY_SIZE;
@@ -876,8 +876,9 @@ sa_status soc_kc_unwrap(
             break;
         }
 
-        if (parse_header(header_fields, header_fields_count, &header) != SA_STATUS_OK) {
-            ERROR("unpack_soc_kc failed");
+        status = parse_header(header_fields, header_fields_count, &header);
+        if (status != SA_STATUS_OK) {
+            ERROR("parse_header failed");
             break;
         }
 
@@ -885,6 +886,7 @@ sa_status soc_kc_unwrap(
         json_payload_value = json_parse_bytes(unpacked->payload, unpacked->payload_length);
         if (json_payload_value == NULL) {
             ERROR("json_parse_bytes failed");
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -892,11 +894,13 @@ sa_status soc_kc_unwrap(
         payload_fields = json_value_as_map(&payload_fields_count, json_payload_value);
         if (payload_fields == NULL) {
             ERROR("json_value_as_map failed");
+            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
-        if (parse_payload(payload_fields, payload_fields_count, &payload) != SA_STATUS_OK) {
-            ERROR("unpack_soc_kc failed");
+        status = parse_payload(payload_fields, payload_fields_count, &payload);
+        if (status != SA_STATUS_OK) {
+            ERROR("parse_payload failed");
             break;
         }
 

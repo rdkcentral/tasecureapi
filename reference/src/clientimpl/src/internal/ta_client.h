@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,18 +51,34 @@ extern "C" {
 #ifdef USE_SHARED_MEMORY
 
 #define CREATE_COMMAND(type, command) \
-    command = ta_alloc_shared_memory(sizeof(type))
+    command = ta_alloc_shared_memory(sizeof(type)); \
+    if ((command) == NULL) { \
+        ERROR("CREATE_COMMAND failed"); \
+        status = SA_STATUS_INTERNAL_ERROR; \
+        continue; /* NOLINT */ \
+    } \
+    (void) 0
 
 #define RELEASE_COMMAND(command) \
     ta_free_shared_memory(command)
 
 #define CREATE_PARAM(param, input, size) \
     param = ta_alloc_shared_memory(size); \
-    if ((param) != NULL) \
+    if ((param) == NULL) { \
+        ERROR("CREATE_PARAM failed"); \
+        status = SA_STATUS_INTERNAL_ERROR; \
+        continue; /* NOLINT */ \
+    } \
     memcpy(param, input, size)
 
 #define CREATE_OUT_PARAM(param, output, size) \
-    param = ta_alloc_shared_memory(size)
+    param = ta_alloc_shared_memory(size); \
+    if ((param) == NULL) { \
+        ERROR("CREATE_OUT_PARAM failed"); \
+        status = SA_STATUS_INTERNAL_ERROR; \
+        continue; /* NOLINT */ \
+    } \
+    (void) 0
 
 #define COPY_OUT_PARAM(output, param, size) \
     memcpy(output, param, size)
@@ -73,7 +89,13 @@ extern "C" {
 #else
 
 #define CREATE_COMMAND(type, command) \
-    command = malloc(sizeof(type))
+    command = malloc(sizeof(type)); \
+    if ((command) == NULL) { \
+        ERROR("CREATE_COMMAND failed"); \
+        status = SA_STATUS_INTERNAL_ERROR; \
+        continue; /* NOLINT */ \
+    } \
+    (void) 0
 
 #define RELEASE_COMMAND(command) \
     if ((command) != NULL) \
@@ -87,13 +109,11 @@ extern "C" {
 
 // NOOP
 #define COPY_OUT_PARAM(output, param, size) \
-    do { \
-    } while (0)
+    (void) 0
 
 // NOOP
 #define RELEASE_PARAM(param) \
-    do { \
-    } while (0)
+    (void) 0
 
 #endif
 

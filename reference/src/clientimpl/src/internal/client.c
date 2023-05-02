@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@
 
 static thread_local void* session = NULL;
 static tss_t thread_session;
-static once_flag flag = ONCE_FLAG_INIT;
+static once_flag mutex_flag = ONCE_FLAG_INIT;
+static once_flag shutdown_flag = ONCE_FLAG_INIT;
 static mtx_t mutex;
 
 static void client_thread_shutdown(void* client_session) {
@@ -41,12 +42,14 @@ static void client_shutdown() {
     }
 }
 
-static void client_create() {
+static void client_mutex_create() {
     if (mtx_init(&mutex, mtx_recursive) != thrd_success) {
         ERROR("mtx_init failed");
         return;
     }
+}
 
+static void client_create() {
     // Calls client_thread_shutdown when the thread exits.
     if (tss_create(&thread_session, client_thread_shutdown) != 0) {
         ERROR("tss_create failed");
@@ -65,7 +68,7 @@ void* client_session() {
         return session;
     }
 
-    call_once(&flag, client_create);
+    call_once(&mutex_flag, client_mutex_create);
 
     if (mtx_lock(&mutex) != thrd_success) {
         ERROR("mtx_lock failed");
@@ -83,6 +86,10 @@ void* client_session() {
             ERROR("ta_sa_init failed: %d", status);
             break;
         }
+
+        // Call after the open session so that client_shutdown handler runs after the TA handler in the reference
+        // implementation.
+        call_once(&shutdown_flag, client_create);
 
         // Store the session in thread specific storage so that it can be cleaned up automatically when the thread
         // exits.

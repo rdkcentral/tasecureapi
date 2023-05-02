@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
  */
 
 #include "client_store.h"
-#include "digest.h"
+#include "digest_util.h"
 #include "ec.h"
 #include "key_store.h"
 #include "key_type.h"
@@ -88,12 +88,12 @@ static sa_status ta_sa_crypto_sign_ecdsa(
         }
 
         if (out == NULL) {
-            *out_length = header->size * 2;
+            *out_length = (size_t) header->size * 2;
             status = SA_STATUS_OK;
             break;
         }
 
-        if (*out_length < header->size * 2) {
+        if (*out_length < (size_t) header->size * 2) {
             ERROR("Invalid out_length");
             status = SA_STATUS_INVALID_PARAMETER;
             break;

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,7 @@
 
 namespace {
     TEST(RightsAllowedTime, valid) {
-        time_t now = time(nullptr);
+        time_t const now = time(nullptr);
 
         sa_rights rights;
         rights.not_before = now;
@@ -33,7 +33,7 @@ namespace {
     }
 
     TEST(RightsAllowedTime, past) {
-        time_t now = time(nullptr);
+        time_t const now = time(nullptr);
 
         sa_rights rights;
         rights.not_before = now - 1;
@@ -43,7 +43,7 @@ namespace {
     }
 
     TEST(RightsAllowedTime, future) {
-        time_t now = time(nullptr);
+        time_t const now = time(nullptr);
 
         sa_rights rights;
         rights.not_before = now + 1;

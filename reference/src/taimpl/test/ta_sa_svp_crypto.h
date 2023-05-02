@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,12 +34,12 @@ protected:
             const std::vector<uint8_t>& key);
 };
 
-using TaCryptoCipherTestType = std::tuple<sa_cipher_algorithm, sa_cipher_mode, size_t, size_t>;
+typedef std::tuple<sa_cipher_algorithm, sa_cipher_mode, size_t, size_t> TaCryptoCipherTestType;
 
 class TaCryptoCipherTest : public ::testing::TestWithParam<TaCryptoCipherTestType>, public TaCryptoCipherBase {};
 
 using TaProcessCommonEncryptionType =
-        std::tuple<std::tuple<size_t, size_t>, size_t, size_t, size_t, sa_cipher_algorithm>;
+        std::tuple<std::tuple<size_t, int64_t>, size_t, size_t, size_t, sa_cipher_algorithm>;
 
 class TaProcessCommonEncryptionTest : public ::testing::TestWithParam<TaProcessCommonEncryptionType>,
                                       public TaCryptoCipherBase,

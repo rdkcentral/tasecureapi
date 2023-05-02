@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_P(SaCryptoMacProcess, nominal) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -55,7 +55,7 @@ namespace {
     TEST_F(SaCryptoMacProcess, failsInvalidContext) {
         auto clear = random(SHA256_DIGEST_LENGTH);
 
-        sa_status status = sa_crypto_mac_process(INVALID_HANDLE, clear.data(), clear.size());
+        sa_status const status = sa_crypto_mac_process(INVALID_HANDLE, clear.data(), clear.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -81,9 +81,9 @@ namespace {
     }
 
     TEST_P(SaCryptoMacProcessArgChecks, failsWithInvalidContext) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -106,9 +106,9 @@ namespace {
     }
 
     TEST_P(SaCryptoMacProcessArgChecks, failsInvalidContextAlreadyUsed) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -142,9 +142,9 @@ namespace {
     }
 
     TEST_P(SaCryptoMacProcessArgChecks, failsWithNullData) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 

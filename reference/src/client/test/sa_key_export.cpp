@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -145,7 +145,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         size_t out_length = 0;
-        sa_status status = sa_key_export(nullptr, &out_length, nullptr, 0, *key);
+        sa_status const status = sa_key_export(nullptr, &out_length, nullptr, 0, *key);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
@@ -159,7 +159,7 @@ namespace {
         ASSERT_NE(key, nullptr);
 
         auto out = std::vector<uint8_t>(4096);
-        sa_status status = sa_key_export(out.data(), nullptr, nullptr, 0, *key);
+        sa_status const status = sa_key_export(out.data(), nullptr, nullptr, 0, *key);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -175,13 +175,13 @@ namespace {
         auto mixin = random(17);
         auto out = std::vector<uint8_t>(4096);
         size_t out_length = out.size();
-        sa_status status = sa_key_export(out.data(), &out_length, mixin.data(), mixin.size(), *key);
+        sa_status const status = sa_key_export(out.data(), &out_length, mixin.data(), mixin.size(), *key);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaKeyExportTest, failsInvalidKey) {
         size_t out_length = 0;
-        sa_status status = sa_key_export(nullptr, &out_length, nullptr, 0, INVALID_HANDLE);
+        sa_status const status = sa_key_export(nullptr, &out_length, nullptr, 0, INVALID_HANDLE);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

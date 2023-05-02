@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,7 +64,7 @@ extern "C" {
 #define SA_USAGE_BIT_TEST(a, b) ((a) & SA_USAGE_BIT_MASK(b))
 
 /**
- * Create bit mask of all video output protection bits.
+ * A bit mask of all video output protection bits.
  */
 #define SA_USAGE_OUTPUT_PROTECTIONS_MASK \
     (SA_USAGE_BIT_MASK(SA_USAGE_FLAG_ALLOWED_ANALOG_UNPROTECTED) | \
@@ -74,7 +74,9 @@ extern "C" {
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_ALLOWED_DIGITAL_HDCP22) | \
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_ALLOWED_DIGITAL_DTCP) | \
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_SVP_OPTIONAL))
-
+/**
+ * A bit mask of all key usage bits
+ */
 #define SA_KEY_USAGE_MASK \
     (SA_USAGE_BIT_MASK(SA_USAGE_FLAG_KEY_EXCHANGE) | \
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_DERIVE) | \
@@ -82,15 +84,22 @@ extern "C" {
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_ENCRYPT) | \
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_DECRYPT) | \
      SA_USAGE_BIT_MASK(SA_USAGE_FLAG_SIGN))
+
 /* clang-format on */
 
 /**
  * Generic handle type.
  */
-typedef unsigned long sa_handle;
+typedef unsigned long sa_handle; // NOLINT
 
+/**
+ * Value for an uninitialized handle.
+ */
 #define INVALID_HANDLE ((sa_handle) ULONG_MAX)
 
+/**
+ * The number of MAGIC bytes in a key header.
+ */
 #define NUM_MAGIC 4
 
 /**
@@ -131,16 +140,27 @@ typedef struct {
  * List of currently supported cipher algorithms.
  */
 typedef enum {
+    /** AES ECB Cipher Algorithm */
     SA_CIPHER_ALGORITHM_AES_ECB = 0,
+    /** AES ECB Cipher Algorithm with PKCS7 Padding */
     SA_CIPHER_ALGORITHM_AES_ECB_PKCS7,
+    /** AES CBC Cipher Algorithm */
     SA_CIPHER_ALGORITHM_AES_CBC,
+    /** AES CBC Cipher Algorithm with PKCS7 Padding */
     SA_CIPHER_ALGORITHM_AES_CBC_PKCS7,
+    /** AES CTR Cipher Algorithm */
     SA_CIPHER_ALGORITHM_AES_CTR,
+    /** AES GCM Cipher Algorithm */
     SA_CIPHER_ALGORITHM_AES_GCM,
+    /** AES RSA PKCS1 v1.5 Cipher Algorithm */
     SA_CIPHER_ALGORITHM_RSA_PKCS1V15,
+    /** AES RSA OAEP Cipher Algorithm */
     SA_CIPHER_ALGORITHM_RSA_OAEP,
+    /** AES EC El Gamal Cipher Algorithm */
     SA_CIPHER_ALGORITHM_EC_ELGAMAL,
+    /** AES ChaCha20 Cipher Algorithm */
     SA_CIPHER_ALGORITHM_CHACHA20,
+    /** AES ChaCha20 with Poly 1305 Cipher Algorithm */
     SA_CIPHER_ALGORITHM_CHACHA20_POLY1305
 } sa_cipher_algorithm;
 
@@ -148,7 +168,9 @@ typedef enum {
  * List of cipher modes.
  */
 typedef enum {
+    /** Decrypt Cipher Mode */
     SA_CIPHER_MODE_DECRYPT = 0,
+    /** Encrypt Cipher Mode */
     SA_CIPHER_MODE_ENCRYPT
 } sa_cipher_mode;
 
@@ -156,9 +178,13 @@ typedef enum {
  * List of currently supported signature algorithms.
  */
 typedef enum {
+    /** RSA PKCS1 v1.5 Signature Algorithm */
     SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15 = 0,
+    /** RSA PSS Signature Algorithm */
     SA_SIGNATURE_ALGORITHM_RSA_PSS,
+    /** ECDSA Signature Algorithm */
     SA_SIGNATURE_ALGORITHM_ECDSA,
+    /** EDDSA Signature Algorithm */
     SA_SIGNATURE_ALGORITHM_EDDSA
 } sa_signature_algorithm;
 
@@ -166,7 +192,9 @@ typedef enum {
  * List of currently supported message authentication code algorithms.
  */
 typedef enum {
+    /** CMAC MAC Algorithm */
     SA_MAC_ALGORITHM_CMAC = 0,
+    /** HMAC MAC Algorithm */
     SA_MAC_ALGORITHM_HMAC
 } sa_mac_algorithm;
 
@@ -174,9 +202,13 @@ typedef enum {
  * List of currently supported digest algorithms.
  */
 typedef enum {
+    /** SHA1 Digest Algorithm */
     SA_DIGEST_ALGORITHM_SHA1 = 0,
+    /** SHA256 Digest Algorithm */
     SA_DIGEST_ALGORITHM_SHA256,
+    /** SHA384 Digest Algorithm */
     SA_DIGEST_ALGORITHM_SHA384,
+    /** SHA512 Digest Algorithm */
     SA_DIGEST_ALGORITHM_SHA512
 } sa_digest_algorithm;
 
@@ -184,11 +216,23 @@ typedef enum {
  * List of currently supported key derivation function algorithms.
  */
 typedef enum {
+    /** Root Key Ladder Key Derivation Function Algorithm--derives a key from the OTP root key */
     SA_KDF_ALGORITHM_ROOT_KEY_LADDER = 0,
+    /** HKDF Key Derivation Function Algorithm.
+     * See RFC 5869 for definition. */
     SA_KDF_ALGORITHM_HKDF,
+    /** Concat Key Derivation Function Algorithm--a.k.a. the single step key derivation function (SSKDF).
+     *  See NIST SP 56A for definition. */
     SA_KDF_ALGORITHM_CONCAT,
+    /** ANSI X9.63 Key Derivation Function Algorithm.
+     * See ANSI X9.63 for definition. */
     SA_KDF_ALGORITHM_ANSI_X963,
+    /** CMAC Key Derivation Function Algorithm--a.k.a. the key based key derivation function (KBKDF).
+     * See NIST SP 800-108 for definition. */
     SA_KDF_ALGORITHM_CMAC,
+    /** Netflix Key Derivation Function Algorithm.
+     * See https://github.com/Netflix/msl/wiki/Pre-shared-Keys-or-Model-Group-Keys-Entity-Authentication for
+     * definition. */
     SA_KDF_ALGORITHM_NETFLIX,
     /** Common Root Key Ladder Key Derivation Function Algorithm--derives a key from the common SOC root key */
     SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER
@@ -198,8 +242,12 @@ typedef enum {
  * List of currently supported key exchange algorithms.
  */
 typedef enum {
+    /** DH Key Exchange Algorithm. */
     SA_KEY_EXCHANGE_ALGORITHM_DH = 0,
+    /** ECDH Key Exchange Algorithm. */
     SA_KEY_EXCHANGE_ALGORITHM_ECDH,
+    /** Netflix Key Exchange Algorithm.
+     * See https://github.com/Netflix/msl/wiki/Authenticated-Diffie-Hellman-Key-Exchange for definition. */
     SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH
 } sa_key_exchange_algorithm;
 
@@ -207,11 +255,17 @@ typedef enum {
  * List of supported key formats for sa_key_import.
  */
 typedef enum {
+    /** Symmetric Key Bytes Format - Raw Bytes */
     SA_KEY_FORMAT_SYMMETRIC_BYTES = 0,
+    /** EC Private Bytes Key Format - PKCS #8 encoded */
     SA_KEY_FORMAT_EC_PRIVATE_BYTES,
+    /** RSA Private Key Info Format - PKCS #8 encoded */
     SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO,
+    /** Exported Key Format - encoded in a SOC specific way */
     SA_KEY_FORMAT_EXPORTED,
+    /** SOC Key Format - encoded according to the SOC Specific Key Specification */
     SA_KEY_FORMAT_SOC,
+    /** TypeJ Key Format - encoded according to the SecApi Key Container Specification */
     SA_KEY_FORMAT_TYPEJ
 } sa_key_format;
 
@@ -219,9 +273,13 @@ typedef enum {
  * List of supported key types.
  */
 typedef enum {
+    /** Symmetric Key Type - AES & HMAC */
     SA_KEY_TYPE_SYMMETRIC = 0,
+    /** Elliptic Curve Key Type */
     SA_KEY_TYPE_EC = 1,
+    /** RSA Key Type */
     SA_KEY_TYPE_RSA = 2,
+    /** Diffie-Hellman Key Type */
     SA_KEY_TYPE_DH = 3
 } sa_key_type;
 
@@ -229,22 +287,31 @@ typedef enum {
  * List of supported elliptic curves.
  */
 typedef enum {
+    /** NIST P-256 Elliptic Curve */
     SA_ELLIPTIC_CURVE_NIST_P256 = 0,
-    /** This curve is for future support and is not currently required. **/
+    /** NIST P-384 Elliptic Curve
+     * This curve is for future support and is not currently required. */
     SA_ELLIPTIC_CURVE_NIST_P384 = 1,
-    /** This curve is for future support and is not currently required. **/
+    /** NIST P-521 Elliptic Curve
+     * This curve is for future support and is not currently required. */
     SA_ELLIPTIC_CURVE_NIST_P521 = 2,
-    /** Supported only with SA_SIGNATURE_ALGORITHM_ECDSA */
+    /** ED25519 Elliptic Curve
+     * Supported only with SA_SIGNATURE_ALGORITHM_EDDSA */
     SA_ELLIPTIC_CURVE_ED25519 = 3,
-    /** Supported only with SA_KEY_EXCHANGE_ALGORITHM_ECDH */
+    /** X25519 Elliptic Curve
+     * Supported only with SA_KEY_EXCHANGE_ALGORITHM_ECDH. */
     SA_ELLIPTIC_CURVE_X25519 = 4,
-    /** Supported only with SA_SIGNATURE_ALGORITHM_ECDSA */
-    /** This curve is for future support and is not currently required. **/
+    /** ED448 Elliptic Curve
+     * Supported only with SA_SIGNATURE_ALGORITHM_EDDSA.
+     * This curve is for future support and is not currently required. */
     SA_ELLIPTIC_CURVE_ED448 = 5,
-    /** Supported only with SA_KEY_EXCHANGE_ALGORITHM_ECDH */
-    /** This curve is for future support and is not currently required. **/
+    /** ED448 Elliptic Curve
+     * Supported only with SA_KEY_EXCHANGE_ALGORITHM_ECDH.
+     * This curve is for future support and is not currently required. */
     SA_ELLIPTIC_CURVE_X448 = 6,
+    /** NIST P-192 Elliptic Curve */
     SA_ELLIPTIC_CURVE_NIST_P192 = 7,
+    /** NIST P-224 Elliptic Curve */
     SA_ELLIPTIC_CURVE_NIST_P224 = 8
 } sa_elliptic_curve;
 
@@ -252,7 +319,9 @@ typedef enum {
  * List of buffer types.
  */
 typedef enum {
+    /** Clear Buffer Type */
     SA_BUFFER_TYPE_CLEAR = 0,
+    /** SVP Buffer Type */
     SA_BUFFER_TYPE_SVP
 } sa_buffer_type;
 
@@ -374,6 +443,9 @@ typedef struct {
     uint8_t id[16];
 } sa_uuid;
 
+/**
+ * The number of allowed TA IDs in a key header.
+ */
 #define MAX_NUM_ALLOWED_TA_IDS 32
 
 /**
@@ -418,14 +490,19 @@ typedef struct {
     sa_uuid allowed_tas[MAX_NUM_ALLOWED_TA_IDS];
 } sa_rights;
 
+/**
+ * The maxium length of the p and g values in DH parameters.
+ */
 #define DH_MAX_MOD_SIZE 512
 
 /**
  * Type parameters for the sa_header.
  */
 typedef union {
+    /** EC curve type. */
     sa_elliptic_curve curve;
 
+    /** DH parameters. */
     struct {
         /** Prime. */
         uint8_t p[DH_MAX_MOD_SIZE];
@@ -470,14 +547,21 @@ typedef struct {
      * The buffer information.
      */
     union {
+        /** Clear buffer information */
         struct {
+            /** Buffer data */
             void* buffer;
+            /** Length of the buffer */
             size_t length;
+            /** Current offset into the buffer */
             size_t offset;
         } clear;
 
+        /** SVP buffer information */
         struct {
+            /** SVP buffer handle */
             sa_svp_buffer buffer;
+            /** Current offset into the buffer */
             size_t offset;
         } svp;
     } context;
@@ -836,7 +920,7 @@ typedef struct {
 } sa_kdf_parameters_root_key_ladder;
 
 /**
- * KDF parameters for SA_KDF_ALGORITHM_HKDF.
+ * KDF parameters for SA_KDF_ALGORITHM_HKDF. See RFC 5869 for definition.
  */
 typedef struct {
     /** Derived key length in bytes. */
@@ -856,7 +940,7 @@ typedef struct {
 } sa_kdf_parameters_hkdf;
 
 /**
- * KDF parameters for SA_KDF_ALGORITHM_CONCAT.
+ * KDF parameters for SA_KDF_ALGORITHM_CONCAT. See NIST SP 56A for definition.
  */
 typedef struct {
     /** Derived key length in bytes. */
@@ -872,7 +956,7 @@ typedef struct {
 } sa_kdf_parameters_concat;
 
 /**
- * KDF parameters for SA_KDF_ALGORITHM_ANSI_X963.
+ * KDF parameters for SA_KDF_ALGORITHM_ANSI_X963. See ANSI X9.63 for definition.
  */
 typedef struct {
     /** Derived key length in bytes. */
@@ -888,14 +972,14 @@ typedef struct {
 } sa_kdf_parameters_ansi_x963;
 
 /**
- * KDF parameters for SA_KDF_ALGORITHM_CMAC.
+ * KDF parameters for SA_KDF_ALGORITHM_CMAC. See NIST SP 800-108 for definition.
  */
 typedef struct {
     /** Derived key length in bytes. */
     size_t key_length;
     /** Parent key handle. */
     sa_key parent;
-    /** Other data value. */
+    /** Other data value. Should be Label || 0x00 || Context || L according to NIST SP 800-108 */
     const void* other_data;
     /** Length of other data in bytes. */
     size_t other_data_length;
@@ -938,11 +1022,11 @@ typedef struct {
  * Structure to use in sa_svp_buffer_copy_blocks
  */
 typedef struct {
-    // offset into the output buffer.
+    /** offset into the output buffer. */
     size_t out_offset;
-    // offset into the input buffer.
+    /** offset into the input buffer. */
     size_t in_offset;
-    // numbers of bytes to copy or write.
+    /** numbers of bytes to copy or write. */
     size_t length;
 } sa_svp_offset;
 

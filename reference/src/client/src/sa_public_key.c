@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,19 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sa_public_key.h"
+#include "sa_public_key.h" // NOLINT
 #include "common.h"
 #include "log.h"
 #include "sa.h"
 #include <openssl/bn.h>
-#include <openssl/ec.h>
 #include <openssl/evp.h>
 #include <openssl/x509.h>
-#if OPENSSL_VERSION_NUMBER < 0x30000000
-#include <memory.h>
-#endif
 #if OPENSSL_VERSION_NUMBER < 0x10100000
 #include <openssl/ecdsa.h>
+#else
+#include <openssl/ec.h>
 #endif
 
 bool is_pcurve(sa_elliptic_curve curve) {

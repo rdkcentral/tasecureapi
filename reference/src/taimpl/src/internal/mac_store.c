@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2021 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,7 +123,7 @@ static void mac_unlock(mac_t* mac) {
 }
 
 mac_store_t* mac_store_init(size_t size) {
-    mac_store_t* store = object_store_init(mac_free, size);
+    mac_store_t* store = object_store_init(mac_free, size, "mac");
     if (store == NULL) {
         ERROR("object_store_init failed");
         return NULL;

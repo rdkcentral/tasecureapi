@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,7 +64,7 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
         size_t bytes_to_process = clear.size();
@@ -114,7 +114,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         // encrypt using OpenSSL
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto encrypted = encrypt_openssl(clear, parameters);
         ASSERT_FALSE(encrypted.empty());
 
@@ -167,7 +167,7 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
         size_t bytes_to_process = clear.size();
@@ -217,7 +217,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         // encrypt using OpenSSL
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto encrypted = encrypt_openssl(clear, parameters);
         ASSERT_FALSE(encrypted.empty());
 
@@ -245,8 +245,8 @@ namespace {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
         parameters.svp_required = false;
-        sa_key_type key_type = SA_KEY_TYPE_SYMMETRIC;
-        size_t key_size = SYM_128_KEY_SIZE;
+        sa_key_type const key_type = SA_KEY_TYPE_SYMMETRIC;
+        size_t const key_size = SYM_128_KEY_SIZE;
 
         auto cipher = initialize_cipher(SA_CIPHER_MODE_ENCRYPT, key_type, key_size, parameters);
         ASSERT_NE(cipher, nullptr);
@@ -278,8 +278,8 @@ namespace {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
         parameters.svp_required = false;
-        sa_key_type key_type = SA_KEY_TYPE_SYMMETRIC;
-        size_t key_size = SYM_128_KEY_SIZE;
+        sa_key_type const key_type = SA_KEY_TYPE_SYMMETRIC;
+        size_t const key_size = SYM_128_KEY_SIZE;
 
         auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, key_type, key_size, parameters);
         ASSERT_NE(cipher, nullptr);
@@ -312,7 +312,7 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherWithoutSvpTest, processAesGcmFailsInvalidOutLength) {
-        sa_cipher_mode cipher_mode = std::get<0>(GetParam());
+        sa_cipher_mode const cipher_mode = std::get<0>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -368,7 +368,7 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, clear);
         ASSERT_NE(in_buffer, nullptr);
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
@@ -402,7 +402,7 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, clear.size());

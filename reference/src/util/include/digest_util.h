@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@
  * This file contains the functions implementing internal digest algorithms.
  */
 
-#ifndef DIGEST_INTERNAL_H
-#define DIGEST_INTERNAL_H
+#ifndef DIGEST_UTIL_H
+#define DIGEST_UTIL_H
 
 #include "sa_types.h"
 #include <openssl/ossl_typ.h>
@@ -47,8 +47,33 @@ const EVP_MD* digest_mechanism(sa_digest_algorithm digest_algorithm);
  */
 const char* digest_string(sa_digest_algorithm digest_algorithm);
 
+/**
+ * Obtain digest length for specified algorithm.
+ *
+ * @param[in] digest_algorithm digest algorithm.
+ * @return length required to store the digest value. Returns (size_t) -1 if invalid digest
+ * algorithm is specified.
+ */
+size_t digest_length(sa_digest_algorithm digest_algorithm);
+
+/**
+ * Retrieves the digest algorithm from the OpenSSL message digest.
+ *
+ * @param[in] evp_md the OpenSSL message digest.
+ * @return the digest algorithm.
+ */
+sa_digest_algorithm digest_algorithm_from_md(const EVP_MD* evp_md);
+
+/**
+ * Returns the digest algorithm based on the algorithm name.
+ *
+ * @param[in] name the name of the digest algorithm.
+ * @return the digest algorithm.
+ */
+sa_digest_algorithm digest_algorithm_from_name(const char* name);
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif // DIGEST_INTERNAL_H
+#endif // DIGEST_UTIL_H

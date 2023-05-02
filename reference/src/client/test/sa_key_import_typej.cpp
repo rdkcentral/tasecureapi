@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
@@ -306,7 +306,7 @@ namespace {
         auto key_size = SYM_128_KEY_SIZE;
         auto algorithm = SA_CIPHER_ALGORITHM_AES_ECB;
         auto usage_flags_mask = DATA_AND_KEY_MASK;
-        int count = GetParam();
+        int const count = GetParam();
         std::vector<std::string> entitled_ta_ids;
 
         sa_rights key_rights;
@@ -351,7 +351,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
         if (count > MAX_NUM_ALLOWED_TA_IDS) {
             ASSERT_NE(status, SA_STATUS_OK);
@@ -403,7 +403,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, clear_key.data(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, clear_key.data(),
                 clear_key.size(), &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -440,7 +440,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
@@ -473,7 +473,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
@@ -504,7 +504,7 @@ namespace {
                 .kcipher = INVALID_HANDLE,
                 .khmac = *mackey};
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
@@ -535,7 +535,7 @@ namespace {
                 .kcipher = *enckey,
                 .khmac = INVALID_HANDLE};
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
@@ -573,7 +573,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
@@ -611,7 +611,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_TYPEJ, typej.data(), typej.size(),
                 &parameters);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }

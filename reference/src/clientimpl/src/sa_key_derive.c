@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,12 +51,6 @@ sa_status sa_key_derive(
     sa_status status;
     do {
         CREATE_COMMAND(sa_key_derive_s, key_derive);
-        if (key_derive == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         key_derive->api_version = API_VERSION;
         key_derive->key = *key;
         key_derive->rights = *rights;
@@ -128,12 +122,6 @@ sa_status sa_key_derive(
                 }
 
                 CREATE_COMMAND(sa_kdf_parameters_root_key_ladder_s, param1);
-                if (param1 == NULL) {
-                    ERROR("CREATE_COMMAND failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 sa_kdf_parameters_root_key_ladder_s* parameters_root_key_ladder_s =
                         (sa_kdf_parameters_root_key_ladder_s*) param1;
                 memcpy(parameters_root_key_ladder_s->c1, parameters_root_key_ladder->c1, AES_BLOCK_SIZE);
@@ -169,12 +157,6 @@ sa_status sa_key_derive(
                 }
 
                 CREATE_COMMAND(sa_kdf_parameters_hkdf_s, param1);
-                if (param1 == NULL) {
-                    ERROR("CREATE_COMMAND failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 sa_kdf_parameters_hkdf_s* parameters_hkdf_s = (sa_kdf_parameters_hkdf_s*) param1;
                 parameters_hkdf_s->key_length = parameters_hkdf->key_length;
                 parameters_hkdf_s->digest_algorithm = parameters_hkdf->digest_algorithm;
@@ -184,12 +166,6 @@ sa_status sa_key_derive(
 
                 if (parameters_hkdf->info != NULL) {
                     CREATE_PARAM(param2, (void*) parameters_hkdf->info, parameters_hkdf->info_length);
-                    if (param2 == NULL) {
-                        ERROR("CREATE_PARAM failed");
-                        status = SA_STATUS_INTERNAL_ERROR;
-                        continue; // NOLINT
-                    }
-
                     param2_size = parameters_hkdf->info_length;
                     param2_type = TA_PARAM_IN;
                 } else {
@@ -199,12 +175,6 @@ sa_status sa_key_derive(
 
                 if (parameters_hkdf->salt != NULL) {
                     CREATE_PARAM(param3, (void*) parameters_hkdf->salt, parameters_hkdf->salt_length);
-                    if (param3 == NULL) {
-                        ERROR("CREATE_PARAM failed");
-                        status = SA_STATUS_INTERNAL_ERROR;
-                        continue; // NOLINT
-                    }
-
                     param3_size = parameters_hkdf->salt_length;
                     param3_type = TA_PARAM_IN;
                 } else {
@@ -229,12 +199,6 @@ sa_status sa_key_derive(
                 }
 
                 CREATE_COMMAND(sa_kdf_parameters_concat_s, param1);
-                if (param1 == NULL) {
-                    ERROR("CREATE_COMMAND failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 sa_kdf_parameters_concat_s* parameters_concat_s = (sa_kdf_parameters_concat_s*) param1;
                 parameters_concat_s->key_length = parameters_concat->key_length;
                 parameters_concat_s->digest_algorithm = parameters_concat->digest_algorithm;
@@ -244,12 +208,6 @@ sa_status sa_key_derive(
 
                 if (parameters_concat->info != NULL) {
                     CREATE_PARAM(param2, (void*) parameters_concat->info, parameters_concat->info_length);
-                    if (param2 == NULL) {
-                        ERROR("CREATE_PARAM failed");
-                        status = SA_STATUS_INTERNAL_ERROR;
-                        continue; // NOLINT
-                    }
-
                     param2_size = parameters_concat->info_length;
                     param2_type = TA_PARAM_IN;
                 } else {
@@ -276,12 +234,6 @@ sa_status sa_key_derive(
                 }
 
                 CREATE_COMMAND(sa_kdf_parameters_ansi_x963_s, param1);
-                if (param1 == NULL) {
-                    ERROR("CREATE_COMMAND failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 sa_kdf_parameters_ansi_x963_s* parameters_ansi_x_963_s = (sa_kdf_parameters_ansi_x963_s*) param1;
                 parameters_ansi_x_963_s->key_length = parameters_ansi_x_963->key_length;
                 parameters_ansi_x_963_s->digest_algorithm = parameters_ansi_x_963->digest_algorithm;
@@ -291,12 +243,6 @@ sa_status sa_key_derive(
 
                 if (parameters_ansi_x_963->info != NULL) {
                     CREATE_PARAM(param2, (void*) parameters_ansi_x_963->info, parameters_ansi_x_963->info_length);
-                    if (param2 == NULL) {
-                        ERROR("CREATE_PARAM failed");
-                        status = SA_STATUS_INTERNAL_ERROR;
-                        continue; // NOLINT
-                    }
-
                     param2_size = parameters_ansi_x_963->info_length;
                     param2_type = TA_PARAM_IN;
                 } else {
@@ -323,12 +269,6 @@ sa_status sa_key_derive(
                 }
 
                 CREATE_COMMAND(sa_kdf_parameters_cmac_s, param1);
-                if (param1 == NULL) {
-                    ERROR("CREATE_COMMAND failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 sa_kdf_parameters_cmac_s* parameters_cmac_s = (sa_kdf_parameters_cmac_s*) param1;
                 parameters_cmac_s->key_length = parameters_cmac->key_length;
                 parameters_cmac_s->parent = parameters_cmac->parent;
@@ -338,12 +278,6 @@ sa_status sa_key_derive(
 
                 if (parameters_cmac->other_data != NULL) {
                     CREATE_PARAM(param2, (void*) parameters_cmac->other_data, parameters_cmac->other_data_length);
-                    if (param2 == NULL) {
-                        ERROR("CREATE_PARAM failed");
-                        status = SA_STATUS_INTERNAL_ERROR;
-                        continue; // NOLINT
-                    }
-
                     param2_size = parameters_cmac->other_data_length;
                     param2_type = TA_PARAM_IN;
                 } else {
@@ -364,12 +298,6 @@ sa_status sa_key_derive(
 
                 sa_kdf_parameters_netflix* parameters_netflix = (sa_kdf_parameters_netflix*) parameters;
                 CREATE_COMMAND(sa_kdf_parameters_netflix, param1);
-                if (param1 == NULL) {
-                    ERROR("CREATE_COMMAND failed");
-                    status = SA_STATUS_INTERNAL_ERROR;
-                    continue; // NOLINT
-                }
-
                 sa_kdf_parameters_netflix_s* parameters_netflix_s = (sa_kdf_parameters_netflix_s*) param1;
                 parameters_netflix_s->kenc = parameters_netflix->kenc;
                 parameters_netflix_s->khmac = parameters_netflix->khmac;

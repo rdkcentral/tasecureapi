@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,15 +41,6 @@ extern "C" {
 #endif
 
 #define DIGEST_MAX_LENGTH 64
-
-/**
- * Obtain digest length for specified algorithm.
- *
- * @param[in] digest_algorithm digest algorithm.
- * @return length required to store the digest value. Returns (size_t) -1 if invalid digest
- * algorithm is specified.
- */
-size_t digest_length(sa_digest_algorithm digest_algorithm);
 
 /**
  * Compute a SHA digest value over inputs.

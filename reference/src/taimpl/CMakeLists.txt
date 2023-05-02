@@ -72,7 +72,6 @@ add_library(taimpl STATIC
         include/internal/cmac_context.h
         include/internal/dh.h
         include/internal/digest.h
-        include/internal/digest_internal.h
         include/internal/ec.h
         include/internal/hmac_internal.h
         include/internal/hmac_context.h

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,8 @@ sa_status ta_sa_get_device_id(
         ta_client client_slot,
         const sa_uuid* caller_uuid) {
 
+    DEBUG("client_slot %d", client_slot);
+
     if (caller_uuid == NULL) {
         ERROR("NULL caller_uuid");
         return SA_STATUS_NULL_PARAMETER;
@@ -35,5 +37,10 @@ sa_status ta_sa_get_device_id(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    return otp_device_id(id);
+    if (otp_device_id(id) != SA_STATUS_OK) {
+        ERROR("otp_device_id failed");
+        return SA_STATUS_INTERNAL_ERROR;
+    }
+
+    return SA_STATUS_OK;
 }

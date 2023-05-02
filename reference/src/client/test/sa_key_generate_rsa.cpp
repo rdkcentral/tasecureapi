@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sa.h"
+#include "sa.h" // NOLINT
 #include "client_test_helpers.h"
 #include "sa_key_common.h"
 #include "gtest/gtest.h"
@@ -31,7 +31,7 @@ namespace {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
-        sa_status status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_EC, nullptr);
+        sa_status const status = sa_key_generate(key.get(), &rights, SA_KEY_TYPE_EC, nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

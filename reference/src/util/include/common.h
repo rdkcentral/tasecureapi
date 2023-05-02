@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -57,11 +57,14 @@
 #define CHACHA20_TAG_LENGTH 16
 #define MAX_SIGNATURE_LENGTH 512
 #define MAX_NUM_SLOTS 256
+#define MAX_NAME_SIZE 50
+#define MAX_PROPQUERY_SIZE 256
+#define MAX_CMAC_SIZE 64
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000
-#define RSA_PSS_SALTLEN_DIGEST -1
-#define RSA_PSS_SALTLEN_AUTO -2
-#define RSA_PSS_SALTLEN_MAX -3
+#define RSA_PSS_SALTLEN_DIGEST (-1)
+#define RSA_PSS_SALTLEN_AUTO (-2)
+#define RSA_PSS_SALTLEN_MAX (-3)
 #endif
 
 #define DEFAULT_ROOT_KEYSTORE_PASSWORD "password01234567"

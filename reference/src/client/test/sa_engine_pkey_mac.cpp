@@ -1,5 +1,5 @@
-/**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -8,7 +8,9 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
+ *
  * distributed under the License is distributed on an "AS IS" BASIS,
+ *
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
@@ -16,11 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-
-#include "client_test_helpers.h"
-#include "sa.h"
 #include "sa_engine_common.h"
+// These tests fail on OpenSSL 1.1.1f, so disable them.
+#if OPENSSL_VERSION_NUMBER > 0x1010106f && OPENSSL_VERSION_NUMBER < 0x30000000
+#include "client_test_helpers.h"
+#include "digest_util.h"
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
 
@@ -41,11 +43,11 @@ TEST_P(SaEnginePkeyMacTest, digestSignWithUpdateFinalTest) {
 
     auto data = random(256);
     std::vector<uint8_t> mac;
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
     const EVP_MD* evp_md;
     if (mac_algorithm == SA_MAC_ALGORITHM_HMAC)
         evp_md = digest_mechanism(digest_algorithm);
@@ -53,7 +55,7 @@ TEST_P(SaEnginePkeyMacTest, digestSignWithUpdateFinalTest) {
         evp_md = nullptr;
 
     size_t mac_length = 0;
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_sign_ctx = nullptr;
     ASSERT_EQ(EVP_DigestSignInit(evp_md_sign_ctx.get(), &evp_pkey_sign_ctx, evp_md, engine.get(), evp_pkey.get()),
@@ -88,11 +90,11 @@ TEST_P(SaEnginePkeyMacTest, digestSignNoUpdateFinalTest) {
 
     auto data = random(256);
     std::vector<uint8_t> mac;
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     EVP_PKEY* temp = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp, EVP_PKEY_free);
     const EVP_MD* evp_md;
     if (mac_algorithm == SA_MAC_ALGORITHM_HMAC)
         evp_md = digest_mechanism(digest_algorithm);
@@ -100,7 +102,7 @@ TEST_P(SaEnginePkeyMacTest, digestSignNoUpdateFinalTest) {
         evp_md = nullptr;
 
     size_t mac_length = 0;
-    std::shared_ptr<EVP_MD_CTX> evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+    std::shared_ptr<EVP_MD_CTX> const evp_md_sign_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
     ASSERT_NE(evp_md_sign_ctx, nullptr);
     EVP_PKEY_CTX* evp_pkey_sign_ctx = nullptr;
     ASSERT_EQ(EVP_DigestSignInit(evp_md_sign_ctx.get(), &evp_pkey_sign_ctx, evp_md, engine.get(), evp_pkey.get()),

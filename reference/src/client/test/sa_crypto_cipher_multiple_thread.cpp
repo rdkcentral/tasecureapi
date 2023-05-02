@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,9 +31,9 @@ sa_status SaCryptoCipherMultipleThread::process_multiple_threads(size_t id) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
         parameters.svp_required = false;
-        sa_key_type key_type = SA_KEY_TYPE_SYMMETRIC;
-        size_t key_size = SYM_128_KEY_SIZE;
-        sa_buffer_type buffer_type = SA_BUFFER_TYPE_CLEAR;
+        sa_key_type const key_type = SA_KEY_TYPE_SYMMETRIC;
+        size_t const key_size = SYM_128_KEY_SIZE;
+        sa_buffer_type const buffer_type = SA_BUFFER_TYPE_CLEAR;
 
         auto cipher = initialize_cipher(SA_CIPHER_MODE_ENCRYPT, key_type, key_size, parameters);
         if (cipher == nullptr || *cipher == UNSUPPORTED_CIPHER) {
@@ -41,7 +41,7 @@ sa_status SaCryptoCipherMultipleThread::process_multiple_threads(size_t id) {
             return SA_STATUS_OPERATION_NOT_SUPPORTED;
         }
 
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto in_buffer = buffer_alloc(buffer_type, clear);
         if (in_buffer == nullptr) {
             return SA_STATUS_NULL_PARAMETER;

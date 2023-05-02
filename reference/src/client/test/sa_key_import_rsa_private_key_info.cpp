@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, clear_key.data(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, clear_key.data(),
                 clear_key.size(), &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
@@ -101,7 +101,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, clear_key.data(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, clear_key.data(),
                 clear_key.size(), &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
@@ -115,7 +115,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, clear_key.data(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, clear_key.data(),
                 clear_key.size(), nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
@@ -131,7 +131,7 @@ namespace {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, clear_key.data(),
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, clear_key.data(),
                 clear_key.size(), &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";

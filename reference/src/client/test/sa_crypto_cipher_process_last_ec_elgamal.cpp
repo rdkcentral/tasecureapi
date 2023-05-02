@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFails) {
-        sa_elliptic_curve curve = std::get<0>(GetParam());
-        size_t key_size = ec_get_key_size(curve);
+        sa_elliptic_curve const curve = std::get<0>(GetParam());
+        size_t const key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
 
         sa_rights rights;

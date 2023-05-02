@@ -1,5 +1,5 @@
-/**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <openssl/opensslv.h>
-
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-
-#include "log.h"
 #include "sa_engine_internal.h"
-#include <openssl/evp.h>
-#if OPENSSL_VERSION_NUMBER < 0x30000000
+#if OPENSSL_VERSION_NUMBER > 0x10100000 && OPENSSL_VERSION_NUMBER < 0x30000000
+#include "log.h"
 #include <memory.h>
-#endif
+#include <openssl/evp.h>
 
 static int pkey_asn1_nids[] = {EVP_PKEY_SYM};
 static int pkey_asn1_nids_num = (sizeof(pkey_asn1_nids) / sizeof(pkey_asn1_nids[0]));
@@ -61,7 +56,7 @@ static void pkey_asn1_free(EVP_PKEY* evp_pkey) {
 static int pkey_asn1_ctrl(
         EVP_PKEY* evp_pkey,
         int command,
-        long p1,
+        ossl_unused long p1,
         void* p2) {
 
     if (evp_pkey == NULL) {
@@ -143,7 +138,7 @@ static EVP_PKEY_ASN1_METHOD* get_pkey_asn1_method(
 }
 
 int sa_get_engine_pkey_asn1_meths(
-        ENGINE* engine,
+        ossl_unused ENGINE* engine,
         EVP_PKEY_ASN1_METHOD** method,
         const int** nids,
         int nid) {

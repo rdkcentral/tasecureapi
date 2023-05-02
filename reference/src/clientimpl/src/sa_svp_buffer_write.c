@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ sa_status sa_svp_buffer_write(
         sa_svp_offset* offsets,
         size_t offsets_length) {
 
-    if (in == NULL && in_length > 0) {
+    if (in == NULL || in_length == 0) {
         ERROR("NULL in");
         return SA_STATUS_NULL_PARAMETER;
     }
@@ -48,40 +48,19 @@ sa_status sa_svp_buffer_write(
     sa_svp_buffer_write_s* svp_buffer_write = NULL;
     void* param1 = NULL;
     void* param2 = NULL;
+    size_t param1_size = in_length;
     size_t param2_size;
     sa_status status;
     do {
         CREATE_COMMAND(sa_svp_buffer_write_s, svp_buffer_write);
-        if (svp_buffer_write == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         svp_buffer_write->api_version = API_VERSION;
         svp_buffer_write->out = out;
-        size_t param1_size;
-        ta_param_type param1_type;
-        if (in != NULL) {
-            CREATE_PARAM(param1, (void*) in, in_length);
-            if (param1 == NULL) {
-                ERROR("CREATE_PARAM failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-                break;
-            }
-
-            param1_size = in_length;
-            param1_type = TA_PARAM_IN;
-        } else {
-            param1_size = 0;
-            param1_type = TA_PARAM_NULL;
-        }
-
+        CREATE_PARAM(param1, (void*) in, in_length);
         param2_size = offsets_length * sizeof(sa_svp_offset);
         CREATE_PARAM(param2, offsets, param2_size);
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_IN, TA_PARAM_IN, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{svp_buffer_write, sizeof(sa_svp_buffer_write_s)},
                                           {param1, param1_size},
                                           {param2, param2_size},

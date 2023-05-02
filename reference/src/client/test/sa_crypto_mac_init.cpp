@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,14 +36,14 @@ namespace {
         auto mac = create_uninitialized_sa_crypto_mac_context();
         ASSERT_NE(mac, nullptr);
 
-        sa_status status = sa_crypto_mac_init(mac.get(), static_cast<sa_mac_algorithm>(UINT8_MAX), *key, nullptr);
+        sa_status const status = sa_crypto_mac_init(mac.get(), static_cast<sa_mac_algorithm>(UINT8_MAX), *key, nullptr);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaCryptoMacInit, nominal) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -56,15 +56,15 @@ namespace {
         auto mac = create_uninitialized_sa_crypto_mac_context();
         ASSERT_NE(mac, nullptr);
 
-        sa_status status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
+        sa_status const status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_NE(mac, nullptr);
     }
 
     TEST_P(SaCryptoMacInit, nominalNoAvailableResourceSlot) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -91,9 +91,9 @@ namespace {
     }
 
     TEST_P(SaCryptoMacInitArgChecks, failsNullMac) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -103,13 +103,13 @@ namespace {
         auto key = create_sa_key_symmetric(&rights, clear_key);
         ASSERT_NE(key, nullptr);
 
-        sa_status status = sa_crypto_mac_init(nullptr, mac_algorithm, *key, parameters);
+        sa_status const status = sa_crypto_mac_init(nullptr, mac_algorithm, *key, parameters);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
     TEST_P(SaCryptoMacInitArgChecks, failsInvalidAlgorithm) {
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -122,24 +122,25 @@ namespace {
         auto mac = create_uninitialized_sa_crypto_mac_context();
         ASSERT_NE(mac, nullptr);
 
-        sa_status status = sa_crypto_mac_init(mac.get(), static_cast<sa_mac_algorithm>(UINT8_MAX), *key, parameters);
+        sa_status const status = sa_crypto_mac_init(mac.get(), static_cast<sa_mac_algorithm>(UINT8_MAX), *key,
+                parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaCryptoMacInitArgChecks, failsInvalidKeySlot) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
 
         auto mac = create_uninitialized_sa_crypto_mac_context();
         ASSERT_NE(mac, nullptr);
 
-        sa_status status = sa_crypto_mac_init(mac.get(), mac_algorithm, INVALID_HANDLE, parameters);
+        sa_status const status = sa_crypto_mac_init(mac.get(), mac_algorithm, INVALID_HANDLE, parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_P(SaCryptoMacInitArgChecks, failsInvalidKeyType) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
 
         auto clear_key = ec_generate_key_bytes(curve);
@@ -154,14 +155,14 @@ namespace {
         auto mac = create_uninitialized_sa_crypto_mac_context();
         ASSERT_NE(mac, nullptr);
 
-        sa_status status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
+        sa_status const status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_P(SaCryptoMacInitKeyRights, failsSignNotSet) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -175,14 +176,14 @@ namespace {
         auto mac = create_uninitialized_sa_crypto_mac_context();
         ASSERT_NE(mac, nullptr);
 
-        sa_status status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
+        sa_status const status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
     TEST_P(SaCryptoMacInitKeyRights, failsNotBefore) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -196,14 +197,14 @@ namespace {
         auto mac = create_uninitialized_sa_crypto_mac_context();
         ASSERT_NE(mac, nullptr);
 
-        sa_status status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
+        sa_status const status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
     TEST_P(SaCryptoMacInitKeyRights, failsNotOnOrAfter) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -217,14 +218,14 @@ namespace {
         auto mac = create_uninitialized_sa_crypto_mac_context();
         ASSERT_NE(mac, nullptr);
 
-        sa_status status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
+        sa_status const status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
     TEST_P(SaCryptoMacInitInvalidKeyLengths, failsWithInvalidKeyLengths) {
-        sa_mac_algorithm mac_algorithm = std::get<0>(GetParam());
+        sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -237,12 +238,12 @@ namespace {
         auto mac = create_uninitialized_sa_crypto_mac_context();
         ASSERT_NE(mac, nullptr);
 
-        sa_status status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
+        sa_status const status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
     TEST_P(SaCryptoMacInitHmacDigests, failsHmacInvalidDigestAlgorithm) {
-        int key_size = std::get<2>(GetParam());
+        int const key_size = std::get<2>(GetParam());
 
         auto clear_key = random(key_size);
 
@@ -257,7 +258,7 @@ namespace {
         auto mac = create_uninitialized_sa_crypto_mac_context();
         ASSERT_NE(mac, nullptr);
 
-        sa_status status = sa_crypto_mac_init(mac.get(), SA_MAC_ALGORITHM_HMAC, *key, &parameters);
+        sa_status const status = sa_crypto_mac_init(mac.get(), SA_MAC_ALGORITHM_HMAC, *key, &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace

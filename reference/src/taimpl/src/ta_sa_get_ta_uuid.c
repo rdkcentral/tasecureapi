@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ sa_status ta_sa_get_ta_uuid(
         sa_uuid* uuid,
         ta_client client_slot,
         const sa_uuid* caller_uuid) {
+
+    DEBUG("client_slot %d", client_slot);
 
     if (caller_uuid == NULL) {
         ERROR("NULL caller_uuid");

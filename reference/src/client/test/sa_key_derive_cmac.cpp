@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_OK);
 
         std::vector<uint8_t> clear_key(key_size);
@@ -73,7 +73,7 @@ namespace {
                 .other_data_length = other_data.size(),
                 .counter = 1};
 
-        sa_status status = sa_key_derive(nullptr, &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(nullptr, &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -97,7 +97,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), nullptr, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(key.get(), nullptr, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -107,7 +107,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, nullptr);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -131,7 +131,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -155,7 +155,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -173,7 +173,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -196,7 +196,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
@@ -220,7 +220,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -244,7 +244,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -268,7 +268,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
@@ -293,7 +293,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
@@ -317,7 +317,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
@@ -341,7 +341,7 @@ namespace {
 
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
-        sa_status status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
+        sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_CMAC, &kdf_parameters_cmac);
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 } // namespace

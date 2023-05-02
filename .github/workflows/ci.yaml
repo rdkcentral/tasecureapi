@@ -1,0 +1,29 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  core:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install YAJL
+      run: sudo apt-get install -y libyajl-dev
+      continue-on-error: true
+    - name: config
+      run: >-
+        cmake
+        -S reference
+        -B reference/cmake-build
+        -DENABLE_SOC_KEY_TESTS=1
+        -DENABLE_CLANG_TIDY=TRUE
+        -DENABLE_CLANG_TIDY_TESTS=TRUE
+    - name: build
+      run: cmake --build reference/cmake-build
+    - name: test
+      run: cmake --build reference/cmake-build --target test

@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,12 @@ struct slots_s {
     int* bitfield;
     size_t slot_count;
     size_t block_count;
+    const char* name;
 };
 
-slots_t* slots_init(size_t count) {
+slots_t* slots_init(
+        size_t count,
+        const char* name) {
     if (count % (sizeof(int) * 8)) {
         ERROR("Number of slots has to be a multiple of int bit length");
         return NULL;
@@ -60,6 +63,7 @@ slots_t* slots_init(size_t count) {
         slots->slot_count = count;
         slots->block_count = block_count;
         slots->bitfield = bitfield;
+        slots->name = name;
 
         // bitfield is now owned by slots instance
         bitfield = NULL;
@@ -84,7 +88,7 @@ void slots_shutdown(slots_t* slots) {
 
     for (size_t i = 0; i < slots->slot_count; ++i) {
         if (slots->bitfield[BLOCK_IDX(i)] & BLOCK_BITMASK(i)) {
-            ERROR("Slot %" PRIu32 " is still allocated on slots_shutdown for slots %p", i, slots);
+            ERROR("Slot %" PRIu32 " is still allocated on slots_shutdown for %s slots", i, slots->name);
         }
     }
 
@@ -105,7 +109,7 @@ slot_t slots_allocate(slots_t* slots) {
             int bitmask = (1 << (least_significant_available - 1));
             slots->bitfield[i] |= bitmask;
             slot = (i + 1) * sizeof(int) * 8 - least_significant_available;
-            DEBUG("Allocated slot %" PRIu32 " on slots %p", slot, slots);
+            DEBUG("Allocated slot %" PRIu32 " on %s slots", slot, slots->name);
             break;
         }
     }
@@ -113,7 +117,7 @@ slot_t slots_allocate(slots_t* slots) {
     if (slot == SLOT_INVALID) {
         ERROR("No available slots in slots %p", slots);
     } else {
-        DEBUG("Allocated slot %" PRIu32 " on slots %p", slot, slots);
+        DEBUG("Allocated slot %" PRIu32 " on %s slots", slot, slots->name);
     }
 
     return slot;
@@ -140,12 +144,12 @@ void slots_free(
 
     do {
         if (!(slots->bitfield[BLOCK_IDX(slot)] & BLOCK_BITMASK(slot))) {
-            WARN("Attempting to release a slot %" PRIu32 " that is not allocated on slots %p", slot, slots);
+            WARN("Attempting to release a slot %" PRIu32 " that is not allocated on %s slots", slot, slots->name);
             break;
         }
 
         slots->bitfield[BLOCK_IDX(slot)] &= ~BLOCK_BITMASK(slot);
 
-        DEBUG("Released slot %" PRIu32 " on slots %p", slot, slots);
+        DEBUG("Released slot %" PRIu32 " on %s slots", slot, slots->name);
     } while (false);
 }

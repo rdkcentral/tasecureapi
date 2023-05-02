@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "client_test_helpers.h"
 #include "sa_engine_common.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
+#include "client_test_helpers.h"
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
 
@@ -36,11 +37,11 @@ TEST_P(SaEnginePkcs7Test, pkcs7Test) {
 
     auto data = random(256);
 
-    std::shared_ptr<ENGINE> engine(sa_get_engine(), sa_engine_free);
+    std::shared_ptr<ENGINE> const engine(sa_get_engine(), sa_engine_free);
     ASSERT_NE(engine, nullptr);
     EVP_PKEY* temp_key = ENGINE_load_private_key(engine.get(), reinterpret_cast<char*>(key.get()), nullptr, nullptr);
     ASSERT_NE(temp_key, nullptr);
-    std::shared_ptr<EVP_PKEY> evp_pkey(temp_key, EVP_PKEY_free);
+    std::shared_ptr<EVP_PKEY> const evp_pkey(temp_key, EVP_PKEY_free);
 
     auto x509 = std::shared_ptr<X509>(X509_new(), X509_free);
     ASSERT_NE(x509, nullptr);
@@ -82,7 +83,7 @@ TEST_P(SaEnginePkcs7Test, pkcs7Test) {
     auto pkcs7_verify = std::shared_ptr<PKCS7>(temp, PKCS7_free);
 
     auto out = std::shared_ptr<BIO>(BIO_new(BIO_s_mem()), BIO_free);
-    ASSERT_EQ(PKCS7_verify(pkcs7.get(), nullptr, nullptr, nullptr, out.get(), PKCS7_NOVERIFY), 1);
+    ASSERT_EQ(PKCS7_verify(pkcs7_verify.get(), nullptr, nullptr, nullptr, out.get(), PKCS7_NOVERIFY), 1);
 
     BUF_MEM* bptr;
     BIO_ctrl(out.get(), BIO_C_GET_BUF_MEM_PTR, 0, &bptr);
@@ -106,3 +107,5 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_ELLIPTIC_CURVE_NIST_P192, SA_ELLIPTIC_CURVE_NIST_P224, SA_ELLIPTIC_CURVE_NIST_P256,
                     SA_ELLIPTIC_CURVE_NIST_P384, SA_ELLIPTIC_CURVE_NIST_P521)));
 // clang-format on
+
+#endif

@@ -1,5 +1,5 @@
-/**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,24 @@
 #ifndef SA_ENGINE_INTERNAL_H
 #define SA_ENGINE_INTERNAL_H
 
-#include "sa.h"
 #include "sa_engine.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
+
+#include "sa.h"
 #include "sa_public_key.h"
 #include <openssl/engine.h>
 #include <threads.h>
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000
+#if defined(__GNUC__)
+#define ossl_unused __attribute__((unused))
+#else
+#define ossl_unused
+#endif
 #endif
 
 #define EVP_PKEY_SYM ((int) 0x83655100)
@@ -37,10 +47,8 @@ extern mtx_t engine_mutex;
 #define MAX_KEY_DATA_LEN 512
 
 typedef struct {
-#if OPENSSL_VERSION_NUMBER < 0x30000000
     uint8_t data[MAX_KEY_DATA_LEN];
     int type;
-#endif
     sa_key private_key;
     sa_header header;
 } pkey_data;
@@ -164,4 +172,5 @@ int sa_set_pkey_data(
 }
 #endif
 
+#endif
 #endif //SA_ENGINE_INTERNAL_H

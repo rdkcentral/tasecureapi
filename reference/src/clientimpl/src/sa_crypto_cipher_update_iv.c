@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,22 +43,10 @@ sa_status sa_crypto_cipher_update_iv(
     sa_status status;
     do {
         CREATE_COMMAND(sa_crypto_cipher_update_iv_s, cipher_update_iv);
-        if (cipher_update_iv == NULL) {
-            ERROR("CREATE_COMMAND failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         cipher_update_iv->api_version = API_VERSION;
         cipher_update_iv->context = context;
 
         CREATE_PARAM(param1, (void*) iv, iv_length);
-        if (param1 == NULL) {
-            ERROR("CREATE_PARAM failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
         size_t param1_size = iv_length;
         ta_param_type param1_type = TA_PARAM_IN;
 

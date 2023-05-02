@@ -1,5 +1,5 @@
-/**
- * Copyright 2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2022-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
  */
 
 #include "sa_engine_common.h"
+#if OPENSSL_VERSION_NUMBER < 0x30000000
 #include <openssl/evp.h>
 
 using namespace client_test_helpers;
@@ -30,7 +31,7 @@ bool SaEngineTest::verifyEncrypt(
         std::vector<uint8_t>& tag,
         const EVP_CIPHER* cipher,
         int padded) {
-    std::shared_ptr<EVP_CIPHER_CTX> cipher_ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
+    std::shared_ptr<EVP_CIPHER_CTX> const cipher_ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
 
     if (EVP_DecryptInit(cipher_ctx.get(), cipher, clear_key.data(), iv.data()) != 1) {
         fprintf(stderr, "EVP_DecryptInit failed");
@@ -87,7 +88,7 @@ bool SaEngineTest::doEncrypt(
         const EVP_CIPHER* cipher,
         int padded) {
     encrypted.resize(clear.size() + 16);
-    std::shared_ptr<EVP_CIPHER_CTX> cipher_ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
+    std::shared_ptr<EVP_CIPHER_CTX> const cipher_ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
 
     if (EVP_EncryptInit(cipher_ctx.get(), cipher, clear_key.data(), iv.data()) != 1) {
         fprintf(stderr, "EVP_EncryptInit failed");
@@ -132,3 +133,5 @@ bool SaEngineTest::doEncrypt(
     encrypted.resize(total_length);
     return true;
 }
+
+#endif

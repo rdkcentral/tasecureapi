@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,20 +23,20 @@
 // clang-format off
 class SaKeyDeriveTest : public ::testing::Test {};
 
-using SaKeyDeriveAnsiX963TestType = std::tuple<std::tuple<sa_key_type, size_t>, sa_digest_algorithm, size_t, size_t>;
+typedef std::tuple<std::tuple<sa_key_type, size_t>, sa_digest_algorithm, size_t, size_t> SaKeyDeriveAnsiX963TestType;
 
 class SaKeyDeriveAnsiX963Test : public ::testing::TestWithParam<SaKeyDeriveAnsiX963TestType>, public SaKeyBase {};
 
-using SaKeyDeriveConcatTestType = std::tuple<std::tuple<sa_key_type, size_t>, sa_digest_algorithm, size_t, size_t>;
+typedef std::tuple<std::tuple<sa_key_type, size_t>, sa_digest_algorithm, size_t, size_t> SaKeyDeriveConcatTestType;
 
 class SaKeyDeriveConcatTest : public ::testing::TestWithParam<SaKeyDeriveConcatTestType>, public SaKeyBase {};
 
-using SaKeyDeriveHkdfTestType = std::tuple<std::tuple<sa_key_type, size_t>, sa_digest_algorithm, size_t, size_t,
-        size_t>;
+typedef std::tuple<std::tuple<sa_key_type, size_t>, sa_digest_algorithm, size_t, size_t, size_t>
+    SaKeyDeriveHkdfTestType;
 
 class SaKeyDeriveHkdfTest : public ::testing::TestWithParam<SaKeyDeriveHkdfTestType>, public SaKeyBase {};
 
-using SaKeyDeriveCmacTestType = std::tuple<size_t, size_t, uint8_t>;
+typedef std::tuple<size_t, size_t, uint8_t> SaKeyDeriveCmacTestType;
 
 class SaKeyDeriveCmacTest : public ::testing::TestWithParam<SaKeyDeriveCmacTestType>, public SaKeyBase {};
 

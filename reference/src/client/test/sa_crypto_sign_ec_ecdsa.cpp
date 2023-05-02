@@ -1,5 +1,5 @@
-/**
- * Copyright 2020-2022 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2020-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ namespace {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
-        sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
+        sa_digest_algorithm const digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -62,7 +62,7 @@ namespace {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P384;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
-        sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
+        sa_digest_algorithm const digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -106,8 +106,8 @@ namespace {
         auto out = std::vector<uint8_t>(512);
         size_t out_length = out.size();
         auto in = random(25);
-        sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key, in.data(),
-                in.size(), nullptr);
+        sa_status const status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_RSA_PSS, *key,
+                in.data(), in.size(), nullptr);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Unsupported signature algorithm";
 
@@ -118,7 +118,7 @@ namespace {
         auto curve = SA_ELLIPTIC_CURVE_X25519;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
-        sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
+        sa_digest_algorithm const digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -131,7 +131,7 @@ namespace {
         size_t out_length = out.size();
         auto in = random(25);
         sa_sign_parameters_ecdsa parameters = {digest_algorithm, false};
-        sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_ECDSA, *key, in.data(),
+        sa_status const status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_ECDSA, *key, in.data(),
                 in.size(), &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Unsupported signature algorithm";
@@ -143,7 +143,7 @@ namespace {
         auto curve = SA_ELLIPTIC_CURVE_X448;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
-        sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
+        sa_digest_algorithm const digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -156,7 +156,7 @@ namespace {
         size_t out_length = out.size();
         auto in = random(25);
         sa_sign_parameters_ecdsa parameters = {digest_algorithm, false};
-        sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_ECDSA, *key, in.data(),
+        sa_status const status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_ECDSA, *key, in.data(),
                 in.size(), &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Unsupported signature algorithm";
@@ -168,7 +168,7 @@ namespace {
         auto curve = SA_ELLIPTIC_CURVE_ED25519;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
-        sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
+        sa_digest_algorithm const digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -181,7 +181,7 @@ namespace {
         size_t out_length = out.size();
         auto in = random(25);
         sa_sign_parameters_ecdsa parameters = {digest_algorithm, false};
-        sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_ECDSA, *key, in.data(),
+        sa_status const status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_ECDSA, *key, in.data(),
                 in.size(), &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Unsupported signature algorithm";
@@ -193,7 +193,7 @@ namespace {
         auto curve = SA_ELLIPTIC_CURVE_ED448;
         auto key_size = ec_get_key_size(curve);
         auto clear_key = ec_generate_key_bytes(curve);
-        sa_digest_algorithm digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
+        sa_digest_algorithm const digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -206,7 +206,7 @@ namespace {
         size_t out_length = out.size();
         auto in = random(25);
         sa_sign_parameters_ecdsa parameters = {digest_algorithm, false};
-        sa_status status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_ECDSA, *key, in.data(),
+        sa_status const status = sa_crypto_sign(out.data(), &out_length, SA_SIGNATURE_ALGORITHM_ECDSA, *key, in.data(),
                 in.size(), &parameters);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "Unsupported signature algorithm";

@@ -54,6 +54,7 @@ add_library(saclient SHARED
         include/sa_crypto.h
         include/sa_engine.h
         include/sa_key.h
+        include/sa_provider.h
         include/sa_svp.h
         include/sa_ta_types.h
         include/sa_types.h
@@ -65,17 +66,26 @@ add_library(saclient SHARED
         src/sa_engine_pkey.c
         src/sa_engine_pkey_asn1_method.c
         src/sa_engine_pkey_data.c
+        src/sa_provider.c
+        src/sa_provider_asym_cipher.c
+        src/sa_provider_cipher.c
+        src/sa_provider_digest.c
+        src/sa_provider_internal.h
+        src/sa_provider_kdf.c
+        src/sa_provider_keyexch.c
+        src/sa_provider_keymgt.c
+        src/sa_provider_mac.c
+        src/sa_provider_signature.c
         src/sa_public_key.h
-        src/sa_public_key.c
-        )
+        src/sa_public_key.c)
 
 target_compile_options(saclient PRIVATE -Werror -Wall -Wextra -Wno-type-limits -Wno-unused-parameter
         -Wno-deprecated-declarations)
 
 set_target_properties(saclient PROPERTIES
         LINKER_LANGUAGE C
-        SO_VERSION 3.1
-        VERSION 3.1.2
+        SO_VERSION 3.2
+        VERSION 3.2.0
         )
 
 target_include_directories(saclient
@@ -98,7 +108,6 @@ if (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
             PRIVATE
             -Wl,-all_load
             saclientimpl
-            -Wl,-noall_load
             util
             ${OPENSSL_CRYPTO_LIBRARY}
             )
@@ -252,8 +261,17 @@ add_executable(saclienttest
         test/sa_key_unwrap_ec.cpp
         test/sa_key_unwrap_rsa.cpp
         test/sa_crypto_cipher_multiple_thread.cpp
+        test/sa_provider_asym_cipher.cpp
         test/sa_process_common_encryption.cpp
         test/sa_process_common_encryption.h
+        test/sa_provider_cipher.cpp
+        test/sa_provider_common.cpp
+        test/sa_provider_common.h
+        test/sa_provider_kdf.cpp
+        test/sa_provider_keyexch.cpp
+        test/sa_provider_mac.cpp
+        test/sa_provider_pkcs7.cpp
+        test/sa_provider_signature.cpp
         test/sa_svp_buffer_alloc.cpp
         test/sa_svp_buffer_check.cpp
         test/sa_svp_buffer_copy.cpp
@@ -262,8 +280,7 @@ add_executable(saclienttest
         test/sa_svp_buffer_write.cpp
         test/sa_svp_key_check.cpp
         test/sa_svp_common.cpp
-        test/sa_svp_common.h
-        )
+        test/sa_svp_common.h)
 
 target_compile_options(saclienttest PRIVATE -Werror -Wall -Wextra -Wno-type-limits -Wno-unused-parameter
         -Wno-deprecated-declarations)
@@ -275,6 +292,14 @@ target_include_directories(saclienttest
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
         ${OPENSSL_INCLUDE_DIR}
         )
+
+if (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+    # using Clang
+    target_include_directories(saclienttest
+            PRIVATE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
+            )
+endif ()
 
 target_link_libraries(saclienttest
         PRIVATE

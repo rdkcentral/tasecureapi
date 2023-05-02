@@ -1,5 +1,5 @@
-/**
- * Copyright 2019-2021 Comcast Cable Communications Management, LLC
+/*
+ * Copyright 2019-2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ extern "C" {
 #endif
 
 // clang-format off
-#define b64_decoded_length(x) ((x / 4 + (x % 4 > 0 ? 1 : 0)) * 3)
+#define b64_decoded_length(x) (((x) / 4 + ((x) % 4 > 0 ? 1 : 0)) * 3)
 // clang-format on
 
 typedef enum {
