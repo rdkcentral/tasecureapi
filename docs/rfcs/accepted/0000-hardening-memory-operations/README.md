@@ -68,7 +68,7 @@ Note that, this routine shall check that all of the bytes from 'address', over '
 all inside of a given memory type (in other words, crossing memory types shall return an invalid 
 result)
 
-Then depending on the intend of a given memory operation, routines could add allowed memory 
+Then depending on the intent of a given memory operation, routines could add allowed memory 
 transaction sanitization.
 For instance 'cache_from_ree_to_tee(source, destination, size)' would verify that the buffer 
 starting at 'source' over 'size' bytes is entirely inside of a memory type 'Shared', as it is 
