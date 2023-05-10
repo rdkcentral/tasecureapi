@@ -13,7 +13,7 @@ Add mechanics to harden the code against Time-of-Check / Time-of-Use (TOCTOU) at
 TOCTOU is a class of security vulnerabilities that is hard to avoid in complex code bases, and can 
 be especially challenging when exchanging data between different execution environments with shared 
 memories.
-All parameters and fields coming from the outside world (anything calling inside of the code) 
+All parameters and fields coming from the outside world (anything calling inside of the `tasecureapi` code) 
 should be sanitized, but special concern is to make sure there is no possibilities for the value 
 to change between the sanitization and the use of the value. Even a very short window can present 
 opportunities and be abused. In general is it preferable to cache (create a copy of) all structures 
