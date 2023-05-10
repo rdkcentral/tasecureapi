@@ -11,7 +11,7 @@ Add mechanics to harden the code against Time-of-Check / Time-of-Use (TOCTOU) at
 ## Motivation / use-cases
 
 TOCTOU is a class of security vulnerabilities that is hard to avoid in complex code bases, and can 
-be especially challenging when exchanging data between different execution environment with shared 
+be especially challenging when exchanging data between different execution environments with shared 
 memories.
 All parameters and fields coming from the outside world (anything calling inside of the code) 
 should be sanitized, but special concern is to make sure there is no possibilities for the value 
