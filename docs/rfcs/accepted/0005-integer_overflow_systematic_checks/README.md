@@ -32,7 +32,7 @@ acceptable ranges.
 
 ## Detailed design
 
-Systematically applies to integer operations all that involve directly or indirectly any
+Systematically applies to all integer operations that involve, directly or indirectly, any
 field/parameter that can be under the influence of the outside world. add (A+B), sub (A-B), and mult
 (A*B) operations are in scope. More complex operations shall be decomposed and checks for intermediate
 values, e.g. (A+B+C+B) should be decomposed on
