@@ -59,7 +59,8 @@ portability that you can get inspiration from, as it can be seen in
 
 ## Alternatives considered
 
--
+- None.
+
 ## Unresolved questions
 
 -
