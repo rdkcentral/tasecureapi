@@ -33,7 +33,7 @@ acceptable ranges.
 ## Detailed design
 
 Systematically applies to all integer operations that involve, directly or indirectly, any
-field/parameter that can be under the influence of the outside world. add (A+B), sub (A-B), and mult
+field/parameter that can be under the influence of the outside world. add (A+B), subtract (A-B), and multiply
 (A*B) operations are in scope. More complex operations shall be decomposed and checks for intermediate
 values, e.g. (A+B+C+B) should be decomposed on
 - check independently A, B, C and D values
