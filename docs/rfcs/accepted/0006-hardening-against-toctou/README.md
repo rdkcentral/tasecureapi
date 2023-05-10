@@ -67,4 +67,4 @@ structure shall be cached as well.
 
 ## References
 
--
+- [TOCTOU Issue](https://cwe.mitre.org/data/definitions/367.html).
