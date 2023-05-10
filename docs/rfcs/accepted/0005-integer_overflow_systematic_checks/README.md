@@ -14,7 +14,7 @@ Integer overflows is a class of security vulnerabilities that is hard to avoid i
 bases, and is challenging for static analysers. The arithmetic behind integer overflow is well
 documented across the internet. All parameters and fields coming from the outside world (outside world
 being any code that calls inside of the TASECUREAPI code) could be of any value and should be
-checked against valid ranges, but that alone falls short. All resulting value of an operation
+checked against valid ranges, but that alone falls short. All resulting values of an operation
 involving one or many fields from the outside world should also be evaluated to be in within
 acceptable ranges.
 
