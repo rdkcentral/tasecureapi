@@ -23,15 +23,15 @@ leading to data compromise or arbitrary data execution in the worst cases.
 
 ## Updates/Obsoletes
 
--
+None
 
 ## Affected platforms
 
--
+All
 
 ## Open Source Dependencies
 
--
+None
 
 ## Detailed design
 
@@ -52,19 +52,20 @@ structure shall be cached as well.
 
 ## Drawbacks
 
--
+None
 
 ## Alternatives considered
 
--
+None
+
 ## Unresolved questions
 
--
+None
 
 ## Future possibilities
 
--
+None
 
 ## References
 
-- [TOCTOU Issue](https://cwe.mitre.org/data/definitions/367.html).
+[TOCTOU Issue](https://cwe.mitre.org/data/definitions/367.html).
