@@ -38,7 +38,7 @@ leading to data compromise or arbitrary data execution in the worst cases.
 Code can rapidly get complex and even with the best intent and expertize will eventually introduce 
 mistakes leading to TOCTOU opportunities.
 
-The recommendation is to systematically copy all data coming from the outside world at the 
+The recommendation is to systematically copy all data coming from the outside world with the 
 exception of video or audio payloads. 
 Rules could be created to reserve some of the RPC Global Platform (GP) parameters for 
 parameters/values, and some for payloads, so that some buffers are always copied/cache internally 
