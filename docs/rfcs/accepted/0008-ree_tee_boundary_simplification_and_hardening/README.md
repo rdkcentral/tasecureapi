@@ -37,15 +37,15 @@ their integration.
 
 ## Updates/Obsoletes
 
--
+None
 
 ## Affected platforms
 
--
+All
 
 ## Open Source Dependencies
 
--
+None
 
 ## Detailed design
 
@@ -66,19 +66,20 @@ partners' hands have a benefit on the security posture that scales across integr
 
 ## Drawbacks
 
--
+None
 
 ## Alternatives considered
 
--
+None
+
 ## Unresolved questions
 
--
+None
 
 ## Future possibilities
 
--
+None
 
 ## References
 
--
+None
