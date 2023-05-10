@@ -20,22 +20,22 @@ acceptable ranges.
 
 ## Updates/Obsoletes
 
--
+None
 
 ## Affected platforms
 
--
+All
 
 ## Open Source Dependencies
 
--
+None
 
 ## Detailed design
 
 Systematically applies to all integer operations that involve, directly or indirectly, any
 field/parameter that can be under the influence of the outside world. add (A+B), subtract (A-B), and multiply
 (A*B) operations are in scope. More complex operations shall be decomposed and checks for intermediate
-values, e.g. (A+B+C+B) should be decomposed on
+values, e.g. (A+B+C+D) should be decomposed on
 - check independently A, B, C and D values
 - check for A + B
 - check for (A + B) + C
@@ -55,20 +55,20 @@ portability that you can get inspiration from, as it can be seen in
 
 ## Drawbacks
 
--
+None
 
 ## Alternatives considered
 
-- None.
+None.
 
 ## Unresolved questions
 
--
+None
 
 ## Future possibilities
 
--
+None
 
 ## References
 
-- [Integer Overflow or Wraparound](https://cwe.mitre.org/data/definitions/190.html).
+[Integer Overflow or Wraparound](https://cwe.mitre.org/data/definitions/190.html).
