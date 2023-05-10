@@ -48,7 +48,7 @@ that the resulting pointer of an operation is within expected ranges.
 There are various ways of checking for integer overflows, which are documented over internet.
 Nonetheless I would encourage the code owners to look at builtins macros offered by the compilers.
 For instance, GCC offers Builtins, as documented at:
-https://gcc.gnu.org/onlinedocs/gcc/Integer-Overflow-Builtins.html
+[GCC Integer Overflow Builtins](https://gcc.gnu.org/onlinedocs/gcc/Integer-Overflow-Builtins.html)
 Some OS, like OP-TEE, offer Macros over the compilers builtins, see this is another way of increasing
 portability that you can get inspiration from, as it can be seen in
 https://github.com/OP-TEE/optee_os/blob/master/lib/libutils/ext/include/util.h
