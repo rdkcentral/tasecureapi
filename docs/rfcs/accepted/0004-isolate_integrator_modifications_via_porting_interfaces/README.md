@@ -23,15 +23,15 @@ to be reviewed.
 
 ## Updates/Obsoletes
 
--
+None
 
 ## Affected platforms
 
--
+All
 
 ## Open Source Dependencies
 
--
+None
 
 ## Detailed design
 
@@ -41,14 +41,15 @@ example, adding a 'get_uuid()' interface and using it inside of 'transport_auten
 
 ## Drawbacks
 
--
+None
 
 ## Alternatives considered
 
--
+None
+
 ## Unresolved questions
 
--
+None
 
 ## Future possibilities
 
@@ -56,4 +57,4 @@ Any new feature or dependency on the system / HW of a product shall consider add
 
 ## References
 
--
+None
