@@ -51,7 +51,7 @@ For instance, GCC offers Builtins, as documented at:
 [GCC Integer Overflow Builtins](https://gcc.gnu.org/onlinedocs/gcc/Integer-Overflow-Builtins.html)
 Some OS, like OP-TEE, offer Macros over the compilers builtins, see this is another way of increasing
 portability that you can get inspiration from, as it can be seen in
-https://github.com/OP-TEE/optee_os/blob/master/lib/libutils/ext/include/util.h
+[OP-TEE Overflow Macros](https://github.com/OP-TEE/optee_os/blob/master/lib/libutils/ext/include/util.h).
 
 ## Drawbacks
 
