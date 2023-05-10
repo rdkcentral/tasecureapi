@@ -70,4 +70,4 @@ portability that you can get inspiration from, as it can be seen in
 
 ## References
 
--
+- [Integer Overflow or Wraparound](https://cwe.mitre.org/data/definitions/190.html).
