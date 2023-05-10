@@ -19,7 +19,7 @@ to change between the sanitization and the use of the value. Even a very short w
 opportunities and be abused. In general it is preferable to cache (create a copy of) all structures 
 and parameters coming from outside of the `tasecureapi` code.
 Abuse of TOCTOU attacks can lead to serious security vulnerabilities directly or indirectly 
-leading to data compromise or arbitrary data execution in the worse cases.
+leading to data compromise or arbitrary data execution in the worst cases.
 
 ## Updates/Obsoletes
 
