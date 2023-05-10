@@ -40,7 +40,7 @@ values, e.g. (A+B+C+B) should be decomposed on
 - check for A + B
 - check for (A + B) + C
 - check for ((A + B) + C) + D
-Same applies for any combination of add, sub and/or mult
+Same applies for any combination of add, subtract, and/or multiply.
 
 Integer overflows sanitization checks should also apply to pointers and special care should be taking
 that the resulting pointer of an operation is within expected ranges.
