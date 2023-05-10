@@ -17,7 +17,7 @@ All parameters and fields coming from the outside world (anything calling inside
 should be sanitized, but special concern is to make sure there is no possibilities for the value 
 to change between the sanitization and the use of the value. Even a very short window can present 
 opportunities and be abused. In general it is preferable to cache (create a copy of) all structures 
-and parameters coming from outside of the code.
+and parameters coming from outside of the `tasecureapi` code.
 Abuse of TOCTOU attacks can lead to serious security vulnerabilities directly or indirectly 
 leading to data compromise or arbitrary data execution in the worse cases.
 
