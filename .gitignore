@@ -2,3 +2,5 @@
 /build/
 /cmake-build*/
 /reference/cmake-build*/
+/docs/output
+/docs/build/template

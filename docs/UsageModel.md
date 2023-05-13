@@ -1,6 +1,6 @@
-# SecAPI 3 Usage Model
+# Security API Usage Model
 
-![SecAPI 3 Usage Model](./diagrams/SecApi3-UsageModel.png)
+![Security API Usage Model](../diagrams/SecApi3-UsageModel.png)
 
 This diagram shows the planned usage model for SecAPI 3. SecAPI 3 uses a slot for every REE
 application thread.
