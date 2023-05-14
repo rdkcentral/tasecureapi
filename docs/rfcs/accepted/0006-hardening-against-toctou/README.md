@@ -46,13 +46,15 @@ parameters/values, and some for payloads, so that some buffers are always copied
 in code logic decisions (e.g. params[] 2 and 3). Apply this consistent protocol for all of the 
 commands that can be dispatched, at the dispatcher level.
 
-Note that, particular attention should be made to protect nested pointers. While the use of nested pointers is discouraged, if 
-there are such practices, then the nested pointers should obey the same rules and the pointed 
-structure shall be cached as well.
+Note that, particular attention should be made to protect nested pointers. While the use of nested
+pointers is discouraged, if there are such practices, then the nested pointers should obey the same
+rules and the pointed structure shall be cached as well.
 
 ## Drawbacks
 
-None
+- Performance based on the number of copies and amount of data
+- TEE memory resource limitations based on the amount and quantity of copies being maintained in the
+TEE.
 
 ## Alternatives considered
 
