@@ -20,18 +20,18 @@ like memset(), memcpy() or direct assignment like variable X = Y; at times, it c
 subtle and delegated to the compiler, like structure assignments.
 
 Either way, at all times the source, destination involved in the memory operation, as well as the 
-number of bytes, should all be sanitized and restricted to acceptable values. For each operation, it 
-should the following questions should be able to be answered:
+number of bytes, should all be sanitized and restricted to acceptable values. For each operation, 
+the following questions should be able to be answered:
 - What is the memory type of the source? Is it a secure memory? Is the shared memory accessible 
 to a less secure execution environement?
-- What is the size of the memory operation? Does it go beyond the allocated memory for the source  
+- What is the size of the memory operation? Does it go beyond the allocated memory for the source
 and/or the destination?
 - Is the transaction from a given memory type to another given memory type allowed, e.g. should 
 stack memory be copied over to shared memory?
 
-Systematic memory transaction checks are not always easy, but they do add a significant  
+Systematic memory transaction checks are not always easy, but they do add a significant
 layer of security at the very last moment of processing, and adds value on top of any prior 
-sanitization. For example, an adversary may manage to abuse an integer overflow and/or manipulate  
+sanitization. For example, an adversary may manage to abuse an integer overflow and/or manipulate
 one of the source, destination or size parameter. A systematic sanitization at the time of running 
 the memory operation provides an extra opportunity to mitigate the abuse.
 
@@ -55,17 +55,17 @@ focus shall be made in layers that are close to the entry point, but subtle weak
 many layers and effort should be done to track and sanitize memory transactions all the way down. 
 
 Memory types depend on the system and the platform as there are no standard memory ranges that are 
-either secure or unsecure. It can't be solved without the help of an information from the system the
+either secure or unsecure. It can't be solved without the help of information from the system the
 code is executed on. The top level idea here is to implement similar logic as the Linux kernel does 
 when copying memory back and forth with userland -- with functions, a la copy_from_user(),
 copy_to_user().
 
-The recommendation is to define an interface that provides the memory type to of a given 
+The recommendation is to define an interface that provides the memory type of a given 
 memory block. For instance 'get_memory_type(address, size)' could return an enum from a list like
 {Shared, SecureDataPath, SecureStack, SecureHeap, Invalid} and so forth. This would be a porting
-interface that integrator partners to implement. Note that, this routine shall
+interface that integrator partners implement. Note that, this routine shall
 check that all of the bytes from 'address' through 'size' bytes are all inside of a given memory type.
-In other words, crossing memory types shall return an invalid result. Then depending on the
+In other words, operations crossing memory types shall return an invalid result. Then depending on the
 intent of a given memory operation, routines could add allowed memory transaction sanitization.
 For instance 'cache_from_ree_to_tee(source, destination, size)' would verify that the buffer 
 starting at 'source' over 'size' bytes is entirely inside of a memory type 'Shared', as it is 
