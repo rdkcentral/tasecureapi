@@ -60,19 +60,18 @@ code is executed on. The top level idea here is to implement similar logic as th
 when copying memory back and forth with userland -- with functions, a la copy_from_user(),
 copy_to_user().
 
-The recommendation is to define an interface that provides the memory type of a given 
-memory block. For instance 'get_memory_type(address, size)' could return an enum from a list like
-{Shared, SecureDataPath, SecureStack, SecureHeap, Invalid} and so forth. This would be a porting
-interface that integrator partners implement. Note that, this routine shall
-check that all of the bytes from 'address' through 'size' bytes are all inside of a given memory type.
-In other words, operations crossing memory types shall return an invalid result. Then depending on the
-intent of a given memory operation, routines could add allowed memory transaction sanitization.
-For instance 'cache_from_ree_to_tee(source, destination, size)' would verify that the buffer 
-starting at 'source' over 'size' bytes is entirely inside of a memory type 'Shared', as it is 
-meant to be REE accessible, and would verify that the buffer starting at 'destination' over 'size' 
-bytes is entirely inside of a memory type 'SecureHeap'.
-Other routines can easily be defined like 'ree_to_svp()' or 'svp_to_svp()' or 'tee_to_ree()' and 
-used where appropriate.
+The recommendation is to define an interface that provides the memory type of a given memory block.
+For instance 'get_memory_type(address, size)' could return an enum from a list like {Shared,
+SecureDataPath, SecureStack, SecureHeap, Invalid} and so forth. This would be a porting interface
+that integrator partners implement. Note that, this routine shall check that all of the bytes from
+'address' through 'size' bytes are all inside of a given memory type. In other words, operations
+crossing memory types shall return an invalid result. Then depending on the intent of a given
+memory operation, routines could add allowed memory transaction sanitization. For instance
+'cache_from_ree_to_tee(source, destination, size)' would verify that the buffer starting at
+'source' over 'size' bytes is entirely inside of a memory type 'Shared', as it is meant to be REE
+accessible, and would verify that the buffer starting at 'destination' over 'size' bytes is
+entirely inside of a memory type 'SecureHeap'. Other routines can easily be defined like
+'ree_to_svp()' or 'svp_to_svp()' or 'tee_to_ree()' and used where appropriate.
 
 By leveraging systematic checks in conjunction with this new interface, the code of TASECUREAPI can
 evolve independently from any systems it relies on, and implement secure memory transaction, for as
