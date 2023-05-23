@@ -106,7 +106,7 @@ sa_status convert_buffer(
         }
 
         if (!memory_is_valid_clear(buffer->context.clear.buffer, buffer->context.clear.length)) {
-            ERROR("memory location is not within SVP memory");
+            ERROR("memory range is not within clear memory");
             return SA_STATUS_INVALID_PARAMETER;
         }
 
