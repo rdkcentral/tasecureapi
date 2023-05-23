@@ -57,6 +57,7 @@ add_library(taimpl STATIC
         include/porting/overflow.h
         include/porting/rand.h
         include/porting/svp.h
+        include/porting/transport.h
         include/porting/video_output.h
 
         src/porting/init.c
@@ -65,6 +66,7 @@ add_library(taimpl STATIC
         src/porting/overflow.c
         src/porting/rand.c
         src/porting/svp.c
+        src/porting/transport.c
         src/porting/video_output.c
 
         include/internal/buffer.h
@@ -95,7 +97,6 @@ add_library(taimpl STATIC
         include/internal/stored_key_internal.h
         include/internal/svp_store.h
         include/internal/symmetric.h
-        include/internal/transport.h
         include/internal/typej.h
         include/internal/unwrap.h
 
@@ -125,7 +126,6 @@ add_library(taimpl STATIC
         src/internal/svp_store.c
         src/internal/symmetric.c
         src/internal/ta.c
-        src/internal/transport.c
         src/internal/typej.c
         src/internal/unwrap.c
 

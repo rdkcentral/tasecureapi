@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "transport.h" // NOLINT
+#include "porting/transport.h" // NOLINT
 #include "log.h"
 #include "porting/memory.h"
 #include <memory.h>
@@ -39,8 +39,8 @@ sa_status transport_authenticate_caller(sa_uuid* uuid) {
 
     // SecApi TA obtains the caller UUID from the underlying transport mechanism which is
     // platform dependent. The caller must be authenticated to prevent spoofing.
-    // TODO Soc Vendor: add code here to retrieve the authenticated caller UUID.
-
+    // TODO SoC Vendor: replace code here to retrieve the authenticated caller UUID. If the caller is the REE, return
+    // the REE_UUID.
     memcpy(uuid, &REE_UUID, sizeof(sa_uuid));
 
     return SA_STATUS_OK;

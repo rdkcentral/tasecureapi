@@ -18,8 +18,8 @@ SecAPI.
 This folder should be copied over from the reference implementation to the SoC vendor
 implementation as-is, without any changes. Comcast will update the reference implementation and
 unit tests over time and will expect SoC vendors to keep this folder up to date. Some unit tests,
-like sa_key_import_soc.cpp, may need to be modified by the vendor, especially if the vendor library
-does not support a particular feature. The vendor must declare to Comcast which unit tests have been
+like sa_key_import_soc.cpp, may be modified by the vendor, especially if the vendor library does
+not support a particular feature. The vendor *MUST* declare to Comcast which unit tests have been
 modified.
 
 ### 'clientimpl'
@@ -31,19 +31,22 @@ to the TA.
 Client implementation library is required to be ported to both the host (REE) environment for use
 by client applications, as well as the TEE environment for use by TA clients.
 
-Only the files in the 'internal' directory need to be modified.
+Only the files in the 'internal' directory need to be modified. All other code in the src directory
+is platform independent and should *NOT* be modified.
 
 clientimpl code performs the marshaling of calls from API calls into the TA. Some TEEs require
 communication through shared memory, others may be able to use standard memory between the processor
-and the TEE. To use shared memory, define the compile time flag USE_SHARED_MEMORY. Vendors must
-implement the client-side functions: ta_open_session, ta_close_session, ta_invoke_command,
-ta_alloc_shared_memory, and ta_free_shared_memory which are defined in ta.h. Example implementations
-are in ta_client.c. Vendors must also implement code to call the TA-side functions:
-ta_open_session_handler, ta_close_session_handler, and ta_invoke_command_handler which also defined
-in ta.h. ta.h also defines the macros, controlled by the compile time USE_SHARED_MEMORY flag, that
-determine whether shared memory or standard memory is used by the client-side library.
+and the TEE. To use shared memory, define the compile time flag USE_SHARED_MEMORY. Vendors *MUST*
+implement the client-side functions defined in the porting directory: ta_open_session,
+ta_close_session, ta_invoke_command, ta_alloc_shared_memory, and ta_free_shared_memory which are
+defined in ta_client.h. Example implementations are in ta_client.c. ta_client.h also defines the
+macros, controlled by the compile time USE_SHARED_MEMORY flag, that determine whether shared memory
+or standard memory is used by the client-side library.
 
-Vendors must implement code identified by ```TODO SoC Vendor```.
+Vendors *MUST* implement code identified by ```TODO SoC Vendor``` in files in the src/porting
+directory.
+
+Vendors may modify code in the src/internal if needed.
 
 ### 'taimpl'
 
@@ -52,9 +55,18 @@ servicing client requests.
 
 Only the files in the include/internal, include/porting, src/internal, and src/porting directories
 need to be modified. All other code in the src and include directories is platform independent and
-should not be modified.
+should *NOT* be modified.
 
-Vendors must implement code identified by ```TODO SoC Vendor```.
+Vendors *MUST* implement code to call the TA-side functions: ta_open_session_handler,
+ta_close_session_handler, and ta_invoke_command_handler which defined in ta.h and implemented in
+ta.c.
+
+Vendors *MUST* implement code identified by ```TODO SoC Vendor``` in files in the include/porting
+and src/porting directories.
+
+include/internal and src/internal directories contain the OpenSSL implementation of SecApi 3.
+Vendors may modify code in the include/internal and src/internal directories if needed to replace
+the OpenSSL cryptographic implementation with a SoC specific cryptographic implementation. 
 
 ### 'util'
 
@@ -85,7 +97,7 @@ OPENSSL - include -DOPENSSL_ROOT_DIR=<directory> if not found
 
 OpenSSL 1.0.2 and 3.0.0+ is supported. OpenSSL 1.1.1j+ is supported.
 
-SOC and root key tests are also disabled by default. To enable these tests, add -DENABLE_SOC_KEY_TESTS=1. The TEST_KEY
+SoC and root key tests are also disabled by default. To enable these tests, add -DENABLE_SOC_KEY_TESTS=1. The TEST_KEY
 key defined in sa_key_common.cpp must match the root key defined on the test device for these tests to pass.
 
 -DDISABLE_CENC_1000000_TESTS=true can be added to disable 1KB sample common encryption tests.

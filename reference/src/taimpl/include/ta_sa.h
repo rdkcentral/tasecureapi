@@ -94,7 +94,7 @@ sa_status ta_sa_get_version(
         const sa_uuid* caller_uuid);
 
 /**
- * Obtain the SecAPI implementation name, e.g. SOC manufacturer.
+ * Obtain the SecAPI implementation name, e.g. SoC manufacturer.
  *
  * @param[out] name Buffer where implementation name will be written. Can be set to NULL to
  * obtain the required length.
@@ -118,7 +118,7 @@ sa_status ta_sa_get_name(
         const sa_uuid* caller_uuid);
 
 /**
- * Obtain the device ID. ID will be formatted according to the "SOC Identifier Specification"
+ * Obtain the device ID. ID will be formatted according to the "SoC Identifier Specification"
  * specification.
  *
  * @param[out] id Device ID.

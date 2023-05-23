@@ -19,8 +19,8 @@
 #include "ta.h" // NOLINT
 #include "log.h"
 #include "porting/memory.h"
+#include "porting/transport.h"
 #include "ta_sa.h"
-#include "transport.h"
 #include <memory.h>
 #include <stdbool.h>
 

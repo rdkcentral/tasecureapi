@@ -217,11 +217,21 @@ bool svp_copy(
         }
     }
 
-    uint8_t* out_bytes = (uint8_t*) out_svp_buffer->svp_memory;
-    uint8_t* in_bytes = (uint8_t*) in_svp_buffer->svp_memory;
-    for (size_t i = 0; i < offsets_length; i++)
-        memcpy(out_bytes + offsets[i].out_offset, in_bytes + offsets[i].in_offset, offsets[i].length);
+    for (size_t i = 0; i < offsets_length; i++) {
+        unsigned long out_position;
+        if (add_overflow((unsigned long)out_svp_buffer->svp_memory, offsets[i].out_offset, &out_position)) {
+            ERROR("Integer overflow");
+            return false;
+        }
 
+        unsigned long in_position;
+        if (add_overflow((unsigned long)in_svp_buffer->svp_memory, offsets[i].in_offset, &in_position)) {
+            ERROR("Integer overflow");
+            return false;
+        }
+
+        memcpy((void*)out_position, (void*)in_position, offsets[i].length); // NOLINT
+    }
     return true;
 }
 
@@ -307,8 +317,13 @@ bool svp_digest(
         return false;
     }
 
-    if (!digest_sha(out, out_length, digest_algorithm, (uint8_t*) svp_buffer->svp_memory + offset, length, NULL, 0,
-                NULL, 0)) {
+    unsigned long position;
+    if (add_overflow((unsigned long)svp_buffer->svp_memory, offset, &position)) {
+        ERROR("Integer overflow");
+        return false;
+    }
+
+    if (!digest_sha(out, out_length, digest_algorithm, (uint8_t*) position, length, NULL, 0, NULL, 0)) { // NOLINT
         ERROR("digest_sha failed");
         return false;
     }
