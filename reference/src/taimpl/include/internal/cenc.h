@@ -28,12 +28,14 @@
 #include "client_store.h"
 #include "sa_cenc.h"
 
+#define CENC_OVERFLOW 0
+
 /**
  * Returns the required length of a buffer for the sample.
  *
  * @param[in] subsample_lengths the lengths of the subsample components.
  * @param[in] subsample_count the number of subsamples.
- * @return the required length of a buffer for the sample.
+ * @return the required length of a buffer for the sample. CENC_OVERFLOW if an integer overflow occurs.
  */
 size_t cenc_get_required_length(
         sa_subsample_length* subsample_lengths,

@@ -23,6 +23,7 @@
 #include "pad.h"
 #include "porting/memory.h"
 #include "porting/otp_internal.h"
+#include "porting/overflow.h"
 #include "rsa.h"
 #include "stored_key_internal.h"
 #include <openssl/evp.h>
@@ -895,7 +896,14 @@ sa_status unwrap_ec(
             break;
         }
 
-        if ((algorithm_parameters->offset + algorithm_parameters->key_length) > unwrapped_key_length) {
+        unsigned long total_length;
+        if (add_overflow(algorithm_parameters->offset, algorithm_parameters->key_length, &total_length)) {
+            ERROR("Integer overflow");
+            status = SA_STATUS_INVALID_PARAMETER;
+            break;
+        }
+
+        if (total_length > unwrapped_key_length) {
             ERROR("Invalid offset and key_length combination");
             status = SA_STATUS_INVALID_PARAMETER;
             break;

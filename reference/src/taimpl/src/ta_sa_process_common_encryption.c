@@ -128,6 +128,12 @@ static sa_status verify_sample(
 
         // Check out buffer length.
         size_t required_length = cenc_get_required_length(sample->subsample_lengths, sample->subsample_count);
+        if (required_length == CENC_OVERFLOW) {
+            ERROR("cenc_get_required_length integer overflow");
+            status = SA_STATUS_INVALID_PARAMETER;
+            break;
+        }
+
         uint8_t* out_bytes = NULL;
         status = convert_buffer(&out_bytes, &out_svp, sample->out, required_length, client, caller_uuid);
         if (status != SA_STATUS_OK) {
