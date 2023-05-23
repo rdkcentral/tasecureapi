@@ -234,7 +234,7 @@ typedef enum {
      * See https://github.com/Netflix/msl/wiki/Pre-shared-Keys-or-Model-Group-Keys-Entity-Authentication for
      * definition. */
     SA_KDF_ALGORITHM_NETFLIX,
-    /** Common Root Key Ladder Key Derivation Function Algorithm--derives a key from the common SOC root key */
+    /** Common Root Key Ladder Key Derivation Function Algorithm--derives a key from the common SoC root key */
     SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER
 } sa_kdf_algorithm;
 
@@ -261,9 +261,9 @@ typedef enum {
     SA_KEY_FORMAT_EC_PRIVATE_BYTES,
     /** RSA Private Key Info Format - PKCS #8 encoded */
     SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO,
-    /** Exported Key Format - encoded in a SOC specific way */
+    /** Exported Key Format - encoded in a SoC specific way */
     SA_KEY_FORMAT_EXPORTED,
-    /** SOC Key Format - encoded according to the SOC Specific Key Specification */
+    /** SoC Key Format - encoded according to the SoC Specific Key Specification */
     SA_KEY_FORMAT_SOC,
     /** TypeJ Key Format - encoded according to the SecApi Key Container Specification */
     SA_KEY_FORMAT_TYPEJ
@@ -604,8 +604,8 @@ typedef struct {
 } sa_import_parameters_typej;
 
 /**
- * Import parameters for a SOC key container. This structure is used to signal the SecApi compatability version of the
- * key container and to identify the object_id in the key rights. This structure can be extended in a SOC specific way
+ * Import parameters for a SoC key container. This structure is used to signal the SecApi compatability version of the
+ * key container and to identify the object_id in the key rights. This structure can be extended in a SoC specific way
  * with additional fields at the end, however the length field must include the sizeof the extended structure.
  */
 typedef struct {
