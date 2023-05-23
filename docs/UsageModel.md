@@ -50,7 +50,7 @@ the sa_svp_buffer_release function, and assigned to another thread using the sa_
 function.
 
 Examples of REE Applications include:
-* The SOC Provisioning application.
+* The SoC Provisioning application.
 * Any application using the SecClient library.
 * Potentially any application using TLS where the TLS library uses SecAPI 3 as its underlying
   cryptographic engine.

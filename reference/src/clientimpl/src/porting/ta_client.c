@@ -20,7 +20,7 @@
  * @section Description
  * @file ta_client.c
  * This file implements the TA client interfaces. This file should be replaced with code that implements client to
- * TA communication on the SOC platform.
+ * TA communication on the SoC platform.
  */
 
 #include "ta_client.h" // NOLINT

@@ -53,7 +53,7 @@ namespace ta_test_helpers {
         return client;
     }
 
-    // TODO Soc Vendor: replace this call with a call to allocate secure memory.
+    // TODO SoC Vendor: replace this call with a call to allocate secure memory.
     sa_status ta_sa_svp_memory_alloc(
             void** svp_memory,
             size_t size) {
@@ -71,7 +71,7 @@ namespace ta_test_helpers {
         return SA_STATUS_OK;
     }
 
-    // TODO Soc Vendor: replace this call with a call to free secure memory.
+    // TODO SoC Vendor: replace this call with a call to free secure memory.
     sa_status ta_sa_svp_memory_free(void* svp_memory) {
         if (svp_memory != nullptr)
             free(svp_memory);
