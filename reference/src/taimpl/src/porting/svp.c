@@ -37,8 +37,10 @@ static bool svp_validate_buffer(const svp_buffer_t* svp_buffer) {
         return false;
     }
 
-    // TODO SoC Vendor: insert code for validating whether the passed in pointer and size are fully contained within the
-    // protected svp memory space
+    if (!memory_is_valid_svp(svp_buffer->svp_memory, svp_buffer->size)) {
+        ERROR("memory range is not within SVP memory");
+        return SA_STATUS_INVALID_PARAMETER;
+    }
 
     return true;
 }
@@ -56,6 +58,11 @@ bool svp_create_buffer(
     if (svp_memory == NULL) {
         ERROR("NULL svp_memory");
         return false;
+    }
+
+    if (!memory_is_valid_svp(svp_memory, size)) {
+        ERROR("memory range is not within SVP memory");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     *svp_buffer = memory_internal_alloc(sizeof(svp_buffer_t));
