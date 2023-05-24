@@ -41,7 +41,7 @@ static sa_status ta_sa_key_generate_symmetric(
     *key = INVALID_HANDLE;
 
     if (rights == NULL) {
-        ERROR("NULL parameters");
+        ERROR("NULL rights");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -101,7 +101,7 @@ static sa_status ta_sa_key_generate_ec(
     *key = INVALID_HANDLE;
 
     if (rights == NULL) {
-        ERROR("NULL parameters");
+        ERROR("NULL rights");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -219,7 +219,7 @@ static sa_status ta_sa_key_generate_dh(
     *key = INVALID_HANDLE;
 
     if (rights == NULL) {
-        ERROR("NULL parameters");
+        ERROR("NULL rights");
         return SA_STATUS_NULL_PARAMETER;
     }
 

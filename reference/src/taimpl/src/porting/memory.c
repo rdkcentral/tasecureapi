@@ -16,7 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "porting/memory.h"
+#include "porting/memory.h" // NOLINT
+#include "log.h"
+#include "porting/overflow.h"
 #include <stdlib.h>
 
 void* memory_secure_alloc(size_t size) {
@@ -63,4 +65,44 @@ void* memory_memset_unoptimizable(void* destination, uint8_t value, size_t size)
     while (size--)
         *pointer++ = value;
     return destination;
+}
+
+bool memory_is_valid_svp(
+        void* memory_location,
+        size_t size) {
+
+    if (memory_location == NULL) {
+        ERROR("Invalid memory");
+        return false;
+    }
+
+    size_t temp;
+    if (add_overflow((unsigned long) memory_location, size, &temp)) {
+        ERROR("Integer overflow");
+        return false;
+    }
+
+    // TODO: SoC vendor must verify that all bytes between memory_location and memory_location+size are within SVP
+    // space.
+    return true;
+}
+
+bool memory_is_valid_clear(
+        void* memory_location,
+        size_t size) {
+
+    if (memory_location == NULL) {
+        ERROR("Invalid memory");
+        return false;
+    }
+
+    size_t temp;
+    if (add_overflow((unsigned long) memory_location, size, &temp)) {
+        ERROR("Integer overflow");
+        return false;
+    }
+
+    // TODO: SoC vendor must verify that all bytes between memory_location and memory_location+size are not within SVP
+    // space.
+    return true;
 }

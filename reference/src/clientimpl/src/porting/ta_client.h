@@ -20,7 +20,7 @@
  * @section Description
  * @file ta_client.h
  *
- * This file contains functions that implements the REE -> TA interface and the TA -> TA interface. SOC vendors must
+ * This file contains functions that implements the REE -> TA interface and the TA -> TA interface. SoC vendors must
  * provide client implementations of the functions ta_open_session, ta_close_session, and ta_invoke_command that makes
  * calls into a TA (i.e., ta_client.c should be replaced).
  */
