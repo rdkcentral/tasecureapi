@@ -41,7 +41,7 @@ sa_status sa_crypto_mac_process_key(
         mac_process_key->key = key;
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{mac_process_key, sizeof(sa_crypto_mac_process_key_s)},
                                           {NULL, 0},
                                           {NULL, 0},

@@ -41,7 +41,7 @@ void ta_close_session(void* session_context) {
 sa_status ta_invoke_command(
         void* session_context,
         SA_COMMAND_ID command_id,
-        const ta_param_type param_types[NUM_TA_PARAMS],
+        const uint32_t param_types[NUM_TA_PARAMS],
         ta_param params[NUM_TA_PARAMS]) {
 
 #ifdef TA_CLIENT_TEST

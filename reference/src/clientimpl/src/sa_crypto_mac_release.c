@@ -38,7 +38,7 @@ sa_status sa_crypto_mac_release(sa_crypto_mac_context context) {
         mac_release->context = context;
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{mac_release, sizeof(sa_crypto_mac_release_s)},
                                           {NULL, 0},
                                           {NULL, 0},

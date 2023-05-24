@@ -37,7 +37,7 @@ sa_status sa_svp_supported() {
         svp_supported->api_version = API_VERSION;
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{svp_supported, sizeof(sa_svp_supported_s)},
                                           {NULL, 0},
                                           {NULL, 0},

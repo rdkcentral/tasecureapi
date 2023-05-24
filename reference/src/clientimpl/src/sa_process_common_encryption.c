@@ -91,10 +91,9 @@ sa_status sa_process_common_encryption(
 
             size_t param1_size = samples[i].subsample_count * sizeof(sa_subsample_length);
             CREATE_PARAM(param1, samples[i].subsample_lengths, param1_size);
-            ta_param_type param1_type = TA_PARAM_IN;
-
+            uint32_t param1_type = TA_PARAM_IN;
             size_t param2_size;
-            ta_param_type param2_type;
+            uint32_t param2_type;
             if (samples[i].out->buffer_type == SA_BUFFER_TYPE_CLEAR) {
                 if (samples[i].out->context.clear.buffer == NULL) {
                     ERROR("NULL samples[i].out.context.clear.buffer");
@@ -123,7 +122,7 @@ sa_status sa_process_common_encryption(
             }
 
             size_t param3_size;
-            ta_param_type param3_type = TA_PARAM_IN;
+            uint32_t param3_type = TA_PARAM_IN;
             if (samples[i].in->buffer_type == SA_BUFFER_TYPE_CLEAR) {
                 if (samples[i].in->context.clear.buffer == NULL) {
                     ERROR("NULL samples[i].in.context.clear.buffer");
@@ -149,7 +148,7 @@ sa_status sa_process_common_encryption(
             }
 
             // clang-format off
-            ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, param3_type};
+            uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, param3_type};
             ta_param params[NUM_TA_PARAMS] = {{process_common_encryption, sizeof(sa_process_common_encryption_s)},
                                            {param1, param1_size},
                                            {param2, param2_size},

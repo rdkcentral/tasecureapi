@@ -43,7 +43,7 @@ sa_status sa_get_ta_uuid(sa_uuid* uuid) {
         get_ta_uuid->uuid = *uuid;
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{get_ta_uuid, sizeof(sa_get_ta_uuid_s)},
                                           {NULL, 0},
                                           {NULL, 0},

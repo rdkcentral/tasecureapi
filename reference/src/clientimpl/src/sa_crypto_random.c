@@ -46,10 +46,10 @@ sa_status sa_crypto_random(
 
         CREATE_OUT_PARAM(param1, out, length);
         size_t param1_size = length;
-        ta_param_type param1_type = TA_PARAM_OUT;
+        uint32_t param1_type = TA_PARAM_OUT;
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, param1_type, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, param1_type, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{crypto_random, sizeof(sa_crypto_random_s)},
                                           {param1, param1_size},
                                           {NULL, 0},

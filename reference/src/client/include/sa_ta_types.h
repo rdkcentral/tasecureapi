@@ -82,14 +82,20 @@ typedef enum {
 } SA_COMMAND_ID;
 
 /**
- * The types of the TA parameters.
+ * The values of the TA parameters. The values correspond to the values in the GlobalPlatform TEE Client API
+ * TEEC_Parameter values.
  */
-typedef enum {
-    TA_PARAM_NULL,
-    TA_PARAM_IN,
-    TA_PARAM_OUT,
-    TA_PARAM_INOUT
-} ta_param_type;
+#define TEEC_NONE 0x00000000
+#define TEEC_VALUE_INPUT 0x00000001
+#define TEEC_VALUE_OUTPUT 0x00000002
+#define TEEC_VALUE_INOUT 0x00000003
+#define TEEC_MEMREF_TEMP_INPUT 0x00000005
+#define TEEC_MEMREF_TEMP_OUTPUT 0x00000006
+#define TEEC_MEMREF_TEMP_INOUT 0x00000007
+#define TEEC_MEMREF_WHOLE 0x0000000C
+#define TEEC_MEMREF_PARTIAL_INPUT 0x0000000D
+#define TEEC_MEMREF_PARTIAL_OUTPUT 0x0000000E
+#define TEEC_MEMREF_PARTIAL_INOUT 0x0000000F
 
 /**
  * TA parameter structure that identifies a memory reference and its size.
@@ -267,7 +273,7 @@ typedef sa_kdf_parameters_netflix sa_kdf_parameters_netflix_s;
 // sa_key_exchange
 // param[0] INOUT - sa_key_exchange_s
 // param[1] IN - other_public + other_public_length
-// param[2] IN - sa_key_exchange_parameters_netflix_authenticated_dh_s
+// param[2] INOUT - sa_key_exchange_parameters_netflix_authenticated_dh_s
 typedef struct {
     uint8_t api_version;
     sa_key key;

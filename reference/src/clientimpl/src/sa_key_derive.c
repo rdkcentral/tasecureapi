@@ -57,11 +57,11 @@ sa_status sa_key_derive(
         key_derive->kdf_algorithm = kdf_algorithm;
 
         size_t param1_size;
-        ta_param_type param1_type;
+        uint32_t param1_type;
         size_t param2_size;
-        ta_param_type param2_type;
+        uint32_t param2_type;
         size_t param3_size;
-        ta_param_type param3_type;
+        uint32_t param3_type;
         switch (kdf_algorithm) {
             case SA_KDF_ALGORITHM_ROOT_KEY_LADDER:
             case SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER:
@@ -316,7 +316,7 @@ sa_status sa_key_derive(
         }
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, param3_type};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, param3_type};
         ta_param params[NUM_TA_PARAMS] = {{key_derive, sizeof(sa_key_derive_s)},
                                           {param1, param1_size},
                                           {param2, param2_size},
