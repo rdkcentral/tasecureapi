@@ -21,9 +21,9 @@
 #include "common.h"
 #include "key_type.h"
 #include "log.h"
+#include "porting/transport.h"
 #include "rights.h"
 #include "ta_sa.h"
-#include "transport.h"
 #include "unwrap.h"
 
 sa_status ta_sa_svp_key_check(

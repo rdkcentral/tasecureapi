@@ -89,7 +89,7 @@ extern "C" {
 sa_status sa_get_version(sa_version* version);
 
 /**
- * Obtain the SecAPI implementation name, e.g. SOC manufacturer.
+ * Obtain the SecAPI implementation name, e.g. SoC manufacturer.
  *
  * @param[out] name Buffer where implementation name will be written. Can be set to NULL to
  * obtain the required length.
@@ -109,7 +109,7 @@ sa_status sa_get_name(
         size_t* name_length);
 
 /**
- * Obtain the device ID. ID will be formatted according to the "SOC Identifier Specification"
+ * Obtain the device ID. ID will be formatted according to the "SoC Identifier Specification"
  * specification.
  *
  * @param[out] id Device ID.

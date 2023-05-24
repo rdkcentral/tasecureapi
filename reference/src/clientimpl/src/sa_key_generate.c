@@ -61,9 +61,9 @@ sa_status sa_key_generate(
         key_generate->key_type = key_type;
 
         size_t param1_length = 0;
-        ta_param_type param1_type = TA_PARAM_NULL;
+        uint32_t param1_type = TA_PARAM_NULL;
         size_t param2_length = 0;
-        ta_param_type param2_type = TA_PARAM_NULL;
+        uint32_t param2_type = TA_PARAM_NULL;
         switch (key_type) {
             case SA_KEY_TYPE_SYMMETRIC:
                 key_generate->key_length = ((sa_generate_parameters_symmetric*) parameters)->key_length;
@@ -101,7 +101,7 @@ sa_status sa_key_generate(
         }
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{key_generate, sizeof(sa_key_generate_s)},
                                           {param1, param1_length},
                                           {param2, param2_length},

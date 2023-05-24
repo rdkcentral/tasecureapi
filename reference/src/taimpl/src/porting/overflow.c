@@ -1,5 +1,5 @@
-/*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+/**
+ * Copyright 2023 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sa.h"
-#include "ta_client.h"
+#include "porting/overflow.h"
 
-sa_status sa_svp_memory_free(void* svp_memory) {
-
-    // TODO Soc Vendor: replace this call to a call to free secure memory.
-    if (svp_memory != NULL)
-        free(svp_memory);
-
-    return SA_STATUS_OK;
+bool add_overflow(
+        unsigned long a,
+        unsigned long b,
+        unsigned long* result) {
+    return __builtin_uaddl_overflow(a, b, result);
 }

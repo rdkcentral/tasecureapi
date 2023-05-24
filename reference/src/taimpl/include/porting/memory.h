@@ -121,6 +121,28 @@ void* memory_memset_unoptimizable(
         uint8_t value,
         size_t size);
 
+/**
+ * Checks if all of the bytes between memory_location and memory_location+size are in SVP memory.
+ *
+ * @param destination the starting memory location.
+ * @param size the number of bytes to check.
+ * @return true if all bytes are within SVP memory. false if not.
+ */
+bool memory_is_valid_svp(
+        void* memory_location,
+        size_t size);
+
+/**
+ * Checks if all of the bytes between memory_location and memory_location+size are in non-SVP memory.
+ *
+ * @param destination the starting memory location.
+ * @param size the number of bytes to check.
+ * @return true if all bytes are within non-SVP memory. false if not.
+ */
+bool memory_is_valid_clear(
+        void* memory_location,
+        size_t size);
+
 #ifdef __cplusplus
 }
 #endif

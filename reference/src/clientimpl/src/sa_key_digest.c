@@ -50,7 +50,7 @@ sa_status sa_key_digest(
         key_digest->digest_algorithm = digest_algorithm;
 
         size_t param1_size;
-        ta_param_type param1_type;
+        uint32_t param1_type;
         if (out != NULL) {
             CREATE_OUT_PARAM(param1, out, *out_length);
             param1_size = *out_length;
@@ -61,7 +61,7 @@ sa_status sa_key_digest(
         }
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{key_digest, sizeof(sa_key_digest_s)},
                                           {param1, param1_size},
                                           {NULL, 0},

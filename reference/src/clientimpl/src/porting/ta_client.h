@@ -20,7 +20,7 @@
  * @section Description
  * @file ta_client.h
  *
- * This file contains functions that implements the REE -> TA interface and the TA -> TA interface. SOC vendors must
+ * This file contains functions that implements the REE -> TA interface and the TA -> TA interface. SoC vendors must
  * provide client implementations of the functions ta_open_session, ta_close_session, and ta_invoke_command that makes
  * calls into a TA (i.e., ta_client.c should be replaced).
  */
@@ -86,6 +86,11 @@ extern "C" {
 #define RELEASE_PARAM(param) \
     ta_free_shared_memory(param)
 
+#define TA_PARAM_NULL TEEC_NONE
+#define TA_PARAM_IN TEEC_MEMREF_PARTIAL_INPUT
+#define TA_PARAM_OUT TEEC_MEMREF_PARTIAL_OUTPUT
+#define TA_PARAM_INOUT TEEC_MEMREF_PARTIAL_INOUT
+
 #else
 
 #define CREATE_COMMAND(type, command) \
@@ -114,6 +119,11 @@ extern "C" {
 // NOOP
 #define RELEASE_PARAM(param) \
     (void) 0
+
+#define TA_PARAM_NULL TEEC_NONE
+#define TA_PARAM_IN TEEC_MEMREF_TEMP_INPUT
+#define TA_PARAM_OUT TEEC_MEMREF_TEMP_OUTPUT
+#define TA_PARAM_INOUT TEEC_MEMREF_TEMP_INOUT
 
 #endif
 
@@ -144,7 +154,7 @@ void ta_close_session(void* session_context);
 sa_status ta_invoke_command(
         void* session_context,
         SA_COMMAND_ID command_id,
-        const ta_param_type param_types[NUM_TA_PARAMS],
+        const uint32_t param_types[NUM_TA_PARAMS],
         ta_param params[NUM_TA_PARAMS]);
 
 /**

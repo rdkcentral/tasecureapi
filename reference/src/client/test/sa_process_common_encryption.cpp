@@ -20,6 +20,7 @@
 #include "client_test_helpers.h"
 #include "sa_crypto_cipher_common.h"
 #include <chrono>
+#include <cstddef>
 
 #define SUBSAMPLE_SIZE 256UL
 
@@ -948,6 +949,42 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTooShort) {
     ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
+TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferOverflow) {
+    cipher_parameters parameters;
+    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
+    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
+    ASSERT_NE(cipher, nullptr);
+    if (*cipher == UNSUPPORTED_CIPHER)
+        GTEST_SKIP() << "Cipher algorithm not supported";
+
+    sa_sample sample;
+    sample_data sample_data;
+    sample.iv = parameters.iv.data();
+    sample.iv_length = parameters.iv.size();
+    sample.crypt_byte_block = 0;
+    sample.skip_byte_block = 0;
+    sample.subsample_count = 1;
+
+    sample_data.subsample_lengths.resize(1);
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
+    sample.subsample_lengths[0].bytes_of_clear_data = 0;
+    sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
+
+    sample.context = *cipher;
+    sample_data.clear = random(SUBSAMPLE_SIZE);
+    sample_data.in = buffer_alloc(SA_BUFFER_TYPE_CLEAR, sample_data.clear);
+    ASSERT_NE(sample_data.in, nullptr);
+    sample.in = sample_data.in.get();
+
+    sample_data.out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, SUBSAMPLE_SIZE);
+    ASSERT_NE(sample_data.out, nullptr);
+    sample.out = sample_data.out.get();
+    sample.out->context.clear.offset = SIZE_MAX - 4;
+    sa_status status = sa_process_common_encryption(1, &sample);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+}
+
 TEST_F(SaProcessCommonEncryptionNegativeTest, inBufferTooShort) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
@@ -981,6 +1018,42 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, inBufferTooShort) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sa_status const status = sa_process_common_encryption(1, &sample);
+    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+}
+
+TEST_F(SaProcessCommonEncryptionNegativeTest, inBufferOverflow) {
+    cipher_parameters parameters;
+    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
+    parameters.svp_required = false;
+    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
+    ASSERT_NE(cipher, nullptr);
+    if (*cipher == UNSUPPORTED_CIPHER)
+        GTEST_SKIP() << "Cipher algorithm not supported";
+
+    sa_sample sample;
+    sample_data sample_data;
+    sample.iv = parameters.iv.data();
+    sample.iv_length = parameters.iv.size();
+    sample.crypt_byte_block = 0;
+    sample.skip_byte_block = 0;
+    sample.subsample_count = 1;
+
+    sample_data.subsample_lengths.resize(1);
+    sample.subsample_lengths = sample_data.subsample_lengths.data();
+    sample.subsample_lengths[0].bytes_of_clear_data = 0;
+    sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
+
+    sample.context = *cipher;
+    sample_data.clear = random(SUBSAMPLE_SIZE);
+    sample_data.in = buffer_alloc(SA_BUFFER_TYPE_CLEAR, sample_data.clear);
+    ASSERT_NE(sample_data.in, nullptr);
+    sample.in = sample_data.in.get();
+    sample.in->context.clear.offset = SIZE_MAX - 4;
+
+    sample_data.out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, SUBSAMPLE_SIZE);
+    ASSERT_NE(sample_data.out, nullptr);
+    sample.out = sample_data.out.get();
+    sa_status status = sa_process_common_encryption(1, &sample);
     ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 

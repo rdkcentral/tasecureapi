@@ -48,10 +48,10 @@ sa_status sa_crypto_cipher_update_iv(
 
         CREATE_PARAM(param1, (void*) iv, iv_length);
         size_t param1_size = iv_length;
-        ta_param_type param1_type = TA_PARAM_IN;
+        uint32_t param1_type = TA_PARAM_IN;
 
         // clang-format off
-        ta_param_type param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, param1_type, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, param1_type, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{cipher_update_iv, sizeof(sa_crypto_cipher_update_iv_s)},
                                           {param1, param1_size},
                                           {NULL, 0},

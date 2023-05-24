@@ -29,7 +29,7 @@ sa_status sa_svp_memory_alloc(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    // TODO Soc Vendor: replace this call with a call to allocate secure memory.
+    // TODO SoC Vendor: replace this call with a call to allocate secure memory.
     *svp_memory = malloc(size);
     if (*svp_memory == NULL) {
         ERROR("malloc failed");

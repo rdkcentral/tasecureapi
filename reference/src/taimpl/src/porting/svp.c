@@ -21,6 +21,7 @@
 #include "log.h"
 #include "porting/memory.h"
 #include "porting/otp_internal.h"
+#include "porting/overflow.h"
 #include "stored_key_internal.h"
 #include <memory.h>
 
@@ -36,8 +37,10 @@ static bool svp_validate_buffer(const svp_buffer_t* svp_buffer) {
         return false;
     }
 
-    // TODO Soc Vendor: insert code for validating whether the passed in pointer and size are fully contained within the
-    // protected svp memory space
+    if (!memory_is_valid_svp(svp_buffer->svp_memory, svp_buffer->size)) {
+        ERROR("memory range is not within SVP memory");
+        return SA_STATUS_INVALID_PARAMETER;
+    }
 
     return true;
 }
@@ -55,6 +58,11 @@ bool svp_create_buffer(
     if (svp_memory == NULL) {
         ERROR("NULL svp_memory");
         return false;
+    }
+
+    if (!memory_is_valid_svp(svp_memory, size)) {
+        ERROR("memory range is not within SVP memory");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     *svp_buffer = memory_internal_alloc(sizeof(svp_buffer_t));
@@ -126,12 +134,23 @@ bool svp_write(
     }
 
     for (size_t i = 0; i < offsets_length; i++) {
-        if ((offsets[i].out_offset + offsets[i].length) > out_svp_buffer->size) {
+        size_t range;
+        if (add_overflow(offsets[i].out_offset, offsets[i].length, &range)) {
+            ERROR("Integer overflow");
+            return false;
+        }
+
+        if (range > out_svp_buffer->size) {
             ERROR("attempting to write outside the bounds of output secure buffer");
             return false;
         }
 
-        if ((offsets[i].in_offset + offsets[i].length) > in_length) {
+        if (add_overflow(offsets[i].in_offset, offsets[i].length, &range)) {
+            ERROR("Integer overflow");
+            return false;
+        }
+
+        if (range > in_length) {
             ERROR("attempting to read outside the bounds of input buffer");
             return false;
         }
@@ -176,22 +195,43 @@ bool svp_copy(
     }
 
     for (size_t i = 0; i < offsets_length; i++) {
-        if ((offsets[i].out_offset + offsets[i].length) > out_svp_buffer->size) {
+        size_t range;
+        if (add_overflow(offsets[i].out_offset, offsets[i].length, &range)) {
+            ERROR("Integer overflow");
+            return false;
+        }
+
+        if (range > out_svp_buffer->size) {
             ERROR("attempting to write outside the bounds of output secure buffer");
             return false;
         }
 
-        if ((offsets[i].in_offset + offsets[i].length) > in_svp_buffer->size) {
+        if (add_overflow(offsets[i].in_offset, offsets[i].length, &range)) {
+            ERROR("Integer overflow");
+            return false;
+        }
+
+        if (range > in_svp_buffer->size) {
             ERROR("attempting to read outside the bounds of input secure buffer");
             return false;
         }
     }
 
-    uint8_t* out_bytes = (uint8_t*) out_svp_buffer->svp_memory;
-    uint8_t* in_bytes = (uint8_t*) in_svp_buffer->svp_memory;
-    for (size_t i = 0; i < offsets_length; i++)
-        memcpy(out_bytes + offsets[i].out_offset, in_bytes + offsets[i].in_offset, offsets[i].length);
+    for (size_t i = 0; i < offsets_length; i++) {
+        unsigned long out_position;
+        if (add_overflow((unsigned long)out_svp_buffer->svp_memory, offsets[i].out_offset, &out_position)) {
+            ERROR("Integer overflow");
+            return false;
+        }
 
+        unsigned long in_position;
+        if (add_overflow((unsigned long)in_svp_buffer->svp_memory, offsets[i].in_offset, &in_position)) {
+            ERROR("Integer overflow");
+            return false;
+        }
+
+        memcpy((void*)out_position, (void*)in_position, offsets[i].length); // NOLINT
+    }
     return true;
 }
 
@@ -261,8 +301,29 @@ bool svp_digest(
         size_t offset,
         size_t length) {
 
-    if (!digest_sha(out, out_length, digest_algorithm, (uint8_t*) svp_buffer->svp_memory + offset, length, NULL, 0,
-                NULL, 0)) {
+    size_t range;
+    if (add_overflow(offset, length, &range)) {
+        ERROR("Integer overflow");
+        return false;
+    }
+
+    if (range > svp_buffer->size) {
+        ERROR("attempting to write outside the bounds of output secure buffer");
+        return false;
+    }
+
+    if (!svp_validate_buffer(svp_buffer)) {
+        ERROR("svp_validate_buffer failed");
+        return false;
+    }
+
+    unsigned long position;
+    if (add_overflow((unsigned long)svp_buffer->svp_memory, offset, &position)) {
+        ERROR("Integer overflow");
+        return false;
+    }
+
+    if (!digest_sha(out, out_length, digest_algorithm, (uint8_t*) position, length, NULL, 0, NULL, 0)) { // NOLINT
         ERROR("digest_sha failed");
         return false;
     }
