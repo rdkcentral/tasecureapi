@@ -9,6 +9,8 @@ PROJECT_VERSION=$(git describe --tags | sort | head -n1)
 # Check if the common document configuration is present, if not clone it
 if [ -d "./build" ]; then
     make -C ./build PROJECT_NAME="SecApi (tasecureapi)" PROJECT_VERSION=${PROJECT_VERSION}
+    mkdir -p output/html/docs/diagrams
+    cp ./diagrams/*.png output/html/docs/diagrams
 else
     echo "Cloning Common documentation generation"
     git clone git@comcast_github:comcast-sky/rdk-components-hal-doxygen.git build

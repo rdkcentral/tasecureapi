@@ -124,7 +124,7 @@ depends on a priori knowledge of a key derived from the device's root key. This 
 provisioning service to subsequently derive the SecAPI keys used to encrypt the key carried in the
 container as well as authenticate the container.
 
-![Key Container Generation](./diagrams/GenerateKeyContainer.png)
+![Key Container Generation](./docs/diagrams/GenerateKeyContainer.png)
 
 1. A keying center generates SoC root keys.
 2. The keying center delivers the SoC root keys to the SoC manufacturer. The SoC manufacturer writes
@@ -180,7 +180,7 @@ operations.
 
 The diagram below presents an overview of the role of the SecAPI TA in key provisioning.
 
-![Key Provisioning](./diagrams/KeyProvisioning.png)
+![Key Provisioning](./docs/diagrams/KeyProvisioning.png)
 
 1. A provisioning client application obtains a key container from the key provisioning service.
 2. The provisioning application writes the key container to REE memory.
@@ -196,7 +196,7 @@ The diagram below presents an overview of the role of the SecAPI TA in key provi
 
 The diagram below presents an overview of the role of the SecAPI TA in DRM license acquisition.
 
-![DRM License Acquisition](./diagrams/LicenseAcquisition.png)
+![DRM License Acquisition](./docs/diagrams/LicenseAcquisition.png)
 
 1. The player determines the media type and invokes the DRM TA to obtain a license request.
 2. The DRM TA creates the license request and invokes the SecAPI to sign the request.
@@ -215,7 +215,7 @@ The diagram below presents an overview of the role of the SecAPI TA in SVP conte
 to content decryption a DRM TA acquires a license, unwraps the key and invokes the SecAPI TA to
 export the content key for storage in the REE.
 
-![SVP Content Decryption](./diagrams/SvpDecryptionUseCase.png)
+![SVP Content Decryption](./docs/diagrams/SvpDecryptionUseCase.png)
 
 1. An SVP TA initializes the SVP.
 2. The content key is imported by the SecAPI TA.

@@ -1,8 +1,10 @@
+# RFC 0002-Consolidate SVP and Crypto Cipher Functions
+
 - Feature Name: Consolidate SVP and Non-SVP Cipher APIs
 - Author(s): Eric Berry
 - Start Date: 2021-06-23
-- RFC PR:
-- Leader(s):
+- RFC PR: 0002
+- Leader(s): Eric Berry
 
 ## Introduction
 
@@ -15,8 +17,6 @@ SecApi 2 Adapter is a library that implements the SecApi 2.3 API and delegates c
 to the SecApi 3 library. The intention is that the SecApi 2 Adapter library can be introduced along
 with a new SecApi 3 library and can provide compatability for applications and libraries that have
 not upgraded to the new interface yet.
-
-![SecApi3-Plan](../diagrams/SecApi3-Plan.png)
 
 There is an incompatibility between the design of SecApi 2.3 and SecApi 3.  Specifically, the SecApi
 2 SecCipher_ProcessOpaque function requires that the input buffer be an SVP buffer while the SecApi
@@ -118,4 +118,3 @@ A similar design of adding an svp_buffer to only the in parameter of `sa_svp_cip
 ## Unresolved questions
 
 None
-

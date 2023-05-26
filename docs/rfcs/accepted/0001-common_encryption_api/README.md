@@ -1,8 +1,10 @@
+# RFC 0001-Common Encryption API
+
 - Feature Name: Common Encryption API
 - Author(s): Eric Berry
 - Start Date: 2021-06-08
-- RFC PR: (leave this empty)
-- Leader(s): (leave this empty)
+- RFC PR: 0001
+- Leader(s): Eric Berry
 
 ## Introduction
 

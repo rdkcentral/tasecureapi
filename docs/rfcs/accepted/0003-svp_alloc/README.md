@@ -1,8 +1,10 @@
+# RFC 0003-SVP Alloc
+
 - Feature Name: SVP Memory Alloc in REE
 - Author(s): Eric Berry
 - Start Date: 2021-12-02
-- RFC PR:
-- Leader(s):
+- RFC PR: 0003
+- Leader(s): Eric Berry
 
 ## Introduction
 
@@ -113,4 +115,3 @@ None
 ## Unresolved questions
 
 None
-

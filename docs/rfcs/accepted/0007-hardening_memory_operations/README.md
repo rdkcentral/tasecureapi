@@ -1,3 +1,5 @@
+# RFC 0007-Hardening Memory Operations
+
 - Feature Name: Hardening memory operations
 - Author(s): Bastien Simondi
 - Start Date: 2023-04-07
