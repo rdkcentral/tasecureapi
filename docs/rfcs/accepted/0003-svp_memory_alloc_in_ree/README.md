@@ -1,4 +1,4 @@
-# RFC 0003-SVP Alloc
+# RFC 0003-SVP Memory Alloc in REE
 
 - Feature Name: SVP Memory Alloc in REE
 - Author(s): Eric Berry

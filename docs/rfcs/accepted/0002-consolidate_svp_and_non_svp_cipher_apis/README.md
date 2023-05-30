@@ -1,4 +1,4 @@
-# RFC 0002-Consolidate SVP and Crypto Cipher Functions
+# RFC 0002-Consolidate SVP and Non-SVP Cipher APIs
 
 - Feature Name: Consolidate SVP and Non-SVP Cipher APIs
 - Author(s): Eric Berry
