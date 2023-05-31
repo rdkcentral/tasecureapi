@@ -1,6 +1,6 @@
-# SecAPI 3 Usage Model
+# Security API Usage Model
 
-![SecAPI 3 Usage Model](./diagrams/SecApi3-UsageModel.png)
+![Security API Usage Model](./docs/diagrams/SecApi3-UsageModel.png)
 
 This diagram shows the planned usage model for SecAPI 3. SecAPI 3 uses a slot for every REE
 application thread.
@@ -90,6 +90,7 @@ within the SecAPI 3 TA.  Any calls to the SecAPI 3 TA using the same session may
 sequentially and may block other calls to the SecAPI 3 TA using the same session.
 
 Examples of Secure Application TAs include:
-* Widevine v16 DRM TA.
-* PlayReady 4.4 DRM TA.
+* Widevine v17 DRM TA.
+* PlayReady 4.6 DRM TA.
+* FairPlay DRM TA.
 * Any other future TA that needs access to SecAPI 3.

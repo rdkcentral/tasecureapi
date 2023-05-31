@@ -1,3 +1,5 @@
+# RFC 0008-REE/TEE Boundary Simplification and Hardening
+
 - Feature Name: REE/TEE boundary simplification and hardening
 - Author(s): Bastien Simondi
 - Start Date: 2023-04-07

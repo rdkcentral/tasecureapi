@@ -3,10 +3,11 @@
 ## Table of Contents
 
 1. [Introduction](#introduction)
-1. [Terms and Definitions](#terms-and-definitions)
-1. [SecAPI Overview](#secapi-overview)
-1. [Sample Use Cases](#sample-use-cases)
-1. [Robustness Rules](#robustness-rules)
+2. [Terms and Definitions](#terms-and-definitions)
+3. [SecAPI Overview](#secapi-overview)
+4. [Sample Use Cases](#sample-use-cases)
+5. [Robustness Rules](#robustness-rules)
+6. [References](#references)
 
 ## Introduction
 
@@ -127,11 +128,11 @@ container as well as authenticate the container.
 ![Key Container Generation](./docs/diagrams/GenerateKeyContainer.png)
 
 1. A keying center generates SoC root keys.
-1. The keying center delivers the SoC root keys to the SoC manufacturer. The SoC manufacturer writes
+2. The keying center delivers the SoC root keys to the SoC manufacturer. The SoC manufacturer writes
    the root keys to SoC OTP memory.
-1. The keying center performs the first stage derivation of a container encryption key and delivers
+3. The keying center performs the first stage derivation of a container encryption key and delivers
    the result to the key provisioning service.
-1. The key provisioning service, starting with the first stage derived key, performs second and
+4. The key provisioning service, starting with the first stage derived key, performs second and
    third stage derivation to generate the SecAPI key used to protect the confidentiality of a
    field-provisioned key delivered in a SecAPI key container.
 
@@ -183,12 +184,12 @@ The diagram below presents an overview of the role of the SecAPI TA in key provi
 ![Key Provisioning](./docs/diagrams/KeyProvisioning.png)
 
 1. A provisioning client application obtains a key container from the key provisioning service.
-1. The provisioning application writes the key container to REE memory.
-1. The SecAPI TA copies the key container into the TEE.
-1. The SecAPI TA uses the root key ladder to derive the SecAPI key that is used to encrypt the key in
+2. The provisioning application writes the key container to REE memory.
+3. The SecAPI TA copies the key container into the TEE.
+4. The SecAPI TA uses the root key ladder to derive the SecAPI key that is used to encrypt the key in
    the key container. The SecAPI TA decrypts the key and verifies the container authentication
    data.
-1. The SecAPI generates an export key container and returns the export key container to the calling
+5. The SecAPI generates an export key container and returns the export key container to the calling
    client application. The client application places the container in the file system for
    persistent storage.
 
@@ -199,13 +200,13 @@ The diagram below presents an overview of the role of the SecAPI TA in DRM licen
 ![DRM License Acquisition](./docs/diagrams/LicenseAcquisition.png)
 
 1. The player determines the media type and invokes the DRM TA to obtain a license request.
-1. The DRM TA creates the license request and invokes the SecAPI to sign the request.
-1. The SecAPI TA imports the DRM key, signs the license request, and returns the signed request to
+2. The DRM TA creates the license request and invokes the SecAPI to sign the request.
+3. The SecAPI TA imports the DRM key, signs the license request, and returns the signed request to
    the DRM TA. The DRM TA provides the license request to the player.
-1. The player obtains a license from the DRM license server.
-1. The player provides the license to the DRM TA to process the license.
-1. The DRM TA invokes the SecAPI TA to unwrap the content key.
-1. The SecAPI unwraps the content key. The content key may be exported in an export key container
+4. The player obtains a license from the DRM license server.
+5. The player provides the license to the DRM TA to process the license.
+6. The DRM TA invokes the SecAPI TA to unwrap the content key.
+7. The SecAPI unwraps the content key. The content key may be exported in an export key container
    if the use case requires persistent storage for the content key (i.e. if the content key is
    cacheable).
 
@@ -218,11 +219,11 @@ export the content key for storage in the REE.
 ![SVP Content Decryption](./docs/diagrams/SvpDecryptionUseCase.png)
 
 1. An SVP TA initializes the SVP.
-1. The content key is imported by the SecAPI TA.
-1. The encrypted compressed content is decrypted into an SVP buffer.
-1. The SVP is configured to allow the decoder to access protected TEE memory. The decoder
+2. The content key is imported by the SecAPI TA.
+3. The encrypted compressed content is decrypted into an SVP buffer.
+4. The SVP is configured to allow the decoder to access protected TEE memory. The decoder
    decompresses the video into an SVP buffer.
-1. An HDCP TA outputs HDCP-protected video.
+5. An HDCP TA outputs HDCP-protected video.
 
 ## Robustness Rules
 
@@ -261,3 +262,7 @@ Implementations of this API must conform to the following:
   SVP is configured and enabled.
 * The SecAPI TA must have access to a device service that enables the SecAPI TA to determine what
   video outputs are currently enabled.
+
+## References
+
+[List Format Requirements for Markdown documentation](https://www.doxygen.nl/manual/lists.html)

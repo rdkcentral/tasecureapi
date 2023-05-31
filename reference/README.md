@@ -1,4 +1,4 @@
-# Comcast Security API v3+
+# Security API Reference Implementation
 
 ## Summary
 
@@ -198,11 +198,11 @@ implementation. The full 4 number version can be retrieved using the sa_get_vers
 ### Suggested procedure for porting the SecAPI
 
 1. Copy the reference implementation repo.
-1. Replace the name of the project in ./CMakeLists.txt.
-1. Modify files in src/clientimpl/src/internal, src/taimpl/include/internal,
+2. Replace the name of the project in ./CMakeLists.txt.
+3. Modify files in src/clientimpl/src/internal, src/taimpl/include/internal,
    src/taimpl/include/porting, src/taimpl/src/internal, and src/taimpl/src/porting folders with
    platform specific implementation for a given platform.
-1. Keep all folder except the ones mentioned in 3) up to date with reference implementation
+4. Keep all folder except the ones mentioned in 3) up to date with reference implementation
    regularly.
 
 ### Secure Heap

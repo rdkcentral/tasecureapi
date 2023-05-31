@@ -5,10 +5,10 @@ TaSecureApi project.
 
 ## (1) Tag the repository
 
-### Tagging via Gerrit
+### Tagging via GitHub
 
 From within a local copy of the repository with HEAD at the desired commit to be tagged and
-released, use git to create an annotated tag and complete via a typical gerrit code review.
+released, use git to create an annotated tag and complete via a typical GitHub code review.
 
 ```sh
 $ git tag -a <tag name> -m "<tag message>"
@@ -17,8 +17,8 @@ $ git push <remote> -tags
 
 ### Tagging Directly
 
-RDK Central gerrit repository owners have the ability to directly push annotated tags without going
-through a gerrit code review.
+RDK Central GitHub repository owners have the ability to directly push annotated tags without going
+through a GitHub code review.
 
 ### Naming Conventions
 
@@ -42,14 +42,8 @@ Informative git tagging tutorial is available [here](https://git-scm.com/book/en
 ## (2) Generating Release Documentation
 
 Documents and specifications should be rendered into a common document viewing format such as HTML
-and PDF. To ensure consistent generation, the use of the [Atom](https://atom.io) text editor is
-encouraged.
+and PDF. 
 
-To generate release documentation using Atom, for each document:
-- Open the Markdown document.
-- Generate Markdown preview (`Ctrl+Shift+M`).
-- Save the preview as HTML.
-- Open the saved HTML document in a browser.
-- Print the opened HTML document in the browser as PDF.
-
-
+To generate release documentation:
+- cd to the 'docs' directory
+- Execute ./generate_docs.sh
