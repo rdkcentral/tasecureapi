@@ -20,7 +20,6 @@
 #include "client_test_helpers.h"
 #include "sa_crypto_cipher_common.h"
 #include <chrono>
-#include <cstddef>
 
 #define SUBSAMPLE_SIZE 256UL
 
@@ -981,7 +980,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferOverflow) {
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sample.out->context.clear.offset = SIZE_MAX - 4;
-    sa_status status = sa_process_common_encryption(1, &sample);
+    sa_status const status = sa_process_common_encryption(1, &sample);
     ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
@@ -1053,7 +1052,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, inBufferOverflow) {
     sample_data.out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, SUBSAMPLE_SIZE);
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
-    sa_status status = sa_process_common_encryption(1, &sample);
+    sa_status const status = sa_process_common_encryption(1, &sample);
     ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 

@@ -148,8 +148,8 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherWithSvpTest, processLastFailsOutOffsetOverflow) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+        sa_buffer_type const buffer_type = std::get<0>(GetParam());
+        sa_cipher_mode const cipher_mode = std::get<1>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -166,7 +166,7 @@ namespace {
             GTEST_SKIP() << "Cipher algorithm not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto in_buffer = buffer_alloc(buffer_type, clear);
         ASSERT_NE(in_buffer, nullptr);
 
@@ -183,8 +183,8 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherWithSvpTest, processLastFailsInOffsetOverflow) {
-        sa_buffer_type buffer_type = std::get<0>(GetParam());
-        sa_cipher_mode cipher_mode = std::get<1>(GetParam());
+        sa_buffer_type const buffer_type = std::get<0>(GetParam());
+        sa_cipher_mode const cipher_mode = std::get<1>(GetParam());
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -201,7 +201,7 @@ namespace {
             GTEST_SKIP() << "Cipher algorithm not supported";
 
         ASSERT_EQ(status, SA_STATUS_OK);
-        auto clear = random(AES_BLOCK_SIZE * 2);
+        auto clear = random(static_cast<size_t>(AES_BLOCK_SIZE) * 2);
         auto in_buffer = buffer_alloc(buffer_type, clear);
         ASSERT_NE(in_buffer, nullptr);
 
