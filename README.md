@@ -265,4 +265,4 @@ Implementations of this API must conform to the following:
 
 ## References
 
-https://www.doxygen.nl/manual/lists.html
+[List Format Requirements for Markdown documentation](https://www.doxygen.nl/manual/lists.html)
