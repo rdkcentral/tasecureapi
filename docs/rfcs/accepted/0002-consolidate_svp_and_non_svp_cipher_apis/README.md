@@ -18,6 +18,8 @@ to the SecApi 3 library. The intention is that the SecApi 2 Adapter library can 
 with a new SecApi 3 library and can provide compatability for applications and libraries that have
 not upgraded to the new interface yet.
 
+![SecApi3-Plan](./SecApi3-Plan.png)
+
 There is an incompatibility between the design of SecApi 2.3 and SecApi 3.  Specifically, the SecApi
 2 SecCipher_ProcessOpaque function requires that the input buffer be an SVP buffer while the SecApi
 3 sa_svp_cipher_process function requires that the input buffer be a clear buffer.  This means

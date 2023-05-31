@@ -11,6 +11,7 @@ if [ -d "./build" ]; then
     make -C ./build PROJECT_NAME="SecApi (tasecureapi)" PROJECT_VERSION=${PROJECT_VERSION}
     mkdir -p output/html/docs/diagrams
     cp ./diagrams/*.png output/html/docs/diagrams
+    cp rfcs/accepted/0002-consolidate_svp_and_non_svp_cipher_apis/SecApi3-Plan.png output/html
 else
     echo "Cloning Common documentation generation"
     git clone git@comcast_github:comcast-sky/rdk-components-hal-doxygen.git build
