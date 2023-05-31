@@ -7,6 +7,7 @@
 3. [SecAPI Overview](#secapi-overview)
 4. [Sample Use Cases](#sample-use-cases)
 5. [Robustness Rules](#robustness-rules)
+6. [References](#references)
 
 ## Introduction
 
@@ -261,3 +262,7 @@ Implementations of this API must conform to the following:
   SVP is configured and enabled.
 * The SecAPI TA must have access to a device service that enables the SecAPI TA to determine what
   video outputs are currently enabled.
+
+## References
+
+https://www.doxygen.nl/manual/lists.html

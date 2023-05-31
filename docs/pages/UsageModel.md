@@ -1,1 +1,1 @@
-../UsageModel.md
+../../UsageModel.md
