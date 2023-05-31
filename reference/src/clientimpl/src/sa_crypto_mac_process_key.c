@@ -55,6 +55,5 @@ sa_status sa_crypto_mac_process_key(
     } while (false);
 
     RELEASE_COMMAND(mac_process_key);
-    RELEASE_PARAM(param1);
     return status;
 }
