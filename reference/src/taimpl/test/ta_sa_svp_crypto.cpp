@@ -372,7 +372,7 @@ namespace {
     TEST_P(TaCryptoCipherTest, processFailsOutOffsetOverflow) {
         auto cipher_algorithm = std::get<0>(GetParam());
         auto cipher_mode = std::get<1>(GetParam());
-        size_t key_size = std::get<2>(GetParam());
+        size_t const key_size = std::get<2>(GetParam());
 
         std::shared_ptr<void> parameters;
         std::vector<uint8_t> iv;
@@ -410,7 +410,7 @@ namespace {
     TEST_P(TaCryptoCipherTest, processFailsInOffsetOverflow) {
         auto cipher_algorithm = std::get<0>(GetParam());
         auto cipher_mode = std::get<1>(GetParam());
-        size_t key_size = std::get<2>(GetParam());
+        size_t const key_size = std::get<2>(GetParam());
 
         std::shared_ptr<void> parameters;
         std::vector<uint8_t> iv;

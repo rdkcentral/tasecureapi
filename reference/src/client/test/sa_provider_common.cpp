@@ -58,8 +58,8 @@ bool SaProviderTest::verifyEncrypt(
         std::vector<uint8_t>& tag,
         const char* algorithm_name,
         int padded) {
-    std::shared_ptr<EVP_CIPHER_CTX> cipher_ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
-    std::shared_ptr<EVP_CIPHER> cipher = {EVP_CIPHER_fetch(nullptr, algorithm_name, nullptr), EVP_CIPHER_free};
+    std::shared_ptr<EVP_CIPHER_CTX> const cipher_ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
+    std::shared_ptr<EVP_CIPHER> const cipher = {EVP_CIPHER_fetch(nullptr, algorithm_name, nullptr), EVP_CIPHER_free};
 
     if (EVP_DecryptInit(cipher_ctx.get(), cipher.get(), clear_key.data(), iv.data()) != 1) {
         fprintf(stderr, "EVP_DecryptInit failed");
@@ -116,8 +116,8 @@ bool SaProviderTest::doEncrypt(
         const char* algorithm_name,
         int padded) {
     encrypted.resize(clear.size() + 16);
-    std::shared_ptr<EVP_CIPHER_CTX> cipher_ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
-    std::shared_ptr<EVP_CIPHER> cipher = {EVP_CIPHER_fetch(nullptr, algorithm_name, nullptr), EVP_CIPHER_free};
+    std::shared_ptr<EVP_CIPHER_CTX> const cipher_ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
+    std::shared_ptr<EVP_CIPHER> const cipher = {EVP_CIPHER_fetch(nullptr, algorithm_name, nullptr), EVP_CIPHER_free};
 
     if (EVP_EncryptInit(cipher_ctx.get(), cipher.get(), clear_key.data(), iv.data()) != 1) {
         fprintf(stderr, "EVP_EncryptInit failed");
@@ -181,7 +181,7 @@ std::shared_ptr<EVP_PKEY> SaProviderTest::generate_sa_key(
             }
         } else if (key_type == SA_KEY_TYPE_EC) {
             curve = static_cast<sa_elliptic_curve>(key_length);
-            int type = ec_get_nid(curve);
+            int const type = ec_get_nid(curve);
             if (type == 0) {
                 ERROR("ec_get_nid failed");
                 break;

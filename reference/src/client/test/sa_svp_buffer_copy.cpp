@@ -68,7 +68,7 @@ namespace {
         auto in_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
         ASSERT_NE(in_buffer, nullptr);
         sa_svp_offset offset = {SIZE_MAX - 4, 0, AES_BLOCK_SIZE};
-        sa_status status = sa_svp_buffer_copy(*out_buffer, *in_buffer, &offset, 1);
+        sa_status const status = sa_svp_buffer_copy(*out_buffer, *in_buffer, &offset, 1);
         ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
     }
 
