@@ -21,6 +21,3 @@ following process stages before being merged into the branch:
 - Build verification
 - Compliance scan
 - Unit test validation
-
-Reference
-https://wiki.rdkcentral.com/display/CMF/Gerrit+Development+Workflow
