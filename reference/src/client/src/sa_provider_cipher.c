@@ -418,7 +418,7 @@ static int cipher_cipher(
                         &bytes_to_process, parameters);
                 total_processed += bytes_to_process;
             } else if (cipher_context->remaining_block_length > 0) {
-                // This is a SA_CIPHER_ALGORITHM_AES_CBC or SA_CIPHER_ALGORITHM_AES_ECB cipher and it didn't end on a
+                // This is a SA_CIPHER_ALGORITHM_AES_CBC or SA_CIPHER_ALGORITHM_AES_ECB cipher, and it didn't end on a
                 // block_size boundary. This is an error.
                 ERROR("SA_CIPHER_ALGORITHM_AES_CBC or SA_CIPHER_ALGORITHM_AES_ECB didn't end on a block boundary");
                 *outl = 0;

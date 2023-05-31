@@ -385,7 +385,7 @@ static int keymgmt_import(
                         parameters = &parameters_ec;
                     } else {
                         ERROR("Unsupported key type for import");
-                        return 0;
+                        break;
                     }
 
                     if (sa_key_import(&private_key, key_format, pkcs8, pkcs8_length,
@@ -394,6 +394,8 @@ static int keymgmt_import(
                         break;
                     }
 
+                    // Free the private key, public key will be reloaded below.
+                    EVP_PKEY_free(evp_pkey);
                     delete_key = 1;
                 }
             }
@@ -421,7 +423,6 @@ static int keymgmt_import(
             }
         } else {
             // The private key was not loaded, so then populate the header from the params.
-            private_key = INVALID_HANDLE;
             if (key_data->type == EVP_PKEY_DH) {
                 const OSSL_PARAM* p_param = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_FFC_P);
                 const OSSL_PARAM* g_param = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_FFC_G);

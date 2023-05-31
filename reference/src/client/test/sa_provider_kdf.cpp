@@ -42,9 +42,9 @@ TEST_P(SaProviderKdfTest, deriveTest) {
     sa_rights_set_allow_all(&rights);
     auto key = create_sa_key_symmetric(&rights, clear_key);
 
-    std::shared_ptr<EVP_KDF> evp_kdf(EVP_KDF_fetch(lib_ctx, kdf_algorithm, nullptr), EVP_KDF_free);
+    std::shared_ptr<EVP_KDF> const evp_kdf(EVP_KDF_fetch(lib_ctx, kdf_algorithm, nullptr), EVP_KDF_free);
     ASSERT_NE(evp_kdf, nullptr);
-    std::shared_ptr<EVP_KDF_CTX> evp_kdf_ctx(EVP_KDF_CTX_new(evp_kdf.get()), EVP_KDF_CTX_free);
+    std::shared_ptr<EVP_KDF_CTX> const evp_kdf_ctx(EVP_KDF_CTX_new(evp_kdf.get()), EVP_KDF_CTX_free);
     ASSERT_NE(evp_kdf_ctx, nullptr);
 
     std::vector<uint8_t> clear_derived_key(SYM_128_KEY_SIZE);
@@ -60,7 +60,7 @@ TEST_P(SaProviderKdfTest, deriveTest) {
                 OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, salt.data(), salt.size()),
                 OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO, info.data(), info.size()),
                 OSSL_PARAM_END};
-        int result = EVP_KDF_derive(evp_kdf_ctx.get(), reinterpret_cast<unsigned char*>(derived_key.get()),
+        int const result = EVP_KDF_derive(evp_kdf_ctx.get(), reinterpret_cast<unsigned char*>(derived_key.get()),
                 SYM_128_KEY_SIZE, params);
         ASSERT_EQ(result, 1);
     } else if (strcmp(kdf_algorithm, "CONCAT") == 0) {
@@ -71,7 +71,7 @@ TEST_P(SaProviderKdfTest, deriveTest) {
                         strlen(digest_name)),
                 OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO, info.data(), info.size()),
                 OSSL_PARAM_END};
-        int result = EVP_KDF_derive(evp_kdf_ctx.get(), reinterpret_cast<unsigned char*>(derived_key.get()),
+        int const result = EVP_KDF_derive(evp_kdf_ctx.get(), reinterpret_cast<unsigned char*>(derived_key.get()),
                 SYM_128_KEY_SIZE, params);
         ASSERT_EQ(result, 1);
     } else if (strcmp(kdf_algorithm, "ANSI_X963") == 0) {
@@ -82,7 +82,7 @@ TEST_P(SaProviderKdfTest, deriveTest) {
                         strlen(digest_name)),
                 OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO, info.data(), info.size()),
                 OSSL_PARAM_END};
-        int result = EVP_KDF_derive(evp_kdf_ctx.get(), reinterpret_cast<unsigned char*>(derived_key.get()),
+        int const result = EVP_KDF_derive(evp_kdf_ctx.get(), reinterpret_cast<unsigned char*>(derived_key.get()),
                 SYM_128_KEY_SIZE, params);
         ASSERT_EQ(result, 1);
     } else if (strcmp(kdf_algorithm, "CMAC") == 0) {
@@ -106,7 +106,7 @@ TEST_P(SaProviderKdfTest, deriveTest) {
                 OSSL_PARAM_construct_int(OSSL_KDF_PARAM_KBKDF_USE_SEPARATOR, &one),
                 OSSL_PARAM_construct_int(OSSL_KDF_PARAM_KBKDF_USE_L, &one),
                 OSSL_PARAM_END};
-        int result = EVP_KDF_derive(evp_kdf_ctx.get(), reinterpret_cast<unsigned char*>(derived_key.get()),
+        int const result = EVP_KDF_derive(evp_kdf_ctx.get(), reinterpret_cast<unsigned char*>(derived_key.get()),
                 SYM_128_KEY_SIZE, params);
         ASSERT_EQ(result, 1);
     }

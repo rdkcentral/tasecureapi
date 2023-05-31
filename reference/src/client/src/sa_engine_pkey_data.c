@@ -143,7 +143,7 @@ int sa_set_pkey_data(
                 size_t temp_key_length = memory_size(temp_key, MAX_KEY_DATA_LEN);
                 memcpy(new_data->data, temp_key, temp_key_length);
 
-                // Free the original data structure (unless it's an ED or X key), but don't free any of it's contents
+                // Free the original data structure (unless it's an ED or X key), but don't free any of its contents
                 // which are now pointed to by the key_data.
                 if (type == EVP_PKEY_RSA || type == EVP_PKEY_EC || type == EVP_PKEY_DH)
                     OPENSSL_free(temp_key);
