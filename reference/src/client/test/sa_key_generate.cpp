@@ -124,6 +124,9 @@ namespace {
             cipher_algorithm = SA_CIPHER_ALGORITHM_AES_ECB;
             auto cipher = create_uninitialized_sa_crypto_cipher_context();
             status = sa_crypto_cipher_init(cipher.get(), cipher_algorithm, SA_CIPHER_MODE_ENCRYPT, *key, nullptr);
+            if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+                GTEST_SKIP() << "Cipher algorithm not supported";
+
             ASSERT_EQ(status, SA_STATUS_OK);
             size_t encrypted_data_length = clear_data.size();
             sa_buffer in = {SA_BUFFER_TYPE_CLEAR, {.clear = {clear_data.data(), clear_data.size(), 0}}};
@@ -138,6 +141,9 @@ namespace {
             auto cipher = create_uninitialized_sa_crypto_cipher_context();
             sa_buffer in = {SA_BUFFER_TYPE_CLEAR, {.clear = {encrypted_data.data(), encrypted_data.size(), 0}}};
             status = sa_crypto_cipher_init(cipher.get(), cipher_algorithm, SA_CIPHER_MODE_DECRYPT, *key, nullptr);
+            if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+                GTEST_SKIP() << "Cipher algorithm not supported";
+
             ASSERT_EQ(status, SA_STATUS_OK);
             size_t decrypted_data_length = encrypted_data.size();
             ASSERT_EQ(sa_crypto_cipher_process(nullptr, *cipher, &in, &decrypted_data_length), SA_STATUS_OK);

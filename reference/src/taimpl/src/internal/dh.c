@@ -386,7 +386,7 @@ sa_status dh_generate_key(
         dh->p = bn_p;
         dh->g = bn_g;
 #else
-        if (!DH_set0_pqg(dh, bn_p, NULL, bn_g)) {
+        if (DH_set0_pqg(dh, bn_p, NULL, bn_g) != 1) {
             ERROR("DH_set0_pqg failed");
             break;
         }
@@ -396,7 +396,7 @@ sa_status dh_generate_key(
         bn_p = NULL;
         bn_g = NULL;
 
-        if (!DH_generate_key(dh)) {
+        if (DH_generate_key(dh) != 1) {
             ERROR("DH_generate_key failed");
             status = SA_STATUS_INVALID_PARAMETER;
             break;

@@ -22,7 +22,7 @@
 #include "stored_key_internal.h"
 #include <openssl/evp.h>
 
-bool digest_sha(
+sa_status digest_sha(
         void* out,
         size_t* out_length,
         sa_digest_algorithm digest_algorithm,
@@ -35,37 +35,38 @@ bool digest_sha(
 
     if (out_length == NULL) {
         ERROR("NULL out_length");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     size_t required_length = digest_length(digest_algorithm);
     if (out == NULL) {
         *out_length = required_length;
-        return required_length != (size_t) -1;
+        return required_length == SIZE_MAX ? SA_STATUS_INVALID_PARAMETER : SA_STATUS_OK;
     }
 
     if (*out_length < required_length) {
         ERROR("Invalid out_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
+
     *out_length = required_length;
 
     if (in1 == NULL && in1_length > 0) {
         ERROR("NULL in1");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in2 == NULL && in2_length > 0) {
         ERROR("NULL in2");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in3 == NULL && in3_length > 0) {
         ERROR("NULL in3");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_MD_CTX* context = NULL;
     do {
         context = EVP_MD_CTX_create();
@@ -112,7 +113,7 @@ bool digest_sha(
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_MD_CTX_destroy(context);
@@ -133,7 +134,7 @@ sa_status digest_key(
     size_t required_length = digest_length(digest_algorithm);
     if (out == NULL) {
         *out_length = required_length;
-        return SA_STATUS_OK;
+        return *out_length == SIZE_MAX ? SA_STATUS_INVALID_PARAMETER : SA_STATUS_OK;
     }
 
     if (*out_length < required_length) {

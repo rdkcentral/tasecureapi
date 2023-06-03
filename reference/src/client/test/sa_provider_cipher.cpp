@@ -25,6 +25,35 @@
 
 using namespace client_test_helpers;
 
+namespace {
+    sa_status check_algorithm_supported(
+            const char* algorithm_name,
+            ossl_unused std::shared_ptr<sa_key>& key) {
+
+        auto status = SA_STATUS_OK;
+
+        // Check for algorithm support.
+        if (strcmp(algorithm_name, SN_chacha20) == 0) {
+            auto cipher_context = create_uninitialized_sa_crypto_cipher_context();
+            auto nonce = random(CHACHA20_NONCE_LENGTH);
+            auto counter = random(CHACHA20_COUNTER_LENGTH);
+            sa_cipher_parameters_chacha20 parameters = {counter.data(), counter.size(), nonce.data(),
+                                                        nonce.size()};
+            status = sa_crypto_cipher_init(cipher_context.get(), SA_CIPHER_ALGORITHM_CHACHA20,
+                                           SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
+        } else if (strcmp(algorithm_name, SN_chacha20_poly1305) == 0) {
+            auto cipher_context = create_uninitialized_sa_crypto_cipher_context();
+            auto nonce = random(CHACHA20_NONCE_LENGTH);
+            auto aad = random(CHACHA20_COUNTER_LENGTH);
+            sa_cipher_parameters_chacha20_poly1305 parameters = {nonce.data(), nonce.size(), aad.data(), aad.size()};
+            status = sa_crypto_cipher_init(cipher_context.get(), SA_CIPHER_ALGORITHM_CHACHA20_POLY1305,
+                                           SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
+        }
+
+        return status;
+    }
+} // namespace
+
 TEST_P(SaProviderCipherTest, encryptTest) {
     const char* algorithm_name = std::get<0>(GetParam());
     int const padded = std::get<1>(GetParam());
@@ -33,9 +62,6 @@ TEST_P(SaProviderCipherTest, encryptTest) {
 
     OSSL_LIB_CTX* lib_ctx = sa_get_provider();
     ASSERT_NE(lib_ctx, nullptr);
-    std::shared_ptr<EVP_CIPHER> const cipher = {EVP_CIPHER_fetch(lib_ctx, algorithm_name, nullptr), EVP_CIPHER_free};
-    ASSERT_NE(cipher, nullptr);
-
     bool const include_aad = strcmp(algorithm_name, SN_aes_128_gcm) == 0 ||
                              strcmp(algorithm_name, SN_aes_256_gcm) == 0 ||
                              strcmp(algorithm_name, SN_chacha20_poly1305) == 0;
@@ -43,6 +69,9 @@ TEST_P(SaProviderCipherTest, encryptTest) {
     sa_rights rights;
     sa_rights_set_allow_all(&rights);
     auto key = create_sa_key_symmetric(&rights, clear_key);
+    if (check_algorithm_supported(algorithm_name, key) == SA_STATUS_OPERATION_NOT_SUPPORTED)
+        GTEST_SKIP() << "algorithm not supported";
+
     OSSL_PARAM params[] = {
             OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
@@ -52,6 +81,8 @@ TEST_P(SaProviderCipherTest, encryptTest) {
     auto aad = include_aad ? random(256) : std::vector<uint8_t>(0);
     std::vector<uint8_t> encrypted(128);
 
+    std::shared_ptr<EVP_CIPHER> const cipher = {EVP_CIPHER_fetch(lib_ctx, algorithm_name, nullptr), EVP_CIPHER_free};
+    ASSERT_NE(cipher, nullptr);
     std::shared_ptr<EVP_CIPHER_CTX> cipher_ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
     ASSERT_EQ(1, EVP_EncryptInit_ex2(cipher_ctx.get(), cipher.get(), nullptr, iv.data(), params));
     ASSERT_EQ(EVP_CIPHER_CTX_set_padding(cipher_ctx.get(), padded), 1);
@@ -94,8 +125,6 @@ TEST_P(SaProviderCipherTest, decryptTest) {
 
     OSSL_LIB_CTX* lib_ctx = sa_get_provider();
     ASSERT_NE(lib_ctx, nullptr);
-    std::shared_ptr<EVP_CIPHER> const cipher = {EVP_CIPHER_fetch(lib_ctx, algorithm_name, nullptr), EVP_CIPHER_free};
-    ASSERT_NE(cipher, nullptr);
 
     bool const include_aad = strcmp(algorithm_name, SN_aes_128_gcm) == 0 ||
                              strcmp(algorithm_name, SN_aes_256_gcm) == 0 ||
@@ -104,6 +133,9 @@ TEST_P(SaProviderCipherTest, decryptTest) {
     sa_rights rights;
     sa_rights_set_allow_all(&rights);
     auto key = create_sa_key_symmetric(&rights, clear_key);
+    if (check_algorithm_supported(algorithm_name, key) == SA_STATUS_OPERATION_NOT_SUPPORTED)
+        GTEST_SKIP() << "algorithm not supported";
+
     OSSL_PARAM params[] = {
             OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
@@ -116,6 +148,9 @@ TEST_P(SaProviderCipherTest, decryptTest) {
     std::vector<uint8_t> decrypted(128);
 
     ASSERT_TRUE(doEncrypt(encrypted, data, clear_key, iv, aad, tag, algorithm_name, padded));
+
+    std::shared_ptr<EVP_CIPHER> const cipher = {EVP_CIPHER_fetch(lib_ctx, algorithm_name, nullptr), EVP_CIPHER_free};
+    ASSERT_NE(cipher, nullptr);
     std::shared_ptr<EVP_CIPHER_CTX> cipher_ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
     ASSERT_EQ(1, EVP_DecryptInit_ex2(cipher_ctx.get(), cipher.get(), nullptr, iv.data(), params));
     ASSERT_NE(0, EVP_CIPHER_CTX_set_padding(cipher_ctx.get(), padded));
@@ -156,17 +191,23 @@ TEST_P(SaProviderCipherTest, initSeparateParams) {
 
     OSSL_LIB_CTX* lib_ctx = sa_get_provider();
     ASSERT_NE(lib_ctx, nullptr);
-    std::shared_ptr<EVP_CIPHER> const cipher = {EVP_CIPHER_fetch(lib_ctx, algorithm_name, nullptr), EVP_CIPHER_free};
-    ASSERT_NE(cipher, nullptr);
 
     bool const include_aad = strcmp(algorithm_name, SN_aes_128_gcm) == 0 ||
                              strcmp(algorithm_name, SN_aes_256_gcm) == 0 ||
                              strcmp(algorithm_name, SN_chacha20_poly1305) == 0;
     auto clear_key = random(key_length);
+    sa_rights rights;
+    sa_rights_set_allow_all(&rights);
+    auto key = create_sa_key_symmetric(&rights, clear_key);
+    if (check_algorithm_supported(algorithm_name, key) == SA_STATUS_OPERATION_NOT_SUPPORTED)
+        GTEST_SKIP() << "algorithm not supported";
+
     auto data = random((padded == 1) ? 23 : 16);
     auto iv = random(iv_length);
     auto aad = include_aad ? random(256) : std::vector<uint8_t>(0);
     std::vector<uint8_t> encrypted(128);
+    std::shared_ptr<EVP_CIPHER> const cipher = {EVP_CIPHER_fetch(lib_ctx, algorithm_name, nullptr), EVP_CIPHER_free};
+    ASSERT_NE(cipher, nullptr);
     std::shared_ptr<EVP_CIPHER_CTX> cipher_ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
     ASSERT_EQ(1, EVP_EncryptInit_ex2(cipher_ctx.get(), cipher.get(), nullptr, nullptr, nullptr));
     ASSERT_EQ(1, EVP_EncryptInit_ex2(cipher_ctx.get(), nullptr, clear_key.data(), nullptr, nullptr));
@@ -193,14 +234,14 @@ TEST_P(SaProviderCipherTest, initSeparateParams) {
 
     ASSERT_TRUE(verifyEncrypt(encrypted, data, clear_key, iv, aad, tag, algorithm_name, padded));
 
-    sa_key key;
+    sa_key key1;
     OSSL_PARAM params2[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, &key),
+            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, &key1),
             OSSL_PARAM_construct_end()};
     ASSERT_EQ(EVP_CIPHER_CTX_get_params(cipher_ctx.get(), params2), 1);
     cipher_ctx.reset();
     sa_header header;
-    ASSERT_EQ(sa_key_header(&header, key), SA_STATUS_INVALID_PARAMETER);
+    ASSERT_EQ(sa_key_header(&header, key1), SA_STATUS_INVALID_PARAMETER);
 }
 
 INSTANTIATE_TEST_SUITE_P(

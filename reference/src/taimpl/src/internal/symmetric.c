@@ -1237,7 +1237,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_decrypt_context(
 }
 
 sa_status symmetric_context_encrypt(
-        const symmetric_context_t* context,
+        symmetric_context_t* context,
         void* out,
         size_t* out_length,
         const void* in,
@@ -1284,7 +1284,7 @@ sa_status symmetric_context_encrypt(
 }
 
 sa_status symmetric_context_encrypt_last(
-        const symmetric_context_t* context,
+        symmetric_context_t* context,
         void* out,
         size_t* out_length,
         const void* in,
@@ -1302,7 +1302,7 @@ sa_status symmetric_context_encrypt_last(
 
     if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB ||
             context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC) {
-        ERROR("Invalid context algorithm");
+        ERROR("Invalid cipher algorithm");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
@@ -1345,7 +1345,7 @@ sa_status symmetric_context_encrypt_last(
 }
 
 sa_status symmetric_context_decrypt(
-        const symmetric_context_t* context,
+        symmetric_context_t* context,
         void* out,
         size_t* out_length,
         const void* in,
@@ -1392,7 +1392,7 @@ sa_status symmetric_context_decrypt(
 }
 
 sa_status symmetric_context_decrypt_last(
-        const symmetric_context_t* context,
+        symmetric_context_t* context,
         void* out,
         size_t* out_length,
         const void* in,
@@ -1410,7 +1410,7 @@ sa_status symmetric_context_decrypt_last(
 
     if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB ||
             context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC) {
-        ERROR("Invalid context algorithm");
+        ERROR("Invalid cipher algorithm");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
@@ -1521,7 +1521,7 @@ sa_status symmetric_context_get_tag(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM && tag_length > AES_BLOCK_SIZE) {
+    if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM && tag_length > MAX_GCM_TAG_LENGTH) {
         ERROR("Invalid tag_length");
         return SA_STATUS_INVALID_PARAMETER;
     }
@@ -1547,7 +1547,7 @@ sa_status symmetric_context_get_tag(
 }
 
 sa_status symmetric_context_set_tag(
-        const symmetric_context_t* context,
+        symmetric_context_t* context,
         const void* tag,
         size_t tag_length) {
 
@@ -1572,7 +1572,7 @@ sa_status symmetric_context_set_tag(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM && tag_length > AES_BLOCK_SIZE) {
+    if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM && tag_length > MAX_GCM_TAG_LENGTH) {
         ERROR("Invalid tag_length");
         return SA_STATUS_INVALID_PARAMETER;
     }

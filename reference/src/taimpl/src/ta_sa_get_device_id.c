@@ -37,10 +37,9 @@ sa_status ta_sa_get_device_id(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (otp_device_id(id) != SA_STATUS_OK) {
+    sa_status status = otp_device_id(id);
+    if (status != SA_STATUS_OK)
         ERROR("otp_device_id failed");
-        return SA_STATUS_INTERNAL_ERROR;
-    }
 
-    return SA_STATUS_OK;
+    return status;
 }

@@ -54,7 +54,7 @@ extern "C" {
  * @param[in] key_length the key length.
  * @return status of the operation.
  */
-bool hmac_internal(
+sa_status hmac_internal(
         void* mac,
         size_t* mac_length,
         sa_digest_algorithm digest_algorithm,

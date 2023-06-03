@@ -101,7 +101,7 @@ size_t digest_length(sa_digest_algorithm digest_algorithm) {
             break;
     }
 
-    return (size_t) -1;
+    return SIZE_MAX;
 }
 
 sa_digest_algorithm digest_algorithm_from_name(const char* name) {

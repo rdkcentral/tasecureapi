@@ -56,7 +56,7 @@ extern "C" {
  * @param[in] in3_length length of third input buffer.
  * @return status of the operation
  */
-bool digest_sha(
+sa_status digest_sha(
         void* out,
         size_t* out_length,
         sa_digest_algorithm digest_algorithm,

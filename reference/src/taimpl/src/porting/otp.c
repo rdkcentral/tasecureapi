@@ -142,7 +142,7 @@ static bool get_common_root_key(
     return true;
 }
 
-static bool wrap_aes_cbc(
+static sa_status wrap_aes_cbc(
         void* out,
         const void* in,
         size_t in_length,
@@ -152,35 +152,35 @@ static bool wrap_aes_cbc(
 
     if (out == NULL) {
         ERROR("NULL out");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in == NULL) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in_length % AES_BLOCK_SIZE) {
         ERROR("Invalid in_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (iv == NULL) {
         ERROR("NULL iv");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (key == NULL) {
         ERROR("NULL key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
         ERROR("Invalid key_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_CIPHER_CTX* context = NULL;
     do {
         context = EVP_CIPHER_CTX_new();
@@ -217,7 +217,7 @@ static bool wrap_aes_cbc(
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_CIPHER_CTX_free(context);
@@ -231,7 +231,7 @@ static bool wrap_aes_cbc(
  * usable by any SW components. Stage 3 result shall be usable only by SecApi TA and not by any
  * other TEE or REE applications.
  */
-static bool otp_hw_key_ladder(
+static sa_status otp_hw_key_ladder(
         void* derived,
         const void* c1,
         const void* c2,
@@ -257,7 +257,7 @@ static bool otp_hw_key_ladder(
         return false;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* k1 = NULL;
     size_t k1_length = SYM_128_KEY_SIZE;
     uint8_t* k2 = NULL;
@@ -282,22 +282,25 @@ static bool otp_hw_key_ladder(
             break;
         }
 
-        if (!unwrap_aes_ecb_internal(k1, c1, AES_BLOCK_SIZE, root_key, root_key_length)) {
+        status = unwrap_aes_ecb_internal(k1, c1, AES_BLOCK_SIZE, root_key, root_key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_ecb_internal failed");
             break;
         }
 
-        if (!unwrap_aes_ecb_internal(k2, c2, AES_BLOCK_SIZE, k1, k1_length)) {
+        status = unwrap_aes_ecb_internal(k2, c2, AES_BLOCK_SIZE, k1, k1_length);
+        if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_ecb_internal failed");
             break;
         }
 
-        if (!unwrap_aes_ecb_internal(derived, c3, AES_BLOCK_SIZE, k2, k2_length)) {
+        status = unwrap_aes_ecb_internal(derived, c3, AES_BLOCK_SIZE, k2, k2_length);
+        if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_ecb_internal failed");
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     memory_memset_unoptimizable(root_key, 0, SYM_256_KEY_SIZE);
@@ -314,7 +317,7 @@ static bool otp_hw_key_ladder(
     return status;
 }
 
-static bool otp_common_key_ladder(
+static sa_status otp_common_key_ladder(
         void* derived,
         const void* c1,
         const void* c2,
@@ -340,7 +343,7 @@ static bool otp_common_key_ladder(
         return false;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_OK;
     uint8_t* k1 = NULL;
     size_t k1_length = SYM_128_KEY_SIZE;
     uint8_t* k2 = NULL;
@@ -365,22 +368,25 @@ static bool otp_common_key_ladder(
             break;
         }
 
-        if (!unwrap_aes_ecb_internal(k1, c1, AES_BLOCK_SIZE, root_key, common_root_key_length)) {
+        status = unwrap_aes_ecb_internal(k1, c1, AES_BLOCK_SIZE, root_key, common_root_key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_ecb_internal failed");
             break;
         }
 
-        if (!unwrap_aes_ecb_internal(k2, c2, AES_BLOCK_SIZE, k1, k1_length)) {
+        status = unwrap_aes_ecb_internal(k2, c2, AES_BLOCK_SIZE, k1, k1_length);
+        if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_ecb_internal failed");
             break;
         }
 
-        if (!unwrap_aes_ecb_internal(derived, c3, AES_BLOCK_SIZE, k2, k2_length)) {
+        status = unwrap_aes_ecb_internal(derived, c3, AES_BLOCK_SIZE, k2, k2_length);
+        if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_ecb_internal failed");
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     memory_memset_unoptimizable(root_key, 0, SYM_256_KEY_SIZE);
@@ -397,7 +403,7 @@ static bool otp_common_key_ladder(
     return status;
 }
 
-bool unwrap_aes_ecb_internal(
+sa_status unwrap_aes_ecb_internal(
         void* out,
         const void* in,
         size_t in_length,
@@ -406,30 +412,30 @@ bool unwrap_aes_ecb_internal(
 
     if (out == NULL) {
         ERROR("NULL out");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in == NULL) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in_length % AES_BLOCK_SIZE) {
         ERROR("Invalid in_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (key == NULL) {
         ERROR("NULL key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
         ERROR("Invalid key_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_CIPHER_CTX* context = NULL;
     do {
         context = EVP_CIPHER_CTX_new();
@@ -466,7 +472,7 @@ bool unwrap_aes_ecb_internal(
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_CIPHER_CTX_free(context);
@@ -474,7 +480,7 @@ bool unwrap_aes_ecb_internal(
     return status;
 }
 
-bool unwrap_aes_cbc_internal(
+sa_status unwrap_aes_cbc_internal(
         void* out,
         const void* in,
         size_t in_length,
@@ -484,35 +490,35 @@ bool unwrap_aes_cbc_internal(
 
     if (out == NULL) {
         ERROR("NULL out");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in == NULL) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in_length % AES_BLOCK_SIZE) {
         ERROR("Invalid in_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (iv == NULL) {
         ERROR("NULL iv");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (key == NULL) {
         ERROR("NULL key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
         ERROR("Invalid key_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_CIPHER_CTX* context = NULL;
     do {
         context = EVP_CIPHER_CTX_new();
@@ -550,7 +556,7 @@ bool unwrap_aes_cbc_internal(
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_CIPHER_CTX_free(context);
@@ -558,7 +564,7 @@ bool unwrap_aes_cbc_internal(
     return status;
 }
 
-bool unwrap_aes_gcm_internal(
+sa_status unwrap_aes_gcm_internal(
         void* out,
         const void* in,
         size_t in_length,
@@ -573,50 +579,50 @@ bool unwrap_aes_gcm_internal(
 
     if (out == NULL) {
         ERROR("NULL out");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in == NULL) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (iv == NULL) {
         ERROR("NULL iv");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (iv_length != GCM_IV_LENGTH) {
         ERROR("Invalid iv_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (aad == NULL && aad_length > 0) {
         ERROR("NULL aad");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (tag == NULL) {
         ERROR("NULL tag");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (tag_length > AES_BLOCK_SIZE) {
         ERROR("Invalid tag_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (key == NULL) {
         ERROR("NULL key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (key_length != SYM_128_KEY_SIZE && key_length != SYM_256_KEY_SIZE) {
         ERROR("Invalid key_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     EVP_CIPHER_CTX* context = NULL;
     do {
         context = EVP_CIPHER_CTX_new();
@@ -684,7 +690,7 @@ bool unwrap_aes_gcm_internal(
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     if (context != NULL) {
@@ -767,20 +773,23 @@ sa_status otp_root_key_ladder(
             break;
         }
 
-        if (!otp_hw_key_ladder(k3, c1, c2, c3)) {
+        status = otp_hw_key_ladder(k3, c1, c2, c3);
+        if (status != SA_STATUS_OK) {
             ERROR("otp_hw_key_ladder failed");
             break;
         }
 
-        if (!unwrap_aes_ecb_internal(derived, c4, AES_BLOCK_SIZE, k3, k3_length)) {
+        status = unwrap_aes_ecb_internal(derived, c4, AES_BLOCK_SIZE, k3, k3_length);
+        if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_ecb_internal failed");
             break;
         }
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        if (stored_key_create(stored_key_derived, rights, NULL, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                    derived_length, derived, derived_length) != SA_STATUS_OK) {
+        status = stored_key_create(stored_key_derived, rights, NULL, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
+                derived_length, derived, derived_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
@@ -857,20 +866,23 @@ sa_status otp_common_root_key_ladder(
             break;
         }
 
-        if (!otp_common_key_ladder(k3, c1, c2, c3)) {
+        status = otp_common_key_ladder(k3, c1, c2, c3);
+        if (status != SA_STATUS_OK) {
             ERROR("otp_common_key_ladder failed");
             break;
         }
 
-        if (!unwrap_aes_ecb_internal(derived, c4, AES_BLOCK_SIZE, k3, k3_length)) {
+        status = unwrap_aes_ecb_internal(derived, c4, AES_BLOCK_SIZE, k3, k3_length);
+        if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_ecb_internal failed");
             break;
         }
 
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        if (stored_key_create(stored_key_derived, rights, NULL, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                    derived_length, derived, derived_length) != SA_STATUS_OK) {
+        status = stored_key_create(stored_key_derived, rights, NULL, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
+                derived_length, derived, derived_length);
+        if (status != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
         }
@@ -891,7 +903,7 @@ sa_status otp_common_root_key_ladder(
     return status;
 }
 
-bool otp_wrap_aes_cbc(
+sa_status otp_wrap_aes_cbc(
         void* wrapped,
         const key_ladder_inputs_t* key_ladder_inputs,
         const void* in,
@@ -900,30 +912,30 @@ bool otp_wrap_aes_cbc(
 
     if (wrapped == NULL) {
         ERROR("NULL wrapped");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (key_ladder_inputs == NULL) {
         ERROR("NULL key_ladder_inputs");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in == NULL) {
         ERROR("NULL in");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in_length % AES_BLOCK_SIZE) {
         ERROR("Invalid in_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (iv == NULL) {
         ERROR("NULL iv");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* wrapping_key = NULL;
     size_t wrapping_key_length = SYM_128_KEY_SIZE;
     do {
@@ -934,17 +946,19 @@ bool otp_wrap_aes_cbc(
         }
 
         // derive wrapping key
-        if (!otp_hw_key_ladder(wrapping_key, key_ladder_inputs->c1, key_ladder_inputs->c2, key_ladder_inputs->c3)) {
+        status = otp_hw_key_ladder(wrapping_key, key_ladder_inputs->c1, key_ladder_inputs->c2, key_ladder_inputs->c3);
+        if (status != SA_STATUS_OK) {
             ERROR("otp_hw_key_ladder failed");
             break;
         }
 
-        if (!wrap_aes_cbc(wrapped, in, in_length, iv, wrapping_key, wrapping_key_length)) {
+        status = wrap_aes_cbc(wrapped, in, in_length, iv, wrapping_key, wrapping_key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("wrap_aes_cbc failed");
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     if (wrapping_key != NULL) {
@@ -955,7 +969,7 @@ bool otp_wrap_aes_cbc(
     return status;
 }
 
-bool otp_unwrap_aes_cbc(
+sa_status otp_unwrap_aes_cbc(
         void* out,
         const key_ladder_inputs_t* key_ladder_inputs,
         const void* wrapped,
@@ -964,30 +978,30 @@ bool otp_unwrap_aes_cbc(
 
     if (out == NULL) {
         ERROR("NULL out");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (key_ladder_inputs == NULL) {
         ERROR("NULL key_ladder_inputs");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (wrapped == NULL) {
         ERROR("NULL wrapped");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (wrapped_length % AES_BLOCK_SIZE) {
         ERROR("Invalid wrapped_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (iv == NULL) {
         ERROR("NULL iv");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* wrapping_key = NULL;
     size_t wrapping_key_length = SYM_128_KEY_SIZE;
     do {
@@ -998,17 +1012,19 @@ bool otp_unwrap_aes_cbc(
         }
 
         // derive wrapping key
-        if (!otp_hw_key_ladder(wrapping_key, key_ladder_inputs->c1, key_ladder_inputs->c2, key_ladder_inputs->c3)) {
+        status = otp_hw_key_ladder(wrapping_key, key_ladder_inputs->c1, key_ladder_inputs->c2, key_ladder_inputs->c3);
+        if (status != SA_STATUS_OK) {
             ERROR("otp_hw_key_ladder failed");
             break;
         }
 
-        if (!unwrap_aes_cbc_internal(out, wrapped, wrapped_length, iv, wrapping_key, wrapping_key_length)) {
+        status = unwrap_aes_cbc_internal(out, wrapped, wrapped_length, iv, wrapping_key, wrapping_key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_cbc_internal failed");
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     if (wrapping_key != NULL) {
@@ -1019,7 +1035,7 @@ bool otp_unwrap_aes_cbc(
     return status;
 }
 
-bool otp_unwrap_aes_gcm(
+sa_status otp_unwrap_aes_gcm(
         void* out,
         const key_ladder_inputs_t* key_ladder_inputs,
         const void* wrapped,
@@ -1033,35 +1049,35 @@ bool otp_unwrap_aes_gcm(
 
     if (out == NULL) {
         ERROR("NULL out");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (key_ladder_inputs == NULL) {
         ERROR("NULL key_ladder_inputs");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (wrapped == NULL) {
         ERROR("NULL wrapped");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (iv == NULL) {
         ERROR("NULL iv");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (aad == NULL) {
         ERROR("NULL aad");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (tag == NULL) {
         ERROR("NULL tag");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* wrapping_key = NULL;
     size_t wrapping_key_length = SYM_128_KEY_SIZE;
     do {
@@ -1072,18 +1088,20 @@ bool otp_unwrap_aes_gcm(
         }
 
         // derive wrapping key
-        if (!otp_hw_key_ladder(wrapping_key, key_ladder_inputs->c1, key_ladder_inputs->c2, key_ladder_inputs->c3)) {
+        status = otp_hw_key_ladder(wrapping_key, key_ladder_inputs->c1, key_ladder_inputs->c2, key_ladder_inputs->c3);
+        if (status != SA_STATUS_OK) {
             ERROR("otp_hw_key_ladder failed");
             break;
         }
 
-        if (!unwrap_aes_gcm_internal(out, wrapped, wrapped_length, iv, iv_length, aad, aad_length, tag, tag_length,
-                    wrapping_key, wrapping_key_length)) {
+        status = unwrap_aes_gcm_internal(out, wrapped, wrapped_length, iv, iv_length, aad, aad_length, tag, tag_length,
+                wrapping_key, wrapping_key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_gcm_internal failed");
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     if (wrapping_key != NULL) {
@@ -1094,7 +1112,7 @@ bool otp_unwrap_aes_gcm(
     return status;
 }
 
-bool otp_hmac_sha256(
+sa_status otp_hmac_sha256(
         void* mac,
         const key_ladder_inputs_t* key_ladder_inputs,
         const void* in1,
@@ -1106,30 +1124,30 @@ bool otp_hmac_sha256(
 
     if (mac == NULL) {
         ERROR("NULL mac");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (key_ladder_inputs == NULL) {
         ERROR("NULL key_ladder_inputs");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in1 == NULL && in1_length > 0) {
         ERROR("NULL in1");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in2 == NULL && in2_length > 0) {
         ERROR("NULL in2");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in3 == NULL && in3_length > 0) {
         ERROR("NULL in3");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* hmac_key = NULL;
     size_t hmac_key_length = SYM_128_KEY_SIZE;
     do {
@@ -1140,19 +1158,21 @@ bool otp_hmac_sha256(
         }
 
         // derive integrity key
-        if (!otp_hw_key_ladder(hmac_key, key_ladder_inputs->c1, key_ladder_inputs->c2, key_ladder_inputs->c3)) {
+        status = otp_hw_key_ladder(hmac_key, key_ladder_inputs->c1, key_ladder_inputs->c2, key_ladder_inputs->c3);
+        if (status != SA_STATUS_OK) {
             ERROR("otp_hw_key_ladder failed");
             break;
         }
 
         size_t mac_length = SHA256_DIGEST_LENGTH;
-        if (!hmac_internal(mac, &mac_length, SA_DIGEST_ALGORITHM_SHA256, in1, in1_length, in2, in2_length, in3,
-                    in3_length, hmac_key, hmac_key_length)) {
+        status = hmac_internal(mac, &mac_length, SA_DIGEST_ALGORITHM_SHA256, in1, in1_length, in2, in2_length, in3,
+                in3_length, hmac_key, hmac_key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("hmac_internal failed");
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     if (hmac_key != NULL) {

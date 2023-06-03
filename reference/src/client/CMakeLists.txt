@@ -85,7 +85,7 @@ target_compile_options(saclient PRIVATE -Werror -Wall -Wextra -Wno-type-limits -
 set_target_properties(saclient PROPERTIES
         LINKER_LANGUAGE C
         SO_VERSION 3.2
-        VERSION 3.2.0
+        VERSION 3.2.1
         )
 
 target_include_directories(saclient

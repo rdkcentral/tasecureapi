@@ -41,7 +41,7 @@ static sa_status decrypt(
         size_t* enc_byte_count,
         uint8_t* iv,
         sa_cipher_algorithm cipher_algorithm,
-        const symmetric_context_t* symmetric_context) {
+        symmetric_context_t* symmetric_context) {
 
     // For AES-CTR mode, IV is an 8 byte nonce followed by an 8 byte counter. Openssl as well as other implementations
     // treat all 16 bytes as a counter. This code accounts for the rollover condition.
@@ -191,7 +191,7 @@ sa_status cenc_process_sample(
         }
 
         sa_cipher_algorithm cipher_algorithm = cipher_get_algorithm(cipher);
-        const symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
+        symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
         if (symmetric_context == NULL) {
             ERROR("cipher_get_symmetric_context failed");
             status = SA_STATUS_NULL_PARAMETER;

@@ -127,7 +127,7 @@ void hmac_context_free(hmac_context_t* context);
  * @param[in] stored_key key.
  * @return status of the operation.
  */
-bool hmac(
+sa_status hmac(
         void* mac,
         size_t* mac_length,
         sa_digest_algorithm digest_algorithm,

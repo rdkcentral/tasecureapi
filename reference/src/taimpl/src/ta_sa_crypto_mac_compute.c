@@ -73,7 +73,7 @@ sa_status ta_sa_crypto_mac_compute(
             size_t required_length = digest_length(digest_algorithm);
             if (out == NULL) {
                 *out_length = required_length;
-                status = SA_STATUS_OK;
+                status = *out_length == SIZE_MAX ? SA_STATUS_INVALID_PARAMETER : SA_STATUS_OK;
                 break;
             }
 

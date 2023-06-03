@@ -35,6 +35,7 @@
 #include <openssl/rsa.h>
 
 #define DEFAULT_OAEP_DIGEST "SHA1"
+#define UNSUPPORTED_OPERATION (-2)
 
 typedef struct {
     sa_provider_context* provider_context;
@@ -314,7 +315,7 @@ static int asym_cipher_decrypt(void* ctx,
             asym_cipher_context->key_data->private_key, parameters);
     if (status == SA_STATUS_OPERATION_NOT_SUPPORTED) {
         ERROR("sa_crypto_cipher_init operation not supported");
-        return 0;
+        return UNSUPPORTED_OPERATION;
     }
 
     if (status != SA_STATUS_OK) {

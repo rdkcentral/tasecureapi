@@ -219,18 +219,18 @@ bool svp_copy(
 
     for (size_t i = 0; i < offsets_length; i++) {
         unsigned long out_position;
-        if (add_overflow((unsigned long)out_svp_buffer->svp_memory, offsets[i].out_offset, &out_position)) {
+        if (add_overflow((unsigned long) out_svp_buffer->svp_memory, offsets[i].out_offset, &out_position)) {
             ERROR("Integer overflow");
             return false;
         }
 
         unsigned long in_position;
-        if (add_overflow((unsigned long)in_svp_buffer->svp_memory, offsets[i].in_offset, &in_position)) {
+        if (add_overflow((unsigned long) in_svp_buffer->svp_memory, offsets[i].in_offset, &in_position)) {
             ERROR("Integer overflow");
             return false;
         }
 
-        memcpy((void*)out_position, (void*)in_position, offsets[i].length); // NOLINT
+        memcpy((void*) out_position, (void*) in_position, offsets[i].length); // NOLINT
     }
     return true;
 }
@@ -272,7 +272,7 @@ bool svp_key_check(
         }
 
         size_t key_length = stored_key_get_length(stored_key);
-        if (!unwrap_aes_ecb_internal(decrypted, in_bytes, bytes_to_process, key, key_length)) {
+        if (unwrap_aes_ecb_internal(decrypted, in_bytes, bytes_to_process, key, key_length) != SA_STATUS_OK) {
             ERROR("unwrap_aes_ecb failed");
             break;
         }
@@ -318,12 +318,12 @@ bool svp_digest(
     }
 
     unsigned long position;
-    if (add_overflow((unsigned long)svp_buffer->svp_memory, offset, &position)) {
+    if (add_overflow((unsigned long) svp_buffer->svp_memory, offset, &position)) {
         ERROR("Integer overflow");
         return false;
     }
 
-    if (!digest_sha(out, out_length, digest_algorithm, (uint8_t*) position, length, NULL, 0, NULL, 0)) { // NOLINT
+    if (digest_sha(out, out_length, digest_algorithm, (uint8_t*) position, length, NULL, 0, NULL, 0) != SA_STATUS_OK) { // NOLINT
         ERROR("digest_sha failed");
         return false;
     }

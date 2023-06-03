@@ -55,7 +55,7 @@ namespace {
         ASSERT_EQ(bytes_to_process, clear.size() / 2);
 
         // Verify the encryption.
-        ASSERT_TRUE(verify_encrypt(out_buffer.get(), clear, parameters, true));
+        ASSERT_TRUE(verify_encrypt(out_buffer.get(), clear, parameters, false));
     }
 
     TEST_P(SaCryptoCipherWithSvpTest, processAesCtrDecryptResumePartialBlock) {

@@ -517,7 +517,7 @@ std::string SaKeyImportSocBase::generate_encrypted_key(
     }
 
     std::vector<uint8_t> encrypted_key(key.size());
-    tag.resize(AES_BLOCK_SIZE);
+    tag.resize(MAX_GCM_TAG_LENGTH);
 
     std::vector<uint8_t> empty;
     std::vector<uint8_t> root_key;

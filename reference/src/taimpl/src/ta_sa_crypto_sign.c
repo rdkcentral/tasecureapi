@@ -259,7 +259,7 @@ static sa_status ta_sa_crypto_sign_rsa_pss(
         }
 
         size_t digest_length_bytes = digest_length(parameters->digest_algorithm);
-        if (digest_length_bytes == 0) {
+        if (digest_length_bytes == SIZE_MAX) {
             ERROR("Invalid digest");
             status = SA_STATUS_INVALID_PARAMETER;
             break;
