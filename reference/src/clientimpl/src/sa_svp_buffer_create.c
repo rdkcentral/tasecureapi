@@ -48,7 +48,7 @@ sa_status sa_svp_buffer_create(
         CREATE_COMMAND(sa_svp_buffer_create_s, svp_buffer_create);
         svp_buffer_create->api_version = API_VERSION;
         svp_buffer_create->svp_buffer = *svp_buffer;
-        svp_buffer_create->svp_memory = (uintptr_t) svp_memory;
+        svp_buffer_create->svp_memory = (uint64_t) svp_memory;
         svp_buffer_create->size = size;
 
         // clang-format off

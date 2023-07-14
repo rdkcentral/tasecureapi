@@ -813,7 +813,7 @@ static sa_status ta_invoke_key_header(
         const sa_uuid* uuid) {
 
     if (CHECK_NOT_TA_PARAM_INOUT(param_types[0]) || params[0].mem_ref_size != sizeof(sa_key_header_s) ||
-            CHECK_NOT_TA_PARAM_NULL(param_types[1], params[1]) ||
+            CHECK_NOT_TA_PARAM_OUT(param_types[1]) || params[1].mem_ref_size != sizeof(sa_header_s) ||
             CHECK_NOT_TA_PARAM_NULL(param_types[2], params[2]) ||
             CHECK_NOT_TA_PARAM_NULL(param_types[3], params[3])) {
         ERROR("Invalid param[0] or param type");
@@ -825,7 +825,25 @@ static sa_status ta_invoke_key_header(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_key_header(&key_header->header, key_header->key, context->client, uuid);
+    sa_header header;
+    memory_memset_unoptimizable(&header, 0, sizeof(sa_header));
+    sa_status status = ta_sa_key_header(&header, key_header->key, context->client, uuid);
+    sa_header_s* header_s = params[1].mem_ref;
+    memory_memset_unoptimizable(header_s, 0, sizeof(sa_header_s));
+    memcpy(header_s->magic, header.magic, NUM_MAGIC);
+    memcpy(&header_s->rights, &header.rights, sizeof(sa_rights));
+    header_s->type = header.type;
+    header_s->size = header.size;
+    if (header.type == SA_KEY_TYPE_EC) {
+        header_s->type_parameters.curve = header.type_parameters.curve;
+    } else if (header.type == SA_KEY_TYPE_DH) {
+        memcpy(header_s->type_parameters.dh_parameters.p, header.type_parameters.dh_parameters.p, DH_MAX_MOD_SIZE);
+        header_s->type_parameters.dh_parameters.p_length = header.type_parameters.dh_parameters.p_length;
+        memcpy(header_s->type_parameters.dh_parameters.g, header.type_parameters.dh_parameters.g, DH_MAX_MOD_SIZE);
+        header_s->type_parameters.dh_parameters.g_length = header.type_parameters.dh_parameters.g_length;
+    }
+
+    return status;
 }
 
 static sa_status ta_invoke_key_digest(
@@ -1465,16 +1483,23 @@ static sa_status ta_invoke_svp_buffer_write(
     sa_status status;
     sa_svp_offset* offsets;
     do {
-        offsets = memory_secure_alloc(params[2].mem_ref_size);
+        size_t offsets_length = params[2].mem_ref_size / sizeof(sa_svp_offset_s);
+        offsets = memory_secure_alloc(offsets_length * sizeof(sa_svp_offset));
         if (offsets == NULL) {
             ERROR("memory_secure_alloc failed");
             status = SA_STATUS_NULL_PARAMETER;
             break;
         }
 
-        memcpy(offsets, params[2].mem_ref, params[2].mem_ref_size);
+        sa_svp_offset_s* offset_s = params[2].mem_ref;
+        for (size_t i = 0; i < offsets_length; i++) {
+            offsets[i].out_offset = offset_s[i].out_offset;
+            offsets[i].in_offset = offset_s[i].in_offset;
+            offsets[i].length = offset_s[i].length;
+        }
+
         status = ta_sa_svp_buffer_write(svp_buffer_write->out, params[1].mem_ref, params[1].mem_ref_size,
-                offsets, params[2].mem_ref_size / sizeof(sa_svp_offset), context->client, uuid);
+                offsets, offsets_length, context->client, uuid);
     } while (false);
 
     if (offsets != NULL)
@@ -1512,16 +1537,23 @@ static sa_status ta_invoke_svp_buffer_copy(
     sa_status status;
     sa_svp_offset* offsets;
     do {
-        offsets = memory_secure_alloc(params[1].mem_ref_size);
+        size_t offsets_length = params[1].mem_ref_size / sizeof(sa_svp_offset_s);
+        offsets = memory_secure_alloc(offsets_length * sizeof(sa_svp_offset));
         if (offsets == NULL) {
             ERROR("memory_secure_alloc failed");
             status = SA_STATUS_NULL_PARAMETER;
             break;
         }
 
-        memcpy(offsets, params[1].mem_ref, params[1].mem_ref_size);
+        sa_svp_offset_s* offset_s = params[1].mem_ref;
+        for (size_t i = 0; i < offsets_length; i++) {
+            offsets[i].out_offset = offset_s[i].out_offset;
+            offsets[i].in_offset = offset_s[i].in_offset;
+            offsets[i].length = offset_s[i].length;
+        }
+
         status = ta_sa_svp_buffer_copy(svp_buffer_copy->out, svp_buffer_copy->in,
-                offsets, params[1].mem_ref_size / sizeof(sa_svp_offset), context->client, uuid);
+                offsets, offsets_length, context->client, uuid);
     } while (false);
 
     if (offsets != NULL)
@@ -1651,14 +1683,20 @@ static sa_status ta_invoke_process_common_encryption(
             return SA_STATUS_INVALID_PARAMETER;
         }
 
-        sample.subsample_lengths = memory_secure_alloc(params[1].mem_ref_size);
+        sample.subsample_lengths =
+                memory_secure_alloc(process_common_encryption->subsample_count * sizeof(sa_subsample_length));
         if (sample.subsample_lengths == NULL) {
             ERROR("memory_secure_alloc failed");
             status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
-        memcpy(sample.subsample_lengths, params[1].mem_ref, params[1].mem_ref_size);
+        sa_subsample_length_s* subsample_length_s = params[1].mem_ref;
+        for (size_t j = 0; j < sample.subsample_count; j++) {
+            sample.subsample_lengths[j].bytes_of_clear_data = subsample_length_s[j].bytes_of_clear_data;
+            sample.subsample_lengths[j].bytes_of_protected_data = subsample_length_s[j].bytes_of_protected_data;
+        }
+
         sample.iv = &process_common_encryption->iv;
         sample.iv_length = AES_BLOCK_SIZE;
         sample.crypt_byte_block = process_common_encryption->crypt_byte_block;

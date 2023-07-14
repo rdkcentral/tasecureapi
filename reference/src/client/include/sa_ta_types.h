@@ -102,7 +102,7 @@ typedef enum {
  */
 typedef struct {
     void* mem_ref;
-    size_t mem_ref_size;
+    uint64_t mem_ref_size;
 } ta_param;
 
 // sa_get_version
@@ -117,7 +117,7 @@ typedef struct {
 // param[1] OUT - name
 typedef struct {
     uint8_t api_version;
-    size_t name_length;
+    uint64_t name_length;
 } sa_get_name_s;
 
 // sa_get_device_id
@@ -143,7 +143,7 @@ typedef struct {
     sa_key key;
     sa_rights rights;
     uint32_t key_type;
-    size_t key_length; // key_length or curve
+    uint64_t key_length; // key_length or curve
 } sa_key_generate_s;
 
 // sa_key_export
@@ -152,7 +152,7 @@ typedef struct {
 // param[2] IN - mixin+mixin_length
 typedef struct {
     uint8_t api_version;
-    size_t out_length;
+    uint64_t out_length;
     sa_key key;
 } sa_key_export_s;
 
@@ -180,7 +180,7 @@ typedef struct {
     uint32_t key_type;
     uint32_t curve;
     uint32_t cipher_algorithm;
-    uint32_t wrapping_key;
+    sa_key wrapping_key;
 } sa_key_unwrap_s;
 
 typedef struct {
@@ -189,38 +189,41 @@ typedef struct {
 
 typedef struct {
     uint8_t iv[GCM_IV_LENGTH];
-    size_t iv_length;
+    uint64_t iv_length;
     uint8_t tag[MAX_GCM_TAG_LENGTH];
-    uint8_t tag_length;
+    uint64_t tag_length;
 } sa_unwrap_parameters_aes_gcm_s;
 
 typedef struct {
     uint8_t counter[CHACHA20_COUNTER_LENGTH];
-    size_t counter_length;
+    uint64_t counter_length;
     uint8_t nonce[CHACHA20_NONCE_LENGTH];
-    size_t nonce_length;
+    uint64_t nonce_length;
 } sa_unwrap_parameters_chacha20_s;
 
 typedef struct {
     uint8_t nonce[CHACHA20_NONCE_LENGTH];
-    size_t nonce_length;
+    uint64_t nonce_length;
     uint8_t tag[CHACHA20_TAG_LENGTH];
-    uint8_t tag_length;
+    uint64_t tag_length;
 } sa_unwrap_parameters_chacha20_poly1305_s;
 
 typedef struct {
-    sa_digest_algorithm digest_algorithm;
-    sa_digest_algorithm mgf1_digest_algorithm;
+    uint32_t digest_algorithm;
+    uint32_t mgf1_digest_algorithm;
 } sa_unwrap_parameters_rsa_oaep_s;
 
-typedef sa_unwrap_parameters_ec_elgamal sa_unwrap_parameters_ec_elgamal_s;
+typedef struct {
+    uint64_t offset;
+    uint64_t key_length;
+} sa_unwrap_parameters_ec_elgamal_s;
 
 // sa_key_get_public
 // param[0] INOUT - sa_key_get_public_s
 // param[1] OUT - out + out_length
 typedef struct {
     uint8_t api_version;
-    size_t out_length;
+    uint64_t out_length;
     sa_key key;
 } sa_key_get_public_s;
 
@@ -245,27 +248,27 @@ typedef struct {
 } sa_kdf_parameters_root_key_ladder_s;
 
 typedef struct {
-    size_t key_length;
+    uint64_t key_length;
     uint32_t digest_algorithm;
     sa_key parent;
 } sa_kdf_parameters_hkdf_s;
 
 typedef struct {
-    size_t key_length;
+    uint64_t key_length;
     uint32_t digest_algorithm;
     sa_key parent;
 } sa_kdf_parameters_concat_s;
 
 typedef struct {
-    size_t key_length;
+    uint64_t key_length;
     uint32_t digest_algorithm;
     sa_key parent;
 } sa_kdf_parameters_ansi_x963_s;
 
 typedef struct {
-    size_t key_length;
+    uint64_t key_length;
     sa_key parent;
-    uint32_t counter;
+    uint8_t counter;
 } sa_kdf_parameters_cmac_s;
 
 typedef sa_kdf_parameters_netflix sa_kdf_parameters_netflix_s;
@@ -299,20 +302,36 @@ typedef struct {
 
 // sa_key_header
 // param[0] INOUT - sa_key_header_s
+// param[1] OUT - sa_header_s
 typedef struct {
     uint8_t api_version;
-    sa_header header;
     sa_key key;
 } sa_key_header_s;
+
+typedef struct {
+    char magic[NUM_MAGIC];
+    sa_rights rights;
+    uint8_t type;
+    union {
+        sa_elliptic_curve curve;
+        struct {
+            uint8_t p[DH_MAX_MOD_SIZE];
+            uint64_t p_length;
+            uint8_t g[DH_MAX_MOD_SIZE];
+            uint64_t g_length;
+        } dh_parameters;
+    } type_parameters;
+    uint16_t size;
+} sa_header_s;
 
 // sa_key_digest
 // param[0] INOUT - sa_key_digest_s
 // param[1] OUT - out + length
 typedef struct {
     uint8_t api_version;
-    size_t out_length;
+    uint64_t out_length;
     sa_key key;
-    sa_digest_algorithm digest_algorithm;
+    uint32_t digest_algorithm;
 } sa_key_digest_s;
 
 // sa_crypto_random
@@ -335,8 +354,8 @@ typedef struct {
 } sa_crypto_cipher_init_s;
 
 typedef struct {
-    sa_digest_algorithm digest_algorithm;
-    sa_digest_algorithm mgf1_digest_algorithm;
+    uint32_t digest_algorithm;
+    uint32_t mgf1_digest_algorithm;
 } sa_cipher_parameters_rsa_oaep_s;
 
 // sa_crypto_cipher_update_iv_s
@@ -349,16 +368,16 @@ typedef struct {
 
 // sa_crypto_cipher_process
 // param[0] INOUT - sa_crypto_cipher_process_s
-// param[1] OUT - out.buffer
-// param[2] IN - in.buffer
+// param[1] OUT - out.context.X.buffer + length
+// param[2] IN - in.context.X.buffer + length
 typedef struct {
     uint8_t api_version;
     sa_crypto_cipher_context context;
-    size_t bytes_to_process;
+    uint64_t bytes_to_process;
     uint32_t out_buffer_type;
-    size_t out_offset;
+    uint64_t out_offset;
     uint32_t in_buffer_type;
-    size_t in_offset;
+    uint64_t in_offset;
 } sa_crypto_cipher_process_s;
 
 // sa_crypto_cipher_process_last
@@ -406,7 +425,7 @@ typedef struct {
 // param[1] OUT - out + length
 typedef struct {
     uint8_t api_version;
-    size_t out_length;
+    uint64_t out_length;
     sa_crypto_mac_context context;
 } sa_crypto_mac_compute_s;
 
@@ -423,13 +442,13 @@ typedef struct {
 // param[2] IN - in
 typedef struct {
     uint8_t api_version;
-    size_t out_length;
+    uint64_t out_length;
     uint32_t signature_algorithm;
     uint32_t digest_algorithm;
     sa_key key;
-    size_t salt_length;                        // RSA PSS
-    sa_digest_algorithm mgf1_digest_algorithm; // RSA PSS
-    bool precomputed_digest;
+    uint64_t salt_length; // RSA PSS
+    uint32_t mgf1_digest_algorithm; // RSA PSS
+    uint8_t precomputed_digest;
 } sa_crypto_sign_s;
 
 // sa_svp_supported
@@ -440,35 +459,40 @@ typedef struct {
 
 // sa_svp_buffer_create
 // param[0] INOUT - sa_svp_buffer
-// param[1] IN - buffer+size
 typedef struct {
     uint8_t api_version;
     sa_svp_buffer svp_buffer;
-    uintptr_t svp_memory;
-    size_t size;
+    uint64_t svp_memory;
+    uint64_t size;
 } sa_svp_buffer_create_s;
 
 // sa_svp_buffer_release
 // param[0] INOUT - sa_svp_buffer_release_s
 typedef struct {
     uint8_t api_version;
-    uintptr_t svp_memory;
-    size_t size;
+    uint64_t svp_memory;
+    uint64_t size;
     sa_svp_buffer svp_buffer;
 } sa_svp_buffer_release_s;
 
 // sa_svp_buffer_write
 // param[0] INOUT - sa_svp_buffer_write_s
 // param[1] IN - in + in_length
-// param[2] IN - sa_svp_offset
+// param[2] IN - sa_svp_offset_s
 typedef struct {
     uint8_t api_version;
     sa_svp_buffer out;
 } sa_svp_buffer_write_s;
 
+typedef struct {
+    uint64_t out_offset;
+    uint64_t in_offset;
+    uint64_t length;
+} sa_svp_offset_s;
+
 // sa_svp_buffer_copy
 // param[0] INOUT - sa_svp_buffer_copy_s
-// param[1] IN - sa_svp_block
+// param[1] IN - sa_svp_offset_s
 typedef struct {
     uint8_t api_version;
     sa_svp_buffer out;
@@ -483,8 +507,8 @@ typedef struct {
     uint8_t api_version;
     sa_key key;
     uint32_t in_buffer_type;
-    size_t in_offset;
-    size_t bytes_to_process;
+    uint64_t in_offset;
+    uint64_t bytes_to_process;
 } sa_svp_key_check_s;
 
 // sa_svp_buffer_check
@@ -493,28 +517,34 @@ typedef struct {
 typedef struct {
     uint8_t api_version;
     sa_svp_buffer svp_buffer;
-    size_t offset;
-    size_t length;
+    uint64_t offset;
+    uint64_t length;
     uint32_t digest_algorithm;
 } sa_svp_buffer_check_s;
 
 // sa_process_common_encryption (1 sample per call)
 // param[0] INOUT - sa_process_common_encryption_s
 // param[1] IN - subsample_lengths
-// param[2] OUT - out.buffer
-// param[3] IN - in.buffer
+// param[2] OUT - out.context.X.buffer + length
+// param[3] IN - in.context.X.buffer + length
 typedef struct {
     uint8_t api_version;
     uint8_t iv[AES_BLOCK_SIZE];
-    size_t crypt_byte_block;
-    size_t skip_byte_block;
-    size_t subsample_count;
+    uint64_t crypt_byte_block;
+    uint64_t skip_byte_block;
+    uint64_t subsample_count;
     sa_crypto_cipher_context context;
     uint32_t out_buffer_type;
-    size_t out_offset;
+    uint64_t out_offset;
     uint32_t in_buffer_type;
-    size_t in_offset;
+    uint64_t in_offset;
 } sa_process_common_encryption_s;
+
+typedef struct {
+    uint64_t bytes_of_clear_data;
+    uint64_t bytes_of_protected_data;
+} sa_subsample_length_s;
+
 #ifdef __cplusplus
 }
 #endif

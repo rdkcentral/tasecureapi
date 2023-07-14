@@ -41,7 +41,7 @@ TEST_P(SaProviderPkcs7Test, pkcs7Test) {
     OSSL_LIB_CTX* lib_ctx = sa_get_provider();
     ASSERT_NE(lib_ctx, nullptr);
     OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);

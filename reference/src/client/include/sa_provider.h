@@ -35,7 +35,7 @@
  * sa_key key = // Load key into SecApi 3;
  * OSSL_LIB_CTX* lib_ctx = sa_get_provider();
  * OSSL_PARAM params[] = {
- *       OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key),
+ *       OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key),
  *       OSSL_PARAM_construct_int(OSSL_PARAM_SA_KEY_DELETE, 1),
  *       OSSL_PARAM_construct_end()};
  * EVP_PKEY_CTX* = EVP_PKEY_CTX_new_from_name(lib_ctx, "RSA", nullptr);
@@ -143,7 +143,7 @@
  * OSSL_LIB_CTX* lib_ctx = sa_get_provider();
  * EVP_MAC* evp_mac = EVP_MAC_fetch(lib_ctx, "HMAC", NULL);
  * OSSL_PARAM params[] = {
- *     OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key),
+ *     OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key),
  *     OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, "SHA256", 6),
  *     OSSL_PARAM_construct_end()};
  * // A clear raw HMAC/CMAC key can alternatively be passed into the key parameter--SA_KEY_DELETE will automatically
@@ -162,7 +162,7 @@
  * OSSL_LIB_CTX* lib_ctx = sa_get_provider();
  * EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch(lib_ctx, "aes-128-cbc", nullptr);
  * OSSL_PARAM params[] = {
- *     OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key),
+ *     OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key),
  *     OSSL_PARAM_construct_end()};
  * EVP_CIPHER_CTX* evp_cipher_ctx = EVP_CIPHER_CTX_new();
  * // A clear raw symmetric key can alternatively be passed into the key parameter--SA_KEY_DELETE will automatically

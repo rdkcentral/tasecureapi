@@ -47,7 +47,7 @@ TEST_P(SaProviderSignTest, digestSignWithUpdateFinalTest) {
     ASSERT_NE(lib_ctx, nullptr);
 
     OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
@@ -120,7 +120,7 @@ TEST_P(SaProviderSignTest, signTest) {
     ASSERT_NE(lib_ctx, nullptr);
 
     OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
@@ -276,7 +276,7 @@ TEST_P(SaProviderSignDefaultDigestSignTest, defaultDigestTest) {
     ASSERT_NE(lib_ctx, nullptr);
 
     OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
@@ -337,7 +337,7 @@ TEST_P(SaProviderSignDefaultDigestSignTest, defaultDigestTest2) {
     ASSERT_NE(lib_ctx, nullptr);
 
     OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
@@ -422,7 +422,7 @@ TEST_F(SaProviderSignTest, defaultPaddingTest) {
     ASSERT_NE(lib_ctx, nullptr);
 
     OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
@@ -501,7 +501,7 @@ TEST_F(SaProviderSignTest, defaultSaltTest) {
     ASSERT_NE(lib_ctx, nullptr);
 
     OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
@@ -584,7 +584,7 @@ TEST_F(SaProviderSignTest, defaultMgf1DigestTest) {
     ASSERT_NE(lib_ctx, nullptr);
 
     OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
@@ -670,7 +670,7 @@ TEST_P(SaProviderSignTest, digestSignNoUpdateFinalTest) {
     ASSERT_NE(lib_ctx, nullptr);
 
     OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
@@ -738,7 +738,7 @@ TEST_P(SaProviderSignEdTest, digestSignTest) {
     ASSERT_NE(lib_ctx, nullptr);
 
     OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
 
     const char* key_name = get_key_name(key_type, curve);
