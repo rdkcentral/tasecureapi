@@ -38,16 +38,16 @@ namespace {
             auto nonce = random(CHACHA20_NONCE_LENGTH);
             auto counter = random(CHACHA20_COUNTER_LENGTH);
             sa_cipher_parameters_chacha20 parameters = {counter.data(), counter.size(), nonce.data(),
-                                                        nonce.size()};
+                    nonce.size()};
             status = sa_crypto_cipher_init(cipher_context.get(), SA_CIPHER_ALGORITHM_CHACHA20,
-                                           SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
+                    SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         } else if (strcmp(algorithm_name, SN_chacha20_poly1305) == 0) {
             auto cipher_context = create_uninitialized_sa_crypto_cipher_context();
             auto nonce = random(CHACHA20_NONCE_LENGTH);
             auto aad = random(CHACHA20_COUNTER_LENGTH);
             sa_cipher_parameters_chacha20_poly1305 parameters = {nonce.data(), nonce.size(), aad.data(), aad.size()};
             status = sa_crypto_cipher_init(cipher_context.get(), SA_CIPHER_ALGORITHM_CHACHA20_POLY1305,
-                                           SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
+                    SA_CIPHER_MODE_ENCRYPT, *key, &parameters);
         }
 
         return status;
