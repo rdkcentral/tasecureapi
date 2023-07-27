@@ -77,11 +77,6 @@ typedef std::tuple<sa_key_type, size_t> SaEnginePkcs7TestType;
 class SaEnginePkcs7Test : public ::testing::TestWithParam<SaEnginePkcs7TestType>,
                           public SaEngineTest {};
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-class SaEnginePkcs7EdTest : public ::testing::TestWithParam<SaEnginePkcs7TestType>,
-                            public SaEngineTest {};
-#endif
-
 typedef std::tuple<sa_key_type, size_t, int, sa_digest_algorithm, sa_digest_algorithm, int> SaEnginePkeyEncryptTestType;
 
 class SaEnginePkeyEncryptTest : public ::testing::TestWithParam<SaEnginePkeyEncryptTestType>,

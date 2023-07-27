@@ -30,7 +30,7 @@ namespace {
         parameters.iv = random(GCM_IV_LENGTH);
         parameters.aad = random(36);
         parameters.clear_key = random(SYM_128_KEY_SIZE);
-        parameters.tag = std::vector<uint8_t>(AES_BLOCK_SIZE);
+        parameters.tag = std::vector<uint8_t>(MAX_GCM_TAG_LENGTH - 4);
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -77,7 +77,7 @@ namespace {
         parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
         parameters.iv = random(GCM_IV_LENGTH);
         parameters.aad = random(36);
-        parameters.tag = std::vector<uint8_t>(AES_BLOCK_SIZE);
+        parameters.tag = std::vector<uint8_t>(MAX_GCM_TAG_LENGTH - 4);
         parameters.clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;

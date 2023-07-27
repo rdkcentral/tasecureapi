@@ -333,9 +333,8 @@ static int cipher_cipher(
                     continue; // NOLINT
             }
 
-            sa_status status = sa_crypto_cipher_init(&cipher_context->cipher_context,
-                    cipher_context->cipher_algorithm, cipher_context->mode,
-                    cipher_context->key, parameters);
+            sa_status status = sa_crypto_cipher_init(&cipher_context->cipher_context, cipher_context->cipher_algorithm,
+                    cipher_context->mode, cipher_context->key, parameters);
             if (status != SA_STATUS_OK) {
                 ERROR("sa_crypto_cipher_init failed %d", status);
                 break;
@@ -361,12 +360,9 @@ static int cipher_cipher(
                 while (total_length >= cipher_context->block_size) {
                     if (cipher_context->remaining_block_length > 0) {
                         // Start with remaining_block and add in to it.
-                        memcpy(cipher_context->remaining_block +
-                                        cipher_context->remaining_block_length,
-                                in + position,
+                        memcpy(cipher_context->remaining_block + cipher_context->remaining_block_length, in + position,
                                 cipher_context->block_size - cipher_context->remaining_block_length);
-                        position += cipher_context->block_size -
-                                    cipher_context->remaining_block_length;
+                        position += cipher_context->block_size - cipher_context->remaining_block_length;
                         cipher_context->remaining_block_length = 0;
 
                         in_buffer.context.clear.buffer = cipher_context->remaining_block;
@@ -378,8 +374,7 @@ static int cipher_cipher(
                         in_buffer.context.clear.buffer = (void*) in;
                         in_buffer.context.clear.length = inl;
                         in_buffer.context.clear.offset = position;
-                        bytes_to_process = ((inl - position) / cipher_context->block_size) *
-                                           cipher_context->block_size;
+                        bytes_to_process = ((inl - position) / cipher_context->block_size) * cipher_context->block_size;
                         position += bytes_to_process;
                     }
 

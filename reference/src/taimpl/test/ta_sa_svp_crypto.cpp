@@ -188,6 +188,12 @@ void TaProcessCommonEncryptionTest::SetUp() {
     }
 }
 
+void TaCryptoCipherTest::SetUp() {
+    if (ta_sa_svp_supported(client(), ta_uuid()) == SA_STATUS_OPERATION_NOT_SUPPORTED) {
+        GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+    }
+}
+
 sa_status TaProcessCommonEncryptionTest::svp_buffer_write(
         sa_svp_buffer out,
         const void* in,
@@ -254,10 +260,7 @@ namespace {
 
             case SA_CIPHER_ALGORITHM_AES_ECB_PKCS7:
             case SA_CIPHER_ALGORITHM_AES_CBC_PKCS7:
-                if (cipher_mode == SA_CIPHER_MODE_ENCRYPT)
-                    return PADDED_SIZE(bytes_to_process);
-                else
-                    return bytes_to_process;
+                return PADDED_SIZE(bytes_to_process);
 
             case SA_CIPHER_ALGORITHM_RSA_PKCS1V15:
             case SA_CIPHER_ALGORITHM_RSA_OAEP:

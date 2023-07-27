@@ -77,7 +77,8 @@ add_library(saclient SHARED
         src/sa_provider_mac.c
         src/sa_provider_signature.c
         src/sa_public_key.h
-        src/sa_public_key.c)
+        src/sa_public_key.c
+        )
 
 target_compile_options(saclient PRIVATE -Werror -Wall -Wextra -Wno-type-limits -Wno-unused-parameter
         -Wno-deprecated-declarations)

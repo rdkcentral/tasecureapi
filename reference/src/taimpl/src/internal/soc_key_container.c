@@ -851,7 +851,7 @@ sa_status soc_kc_unwrap(
     soc_kc_header_t header;
     soc_kc_payload_t payload;
 
-    memset(&payload, 0, sizeof(soc_kc_unpacked_t));
+    memory_memset_unoptimizable(&payload, 0, sizeof(soc_kc_unpacked_t));
     sa_status status = SA_STATUS_INVALID_KEY_FORMAT;
     do {
         unpacked = unpack_soc_kc(in, in_length);
