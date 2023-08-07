@@ -273,7 +273,7 @@ bool svp_key_check(
 
         size_t key_length = stored_key_get_length(stored_key);
         if (unwrap_aes_ecb_internal(decrypted, in_bytes, bytes_to_process, key, key_length) != SA_STATUS_OK) {
-            ERROR("unwrap_aes_ecb failed");
+            ERROR("unwrap_aes_ecb_internal failed");
             break;
         }
 
