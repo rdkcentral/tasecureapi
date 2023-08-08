@@ -97,7 +97,7 @@ static sa_status ta_sa_crypto_cipher_process_symmetric(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    const symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
+    symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
     if (symmetric_context == NULL) {
         ERROR("cipher_get_symmetric_context failed");
         return SA_STATUS_NULL_PARAMETER;

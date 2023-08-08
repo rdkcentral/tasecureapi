@@ -66,7 +66,7 @@ namespace {
         ASSERT_EQ(bytes_to_process, last_block_size);
 
         // Verify the encryption.
-        ASSERT_TRUE(verify_encrypt(out_buffer.get(), clear, parameters, false));
+        ASSERT_TRUE(verify_encrypt(out_buffer.get(), clear, parameters, pkcs7));
     }
 
     TEST_P(SaCryptoCipherProcessLastTest, processNominalDecrypt) {

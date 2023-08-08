@@ -208,7 +208,7 @@ static typej_unpacked_t* unpack_typej(
     return unpacked;
 }
 
-static bool verify_mac(
+static sa_status verify_mac(
         const void* header,
         size_t header_length,
         const void* payload,
@@ -219,44 +219,45 @@ static bool verify_mac(
 
     if (header == NULL) {
         ERROR("NULL header");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (payload == NULL) {
         ERROR("NULL payload");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (mac == NULL) {
         ERROR("NULL mac");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (mac_length != SHA256_DIGEST_LENGTH) {
         ERROR("Invalid mac_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     uint8_t computed_mac[SHA256_DIGEST_LENGTH];
     size_t computed_mac_length = sizeof(computed_mac);
 
-    if (!hmac(computed_mac, &computed_mac_length, SA_DIGEST_ALGORITHM_SHA256, header, header_length, ".", 1, payload,
-                payload_length, stored_key)) {
+    sa_status status = hmac(computed_mac, &computed_mac_length, SA_DIGEST_ALGORITHM_SHA256, header, header_length, ".",
+            1, payload, payload_length, stored_key);
+    if (status != SA_STATUS_OK) {
         ERROR("hmac failed");
-        return false;
+        return status;
     }
 
     if (memory_memcmp_constant(computed_mac, mac, mac_length) != 0) {
         ERROR("mac does not match");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return true;
+    return SA_STATUS_OK;
 }
 
 static sa_status content_key_rights_to_usage_flags(
@@ -781,8 +782,9 @@ sa_status typej_unwrap(
             break;
         }
 
-        if (!verify_mac(unpacked->header_b64, unpacked->header_b64_length, unpacked->payload_b64,
-                    unpacked->payload_b64_length, unpacked->mac, unpacked->mac_length, stored_key_mac)) {
+        status = verify_mac(unpacked->header_b64, unpacked->header_b64_length, unpacked->payload_b64,
+                unpacked->payload_b64_length, unpacked->mac, unpacked->mac_length, stored_key_mac);
+        if (status != SA_STATUS_OK) {
             ERROR("verify_mac failed");
             status = SA_STATUS_INVALID_KEY_FORMAT;
             break;

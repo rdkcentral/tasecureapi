@@ -53,7 +53,7 @@ sa_cipher_mode cipher_get_mode(const cipher_t* cipher) {
     return cipher->cipher_mode;
 }
 
-const symmetric_context_t* cipher_get_symmetric_context(const cipher_t* cipher) {
+symmetric_context_t* cipher_get_symmetric_context(const cipher_t* cipher) {
     if (cipher == NULL) {
         ERROR("NULL cipher");
         return NULL;

@@ -30,15 +30,11 @@ static size_t get_required_length(
         cipher_t* cipher,
         size_t bytes_to_process) {
     sa_cipher_algorithm cipher_algorithm = cipher_get_algorithm(cipher);
-    sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
 
     switch (cipher_algorithm) {
         case SA_CIPHER_ALGORITHM_AES_CBC_PKCS7:
         case SA_CIPHER_ALGORITHM_AES_ECB_PKCS7:
-            if (cipher_mode == SA_CIPHER_MODE_ENCRYPT)
-                return PADDED_SIZE(bytes_to_process);
-            else
-                return bytes_to_process;
+            return PADDED_SIZE(bytes_to_process);
 
         case SA_CIPHER_ALGORITHM_AES_CTR:
         case SA_CIPHER_ALGORITHM_AES_GCM:
@@ -53,6 +49,7 @@ static size_t get_required_length(
 
 static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
         void* out,
+        size_t out_length,
         cipher_t* cipher,
         const void* in,
         size_t* bytes_to_process,
@@ -83,7 +80,7 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    const symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
+    symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
     if (symmetric_context == NULL) {
         ERROR("cipher_get_symmetric_context failed");
         return SA_STATUS_NULL_PARAMETER;
@@ -106,7 +103,6 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
                 break;
             }
 
-            size_t out_length = *bytes_to_process;
             status = symmetric_context_encrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
             if (status != SA_STATUS_OK) {
                 ERROR("symmetric_context_encrypt failed");
@@ -125,7 +121,6 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_pkcs7(
                 return SA_STATUS_OPERATION_NOT_ALLOWED;
             }
 
-            size_t out_length = *bytes_to_process;
             status = symmetric_context_decrypt_last(symmetric_context, out, &out_length, in, *bytes_to_process);
             if (status != SA_STATUS_OK) {
                 ERROR("symmetric_context_decrypt_last failed");
@@ -168,7 +163,7 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_ctr(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    const symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
+    symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
     if (symmetric_context == NULL) {
         ERROR("cipher_get_symmetric_context failed");
         return SA_STATUS_NULL_PARAMETER;
@@ -244,7 +239,7 @@ static sa_status ta_sa_crypto_cipher_process_last_chacha20(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    const symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
+    symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
     if (symmetric_context == NULL) {
         ERROR("cipher_get_symmetric_context failed");
         return SA_STATUS_NULL_PARAMETER;
@@ -326,7 +321,7 @@ static sa_status ta_sa_crypto_cipher_process_last_aes_gcm(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    const symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
+    symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
     if (symmetric_context == NULL) {
         ERROR("cipher_get_symmetric_context failed");
         return SA_STATUS_NULL_PARAMETER;
@@ -430,7 +425,7 @@ static sa_status ta_sa_crypto_cipher_process_last_chacha20_poly1305(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    const symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
+    symmetric_context_t* symmetric_context = cipher_get_symmetric_context(cipher);
     if (symmetric_context == NULL) {
         ERROR("cipher_get_symmetric_context failed");
         return SA_STATUS_NULL_PARAMETER;
@@ -615,8 +610,8 @@ sa_status ta_sa_crypto_cipher_process_last(
         size_t in_length = *bytes_to_process;
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7 ||
                 cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7) {
-            status = ta_sa_crypto_cipher_process_last_aes_pkcs7(out_bytes, cipher, in_bytes, bytes_to_process,
-                    caller_uuid);
+            status = ta_sa_crypto_cipher_process_last_aes_pkcs7(out_bytes, required_length, cipher, in_bytes,
+                    bytes_to_process, caller_uuid);
             if (status != SA_STATUS_OK) {
                 ERROR("ta_sa_crypto_cipher_process_last_aes_pkcs7 failed");
                 break;

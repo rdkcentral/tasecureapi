@@ -52,7 +52,7 @@
 /**
  * SecAPI specification revision
  */
-#define SA_SPECIFICATION_REVISION 0
+#define SA_SPECIFICATION_REVISION 1
 
 /**
  * Stringify helper macro.

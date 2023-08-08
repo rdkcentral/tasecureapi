@@ -69,7 +69,7 @@ sa_status kdf_hkdf_hmac(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = SA_STATUS_INTERNAL_ERROR;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* derived = NULL;
     uint8_t* prk = NULL;
     size_t prk_length = DIGEST_MAX_LENGTH;
@@ -79,7 +79,6 @@ sa_status kdf_hkdf_hmac(
         derived = memory_secure_alloc(parameters->key_length);
         if (derived == NULL) {
             ERROR("memory_secure_alloc failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
@@ -103,8 +102,9 @@ sa_status kdf_hkdf_hmac(
         }
 
         size_t key_length = stored_key_get_length(stored_key_parent);
-        if (!hmac_internal(prk, &prk_length, parameters->digest_algorithm, key, key_length, NULL, 0, NULL, 0,
-                    parameters->salt, parameters->salt_length)) {
+        status = hmac_internal(prk, &prk_length, parameters->digest_algorithm, key, key_length, NULL, 0, NULL, 0,
+                parameters->salt, parameters->salt_length);
+        if (status != SA_STATUS_OK) {
             ERROR("hmac_internal failed");
             break;
         }
@@ -121,8 +121,9 @@ sa_status kdf_hkdf_hmac(
         bool hmac_failed = false;
         for (size_t i = 1; i <= r; i++) {
             uint8_t loop = i;
-            if (!hmac_internal(tag, &tag_length, parameters->digest_algorithm, tag, (i == 1) ? 0 : tag_length,
-                        parameters->info, parameters->info_length, &loop, 1, prk, prk_length)) {
+            status = hmac_internal(tag, &tag_length, parameters->digest_algorithm, tag, (i == 1) ? 0 : tag_length,
+                    parameters->info, parameters->info_length, &loop, 1, prk, prk_length);
+            if (status != SA_STATUS_OK) {
                 ERROR("hmac_internal failed");
                 hmac_failed = true;
                 break;
@@ -209,7 +210,7 @@ sa_status kdf_concat_kdf(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = SA_STATUS_INTERNAL_ERROR;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* derived = NULL;
     uint8_t* hash = NULL;
     do {
@@ -247,8 +248,9 @@ sa_status kdf_concat_kdf(
         bool digest_sha_failed = false;
         for (size_t i = 1; i <= r; ++i) {
             counter[3] = i;
-            if (!digest_sha(hash, &hash_length, parameters->digest_algorithm, counter, sizeof(counter), key, key_length,
-                        parameters->info, parameters->info_length)) {
+            status = digest_sha(hash, &hash_length, parameters->digest_algorithm, counter, sizeof(counter), key,
+                    key_length, parameters->info, parameters->info_length);
+            if (status != SA_STATUS_OK) {
                 ERROR("digest_sha failed");
                 digest_sha_failed = true;
                 break;
@@ -328,7 +330,7 @@ sa_status kdf_ansi_x963(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = SA_STATUS_INTERNAL_ERROR;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* derived = NULL;
     uint8_t* hash = NULL;
     do {
@@ -366,8 +368,9 @@ sa_status kdf_ansi_x963(
         bool digest_sha_failed = false;
         for (size_t i = 1; i <= r; ++i) {
             counter[3] = i;
-            if (!digest_sha(hash, &hash_length, parameters->digest_algorithm, key, key_length, counter, sizeof(counter),
-                        parameters->info, parameters->info_length)) {
+            status = digest_sha(hash, &hash_length, parameters->digest_algorithm, key, key_length, counter,
+                    sizeof(counter), parameters->info, parameters->info_length);
+            if (status != SA_STATUS_OK) {
                 ERROR("digest_sha failed");
                 digest_sha_failed = true;
                 break;
@@ -456,7 +459,7 @@ sa_status kdf_ctr_cmac(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = SA_STATUS_INTERNAL_ERROR;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* full_key = NULL;
     size_t full_key_length = 4 * (size_t) AES_BLOCK_SIZE;
     uint8_t* derived = NULL;
@@ -475,13 +478,15 @@ sa_status kdf_ctr_cmac(
 
         bool inner_loop_failed = false;
         for (uint8_t i = 1; i <= 4; ++i) {
-            if (!cmac(full_key + (i - 1) * (ptrdiff_t) AES_BLOCK_SIZE, &i, 1, parameters->other_data,
-                        parameters->other_data_length, NULL, 0, stored_key_parent)) {
+            status = cmac(full_key + (i - 1) * (ptrdiff_t) AES_BLOCK_SIZE, &i, 1, parameters->other_data,
+                    parameters->other_data_length, NULL, 0, stored_key_parent);
+            if (status != SA_STATUS_OK) {
                 ERROR("cmac failed");
                 inner_loop_failed = true;
                 break;
             }
         }
+
         if (inner_loop_failed) {
             break;
         }

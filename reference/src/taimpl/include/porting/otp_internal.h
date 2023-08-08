@@ -63,7 +63,7 @@ typedef struct {
  * @param[in] key_length key length.
  * @return status of the operation.
  */
-bool unwrap_aes_ecb_internal(
+sa_status unwrap_aes_ecb_internal(
         void* out,
         const void* in,
         size_t in_length,
@@ -81,7 +81,7 @@ bool unwrap_aes_ecb_internal(
  * @param[in] key_length key length.
  * @return status of the operation.
  */
-bool unwrap_aes_cbc_internal(
+sa_status unwrap_aes_cbc_internal(
         void* out,
         const void* in,
         size_t in_length,
@@ -105,7 +105,7 @@ bool unwrap_aes_cbc_internal(
  * @param[in] key_length key length.
  * @return status of the operation.
  */
-bool unwrap_aes_gcm_internal(
+sa_status unwrap_aes_gcm_internal(
         void* out,
         const void* in,
         size_t in_length,
@@ -129,7 +129,7 @@ bool unwrap_aes_gcm_internal(
  * @param[in] iv initialization vector.
  * @return true if the call succeeded, false otherwise.
  */
-bool otp_wrap_aes_cbc(
+sa_status otp_wrap_aes_cbc(
         void* wrapped,
         const key_ladder_inputs_t* key_ladder_inputs,
         const void* in,
@@ -147,7 +147,7 @@ bool otp_wrap_aes_cbc(
  * @param[in] iv initialization vector.
  * @return true if the call succeeded, false otherwise.
  */
-bool otp_unwrap_aes_cbc(
+sa_status otp_unwrap_aes_cbc(
         void* out,
         const key_ladder_inputs_t* key_ladder_inputs,
         const void* wrapped,
@@ -168,7 +168,7 @@ bool otp_unwrap_aes_cbc(
  * @param[in] in3_length third input block length.
  * @return true if the call succeeded, false otherwise.
  */
-bool otp_hmac_sha256(
+sa_status otp_hmac_sha256(
         void* mac,
         const key_ladder_inputs_t* key_ladder_inputs,
         const void* in1,
@@ -194,7 +194,7 @@ bool otp_hmac_sha256(
  * @param[in] tag_length the legnth of the tag.
  * @return true if the call succeeded, false otherwise.
  */
-bool otp_unwrap_aes_gcm(
+sa_status otp_unwrap_aes_gcm(
         void* out,
         const key_ladder_inputs_t* key_ladder_inputs,
         const void* wrapped,

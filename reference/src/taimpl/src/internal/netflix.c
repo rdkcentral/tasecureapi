@@ -80,7 +80,7 @@ sa_status kdf_netflix_wrapping(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = SA_STATUS_INTERNAL_ERROR;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* temp_key = NULL;
     size_t temp_key_length = SYM_256_KEY_SIZE;
     uint8_t* wrapping_key = NULL;
@@ -105,8 +105,9 @@ sa_status kdf_netflix_wrapping(
             break;
         }
 
-        if (!hmac_internal(temp_key, &temp_key_length, SA_DIGEST_ALGORITHM_SHA256, enc_key, enc_length, hmac_key,
-                    hmac_length, NULL, 0, salt, sizeof(salt))) {
+        status = hmac_internal(temp_key, &temp_key_length, SA_DIGEST_ALGORITHM_SHA256, enc_key, enc_length, hmac_key,
+                hmac_length, NULL, 0, salt, sizeof(salt));
+        if (status != SA_STATUS_OK) {
             ERROR("hmac_internal failed");
             break;
         }
@@ -118,8 +119,9 @@ sa_status kdf_netflix_wrapping(
                 0x80, 0x9f, 0x82, 0xa7, 0xad, 0xdf, 0x54, 0x8d,
                 0x3e, 0xa9, 0xdd, 0x06, 0x7f, 0xf9, 0xbb, 0x91};
 
-        if (!hmac_internal(wrapping_key, &wrapping_key_length, SA_DIGEST_ALGORITHM_SHA256, info, sizeof(info),
-                    NULL, 0, NULL, 0, temp_key, temp_key_length)) {
+        status = hmac_internal(wrapping_key, &wrapping_key_length, SA_DIGEST_ALGORITHM_SHA256, info, sizeof(info),
+                NULL, 0, NULL, 0, temp_key, temp_key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("hmac_internal failed");
             break;
         }
@@ -203,7 +205,7 @@ sa_status kdf_netflix_shared_secret(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = SA_STATUS_INTERNAL_ERROR;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* digest_bytes = NULL;
     size_t digest_bytes_length = SHA384_DIGEST_LENGTH;
     uint8_t* key_bytes = NULL;
@@ -221,8 +223,9 @@ sa_status kdf_netflix_shared_secret(
             break;
         }
 
-        if (!digest_sha(digest_bytes, &digest_bytes_length, SA_DIGEST_ALGORITHM_SHA384, in_key, in_key_length, NULL, 0,
-                    NULL, 0)) {
+        status = digest_sha(digest_bytes, &digest_bytes_length, SA_DIGEST_ALGORITHM_SHA384, in_key, in_key_length, NULL,
+                0, NULL, 0);
+        if (status != SA_STATUS_OK) {
             ERROR("digest_sha failed");
             break;
         }
@@ -257,8 +260,9 @@ sa_status kdf_netflix_shared_secret(
 
         const uint8_t zero = 0;
         bool pre_zero = (((const uint8_t*) shared_secret)[0] != 0);
-        if (!hmac_internal(key_bytes, &key_bytes_length, SA_DIGEST_ALGORITHM_SHA384, &zero, pre_zero ? 1 : 0,
-                    shared_secret, shared_secret_length, NULL, 0, digest_bytes, digest_bytes_length)) {
+        status = hmac_internal(key_bytes, &key_bytes_length, SA_DIGEST_ALGORITHM_SHA384, &zero, pre_zero ? 1 : 0,
+                shared_secret, shared_secret_length, NULL, 0, digest_bytes, digest_bytes_length);
+        if (status != SA_STATUS_OK) {
             ERROR("hmac_internal failed");
             break;
         }

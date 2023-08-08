@@ -45,7 +45,7 @@ extern "C" {
 /**
  * Initializes the TA.
  *
- * @param[in] client_slot the client slot ID.
+ * @param[out] client_slot the client slot ID.
  * @param[in] caller_uuid the UUID of the caller.
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.

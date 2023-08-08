@@ -27,8 +27,11 @@
 #include "rsa.h"
 #include "stored_key_internal.h"
 #include <openssl/evp.h>
+
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
+
 #include <memory.h>
+
 #endif
 
 static sa_status import_key(
@@ -145,9 +148,9 @@ sa_status unwrap_aes_ecb(
             break;
         }
 
-        if (!unwrap_aes_ecb_internal(unwrapped_key, in, in_length, key, key_length)) {
+        status = unwrap_aes_ecb_internal(unwrapped_key, in, in_length, key, key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_ecb_internal failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
@@ -236,9 +239,9 @@ sa_status unwrap_aes_cbc(
             break;
         }
 
-        if (!unwrap_aes_cbc_internal(unwrapped_key, in, in_length, iv, key, key_length)) {
-            ERROR("unwrap_aes_ecb_internal failed");
-            status = SA_STATUS_INTERNAL_ERROR;
+        status = unwrap_aes_cbc_internal(unwrapped_key, in, in_length, iv, key, key_length);
+        if (status != SA_STATUS_OK) {
+            ERROR("unwrap_aes_cbc_internal failed");
             break;
         }
 
@@ -442,13 +445,13 @@ sa_status unwrap_aes_gcm(
             break;
         }
 
-        if (!unwrap_aes_gcm_internal(unwrapped_key, in, in_length,
-                    algorithm_parameters->iv, algorithm_parameters->iv_length,
-                    algorithm_parameters->aad, algorithm_parameters->aad_length,
-                    algorithm_parameters->tag, algorithm_parameters->tag_length,
-                    key, key_length)) {
+        status = unwrap_aes_gcm_internal(unwrapped_key, in, in_length,
+                algorithm_parameters->iv, algorithm_parameters->iv_length,
+                algorithm_parameters->aad, algorithm_parameters->aad_length,
+                algorithm_parameters->tag, algorithm_parameters->tag_length,
+                key, key_length);
+        if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_gcm_internal failed");
-            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
@@ -476,6 +479,7 @@ sa_status unwrap_aes_gcm(
 }
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
+
 sa_status unwrap_chacha20(
         stored_key_t** stored_key_unwrapped,
         const void* in,
@@ -739,6 +743,7 @@ sa_status unwrap_chacha20_poly1305(
     EVP_CIPHER_CTX_free(context);
     return status;
 }
+
 #endif
 
 sa_status unwrap_rsa(

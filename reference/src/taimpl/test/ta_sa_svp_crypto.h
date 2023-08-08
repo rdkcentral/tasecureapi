@@ -38,7 +38,10 @@ protected:
 
 typedef std::tuple<sa_cipher_algorithm, sa_cipher_mode, size_t, size_t> TaCryptoCipherTestType;
 
-class TaCryptoCipherTest : public ::testing::TestWithParam<TaCryptoCipherTestType>, public TaCryptoCipherBase {};
+class TaCryptoCipherTest : public ::testing::TestWithParam<TaCryptoCipherTestType>, public TaCryptoCipherBase {
+protected:
+    void SetUp() override;
+};
 
 using TaProcessCommonEncryptionType =
         std::tuple<std::tuple<size_t, int64_t>, size_t, size_t, size_t, sa_cipher_algorithm>;

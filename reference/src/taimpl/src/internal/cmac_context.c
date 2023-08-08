@@ -280,7 +280,7 @@ void cmac_context_free(cmac_context_t* context) {
     memory_internal_free(context);
 }
 
-bool cmac(
+sa_status cmac(
         void* mac,
         const void* in1,
         size_t in1_length,
@@ -292,30 +292,30 @@ bool cmac(
 
     if (mac == NULL) {
         ERROR("NULL mac");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in1 == NULL && in1_length > 0) {
         ERROR("NULL in1");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in2 == NULL && in2_length > 0) {
         ERROR("NULL in2");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (in3 == NULL && in3_length > 0) {
         ERROR("NULL in3");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
     if (stored_key == NULL) {
         ERROR("NULL stored_key");
-        return false;
+        return SA_STATUS_NULL_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
     EVP_MAC* evp_mac = NULL;
     EVP_MAC_CTX* evp_mac_ctx = NULL;
@@ -381,7 +381,7 @@ bool cmac(
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     EVP_MAC_CTX_free(evp_mac_ctx);
@@ -441,7 +441,7 @@ bool cmac(
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
     } while (false);
 
     CMAC_CTX_free(openssl_context);

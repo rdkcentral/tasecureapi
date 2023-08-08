@@ -62,7 +62,7 @@ sa_cipher_mode cipher_get_mode(const cipher_t* cipher);
  * @param[in] cipher cipher.
  * @return AES context.
  */
-const symmetric_context_t* cipher_get_symmetric_context(const cipher_t* cipher);
+symmetric_context_t* cipher_get_symmetric_context(const cipher_t* cipher);
 
 /**
  * Get the stored key.

@@ -112,7 +112,7 @@ void cmac_context_free(cmac_context_t* context);
  * @param[in] stored_key key.
  * @return status of the operation.
  */
-bool cmac(
+sa_status cmac(
         void* mac,
         const void* in1,
         size_t in1_length,

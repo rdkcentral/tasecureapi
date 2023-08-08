@@ -258,7 +258,7 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_decrypt_context(
  * @return status of the operation.
  */
 sa_status symmetric_context_encrypt(
-        const symmetric_context_t* context,
+        symmetric_context_t* context,
         void* out,
         size_t* out_length,
         const void* in,
@@ -275,7 +275,7 @@ sa_status symmetric_context_encrypt(
  * @return status of the operation.
  */
 sa_status symmetric_context_encrypt_last(
-        const symmetric_context_t* context,
+        symmetric_context_t* context,
         void* out,
         size_t* out_length,
         const void* in,
@@ -292,7 +292,7 @@ sa_status symmetric_context_encrypt_last(
  * @return status of the operation.
  */
 sa_status symmetric_context_decrypt(
-        const symmetric_context_t* context,
+        symmetric_context_t* context,
         void* out,
         size_t* out_length,
         const void* in,
@@ -309,7 +309,7 @@ sa_status symmetric_context_decrypt(
  * @return status of the operation.
  */
 sa_status symmetric_context_decrypt_last(
-        const symmetric_context_t* context,
+        symmetric_context_t* context,
         void* out,
         size_t* out_length,
         const void* in,
@@ -349,7 +349,7 @@ sa_status symmetric_context_get_tag(
  * @return status of the operation.
  */
 sa_status symmetric_context_set_tag(
-        const symmetric_context_t* context,
+        symmetric_context_t* context,
         const void* tag,
         size_t tag_length);
 

@@ -251,13 +251,14 @@ sa_status hmac_context_compute(
 
     if (mac == NULL) {
         *mac_length = digest_length(context->digest_algorithm);
-        return SA_STATUS_NULL_PARAMETER;
+        return *mac_length == SIZE_MAX ? SA_STATUS_INVALID_PARAMETER : SA_STATUS_OK;
     }
 
     if (*mac_length < digest_length(context->digest_algorithm)) {
         ERROR("Invalid mac_length");
         return SA_STATUS_INVALID_PARAMETER;
     }
+
     *mac_length = digest_length(context->digest_algorithm);
 
     if (context->done) {
@@ -305,7 +306,7 @@ void hmac_context_free(hmac_context_t* context) {
     memory_internal_free(context);
 }
 
-bool hmac_internal(
+sa_status hmac_internal(
         void* mac,
         size_t* mac_length,
         sa_digest_algorithm digest_algorithm,
@@ -326,15 +327,15 @@ bool hmac_internal(
     size_t hash_length = digest_length(digest_algorithm);
     if (mac == NULL) {
         *mac_length = hash_length;
-        return hash_length != (size_t) -1;
+        return hash_length == SIZE_MAX ? SA_STATUS_INVALID_PARAMETER : SA_STATUS_OK;
     }
 
     if (*mac_length < hash_length) {
         ERROR("Invalid mac_length");
-        return false;
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
-    bool status = false;
+    sa_status status = SA_STATUS_INTERNAL_ERROR;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
     EVP_MAC* evp_mac = NULL;
     EVP_MAC_CTX* evp_mac_ctx = NULL;
@@ -388,7 +389,7 @@ bool hmac_internal(
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
         *mac_length = length;
     } while (false);
 
@@ -454,7 +455,7 @@ bool hmac_internal(
             break;
         }
 
-        status = true;
+        status = SA_STATUS_OK;
         *mac_length = length;
     } while (false);
 
@@ -465,7 +466,7 @@ bool hmac_internal(
     return status;
 }
 
-bool hmac(
+sa_status hmac(
         void* mac,
         size_t* mac_length,
         sa_digest_algorithm digest_algorithm,

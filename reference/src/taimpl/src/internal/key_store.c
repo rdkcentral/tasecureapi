@@ -43,8 +43,8 @@ typedef struct {
 struct {
     derivation_inputs_t export_derivation_inputs;
 } global_key_store = {
-        // These values are randomly generated.
-        // clang-format off
+    // These values are randomly generated.
+    // clang-format off
     .export_derivation_inputs = {
         .wrapping_key_inputs = {
             {0x91, 0xa4, 0x5a, 0xc9, 0x2b, 0x5e, 0xd7, 0x40, 0x20, 0x33, 0x6e, 0x47, 0xad, 0x48, 0x56, 0xba},
@@ -57,7 +57,7 @@ struct {
             {0x11, 0x5b, 0xb8, 0xf6, 0x1a, 0xe1, 0xbe, 0x28, 0x03, 0xb1, 0x98, 0x4a, 0xde, 0xff, 0x57, 0x08}
         }
     }
-        // clang-format on
+    // clang-format on
 };
 
 typedef struct {
@@ -82,9 +82,9 @@ typedef struct {
 
 // clang-format off
 static void xor(
-        uint8_t* out,
-        const uint8_t* in1,
-        const uint8_t* in2,
+        uint8_t *out,
+        const uint8_t *in1,
+        const uint8_t *in2,
         size_t size) {
 
     for (size_t i = 0; i < size; ++i) {
@@ -92,7 +92,7 @@ static void xor(
     }
 }
 
-static bool validate_header_format(const sa_header* hdr) {
+static bool validate_header_format(const sa_header *hdr) {
     if (hdr == NULL) {
         WARN("NULL hdr");
         return false;
@@ -136,8 +136,7 @@ static void* pad(
         return NULL;
     }
 
-    *padded_length = (in_length / AES_BLOCK_SIZE) * AES_BLOCK_SIZE + AES_BLOCK_SIZE;
-
+    *padded_length = PADDED_SIZE(in_length);
     uint8_t* padded = memory_secure_alloc(*padded_length);
     if (padded == NULL) {
         ERROR("memory_secure_alloc failed");
@@ -199,8 +198,9 @@ static stored_key_t* unwrap(
     do {
         // check signature
         uint8_t computed_mac[SHA256_DIGEST_LENGTH];
-        if (!otp_hmac_sha256(computed_mac, &derivation_inputs->integrity_key_inputs, header, sizeof(sa_header),
-                    cipher_parameters, sizeof(cipher_parameters_t), ciphertext, cipher_parameters->ciphertext_length)) {
+        if (otp_hmac_sha256(computed_mac, &derivation_inputs->integrity_key_inputs, header, sizeof(sa_header),
+                    cipher_parameters, sizeof(cipher_parameters_t), ciphertext,
+                    cipher_parameters->ciphertext_length) != SA_STATUS_OK) {
             ERROR("otp_hmac_sha256 failed");
             break;
         }
@@ -218,8 +218,8 @@ static stored_key_t* unwrap(
         }
 
         // decrypt key
-        if (!otp_unwrap_aes_cbc(cleartext, &derivation_inputs->wrapping_key_inputs, ciphertext,
-                    cipher_parameters->ciphertext_length, cipher_parameters->iv)) {
+        if (otp_unwrap_aes_cbc(cleartext, &derivation_inputs->wrapping_key_inputs, ciphertext,
+                    cipher_parameters->ciphertext_length, cipher_parameters->iv) != SA_STATUS_OK) {
             ERROR("otp_unwrap_aes_cbc failed");
             break;
         }
@@ -318,18 +318,19 @@ static wrapped_key_t* wrapped_key_create(
         }
 
         // encrypt in-place
-        if (!otp_wrap_aes_cbc(wrapped_key->ciphertext, &derivation_inputs->wrapping_key_inputs,
+
+        if (otp_wrap_aes_cbc(wrapped_key->ciphertext, &derivation_inputs->wrapping_key_inputs,
                     wrapped_key->ciphertext, wrapped_key->cipher_parameters.ciphertext_length,
-                    wrapped_key->cipher_parameters.iv)) {
+                    wrapped_key->cipher_parameters.iv) != SA_STATUS_OK) {
             ERROR("otp_wrap_aes_cbc failed");
             break;
         }
 
         // generate signature
-        if (!otp_hmac_sha256(wrapped_key->signature.mac, &derivation_inputs->integrity_key_inputs,
+        if (otp_hmac_sha256(wrapped_key->signature.mac, &derivation_inputs->integrity_key_inputs,
                     &wrapped_key->header, sizeof(wrapped_key->header), &wrapped_key->cipher_parameters,
                     sizeof(wrapped_key->cipher_parameters), wrapped_key->ciphertext,
-                    wrapped_key->cipher_parameters.ciphertext_length)) {
+                    wrapped_key->cipher_parameters.ciphertext_length) != SA_STATUS_OK) {
             ERROR("otp_hmac_sha256 failed");
             break;
         }

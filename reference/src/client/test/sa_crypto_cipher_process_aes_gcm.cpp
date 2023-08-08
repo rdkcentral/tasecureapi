@@ -346,6 +346,9 @@ namespace {
     }
 
     TEST_F(SaCryptoCipherWithoutSvpTest, initAesGcmFailsSvpIn) {
+        if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;
@@ -380,6 +383,9 @@ namespace {
     }
 
     TEST_F(SaCryptoCipherWithoutSvpTest, initAesGcmFailsSvpOut) {
+        if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+
         auto clear_key = random(SYM_128_KEY_SIZE);
 
         sa_rights rights;

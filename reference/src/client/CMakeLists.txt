@@ -77,7 +77,8 @@ add_library(saclient SHARED
         src/sa_provider_mac.c
         src/sa_provider_signature.c
         src/sa_public_key.h
-        src/sa_public_key.c)
+        src/sa_public_key.c
+        )
 
 target_compile_options(saclient PRIVATE -Werror -Wall -Wextra -Wno-type-limits -Wno-unused-parameter
         -Wno-deprecated-declarations)
@@ -85,7 +86,7 @@ target_compile_options(saclient PRIVATE -Werror -Wall -Wextra -Wno-type-limits -
 set_target_properties(saclient PROPERTIES
         LINKER_LANGUAGE C
         SO_VERSION 3.2
-        VERSION 3.2.0
+        VERSION 3.2.1
         )
 
 target_include_directories(saclient

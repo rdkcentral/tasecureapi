@@ -167,7 +167,7 @@ bool SaCipherCryptoBase::verify_encrypt(
 
     if (encrypted->buffer_type == SA_BUFFER_TYPE_CLEAR) {
         std::vector<uint8_t> encrypted_data = {static_cast<uint8_t*>(encrypted->context.clear.buffer),
-                static_cast<uint8_t*>(encrypted->context.clear.buffer) + clear.size()};
+                static_cast<uint8_t*>(encrypted->context.clear.buffer) + clear.size() + (padded ? AES_BLOCK_SIZE : 0)};
 
         // Since we are not calling sa_crypto_cipher_process_last, the padding/tag is not added. Change the mode so that
         // openssl doesn't expect the padding to be there.

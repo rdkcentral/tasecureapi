@@ -410,8 +410,8 @@ DECLARE_CIPHER(aes, 256, gcm, EVP_CIPH_GCM_MODE | EVP_CIPH_ALWAYS_CALL_INIT | EV
 #if OPENSSL_VERSION_NUMBER >= 0x10100000
 DECLARE_CIPHER(chacha20, 256, chacha20, EVP_CIPH_ALWAYS_CALL_INIT)
 DECLARE_CIPHER(chacha20, 256, poly1305, EVP_CIPH_ALWAYS_CALL_INIT | EVP_CIPH_FLAG_CUSTOM_CIPHER)
-// clang-format on
 #endif
+// clang-format on
 
 int sa_get_engine_ciphers(
         ossl_unused ENGINE* engine,

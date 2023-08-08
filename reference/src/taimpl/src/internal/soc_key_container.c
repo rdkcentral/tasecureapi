@@ -695,10 +695,7 @@ static bool get_key_type_and_size(
         *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_X448;
     } else {
-        *key_type = SA_KEY_TYPE_SYMMETRIC;
-        *key_size = 0;
-        *subtype = AES_SUBTYPE;
-        *curve = UINT32_MAX;
+        return false;
     }
 
     return true;
@@ -760,10 +757,9 @@ static sa_status decrypt_key_and_verify_mac(
 
         status = otp_unwrap_aes_gcm(key, &payload->key_ladder_inputs, payload->encrypted_key,
                 payload->encrypted_key_length, payload->iv, GCM_IV_LENGTH, aad, aad_length, unpacked->mac,
-                AES_BLOCK_SIZE);
-        if (!status) {
+                unpacked->mac_length);
+        if (status != SA_STATUS_OK) {
             ERROR("otp_unwrap_aes_gcm failed");
-            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -771,7 +767,6 @@ static sa_status decrypt_key_and_verify_mac(
         status = fields_to_rights(&rights, key_type, subtype, payload, parameters);
         if (status != SA_STATUS_OK) {
             ERROR("fields_to_rights failed");
-            status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
 
@@ -856,7 +851,7 @@ sa_status soc_kc_unwrap(
     soc_kc_header_t header;
     soc_kc_payload_t payload;
 
-    memset(&payload, 0, sizeof(soc_kc_unpacked_t));
+    memory_memset_unoptimizable(&payload, 0, sizeof(soc_kc_unpacked_t));
     sa_status status = SA_STATUS_INVALID_KEY_FORMAT;
     do {
         unpacked = unpack_soc_kc(in, in_length);
