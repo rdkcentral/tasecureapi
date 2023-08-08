@@ -477,7 +477,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
 
         // Set lower 8 bytes of IV to FFFFFFFFFFFFFFFE to test rollover condition.
-        memory_memset_unoptimizable(&iv[8], 0xff, 7);
+        memset(&iv[8], 0xff, 7);
         iv[15] = 0xfe;
 
         sample_data sample_data;

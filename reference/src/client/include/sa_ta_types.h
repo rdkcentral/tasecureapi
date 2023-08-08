@@ -446,7 +446,7 @@ typedef struct {
     uint32_t signature_algorithm;
     uint32_t digest_algorithm;
     sa_key key;
-    uint64_t salt_length; // RSA PSS
+    uint64_t salt_length;           // RSA PSS
     uint32_t mgf1_digest_algorithm; // RSA PSS
     uint8_t precomputed_digest;
 } sa_crypto_sign_s;
