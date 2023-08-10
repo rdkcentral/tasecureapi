@@ -47,12 +47,12 @@
 /**
  * SecAPI specification minor version
  */
-#define SA_SPECIFICATION_MINOR 2
+#define SA_SPECIFICATION_MINOR 3
 
 /**
  * SecAPI specification revision
  */
-#define SA_SPECIFICATION_REVISION 1
+#define SA_SPECIFICATION_REVISION 0
 
 /**
  * Stringify helper macro.

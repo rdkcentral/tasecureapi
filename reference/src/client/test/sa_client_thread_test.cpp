@@ -33,8 +33,8 @@ sa_status client_thread_verify(
 
     sa_header header;
     sa_status status = sa_key_header(&header, key);
-    if (status != SA_STATUS_INVALID_PARAMETER) {
-        ERROR("key %d was found in a thread different from the one it was created in", key);
+    if (status != SA_STATUS_OK) {
+        ERROR("key %d was not found in a thread different from the one it was created in", key);
         return SA_STATUS_INVALID_PARAMETER;
     }
 
@@ -44,22 +44,22 @@ sa_status client_thread_verify(
     sa_buffer in = {SA_BUFFER_TYPE_CLEAR, {.clear = {in_buffer.data(), in_buffer.size(), 0}}};
     size_t bytes_to_process = AES_BLOCK_SIZE;
     status = sa_crypto_cipher_process(&out, cipher_context, &in, &bytes_to_process);
-    if (status != SA_STATUS_INVALID_PARAMETER) {
-        ERROR("cipher %d was found in a thread different from the one it was created in", cipher_context);
+    if (status != SA_STATUS_OK) {
+        ERROR("cipher %d was not found in a thread different from the one it was created in", cipher_context);
         return SA_STATUS_INVALID_PARAMETER;
     }
 
     status = sa_crypto_mac_process(mac_context, in_buffer.data(), in_buffer.size());
-    if (status != SA_STATUS_INVALID_PARAMETER) {
-        ERROR("mac %d was found in a thread different from the one it was created in", mac_context);
+    if (status != SA_STATUS_OK) {
+        ERROR("mac %d was not found in a thread different from the one it was created in", mac_context);
         return SA_STATUS_INVALID_PARAMETER;
     }
 
     if (sa_svp_supported() == SA_STATUS_OK) {
         sa_svp_offset offsets = {0, 0, in_buffer.size()};
         status = sa_svp_buffer_write(svp_buffer, in_buffer.data(), in_buffer.size(), &offsets, 1);
-        if (status != SA_STATUS_INVALID_PARAMETER) {
-            ERROR("svp %d was found in a thread different from the one it was created in", svp_buffer);
+        if (status != SA_STATUS_OK) {
+            ERROR("svp %d was not found in a thread different from the one it was created in", svp_buffer);
             return SA_STATUS_INVALID_PARAMETER;
         }
 
