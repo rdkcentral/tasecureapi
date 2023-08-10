@@ -38,17 +38,21 @@ sa_status sa_key_header(
     }
 
     sa_key_header_s* key_header = NULL;
+    sa_header_s header_s;
+    void* param1 = NULL;
+    size_t param1_size = sizeof(sa_header_s);
     sa_status status;
     do {
         CREATE_COMMAND(sa_key_header_s, key_header);
         key_header->api_version = API_VERSION;
-        key_header->header = *header;
         key_header->key = key;
 
+        CREATE_OUT_PARAM(param1, &header_s, sizeof(sa_header_s));
+
         // clang-format off
-        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_OUT, TA_PARAM_NULL, TA_PARAM_NULL};
         ta_param params[NUM_TA_PARAMS] = {{key_header, sizeof(sa_key_header_s)},
-                                          {NULL, 0},
+                                          {param1, param1_size},
                                           {NULL, 0},
                                           {NULL, 0}};
         // clang-format on
@@ -58,7 +62,20 @@ sa_status sa_key_header(
             break;
         }
 
-        *header = key_header->header;
+        COPY_OUT_PARAM(header_s, param1, sizeof(sa_header_s));
+        memset(header, 0, sizeof(sa_header));
+        memcpy(header->magic, header_s.magic, NUM_MAGIC);
+        memcpy(&header->rights, &header_s.rights, sizeof(sa_rights));
+        header->type = header_s.type;
+        header->size = header_s.size;
+        if (header_s.type == SA_KEY_TYPE_EC) {
+            header->type_parameters.curve = header_s.type_parameters.curve;
+        } else if (header_s.type == SA_KEY_TYPE_DH) {
+            memcpy(header->type_parameters.dh_parameters.p, header_s.type_parameters.dh_parameters.p, DH_MAX_MOD_SIZE);
+            header->type_parameters.dh_parameters.p_length = header_s.type_parameters.dh_parameters.p_length;
+            memcpy(header->type_parameters.dh_parameters.g, header_s.type_parameters.dh_parameters.g, DH_MAX_MOD_SIZE);
+            header->type_parameters.dh_parameters.g_length = header_s.type_parameters.dh_parameters.g_length;
+        }
     } while (false);
 
     RELEASE_COMMAND(key_header);

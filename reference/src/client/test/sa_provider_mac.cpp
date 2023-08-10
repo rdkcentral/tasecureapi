@@ -45,7 +45,7 @@ TEST_P(SaProviderMacTest, mac) {
     auto key = create_sa_key_symmetric(&rights, clear_key);
     OSSL_PARAM params[3];
     size_t param = 0;
-    params[param++] = OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get());
+    params[param++] = OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get());
     if (strcmp(mac_algorithm, "HMAC") == 0)
         params[param++] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, const_cast<char*>(digest_name),
                 strlen(digest_name));

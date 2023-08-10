@@ -38,7 +38,7 @@ extern "C" {
 #include <stdint.h>
 #endif
 
-typedef unsigned long slot_t; // NOLINT
+typedef uint64_t slot_t; // NOLINT
 
 #define SLOT_INVALID ((slot_t) ULONG_MAX)
 

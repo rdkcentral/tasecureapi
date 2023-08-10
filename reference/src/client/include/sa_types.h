@@ -90,7 +90,7 @@ extern "C" {
 /**
  * Generic handle type.
  */
-typedef unsigned long sa_handle; // NOLINT
+typedef uint64_t sa_handle; // NOLINT
 
 /**
  * Value for an uninitialized handle.
@@ -127,13 +127,13 @@ typedef sa_handle sa_crypto_mac_context;
  */
 typedef struct {
     /** major version of the SecAPI specification */
-    size_t specification_major;
+    uint64_t specification_major;
     /** minor version of the SecAPI specification */
-    size_t specification_minor;
+    uint64_t specification_minor;
     /** revision version of the SecAPI specification */
-    size_t specification_revision;
+    uint64_t specification_revision;
     /** revision version of the SecAPI implementation */
-    size_t implementation_revision;
+    uint64_t implementation_revision;
 } sa_version;
 
 /**

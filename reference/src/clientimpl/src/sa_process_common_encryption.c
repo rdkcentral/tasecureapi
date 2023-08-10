@@ -43,6 +43,7 @@ sa_status sa_process_common_encryption(
     }
 
     sa_process_common_encryption_s* process_common_encryption = NULL;
+    sa_subsample_length_s* subsample_length_s = NULL;
     void* param1 = NULL;
     void* param2 = NULL;
     void* param3 = NULL;
@@ -90,6 +91,18 @@ sa_status sa_process_common_encryption(
             process_common_encryption->in_buffer_type = samples[i].in->buffer_type;
 
             size_t param1_size = samples[i].subsample_count * sizeof(sa_subsample_length);
+            subsample_length_s = malloc(param1_size);
+            if (subsample_length_s == NULL) {
+                ERROR("malloc failed");
+                status = SA_STATUS_NULL_PARAMETER;
+                break;
+            }
+
+            for (size_t j = 0; j < samples[i].subsample_count; j++) {
+                subsample_length_s[j].bytes_of_clear_data = samples[i].subsample_lengths[j].bytes_of_clear_data;
+                subsample_length_s[j].bytes_of_protected_data = samples[i].subsample_lengths[j].bytes_of_protected_data;
+            }
+
             CREATE_PARAM(param1, samples[i].subsample_lengths, param1_size);
             uint32_t param1_type = TA_PARAM_IN;
             size_t param2_size;
@@ -172,6 +185,10 @@ sa_status sa_process_common_encryption(
             else
                 samples[i].in->context.svp.offset = process_common_encryption->in_offset;
 
+            if (subsample_length_s != NULL)
+                free(subsample_length_s);
+
+            subsample_length_s = NULL;
             RELEASE_PARAM(param1);
             param1 = NULL;
             RELEASE_PARAM(param2);
@@ -180,6 +197,9 @@ sa_status sa_process_common_encryption(
             param3 = NULL;
         }
     } while (false);
+
+    if (subsample_length_s != NULL)
+        free(subsample_length_s);
 
     RELEASE_COMMAND(process_common_encryption);
     RELEASE_PARAM(param1);

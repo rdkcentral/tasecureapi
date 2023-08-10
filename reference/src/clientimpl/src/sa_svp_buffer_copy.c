@@ -40,6 +40,7 @@ sa_status sa_svp_buffer_copy(
     }
 
     sa_svp_buffer_copy_s* svp_buffer_copy = NULL;
+    sa_svp_offset_s* offset_s = NULL;
     sa_status status;
     void* param1 = NULL;
     size_t param1_size;
@@ -49,8 +50,21 @@ sa_status sa_svp_buffer_copy(
         svp_buffer_copy->out = out;
         svp_buffer_copy->in = in;
 
-        param1_size = offsets_length * sizeof(sa_svp_offset);
-        CREATE_PARAM(param1, offsets, param1_size);
+        param1_size = offsets_length * sizeof(sa_svp_offset_s);
+        offset_s = malloc(param1_size);
+        if (offset_s == NULL) {
+            ERROR("malloc failed");
+            status = SA_STATUS_NULL_PARAMETER;
+            break;
+        }
+
+        for (size_t i = 0; i < offsets_length; i++) {
+            offset_s[i].out_offset = offsets[i].out_offset;
+            offset_s[i].in_offset = offsets[i].in_offset;
+            offset_s[i].length = offsets[i].length;
+        }
+
+        CREATE_PARAM(param1, offset_s, param1_size);
 
         // clang-format off
         uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_IN, TA_PARAM_NULL, TA_PARAM_NULL};
@@ -65,6 +79,9 @@ sa_status sa_svp_buffer_copy(
             break;
         }
     } while (false);
+
+    if (offset_s != NULL)
+        free(offset_s);
 
     RELEASE_COMMAND(svp_buffer_copy);
     RELEASE_PARAM(param1);

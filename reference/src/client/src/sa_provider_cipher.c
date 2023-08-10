@@ -573,7 +573,7 @@ static int cipher_get_ctx_params(
 
     param = OSSL_PARAM_locate(params, OSSL_PARAM_SA_KEY);
     if (param != NULL && !OSSL_PARAM_set_ulong(param, cipher_context->key)) {
-        ERROR("OSSL_PARAM_set_ulong failed");
+        ERROR("OSSL_PARAM_set_uint64 failed");
         return 0;
     }
 
@@ -633,8 +633,8 @@ static int cipher_set_ctx_params(void* cctx,
     param = OSSL_PARAM_locate_const(params, OSSL_PARAM_SA_KEY);
     if (param != NULL) {
         unsigned long key;
-        if (!OSSL_PARAM_get_ulong(param, &key)) {
-            ERROR("OSSL_PARAM_get_ulong failed");
+        if (!OSSL_PARAM_get_uint64(param, &key)) {
+            ERROR("OSSL_PARAM_get_uint64 failed");
             return 0;
         }
 
@@ -678,7 +678,7 @@ static const OSSL_PARAM* cipher_gettable_ctx_params(
             OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, NULL, 0),
             OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_IVLEN, NULL),
             OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_IV, NULL, 0),
-            OSSL_PARAM_ulong(OSSL_PARAM_SA_KEY, NULL),
+            OSSL_PARAM_uint64(OSSL_PARAM_SA_KEY, NULL),
             OSSL_PARAM_int(OSSL_PARAM_SA_KEY_DELETE, NULL),
             OSSL_PARAM_END};
 
@@ -692,7 +692,7 @@ static const OSSL_PARAM* cipher_settable_ctx_params(
             OSSL_PARAM_uint(OSSL_CIPHER_PARAM_PADDING, NULL),
             OSSL_PARAM_uint(OSSL_CIPHER_PARAM_KEYLEN, NULL),
             OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, NULL, 0),
-            OSSL_PARAM_ulong(OSSL_PARAM_SA_KEY, NULL),
+            OSSL_PARAM_uint64(OSSL_PARAM_SA_KEY, NULL),
             OSSL_PARAM_int(OSSL_PARAM_SA_KEY_DELETE, NULL),
             OSSL_PARAM_END};
 

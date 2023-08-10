@@ -323,8 +323,8 @@ static int keymgmt_import(
             const OSSL_PARAM* sa_key_param = OSSL_PARAM_locate_const(params, OSSL_PARAM_SA_KEY);
             if (sa_key_param != NULL) {
                 // Import the private key from SecApi3.
-                if (OSSL_PARAM_get_ulong(sa_key_param, &private_key) != 1) {
-                    ERROR("OSSL_PARAM_get_ulong failed");
+                if (OSSL_PARAM_get_uint64(sa_key_param, &private_key) != 1) {
+                    ERROR("OSSL_PARAM_get_uint64 failed");
                     break;
                 }
             } else {
@@ -527,7 +527,7 @@ static int keymgmt_import(
 
 static const OSSL_PARAM* keymgmt_import_types(ossl_unused int selection) {
     static const OSSL_PARAM settable_params[] = {
-            OSSL_PARAM_ulong(OSSL_PARAM_SA_KEY, NULL),
+            OSSL_PARAM_uint64(OSSL_PARAM_SA_KEY, NULL),
             OSSL_PARAM_int(OSSL_PARAM_SA_KEY_DELETE, NULL),
             OSSL_PARAM_END};
 
@@ -555,7 +555,7 @@ static int keymgmt_export(
         }
 
         OSSL_PARAM private_key_params[] = {
-                OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, &key_data->private_key),
+                OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, &key_data->private_key),
                 OSSL_PARAM_construct_end()};
 
         if (EVP_PKEY_todata(key_data->public_key, selection, &public_key_params) != 1) {

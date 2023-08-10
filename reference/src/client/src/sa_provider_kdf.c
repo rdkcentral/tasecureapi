@@ -406,8 +406,8 @@ int kdf_set_ctx_params(
     param = OSSL_PARAM_locate_const(params, OSSL_PARAM_SA_KEY);
     if (param != NULL) {
         unsigned long key;
-        if (!OSSL_PARAM_get_ulong(param, &key)) {
-            ERROR("OSSL_PARAM_get_ulong failed");
+        if (!OSSL_PARAM_get_uint64(param, &key)) {
+            ERROR("OSSL_PARAM_get_uint64 failed");
             return 0;
         }
 
@@ -506,7 +506,7 @@ ossl_unused const OSSL_PARAM* kdf_hkdf_settable_ctx_params(
             OSSL_PARAM_utf8_string(OSSL_KDF_PARAM_DIGEST, NULL, 0),
             OSSL_PARAM_octet_string(OSSL_KDF_PARAM_SALT, NULL, 0),
             OSSL_PARAM_octet_string(OSSL_KDF_PARAM_INFO, NULL, 0),
-            OSSL_PARAM_ulong(OSSL_PARAM_SA_KEY, NULL),
+            OSSL_PARAM_uint64(OSSL_PARAM_SA_KEY, NULL),
             OSSL_PARAM_int(OSSL_PARAM_SA_KEY_DELETE, NULL),
             OSSL_PARAM_END};
 
@@ -521,7 +521,7 @@ ossl_unused const OSSL_PARAM* kdf_concat_settable_ctx_params(
             OSSL_PARAM_octet_string(OSSL_KDF_PARAM_KEY, NULL, 0),
             OSSL_PARAM_utf8_string(OSSL_KDF_PARAM_DIGEST, NULL, 0),
             OSSL_PARAM_octet_string(OSSL_KDF_PARAM_INFO, NULL, 0),
-            OSSL_PARAM_ulong(OSSL_PARAM_SA_KEY, NULL),
+            OSSL_PARAM_uint64(OSSL_PARAM_SA_KEY, NULL),
             OSSL_PARAM_int(OSSL_PARAM_SA_KEY_DELETE, NULL),
             OSSL_PARAM_END};
 
@@ -536,7 +536,7 @@ ossl_unused const OSSL_PARAM* kdf_ansi_x963_settable_ctx_params(
             OSSL_PARAM_octet_string(OSSL_KDF_PARAM_KEY, NULL, 0),
             OSSL_PARAM_utf8_string(OSSL_KDF_PARAM_DIGEST, NULL, 0),
             OSSL_PARAM_octet_string(OSSL_KDF_PARAM_INFO, NULL, 0),
-            OSSL_PARAM_ulong(OSSL_PARAM_SA_KEY, NULL),
+            OSSL_PARAM_uint64(OSSL_PARAM_SA_KEY, NULL),
             OSSL_PARAM_int(OSSL_PARAM_SA_KEY_DELETE, NULL),
             OSSL_PARAM_END};
 
@@ -553,7 +553,7 @@ ossl_unused const OSSL_PARAM* kdf_cmac_settable_ctx_params(
             OSSL_PARAM_octet_string(OSSL_KDF_PARAM_INFO, NULL, 0),
             OSSL_PARAM_int(OSSL_KDF_PARAM_KBKDF_USE_L, NULL),
             OSSL_PARAM_int(OSSL_KDF_PARAM_KBKDF_USE_SEPARATOR, NULL),
-            OSSL_PARAM_ulong(OSSL_PARAM_SA_KEY, NULL),
+            OSSL_PARAM_uint64(OSSL_PARAM_SA_KEY, NULL),
             OSSL_PARAM_int(OSSL_PARAM_SA_KEY_DELETE, NULL),
             OSSL_PARAM_END};
 

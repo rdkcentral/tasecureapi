@@ -304,8 +304,8 @@ static int mac_set_ctx_params(
     param = OSSL_PARAM_locate_const(params, OSSL_PARAM_SA_KEY);
     if (param != NULL) {
         unsigned long key;
-        if (!OSSL_PARAM_get_ulong(param, &key)) {
-            ERROR("OSSL_PARAM_get_ulong failed");
+        if (!OSSL_PARAM_get_uint64(param, &key)) {
+            ERROR("OSSL_PARAM_get_uint64 failed");
             return 0;
         }
 
@@ -353,7 +353,7 @@ ossl_unused static const OSSL_PARAM* mac_hmac_settable_ctx_params(
     static const OSSL_PARAM settable_params[] = {
             OSSL_PARAM_utf8_string(OSSL_MAC_PARAM_DIGEST, NULL, 0),
             OSSL_PARAM_utf8_string(OSSL_MAC_PARAM_PROPERTIES, NULL, 0),
-            OSSL_PARAM_ulong(OSSL_PARAM_SA_KEY, NULL),
+            OSSL_PARAM_uint64(OSSL_PARAM_SA_KEY, NULL),
             OSSL_PARAM_int(OSSL_PARAM_SA_KEY_DELETE, NULL),
             OSSL_PARAM_END};
 
@@ -365,7 +365,7 @@ ossl_unused static const OSSL_PARAM* mac_cmac_settable_ctx_params(
         ossl_unused void* provctx) {
 
     static const OSSL_PARAM settable_params[] = {
-            OSSL_PARAM_ulong(OSSL_PARAM_SA_KEY, NULL),
+            OSSL_PARAM_uint64(OSSL_PARAM_SA_KEY, NULL),
             OSSL_PARAM_int(OSSL_PARAM_SA_KEY_DELETE, NULL),
             OSSL_PARAM_END};
 
