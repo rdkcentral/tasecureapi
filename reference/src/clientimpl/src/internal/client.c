@@ -23,21 +23,14 @@
 #include <stdlib.h>
 #include <threads.h>
 
-static thread_local void* session = NULL;
-static tss_t thread_session;
+static void* session = NULL;
 static once_flag mutex_flag = ONCE_FLAG_INIT;
 static once_flag shutdown_flag = ONCE_FLAG_INIT;
 static mtx_t mutex;
 
-static void client_thread_shutdown(void* client_session) {
-    if (client_session != NULL) {
-        ta_close_session(client_session);
-    }
-}
-
 static void client_shutdown() {
     if (session != NULL) {
-        client_thread_shutdown(session);
+        ta_close_session(session);
         session = NULL;
     }
 }
@@ -50,12 +43,6 @@ static void client_mutex_create() {
 }
 
 static void client_create() {
-    // Calls client_thread_shutdown when the thread exits.
-    if (tss_create(&thread_session, client_thread_shutdown) != 0) {
-        ERROR("tss_create failed");
-        return;
-    }
-
     // Calls client_shutdown when the main thread exits.
     if (atexit(client_shutdown) != 0) {
         ERROR("atexit failed");
@@ -90,14 +77,6 @@ void* client_session() {
         // Call after the open session so that client_shutdown handler runs after the TA handler in the reference
         // implementation.
         call_once(&shutdown_flag, client_create);
-
-        // Store the session in thread specific storage so that it can be cleaned up automatically when the thread
-        // exits.
-        void* thread_session_ptr = session;
-        if (tss_set(thread_session, thread_session_ptr) != thrd_success) {
-            ERROR("tss_set failed");
-            break;
-        }
     } while (false);
 
     if (mtx_unlock(&mutex) != thrd_success) {
