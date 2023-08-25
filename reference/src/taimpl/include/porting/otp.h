@@ -44,6 +44,14 @@ extern "C" {
 #endif
 
 /**
+ * Identifies the type of root key to use.
+ */
+typedef enum {
+    UNIQUE,
+    COMMON
+} sa_root_key_type;
+
+/**
  * Obtain the 8 byte unique device id.
  *
  * @param[out] id device id.
@@ -57,6 +65,7 @@ sa_status otp_device_id(uint64_t* id);
  *
  * @param[out] stored_key_derived the derived 16 byte key.
  * @param[in] rights rights for the derived key.
+ * @param[in] root_key_type the type of the root key to use.
  * @param[in] c1 16 byte input for the first stage of the key ladder.
  * @param[in] c2 16 byte input for the second stage of the key ladder.
  * @param[in] c3 16 byte input for the third stage of the key ladder.
@@ -66,27 +75,7 @@ sa_status otp_device_id(uint64_t* id);
 sa_status otp_root_key_ladder(
         stored_key_t** stored_key_derived,
         const sa_rights* rights,
-        const void* c1,
-        const void* c2,
-        const void* c3,
-        const void* c4);
-
-/**
- * Derive a key from common based root key using a 4 stage key ladder. First 3 stages will be performed
- * in a hardware key ladder. SOCs that do not support a common root key should return false.
- *
- * @param[out] stored_key_derived the derived 16 byte key.
- * @param[in] rights rights for the derived key.
- * @param[in] c1 16 byte input for the first stage of the key ladder.
- * @param[in] c2 16 byte input for the second stage of the key ladder.
- * @param[in] c3 16 byte input for the third stage of the key ladder.
- * @param[in] c4 16 byte input for the fourth stage of the key ladder.
- * @return SA_STATUS_OK if the call succeeded, SA_STATUS_OPERATION_NOT_SUPPORTED if the SoC does not support a common
- * root key.
- */
-sa_status otp_common_root_key_ladder(
-        stored_key_t** stored_key_derived,
-        const sa_rights* rights,
+        sa_root_key_type root_key_type,
         const void* c1,
         const void* c2,
         const void* c3,

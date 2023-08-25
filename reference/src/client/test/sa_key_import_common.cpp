@@ -488,6 +488,7 @@ std::vector<std::string> SaKeyImportSocBase::ENTITLED_TA_IDS = {
 
 std::string SaKeyImportSocBase::generate_encrypted_key(
         uint8_t container_version,
+        const std::string& root_key_type,
         std::string& key_type,
         std::vector<uint8_t>& key,
         std::vector<uint8_t>& iv,
@@ -503,6 +504,9 @@ std::string SaKeyImportSocBase::generate_encrypted_key(
     std::vector<uint8_t> aad;
     aad.insert(aad.end(), alg.begin(), alg.end());
     aad.insert(aad.end(), container_version);
+    if (container_version >= 5)
+        aad.insert(aad.end(), root_key_type.begin(), root_key_type.end());
+
     aad.insert(aad.end(), key_type.begin(), key_type.end());
     aad.insert(aad.end(), key_usage);
     if (container_version >= 3 && key_usage == KEY_ONLY)
@@ -521,8 +525,15 @@ std::string SaKeyImportSocBase::generate_encrypted_key(
 
     std::vector<uint8_t> empty;
     std::vector<uint8_t> root_key;
-    if (!get_root_key(root_key))
+    if (root_key_type == UNIQUE_STR) {
+        if (!get_root_key(root_key))
+            return "";
+    } else if (root_key_type == COMMON_STR) {
+        if (!get_common_root_key(root_key))
+            return "";
+    } else {
         return "";
+    }
 
     auto derived_key = derive_test_key_ladder(root_key, c1, c2, c3, empty);
     if (derived_key == nullptr)
@@ -541,6 +552,7 @@ std::string SaKeyImportSocBase::generate_header() {
 
 std::string SaKeyImportSocBase::generate_payload(
         uint8_t container_version,
+        const std::string& root_key_type,
         std::string& key_type,
         std::vector<uint8_t>& key,
         std::vector<uint8_t>& iv,
@@ -555,11 +567,14 @@ std::string SaKeyImportSocBase::generate_payload(
     std::ostringstream oss;
 
     oss << R"({"containerVersion": )" << static_cast<int>(container_version);
+    if (container_version >= 5)
+        oss << R"(, "rootKeyType": ")" << root_key_type << "\"";
+
     if (!key_type.empty())
         oss << R"(, "keyType": ")" << key_type << "\"";
 
-    std::string const encrypted_key = generate_encrypted_key(container_version, key_type, key, iv, key_usage,
-            decrypted_key_usage, entitled_ta_ids, c1, c2, c3, tag);
+    std::string const encrypted_key = generate_encrypted_key(container_version, root_key_type, key_type, key, iv,
+            key_usage, decrypted_key_usage, entitled_ta_ids, c1, c2, c3, tag);
     if (encrypted_key.empty())
         return "";
 
@@ -683,6 +698,7 @@ void SaKeyImportSocBase::set_key_usage_flags(
 sa_status SaKeyImportSocBase::import_key(
         sa_key* key,
         uint8_t container_version,
+        const std::string& root_key_type,
         std::string& key_type,
         sa_key_type clear_key_type,
         uint8_t secapi_version,
@@ -698,8 +714,8 @@ sa_status SaKeyImportSocBase::import_key(
 
     std::vector<uint8_t> tag;
     auto jwt_header = generate_header();
-    auto jwt_payload = generate_payload(container_version, key_type, clear_key, iv, key_usage, decrypted_key_usage,
-            entitled_ta_ids, c1, c2, c3, tag);
+    auto jwt_payload = generate_payload(container_version, root_key_type, key_type, clear_key, iv, key_usage,
+            decrypted_key_usage, entitled_ta_ids, c1, c2, c3, tag);
     std::string const key_container = jwt_header + "." + jwt_payload + "." + b64_encode(tag.data(), tag.size(), true);
 
     bool const hmac = memcmp(key_type.data(), "HMAC", 4) == 0;
@@ -860,7 +876,11 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(KEY_ONLY, KEY_ONLY),
                 std::make_tuple(KEY_ONLY, SOC_DATA_AND_KEY),
                 std::make_tuple(SOC_DATA_AND_KEY, 0)),
-            ::testing::Values(0, 2, 3)));
+            ::testing::Values(0, 2, 3),
+            ::testing::Values(
+                std::make_tuple(4, UNIQUE_STR),
+                std::make_tuple(5, UNIQUE_STR),
+                std::make_tuple(5, COMMON_STR))));
 
 INSTANTIATE_TEST_SUITE_P(SaKeyImportSocTest, SaKeyImportSocTaIdRangeTest,
     ::testing::Range(0, MAX_NUM_ALLOWED_TA_IDS + 1));

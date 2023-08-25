@@ -32,6 +32,8 @@
 #define AES_128_GCM "A128GCM"
 #define MAX_AAD_SIZE 1300
 #define SOC_CONTAINER_VERSION 4
+#define UNIQUE_STR "unique"
+#define COMMON_STR "common"
 
 typedef struct {
     const void* in;
@@ -61,6 +63,7 @@ typedef struct {
 
 typedef struct {
     uint8_t container_version;
+    sa_root_key_type root_key_type;
     size_t key_type_string_length;
     const char* key_type_string;
     size_t encrypted_key_length;
@@ -319,6 +322,28 @@ static sa_status parse_payload(
 
     payload->container_version = json_value_as_integer(container_version_field->value);
 
+    // read the root key type
+    if (payload->container_version >= 5) {
+        const json_key_value_t* root_key_type_field = json_key_value_find("rootKeyType", fields, fields_count);
+        if (root_key_type_field == NULL) {
+            payload->root_key_type = UNIQUE;
+        } else {
+            size_t root_key_type_length;
+            const char* root_key_type = json_value_as_string(&root_key_type_length,
+                    root_key_type_field->value);
+            if (memory_memcmp_constant(root_key_type, UNIQUE_STR, root_key_type_length) == 0) {
+                payload->root_key_type = UNIQUE;
+            } else if (memory_memcmp_constant(root_key_type, COMMON_STR, root_key_type_length) == 0) {
+                payload->root_key_type = COMMON;
+            } else {
+                ERROR("Invalid rootKeyType");
+                return SA_STATUS_INVALID_KEY_FORMAT;
+            }
+        }
+    } else {
+        payload->root_key_type = UNIQUE;
+    }
+
     // read key type
     const json_key_value_t* key_type_field = json_key_value_find("keyType", fields, fields_count);
     if (key_type_field == NULL) {
@@ -498,13 +523,27 @@ static size_t build_aad(
     length += header->alg_size;
 
     // container version
-    if (payload->container_version != SOC_CONTAINER_VERSION) {
+    if (payload->container_version < SOC_CONTAINER_VERSION) {
         ERROR("Invalid container version");
         return 0;
     }
 
     *(aad + length) = payload->container_version;
     length++;
+
+    // root key type
+    if (payload->container_version >= 5) {
+        if (payload->root_key_type == UNIQUE) {
+            memcpy(aad + length, UNIQUE_STR, strlen(UNIQUE_STR)); // NOLINT
+            length += strlen(UNIQUE_STR);
+        } else if (payload->root_key_type == COMMON) {
+            memcpy(aad + length, COMMON_STR, strlen(COMMON_STR)); // NOLINT
+            length += strlen(COMMON_STR);
+        } else {
+            ERROR("Invalid root key type");
+            return 0;
+        }
+    }
 
     // key type string
     if (!payload->key_type_string || payload->key_type_string_length <= 0) {
@@ -755,9 +794,9 @@ static sa_status decrypt_key_and_verify_mac(
             break;
         }
 
-        status = otp_unwrap_aes_gcm(key, &payload->key_ladder_inputs, payload->encrypted_key,
-                payload->encrypted_key_length, payload->iv, GCM_IV_LENGTH, aad, aad_length, unpacked->mac,
-                unpacked->mac_length);
+        status = otp_unwrap_aes_gcm(key, &payload->key_ladder_inputs, payload->root_key_type,
+                payload->encrypted_key, payload->encrypted_key_length, payload->iv, GCM_IV_LENGTH, aad, aad_length,
+                unpacked->mac, unpacked->mac_length);
         if (status != SA_STATUS_OK) {
             ERROR("otp_unwrap_aes_gcm failed");
             break;

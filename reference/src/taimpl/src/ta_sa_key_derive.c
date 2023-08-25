@@ -106,14 +106,14 @@ static sa_status ta_sa_key_derive_root_key_ladder(
     stored_key_t* stored_key_derived = NULL;
     do {
         if (kdf_algorithm == SA_KDF_ALGORITHM_ROOT_KEY_LADDER) {
-            status = otp_root_key_ladder(&stored_key_derived, rights, parameters->c1, parameters->c2,
+            status = otp_root_key_ladder(&stored_key_derived, rights, UNIQUE, parameters->c1, parameters->c2,
                     parameters->c3, parameters->c4);
             if (status != SA_STATUS_OK) {
                 ERROR("otp_root_key_ladder failed");
                 break;
             }
         } else if (kdf_algorithm == SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER) {
-            status = otp_common_root_key_ladder(&stored_key_derived, rights, parameters->c1, parameters->c2,
+            status = otp_root_key_ladder(&stored_key_derived, rights, COMMON, parameters->c1, parameters->c2,
                     parameters->c3, parameters->c4);
             if (status != SA_STATUS_OK) {
                 ERROR("otp_common_root_key_ladder failed");

@@ -72,7 +72,6 @@
  * EVP_DigestSignUpdate(evp_md_ctx, data, data_length);
  * EVP_DigestSignFinal(evp_md_ctx, signature, &signature_length);
  * EVP_MD_CTX_free(evp_md_ctx);
- * EVP_PKEY_free(evp_pkey);
  * ```
  *
  * Signing Predigested Content (RSA, EC)
@@ -87,7 +86,7 @@
  * EVP_PKEY_CTX_set_signature_md(evp_pkey_ctx, evp_md);
  * EVP_PKEY_sign(evp_pkey_ctx, signature, &signature_length, digest, digest_length);
  * EVP_MD_CTX_free(evp_md_ctx);
- * EVP_PKEY_free(evp_pkey);
+ * EVP_PKEY_CTX_free(evp_pkey_ctx);
  * ```
  *
  * Decryption (RSA)
@@ -100,7 +99,6 @@
  * EVP_PKEY_CTX_set_rsa_padding(evp_pkey_ctx, RSA_PKCS1_PADDING);
  * EVP_PKEY_decrypt(evp_pkey_ctx, decrypted_data, &decrypted_data_length, encrypted_data, encrypted_data_length);
  * EVP_PKEY_CTX_free(evp_pkey_ctx);
- * EVP_PKEY_free(evp_pkey);
  * ```
  *
  * Derivation (DH, EC, X25519, X448)
@@ -114,7 +112,6 @@
  * sa_key shared_secret_key = *((sa_key*)shared_secret);
  * EVP_PKEY_CTX_free(evp_pkey_ctx);
  * EVP_PKEY_free(evp_pkey);
- * sa_engine_free(engine);
  * ```
  *
  * KDF (HMAC, CONCAT a.k.a. SSKDF, ANSI_X963 a.k.a. X963KDF, CMAC a.k.a. KBKDF)
