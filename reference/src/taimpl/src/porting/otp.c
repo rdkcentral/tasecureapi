@@ -273,7 +273,7 @@ static sa_status otp_hw_key_ladder(
             }
         } else if (root_key_type == COMMON) {
             if (!get_common_root_key(root_key, &root_key_length)) {
-                ERROR("get_root_key failed");
+                ERROR("get_common_root_key failed");
                 break;
             }
         } else {

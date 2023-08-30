@@ -326,7 +326,7 @@ static sa_status parse_payload(
     if (payload->container_version >= 5) {
         const json_key_value_t* root_key_type_field = json_key_value_find("rootKeyType", fields, fields_count);
         if (root_key_type_field == NULL) {
-            payload->root_key_type = UNIQUE;
+            payload->root_key_type = UNDEFINED;
         } else {
             size_t root_key_type_length;
             const char* root_key_type = json_value_as_string(&root_key_type_length,
@@ -341,7 +341,7 @@ static sa_status parse_payload(
             }
         }
     } else {
-        payload->root_key_type = UNIQUE;
+        payload->root_key_type = UNDEFINED;
     }
 
     // read key type
@@ -539,9 +539,6 @@ static size_t build_aad(
         } else if (payload->root_key_type == COMMON) {
             memcpy(aad + length, COMMON_STR, strlen(COMMON_STR)); // NOLINT
             length += strlen(COMMON_STR);
-        } else {
-            ERROR("Invalid root key type");
-            return 0;
         }
     }
 
@@ -794,9 +791,10 @@ static sa_status decrypt_key_and_verify_mac(
             break;
         }
 
-        status = otp_unwrap_aes_gcm(key, &payload->key_ladder_inputs, payload->root_key_type,
-                payload->encrypted_key, payload->encrypted_key_length, payload->iv, GCM_IV_LENGTH, aad, aad_length,
-                unpacked->mac, unpacked->mac_length);
+        status = otp_unwrap_aes_gcm(key, &payload->key_ladder_inputs,
+                payload->root_key_type == UNDEFINED ? UNIQUE : payload->root_key_type, payload->encrypted_key,
+                payload->encrypted_key_length, payload->iv, GCM_IV_LENGTH, aad, aad_length, unpacked->mac,
+                unpacked->mac_length);
         if (status != SA_STATUS_OK) {
             ERROR("otp_unwrap_aes_gcm failed");
             break;

@@ -504,7 +504,7 @@ std::string SaKeyImportSocBase::generate_encrypted_key(
     std::vector<uint8_t> aad;
     aad.insert(aad.end(), alg.begin(), alg.end());
     aad.insert(aad.end(), container_version);
-    if (container_version >= 5)
+    if (container_version >= 5 && !root_key_type.empty())
         aad.insert(aad.end(), root_key_type.begin(), root_key_type.end());
 
     aad.insert(aad.end(), key_type.begin(), key_type.end());
@@ -525,7 +525,7 @@ std::string SaKeyImportSocBase::generate_encrypted_key(
 
     std::vector<uint8_t> empty;
     std::vector<uint8_t> root_key;
-    if (root_key_type == UNIQUE_STR) {
+    if (root_key_type.empty() || root_key_type == UNIQUE_STR) {
         if (!get_root_key(root_key))
             return "";
     } else if (root_key_type == COMMON_STR) {
@@ -567,7 +567,7 @@ std::string SaKeyImportSocBase::generate_payload(
     std::ostringstream oss;
 
     oss << R"({"containerVersion": )" << static_cast<int>(container_version);
-    if (container_version >= 5)
+    if (container_version >= 5 && !root_key_type.empty())
         oss << R"(, "rootKeyType": ")" << root_key_type << "\"";
 
     if (!key_type.empty())
@@ -878,7 +878,8 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(SOC_DATA_AND_KEY, 0)),
             ::testing::Values(0, 2, 3),
             ::testing::Values(
-                std::make_tuple(4, UNIQUE_STR),
+                std::make_tuple(4, ""),
+                std::make_tuple(5, ""),
                 std::make_tuple(5, UNIQUE_STR),
                 std::make_tuple(5, COMMON_STR))));
 

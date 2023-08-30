@@ -47,6 +47,7 @@ extern "C" {
  * Identifies the type of root key to use.
  */
 typedef enum {
+    UNDEFINED = 0,
     UNIQUE,
     COMMON
 } sa_root_key_type;

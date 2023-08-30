@@ -116,7 +116,7 @@ static sa_status ta_sa_key_derive_root_key_ladder(
             status = otp_root_key_ladder(&stored_key_derived, rights, COMMON, parameters->c1, parameters->c2,
                     parameters->c3, parameters->c4);
             if (status != SA_STATUS_OK) {
-                ERROR("otp_common_root_key_ladder failed");
+                ERROR("otp_root_key_ladder failed");
                 break;
             }
         } else {
