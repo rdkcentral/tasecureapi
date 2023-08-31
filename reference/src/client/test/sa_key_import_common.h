@@ -53,6 +53,9 @@
 #define RIGHT_ANALOG_OUTPUT_ALLOWED 0x05
 #define RIGHT_CGMSA_REQUIRED 0x08
 
+#define UNIQUE_STR "unique"
+#define COMMON_STR "common"
+
 class SaKeyImportBase : public SaKeyBase {
 protected:
     static std::shared_ptr<std::vector<uint8_t>> export_key(
@@ -139,6 +142,7 @@ protected:
 
     static std::string generate_encrypted_key(
             uint8_t container_version,
+            const std::string& root_key_type,
             std::string& key_type,
             std::vector<uint8_t>& key,
             std::vector<uint8_t>& iv,
@@ -154,6 +158,7 @@ protected:
 
     static std::string generate_payload(
             uint8_t container_version,
+            const std::string& root_key_type,
             std::string& key_type,
             std::vector<uint8_t>& key,
             std::vector<uint8_t>& iv,
@@ -175,6 +180,7 @@ protected:
     static sa_status import_key(
             sa_key* key,
             uint8_t container_version,
+            const std::string& root_key_type,
             std::string& key_type,
             sa_key_type clear_key_type,
             uint8_t secapi_version,
@@ -191,8 +197,10 @@ protected:
 
 class SaKeyImportSocTest : public ::testing::Test, public SaKeyImportSocBase {};
 
-typedef std::tuple<std::tuple<std::string, size_t, sa_key_type>, std::tuple<uint8_t, uint8_t>, uint8_t>
-        SaKeyImportSocAllKeyCombosType;
+// clang-format off
+typedef std::tuple<std::tuple<std::string, size_t, sa_key_type>, std::tuple<uint8_t, uint8_t>, uint8_t,
+        std::tuple<uint8_t, const std::string>> SaKeyImportSocAllKeyCombosType;
+// clang-format on
 
 class SaKeyImportSocAllKeyCombosTest
     : public ::testing::TestWithParam<SaKeyImportSocAllKeyCombosType>,

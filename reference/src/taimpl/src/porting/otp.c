@@ -233,6 +233,7 @@ static sa_status wrap_aes_cbc(
  */
 static sa_status otp_hw_key_ladder(
         void* derived,
+        sa_root_key_type root_key_type,
         const void* c1,
         const void* c2,
         const void* c3) {
@@ -265,8 +266,19 @@ static sa_status otp_hw_key_ladder(
     uint8_t root_key[SYM_256_KEY_SIZE];
     do {
         size_t root_key_length = SYM_256_KEY_SIZE;
-        if (!get_root_key(root_key, &root_key_length)) {
-            ERROR("get_root_key failed");
+        if (root_key_type == UNIQUE) {
+            if (!get_root_key(root_key, &root_key_length)) {
+                ERROR("get_root_key failed");
+                break;
+            }
+        } else if (root_key_type == COMMON) {
+            if (!get_common_root_key(root_key, &root_key_length)) {
+                ERROR("get_common_root_key failed");
+                break;
+            }
+        } else {
+            ERROR("unknown root key type");
+            status = SA_STATUS_INVALID_PARAMETER;
             break;
         }
 
@@ -283,92 +295,6 @@ static sa_status otp_hw_key_ladder(
         }
 
         status = unwrap_aes_ecb_internal(k1, c1, AES_BLOCK_SIZE, root_key, root_key_length);
-        if (status != SA_STATUS_OK) {
-            ERROR("unwrap_aes_ecb_internal failed");
-            break;
-        }
-
-        status = unwrap_aes_ecb_internal(k2, c2, AES_BLOCK_SIZE, k1, k1_length);
-        if (status != SA_STATUS_OK) {
-            ERROR("unwrap_aes_ecb_internal failed");
-            break;
-        }
-
-        status = unwrap_aes_ecb_internal(derived, c3, AES_BLOCK_SIZE, k2, k2_length);
-        if (status != SA_STATUS_OK) {
-            ERROR("unwrap_aes_ecb_internal failed");
-            break;
-        }
-
-        status = SA_STATUS_OK;
-    } while (false);
-
-    memory_memset_unoptimizable(root_key, 0, SYM_256_KEY_SIZE);
-    if (k1 != NULL) {
-        memory_memset_unoptimizable(k1, 0, k1_length);
-        memory_secure_free(k1);
-    }
-
-    if (k2 != NULL) {
-        memory_memset_unoptimizable(k2, 0, k2_length);
-        memory_secure_free(k2);
-    }
-
-    return status;
-}
-
-static sa_status otp_common_key_ladder(
-        void* derived,
-        const void* c1,
-        const void* c2,
-        const void* c3) {
-
-    if (derived == NULL) {
-        ERROR("NULL derived");
-        return false;
-    }
-
-    if (c1 == NULL) {
-        ERROR("NULL c1");
-        return false;
-    }
-
-    if (c2 == NULL) {
-        ERROR("NULL c2");
-        return false;
-    }
-
-    if (c3 == NULL) {
-        ERROR("NULL c3");
-        return false;
-    }
-
-    sa_status status = SA_STATUS_OK;
-    uint8_t* k1 = NULL;
-    size_t k1_length = SYM_128_KEY_SIZE;
-    uint8_t* k2 = NULL;
-    size_t k2_length = SYM_128_KEY_SIZE;
-    uint8_t root_key[SYM_256_KEY_SIZE];
-    do {
-        size_t common_root_key_length = SYM_256_KEY_SIZE;
-        if (!get_common_root_key(root_key, &common_root_key_length)) {
-            ERROR("get_root_key failed");
-            break;
-        }
-
-        k1 = memory_secure_alloc(k1_length);
-        if (k1 == NULL) {
-            ERROR("memory_secure_alloc failed");
-            break;
-        }
-
-        k2 = memory_secure_alloc(k2_length);
-        if (k2 == NULL) {
-            ERROR("memory_secure_alloc failed");
-            break;
-        }
-
-        status = unwrap_aes_ecb_internal(k1, c1, AES_BLOCK_SIZE, root_key, common_root_key_length);
         if (status != SA_STATUS_OK) {
             ERROR("unwrap_aes_ecb_internal failed");
             break;
@@ -720,6 +646,7 @@ sa_status otp_device_id(uint64_t* id) {
 sa_status otp_root_key_ladder(
         stored_key_t** stored_key_derived,
         const sa_rights* rights,
+        sa_root_key_type root_key_type,
         const void* c1,
         const void* c2,
         const void* c3,
@@ -773,102 +700,9 @@ sa_status otp_root_key_ladder(
             break;
         }
 
-        status = otp_hw_key_ladder(k3, c1, c2, c3);
+        status = otp_hw_key_ladder(k3, root_key_type, c1, c2, c3);
         if (status != SA_STATUS_OK) {
             ERROR("otp_hw_key_ladder failed");
-            break;
-        }
-
-        status = unwrap_aes_ecb_internal(derived, c4, AES_BLOCK_SIZE, k3, k3_length);
-        if (status != SA_STATUS_OK) {
-            ERROR("unwrap_aes_ecb_internal failed");
-            break;
-        }
-
-        sa_type_parameters type_parameters;
-        memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
-        status = stored_key_create(stored_key_derived, rights, NULL, SA_KEY_TYPE_SYMMETRIC, &type_parameters,
-                derived_length, derived, derived_length);
-        if (status != SA_STATUS_OK) {
-            ERROR("stored_key_create failed");
-            break;
-        }
-
-        status = SA_STATUS_OK;
-    } while (false);
-
-    if (k3 != NULL) {
-        memory_memset_unoptimizable(k3, 0, k3_length);
-        memory_secure_free(k3);
-    }
-
-    if (derived != NULL) {
-        memory_memset_unoptimizable(derived, 0, derived_length);
-        memory_secure_free(derived);
-    }
-
-    return status;
-}
-
-sa_status otp_common_root_key_ladder(
-        stored_key_t** stored_key_derived,
-        const sa_rights* rights,
-        const void* c1,
-        const void* c2,
-        const void* c3,
-        const void* c4) {
-
-    if (stored_key_derived == NULL) {
-        ERROR("NULL stored_key_derived");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (rights == NULL) {
-        ERROR("NULL rights");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (c1 == NULL) {
-        ERROR("NULL c1");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (c2 == NULL) {
-        ERROR("NULL c2");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (c3 == NULL) {
-        ERROR("NULL c3");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (c4 == NULL) {
-        ERROR("NULL c4");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    sa_status status = SA_STATUS_INTERNAL_ERROR;
-    uint8_t* k3 = NULL;
-    size_t k3_length = SYM_128_KEY_SIZE;
-    uint8_t* derived = NULL;
-    size_t derived_length = AES_BLOCK_SIZE;
-    do {
-        derived = memory_secure_alloc(derived_length);
-        if (derived == NULL) {
-            ERROR("memory_secure_alloc failed");
-            break;
-        }
-
-        k3 = memory_secure_alloc(k3_length);
-        if (k3 == NULL) {
-            ERROR("memory_secure_alloc failed");
-            break;
-        }
-
-        status = otp_common_key_ladder(k3, c1, c2, c3);
-        if (status != SA_STATUS_OK) {
-            ERROR("otp_common_key_ladder failed");
             break;
         }
 
@@ -946,7 +780,8 @@ sa_status otp_wrap_aes_cbc(
         }
 
         // derive wrapping key
-        status = otp_hw_key_ladder(wrapping_key, key_ladder_inputs->c1, key_ladder_inputs->c2, key_ladder_inputs->c3);
+        status = otp_hw_key_ladder(wrapping_key, UNIQUE, key_ladder_inputs->c1, key_ladder_inputs->c2,
+                key_ladder_inputs->c3);
         if (status != SA_STATUS_OK) {
             ERROR("otp_hw_key_ladder failed");
             break;
@@ -1012,7 +847,8 @@ sa_status otp_unwrap_aes_cbc(
         }
 
         // derive wrapping key
-        status = otp_hw_key_ladder(wrapping_key, key_ladder_inputs->c1, key_ladder_inputs->c2, key_ladder_inputs->c3);
+        status = otp_hw_key_ladder(wrapping_key, UNIQUE, key_ladder_inputs->c1, key_ladder_inputs->c2,
+                key_ladder_inputs->c3);
         if (status != SA_STATUS_OK) {
             ERROR("otp_hw_key_ladder failed");
             break;
@@ -1038,6 +874,7 @@ sa_status otp_unwrap_aes_cbc(
 sa_status otp_unwrap_aes_gcm(
         void* out,
         const key_ladder_inputs_t* key_ladder_inputs,
+        sa_root_key_type root_key_type,
         const void* wrapped,
         size_t wrapped_length,
         const void* iv,
@@ -1088,7 +925,8 @@ sa_status otp_unwrap_aes_gcm(
         }
 
         // derive wrapping key
-        status = otp_hw_key_ladder(wrapping_key, key_ladder_inputs->c1, key_ladder_inputs->c2, key_ladder_inputs->c3);
+        status = otp_hw_key_ladder(wrapping_key, root_key_type, key_ladder_inputs->c1, key_ladder_inputs->c2,
+                key_ladder_inputs->c3);
         if (status != SA_STATUS_OK) {
             ERROR("otp_hw_key_ladder failed");
             break;
@@ -1158,7 +996,8 @@ sa_status otp_hmac_sha256(
         }
 
         // derive integrity key
-        status = otp_hw_key_ladder(hmac_key, key_ladder_inputs->c1, key_ladder_inputs->c2, key_ladder_inputs->c3);
+        status = otp_hw_key_ladder(hmac_key, UNIQUE, key_ladder_inputs->c1, key_ladder_inputs->c2,
+                key_ladder_inputs->c3);
         if (status != SA_STATUS_OK) {
             ERROR("otp_hw_key_ladder failed");
             break;

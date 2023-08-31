@@ -28,6 +28,7 @@
 #define OTP_INTERNAL_H
 
 #include "common.h"
+#include "otp.h"
 #include "sa_types.h"
 #include "stored_key.h"
 
@@ -184,6 +185,7 @@ sa_status otp_hmac_sha256(
  *
  * @param[out] out unwrapped key with the same length as wrapped_length.
  * @param[in] key_ladder_inputs the key ladder inputs.
+ * @param[in] root_key_type the type of the root key to use.
  * @param[in] wrapped wrapped key data.
  * @param[in] wrapped_length wrapped key data length. Has to be a multiple of 16 bytes.
  * @param[in] iv 16 byte initialization vector.
@@ -197,6 +199,7 @@ sa_status otp_hmac_sha256(
 sa_status otp_unwrap_aes_gcm(
         void* out,
         const key_ladder_inputs_t* key_ladder_inputs,
+        sa_root_key_type root_key_type,
         const void* wrapped,
         size_t wrapped_length,
         const void* iv,

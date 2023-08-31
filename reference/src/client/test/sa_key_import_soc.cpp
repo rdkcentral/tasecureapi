@@ -25,7 +25,7 @@
 
 using namespace client_test_helpers;
 
-#define SOC_CONTAINER_VERSION 4
+#define SOC_CONTAINER_VERSION 5
 
 namespace {
     TEST_P(SaKeyImportSocAllKeyCombosTest, nominal) {
@@ -37,6 +37,9 @@ namespace {
         uint8_t const key_usage = std::get<0>(param1);
         uint8_t const decrypted_key_usage = std::get<1>(param1);
         uint8_t const secapi_version = std::get<2>(GetParam());
+        auto param3 = std::get<3>(GetParam());
+        uint8_t const soc_container_version = std::get<0>(param3);
+        const std::string root_key_type = std::get<1>(param3);
 
         if (key_usage == KEY_ONLY && memcmp(key_type_string.data(), "HMAC", 4) == 0)
             return;
@@ -63,8 +66,8 @@ namespace {
         ASSERT_FALSE(clear_key.empty());
         sa_rights key_rights;
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type_string, key_type, secapi_version,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status status = import_key(key.get(), soc_container_version, root_key_type, key_type_string, key_type,
+                secapi_version, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -114,8 +117,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -134,8 +137,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -154,8 +157,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -174,8 +177,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), 0, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key, iv, key_usage,
-                decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), 0, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key, iv,
+                key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -194,8 +197,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -214,8 +217,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -234,8 +237,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -254,8 +257,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -274,8 +277,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -294,8 +297,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -314,8 +317,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -334,8 +337,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -354,8 +357,8 @@ namespace {
         sa_rights key_rights;
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -376,8 +379,8 @@ namespace {
 
         sa_rights key_rights;
         auto key = create_uninitialized_sa_key();
-        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0, clear_key,
-                iv, key_usage, decrypted_key_usage, entitled_ta_ids, key_rights, c1, c2, c3);
+        sa_status status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
+                clear_key, iv, key_usage, decrypted_key_usage, entitled_ta_ids, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -415,8 +418,8 @@ namespace {
         }
 
         auto key = create_uninitialized_sa_key();
-        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, key_type, SA_KEY_TYPE_SYMMETRIC, 0,
-                clear_key, iv, key_usage, decrypted_key_usage, entitled_ta_ids, key_rights, c1, c2, c3);
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, entitled_ta_ids, key_rights, c1, c2, c3);
         if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
             GTEST_SKIP() << "key type, key size, or curve not supported";
 
@@ -442,6 +445,26 @@ namespace {
                 ASSERT_FALSE(key_check_sym(*key, clear_key));
             }
         }
+    }
+
+    TEST_F(SaKeyImportSocTest, invalidRootKeyType) {
+        std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+        std::string key_type = "AES-128";
+        uint8_t const key_usage = 3;
+        uint8_t const decrypted_key_usage = 0;
+        auto iv = random(GCM_IV_LENGTH);
+        auto c1 = random(AES_BLOCK_SIZE);
+        auto c2 = random(AES_BLOCK_SIZE);
+        auto c3 = random(AES_BLOCK_SIZE);
+        sa_rights key_rights;
+
+        auto key = create_uninitialized_sa_key();
+        sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, "test", key_type, SA_KEY_TYPE_SYMMETRIC,
+                0, clear_key, iv, key_usage, decrypted_key_usage, ENTITLED_TA_IDS, key_rights, c1, c2, c3);
+        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+            GTEST_SKIP() << "key type, key size, or curve not supported";
+
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 } // namespace
 
