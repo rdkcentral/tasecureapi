@@ -90,7 +90,7 @@ sa_status sa_process_common_encryption(
             process_common_encryption->out_buffer_type = samples[i].out->buffer_type;
             process_common_encryption->in_buffer_type = samples[i].in->buffer_type;
 
-            size_t param1_size = samples[i].subsample_count * sizeof(sa_subsample_length);
+            size_t param1_size = samples[i].subsample_count * sizeof(sa_subsample_length_s);
             subsample_length_s = malloc(param1_size);
             if (subsample_length_s == NULL) {
                 ERROR("malloc failed");
