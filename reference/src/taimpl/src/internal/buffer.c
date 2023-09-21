@@ -17,14 +17,13 @@
  */
 
 #include "buffer.h"
-#include "client_store.h"
 #include "log.h"
 #include "porting/memory.h"
 #include "porting/overflow.h"
+#include "porting/svp_internal.h"
 
 sa_status convert_buffer(
         uint8_t** bytes,
-        svp_t** svp,
         const sa_buffer* buffer,
         size_t bytes_to_process,
         const client_t* client,
@@ -32,11 +31,6 @@ sa_status convert_buffer(
 
     if (bytes == NULL) {
         ERROR("NULL bytes");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (svp == NULL) {
-        ERROR("NULL svp");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -56,29 +50,20 @@ sa_status convert_buffer(
     }
 
     if (buffer->buffer_type == SA_BUFFER_TYPE_SVP) {
-        svp_store_t* svp_store = client_get_svp_store(client);
-        sa_status status = svp_store_acquire_exclusive(svp, svp_store, buffer->context.svp.buffer, caller_uuid);
-        if (status != SA_STATUS_OK) {
-            ERROR("svp_store_acquire_exclusive failed");
-            return status;
-        }
-
         size_t memory_range;
         if (add_overflow(buffer->context.svp.offset, bytes_to_process, &memory_range)) {
             ERROR("Integer overflow");
             return SA_STATUS_INVALID_PARAMETER;
         }
 
-        svp_buffer_t* svp_buffer = svp_get_buffer(*svp);
-
         // This call validates that SVP buffer is contained entirely within SVP memory.
-        void* memory_location = svp_get_svp_memory(svp_buffer);
+        void* memory_location = svp_get_svp_memory(buffer->context.svp.svp_memory);
         if (memory_location == NULL) {
             ERROR("memory range is not within SVP memory");
             return SA_STATUS_INVALID_PARAMETER;
         }
 
-        size_t memory_size = svp_get_size(svp_buffer);
+        size_t memory_size = svp_get_size(buffer->context.svp.svp_memory);
         if (memory_range > memory_size) {
             ERROR("buffer not large enough");
             return SA_STATUS_INVALID_PARAMETER;

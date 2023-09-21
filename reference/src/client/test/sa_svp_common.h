@@ -27,7 +27,7 @@
 class SaSvpBase : public ::testing::Test {
 protected:
     void SetUp() override;
-    static std::shared_ptr<sa_svp_buffer> create_sa_svp_buffer(size_t size);
+    static std::shared_ptr<void> create_sa_svp_memory(size_t size);
 };
 
 class SaSvpBufferAllocTest : public SaSvpBase {};

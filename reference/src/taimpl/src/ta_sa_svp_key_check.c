@@ -21,10 +21,10 @@
 #include "common.h"
 #include "key_type.h"
 #include "log.h"
+#include "porting/svp.h"
 #include "porting/transport.h"
 #include "rights.h"
 #include "ta_sa.h"
-#include "unwrap.h"
 
 sa_status ta_sa_svp_key_check(
         sa_key key,
@@ -64,7 +64,6 @@ sa_status ta_sa_svp_key_check(
     client_store_t* client_store = client_store_global();
     client_t* client = NULL;
     stored_key_t* stored_key = NULL;
-    svp_t* in_svp = NULL;
     do {
         status = client_store_acquire(&client, client_store, client_slot, caller_uuid);
         if (status != SA_STATUS_OK) {
@@ -99,7 +98,7 @@ sa_status ta_sa_svp_key_check(
         }
 
         if (in->buffer_type == SA_BUFFER_TYPE_SVP && is_ree(caller_uuid)) {
-            ERROR("ta_sa_svp_buffer_check can only be called by a TA when buffer type is SVP");
+            ERROR("ta_sa_svp_check can only be called by a TA when buffer type is SVP");
             status = SA_STATUS_OPERATION_NOT_ALLOWED;
             break;
         }
@@ -111,7 +110,7 @@ sa_status ta_sa_svp_key_check(
         }
 
         uint8_t* in_bytes = NULL;
-        status = convert_buffer(&in_bytes, &in_svp, in, bytes_to_process, client, caller_uuid);
+        status = convert_buffer(&in_bytes, in, bytes_to_process, client, caller_uuid);
         if (status != SA_STATUS_OK) {
             ERROR("convert_buffer failed");
             break;
@@ -125,9 +124,6 @@ sa_status ta_sa_svp_key_check(
 
         status = SA_STATUS_OK;
     } while (false);
-
-    if (in_svp != NULL)
-        svp_store_release_exclusive(client_get_svp_store(client), in->context.svp.buffer, in_svp, caller_uuid);
 
     stored_key_free(stored_key);
     client_store_release(client_store, client_slot, client, caller_uuid);

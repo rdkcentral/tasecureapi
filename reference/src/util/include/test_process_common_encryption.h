@@ -46,8 +46,8 @@ protected:
             sample_data& sample_data,
             std::vector<sa_sample>& samples);
 
-    virtual sa_status svp_buffer_write(
-            sa_svp_buffer out,
+    virtual sa_status svp_write(
+            void* out,
             const void* in,
             size_t in_length) = 0;
 

@@ -159,8 +159,6 @@ sa_status cenc_process_sample(
 
     sa_status status;
     cipher_t* cipher = NULL;
-    svp_t* out_svp = NULL;
-    svp_t* in_svp = NULL;
     do {
         status = cipher_store_acquire_exclusive(&cipher, cipher_store, sample->context, caller_uuid);
         if (status != SA_STATUS_OK) {
@@ -177,14 +175,14 @@ sa_status cenc_process_sample(
         }
 
         uint8_t* out_bytes = NULL;
-        status = convert_buffer(&out_bytes, &out_svp, sample->out, required_length, client, caller_uuid);
+        status = convert_buffer(&out_bytes, sample->out, required_length, client, caller_uuid);
         if (status != SA_STATUS_OK) {
             ERROR("convert_buffer failed");
             break;
         }
 
         uint8_t* in_bytes = NULL;
-        status = convert_buffer(&in_bytes, &in_svp, sample->in, required_length, client, caller_uuid);
+        status = convert_buffer(&in_bytes, sample->in, required_length, client, caller_uuid);
         if (status != SA_STATUS_OK) {
             ERROR("convert_buffer failed");
             break;
@@ -312,13 +310,6 @@ sa_status cenc_process_sample(
                 sample->out->context.clear.offset += offset;
         }
     } while (false);
-
-    if (in_svp != NULL)
-        svp_store_release_exclusive(client_get_svp_store(client), sample->in->context.svp.buffer, in_svp, caller_uuid);
-
-    if (out_svp != NULL)
-        svp_store_release_exclusive(client_get_svp_store(client), sample->out->context.svp.buffer, out_svp,
-                caller_uuid);
 
     if (cipher != NULL)
         cipher_store_release_exclusive(cipher_store, sample->context, cipher, caller_uuid);

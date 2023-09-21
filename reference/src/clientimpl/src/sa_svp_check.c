@@ -22,18 +22,16 @@
 #include "ta_client.h"
 #include <stdbool.h>
 
-sa_status sa_svp_buffer_release(
-        void** svp_memory,
-        size_t* size,
-        sa_svp_buffer svp_buffer) {
+sa_status sa_svp_check(
+        void* svp_memory,
+        size_t offset,
+        size_t length,
+        sa_digest_algorithm digest_algorithm,
+        const void* hash,
+        size_t hash_length) {
 
-    if (svp_memory == NULL) {
-        ERROR("NULL out");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (size == NULL) {
-        ERROR("NULL out_length");
+    if (hash == NULL) {
+        ERROR("hash failed");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -43,30 +41,39 @@ sa_status sa_svp_buffer_release(
         return SA_STATUS_INTERNAL_ERROR;
     }
 
-    sa_svp_buffer_release_s* svp_buffer_release = NULL;
+    sa_svp_check_s* svp_check = NULL;
+    void* param1 = NULL;
+    void* param2 = NULL;
     sa_status status;
     do {
-        CREATE_COMMAND(sa_svp_buffer_release_s, svp_buffer_release);
-        svp_buffer_release->api_version = API_VERSION;
-        svp_buffer_release->svp_buffer = svp_buffer;
+        CREATE_COMMAND(sa_svp_check_s, svp_check);
+        svp_check->api_version = SVP_API_VERSION;
+        svp_check->offset = offset;
+        svp_check->length = length;
+        svp_check->digest_algorithm = digest_algorithm;
+
+        CREATE_PARAM(param1, (void*) hash, hash_length);
+        size_t param1_size = hash_length;
+        uint32_t param1_type = TA_PARAM_IN;
+
+        param2 = svp_memory;
+        size_t param2_size = sizeof(void*);
 
         // clang-format off
-        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_NULL, TA_PARAM_NULL, TA_PARAM_NULL};
-        ta_param params[NUM_TA_PARAMS] = {{svp_buffer_release, sizeof(sa_svp_buffer_release_s)},
-                                          {NULL, 0},
-                                          {NULL, 0},
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_IN, param1_type, TA_PARAM_IN, TA_PARAM_NULL};
+        ta_param params[NUM_TA_PARAMS] = {{svp_check, sizeof(sa_svp_check_s)},
+                                          {param1, param1_size},
+                                          {param2, param2_size},
                                           {NULL, 0}};
         // clang-format on
-        status = ta_invoke_command(session, SA_SVP_BUFFER_RELEASE, param_types, params);
+        status = ta_invoke_command(session, SA_SVP_CHECK, param_types, params);
         if (status != SA_STATUS_OK) {
             ERROR("ta_invoke_command failed: %d", status);
             break;
         }
-
-        *svp_memory = (void*) svp_buffer_release->svp_memory; // NOLINT
-        *size = svp_buffer_release->size;
     } while (false);
 
-    RELEASE_COMMAND(svp_buffer_release);
+    RELEASE_COMMAND(svp_check);
+    RELEASE_PARAM(param1);
     return status;
 }

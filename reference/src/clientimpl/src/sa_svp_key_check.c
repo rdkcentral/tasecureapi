@@ -71,8 +71,8 @@ sa_status sa_svp_key_check(
             param1_type = TA_PARAM_IN;
         } else {
             svp_key_check->in_offset = in->context.svp.offset;
-            CREATE_PARAM(param1, &in->context.svp.buffer, sizeof(sa_svp_buffer));
-            param1_size = sizeof(sa_svp_buffer);
+            param1_size = sizeof(void*);
+            param1 = in->context.svp.svp_memory;
             param1_type = TA_PARAM_IN;
         }
 
@@ -94,13 +94,15 @@ sa_status sa_svp_key_check(
         }
 
         if (in->buffer_type == SA_BUFFER_TYPE_CLEAR)
-            in->context.clear.offset = svp_key_check->in_offset;
+            in->context.clear.offset = (size_t)svp_key_check->in_offset;
         else
-            in->context.svp.offset = svp_key_check->in_offset;
+            in->context.svp.offset = (size_t)svp_key_check->in_offset;
     } while (false);
 
     RELEASE_COMMAND(svp_key_check);
-    RELEASE_PARAM(param1);
+    if (in->buffer_type == SA_BUFFER_TYPE_CLEAR)
+        RELEASE_PARAM(param1);
+
     RELEASE_PARAM(param2);
     return status;
 }

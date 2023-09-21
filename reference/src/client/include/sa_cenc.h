@@ -125,7 +125,7 @@ typedef struct {
  *     bytes_of_clear_data and bytes_of_protected_data for all of the samples
  *   + Writing past the end of a clear or SVP buffer detected.
  *   + Context has already processed last chunk of data.
- * + SA_STATUS_INVALID_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
+ * + SA_STATUS_INVALID_SVP_MEMORY - SVP buffer is not fully contained withing SVP memory region.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.

@@ -23,6 +23,12 @@
 
 namespace ta_test_helpers {
 
+    // This is sample code for example purposes only and matches the definition in svp.h.
+    typedef struct {
+        size_t svp_memory_size;
+        uint8_t* svp_memory;
+    } svp_memory_s;
+
     const sa_uuid* ta_uuid() {
         static sa_uuid const uuid = {
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -57,24 +63,40 @@ namespace ta_test_helpers {
     sa_status ta_sa_svp_memory_alloc(
             void** svp_memory,
             size_t size) {
+
         if (svp_memory == nullptr) {
-            ERROR("svp_memory is NULL");
+            ERROR("NULL svp_memory");
             return SA_STATUS_NULL_PARAMETER;
         }
 
-        *svp_memory = malloc(size);
-        if (*svp_memory == nullptr) {
-            ERROR("malloc failed");
+        // TODO SoC Vendor: replace this call with a call to allocate secure memory.
+        auto* temp = new svp_memory_s;
+        if (temp == nullptr) {
+            ERROR("new failed");
             return SA_STATUS_INTERNAL_ERROR;
         }
 
+        temp->svp_memory = new uint8_t[size];
+        if (temp->svp_memory == nullptr) {
+            ERROR("new failed");
+            delete temp;
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+
+        temp->svp_memory_size = size;
+        *svp_memory = temp;
         return SA_STATUS_OK;
     }
 
     // TODO SoC Vendor: replace this call with a call to free secure memory.
     sa_status ta_sa_svp_memory_free(void* svp_memory) {
-        if (svp_memory != nullptr)
-            free(svp_memory);
+        auto* temp = static_cast<svp_memory_s*>(svp_memory);
+
+        if (temp->svp_memory != nullptr)
+            free(temp->svp_memory);
+
+        if (temp != nullptr)
+            free(temp);
 
         return SA_STATUS_OK;
     }
@@ -117,13 +139,8 @@ namespace ta_test_helpers {
                             if (buffer->context.clear.buffer != nullptr)
                                 free(buffer->context.clear.buffer);
                         } else {
-                            if (buffer->context.svp.buffer != INVALID_HANDLE) {
-                                void* svp_memory;
-                                size_t svp_memory_size;
-                                if (ta_sa_svp_buffer_release(&svp_memory, &svp_memory_size,
-                                            buffer->context.svp.buffer, client(), ta_uuid()) == SA_STATUS_OK)
-                                    ta_sa_svp_memory_free(svp_memory);
-                            }
+                            if (buffer->context.svp.svp_memory != nullptr)
+                                free(buffer->context.svp.svp_memory);
                         }
                     }
 
@@ -141,14 +158,8 @@ namespace ta_test_helpers {
             }
         } else if (buffer_type == SA_BUFFER_TYPE_SVP) {
             buffer->buffer_type = SA_BUFFER_TYPE_SVP;
-            buffer->context.svp.buffer = INVALID_HANDLE;
-            void* svp_memory;
-            if (ta_sa_svp_memory_alloc(&svp_memory, size) == SA_STATUS_OK)
-                if (ta_sa_svp_buffer_create(&buffer->context.svp.buffer, svp_memory, size, client(),
-                            ta_uuid()) != SA_STATUS_OK) {
-                    ERROR("ta_sa_svp_memory_alloc failed");
-                    return nullptr;
-                }
+            if (ta_sa_svp_memory_alloc(&buffer->context.svp.svp_memory, size) != SA_STATUS_OK)
+                return nullptr;
 
             buffer->context.svp.offset = 0;
         }
@@ -168,9 +179,9 @@ namespace ta_test_helpers {
             memcpy(buffer->context.clear.buffer, initial_value.data(), initial_value.size());
         } else {
             sa_svp_offset offsets = {0, 0, initial_value.size()};
-            if (ta_sa_svp_buffer_write(buffer->context.svp.buffer, initial_value.data(), initial_value.size(),
+            if (ta_sa_svp_write(buffer->context.svp.svp_memory, initial_value.data(), initial_value.size(),
                         &offsets, 1, client(), ta_uuid()) != SA_STATUS_OK) {
-                ERROR("ta_sa_svp_buffer_write failed");
+                ERROR("ta_sa_svp_write failed");
                 return nullptr;
             }
 

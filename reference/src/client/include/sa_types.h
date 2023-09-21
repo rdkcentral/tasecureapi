@@ -108,11 +108,6 @@ typedef uint64_t sa_handle; // NOLINT
 typedef sa_handle sa_key;
 
 /**
- * SVP buffer opaque data structure.
- */
-typedef sa_handle sa_svp_buffer;
-
-/**
  * Cipher context handle.
  */
 typedef sa_handle sa_crypto_cipher_context;
@@ -345,7 +340,7 @@ typedef enum {
      * key rights were not met. */
     SA_STATUS_OPERATION_NOT_ALLOWED,
     /** Operation failed due to SVP buffer not being fully contained within secure SVP region. */
-    SA_STATUS_INVALID_SVP_BUFFER,
+    SA_STATUS_INVALID_SVP_MEMORY,
     /** Operation failed due to the combination of parameters not being supported in the
      * implementation. */
     SA_STATUS_OPERATION_NOT_SUPPORTED,
@@ -559,8 +554,8 @@ typedef struct {
 
         /** SVP buffer information */
         struct {
-            /** SVP buffer handle */
-            sa_svp_buffer buffer;
+            /** SVP memory */
+            void* svp_memory;
             /** Current offset into the buffer */
             size_t offset;
         } svp;
@@ -1019,7 +1014,7 @@ typedef struct {
 } sa_key_exchange_parameters_netflix_authenticated_dh;
 
 /**
- * Structure to use in sa_svp_buffer_copy_blocks
+ * Structure to use in sa_svp_copy_blocks
  */
 typedef struct {
     /** offset into the output buffer. */

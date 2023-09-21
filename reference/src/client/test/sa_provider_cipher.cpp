@@ -73,7 +73,7 @@ TEST_P(SaProviderCipherTest, encryptTest) {
         GTEST_SKIP() << "algorithm not supported";
 
     OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
 
     auto data = random((padded == 1) ? 50 : 48);
@@ -137,7 +137,7 @@ TEST_P(SaProviderCipherTest, decryptTest) {
         GTEST_SKIP() << "algorithm not supported";
 
     OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, key.get()),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, key.get()),
             OSSL_PARAM_construct_end()};
 
     auto data = random((padded == 1) ? 50 : 48);
@@ -236,7 +236,7 @@ TEST_P(SaProviderCipherTest, initSeparateParams) {
 
     sa_key key1;
     OSSL_PARAM params2[] = {
-            OSSL_PARAM_construct_ulong(OSSL_PARAM_SA_KEY, &key1),
+            OSSL_PARAM_construct_uint64(OSSL_PARAM_SA_KEY, &key1),
             OSSL_PARAM_construct_end()};
     ASSERT_EQ(EVP_CIPHER_CTX_get_params(cipher_ctx.get(), params2), 1);
     cipher_ctx.reset();

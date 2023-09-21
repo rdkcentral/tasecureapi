@@ -22,11 +22,17 @@
 #include "ta_client.h"
 #include <stdbool.h>
 
-sa_status sa_svp_buffer_copy(
-        sa_svp_buffer out,
-        sa_svp_buffer in,
+sa_status sa_svp_write(
+        void* out,
+        const void* in,
+        size_t in_length,
         sa_svp_offset* offsets,
         size_t offsets_length) {
+
+    if (in == NULL || in_length == 0) {
+        ERROR("NULL in");
+        return SA_STATUS_NULL_PARAMETER;
+    }
 
     if (offsets == NULL) {
         ERROR("NULL offsets");
@@ -39,19 +45,22 @@ sa_status sa_svp_buffer_copy(
         return SA_STATUS_INTERNAL_ERROR;
     }
 
-    sa_svp_buffer_copy_s* svp_buffer_copy = NULL;
+    sa_svp_write_s* svp_write = NULL;
     sa_svp_offset_s* offset_s = NULL;
-    sa_status status;
     void* param1 = NULL;
-    size_t param1_size;
+    void* param2 = NULL;
+    void* param3 = NULL;
+    size_t param1_size = in_length;
+    size_t param2_size;
+    size_t param3_size;
+    sa_status status;
     do {
-        CREATE_COMMAND(sa_svp_buffer_copy_s, svp_buffer_copy);
-        svp_buffer_copy->api_version = API_VERSION;
-        svp_buffer_copy->out = out;
-        svp_buffer_copy->in = in;
+        CREATE_COMMAND(sa_svp_write_s, svp_write);
+        svp_write->api_version = SVP_API_VERSION;
+        CREATE_PARAM(param1, (void*) in, in_length);
 
-        param1_size = offsets_length * sizeof(sa_svp_offset_s);
-        offset_s = malloc(param1_size);
+        param2_size = offsets_length * sizeof(sa_svp_offset_s);
+        offset_s = malloc(param2_size);
         if (offset_s == NULL) {
             ERROR("malloc failed");
             status = SA_STATUS_NULL_PARAMETER;
@@ -59,21 +68,24 @@ sa_status sa_svp_buffer_copy(
         }
 
         for (size_t i = 0; i < offsets_length; i++) {
-            offset_s[i].out_offset = offsets[i].out_offset;
-            offset_s[i].in_offset = offsets[i].in_offset;
-            offset_s[i].length = offsets[i].length;
+            offset_s[i].out_offset = offsets->out_offset;
+            offset_s[i].in_offset = offsets->in_offset;
+            offset_s[i].length = offsets->length;
         }
 
-        CREATE_PARAM(param1, offset_s, param1_size);
+        CREATE_PARAM(param2, offset_s, param2_size);
+
+        param3 = out;
+        param3_size = sizeof(void*);
 
         // clang-format off
-        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_IN, TA_PARAM_NULL, TA_PARAM_NULL};
-        ta_param params[NUM_TA_PARAMS] = {{svp_buffer_copy, sizeof(sa_svp_buffer_copy_s)},
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, TA_PARAM_IN, TA_PARAM_IN, TA_PARAM_OUT};
+        ta_param params[NUM_TA_PARAMS] = {{svp_write, sizeof(sa_svp_write_s)},
                                           {param1, param1_size},
-                                          {NULL, 0},
-                                          {NULL, 0}};
+                                          {param2, param2_size},
+                                          {param3, param3_size}};
         // clang-format on
-        status = ta_invoke_command(session, SA_SVP_BUFFER_COPY, param_types, params);
+        status = ta_invoke_command(session, SA_SVP_WRITE, param_types, params);
         if (status != SA_STATUS_OK) {
             ERROR("ta_invoke_command failed: %d", status);
             break;
@@ -83,7 +95,8 @@ sa_status sa_svp_buffer_copy(
     if (offset_s != NULL)
         free(offset_s);
 
-    RELEASE_COMMAND(svp_buffer_copy);
+    RELEASE_COMMAND(svp_write);
     RELEASE_PARAM(param1);
+    RELEASE_PARAM(param2);
     return status;
 }

@@ -16,27 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "log.h"
-#include "sa.h"
+#ifndef SVP_H
+#define SVP_H
 
-sa_status sa_svp_buffer_free(sa_svp_buffer svp_buffer) {
+#include <stddef.h>
+#include <stdint.h>
 
-    void* svp_memory;
-    size_t size;
-    sa_status status;
-    do {
-        status = sa_svp_buffer_release(&svp_memory, &size, svp_buffer);
-        if (status != SA_STATUS_OK) {
-            ERROR("sa_svp_buffer_release failed");
-            break;
-        }
+// This is sample code for example purposes only
+typedef struct {
+    size_t svp_memory_size;
+    uint8_t* svp_memory;
+} svp_memory_s;
 
-        status = sa_svp_memory_free(svp_memory);
-        if (status != SA_STATUS_OK) {
-            ERROR("sa_svp_memory_free failed");
-            break;
-        }
-    } while (0);
-
-    return status;
-}
+#endif //TASECUREAPI_SVP_H

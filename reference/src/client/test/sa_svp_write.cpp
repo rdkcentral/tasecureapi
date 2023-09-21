@@ -27,8 +27,8 @@ namespace {
     TEST_P(SaSvpBufferWriteTest, nominal) {
         auto offset_length = std::get<0>(GetParam());
 
-        auto out_buffer = create_sa_svp_buffer(1024);
-        ASSERT_NE(out_buffer, nullptr);
+        auto out = create_sa_svp_memory(1024);
+        ASSERT_NE(out, nullptr);
         auto in = random(1024);
         long chunk_size = offset_length > 1 ? (1024 / (2 * offset_length)) : 1024; // NOLINT
         std::vector<uint8_t> digest_vector;
@@ -41,59 +41,59 @@ namespace {
                     std::back_inserter(digest_vector));
         }
 
-        sa_status const status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), offsets, offset_length);
+        sa_status const status = sa_svp_write(out.get(), in.data(), in.size(), offsets, offset_length);
         ASSERT_EQ(status, SA_STATUS_OK);
 
         // Write verified in taimpltest.
     }
 
     TEST_F(SaSvpBufferWriteTest, failsOutOffsetOverflow) {
-        auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(out_buffer, nullptr);
+        auto out = create_sa_svp_memory(AES_BLOCK_SIZE);
+        ASSERT_NE(out, nullptr);
         auto in = random(AES_BLOCK_SIZE);
         sa_svp_offset offset = {SIZE_MAX - 4, 0, in.size()};
-        sa_status const status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
+        sa_status const status = sa_svp_write(out.get(), in.data(), in.size(), &offset, 1);
+        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_MEMORY);
     }
 
     TEST_F(SaSvpBufferWriteTest, failsInOffsetOverflow) {
-        auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(out_buffer, nullptr);
+        auto out = create_sa_svp_memory(AES_BLOCK_SIZE);
+        ASSERT_NE(out, nullptr);
         auto in = random(AES_BLOCK_SIZE);
         sa_svp_offset offset = {0, SIZE_MAX - 4, in.size()};
-        sa_status const status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
+        sa_status const status = sa_svp_write(out.get(), in.data(), in.size(), &offset, 1);
+        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_MEMORY);
     }
 
     TEST_F(SaSvpBufferWriteTest, failsOutBufferTooSmall) {
-        auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(out_buffer, nullptr);
+        auto out = create_sa_svp_memory(AES_BLOCK_SIZE);
+        ASSERT_NE(out, nullptr);
         auto in = random(AES_BLOCK_SIZE);
         sa_svp_offset offset = {1, 0, in.size()};
-        sa_status const status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_BUFFER);
+        sa_status const status = sa_svp_write(out.get(), in.data(), in.size(), &offset, 1);
+        ASSERT_EQ(status, SA_STATUS_INVALID_SVP_MEMORY);
     }
 
     TEST_F(SaSvpBufferWriteTest, failsNullOutOffset) {
-        auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(out_buffer, nullptr);
+        auto out = create_sa_svp_memory(AES_BLOCK_SIZE);
+        ASSERT_NE(out, nullptr);
         auto in = random(AES_BLOCK_SIZE);
-        sa_status const status = sa_svp_buffer_write(*out_buffer, in.data(), in.size(), nullptr, 0);
+        sa_status const status = sa_svp_write(out.get(), in.data(), in.size(), nullptr, 0);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(SaSvpBufferWriteTest, failsInvalidOut) {
+    TEST_F(SaSvpBufferWriteTest, failsNullOut) {
         auto in = random(AES_BLOCK_SIZE);
         sa_svp_offset offset = {0, 0, in.size()};
-        sa_status const status = sa_svp_buffer_write(INVALID_HANDLE, in.data(), in.size(), &offset, 1);
-        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+        sa_status const status = sa_svp_write(nullptr, in.data(), in.size(), &offset, 1);
+        ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
     TEST_F(SaSvpBufferWriteTest, failsNullIn) {
-        auto out_buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(out_buffer, nullptr);
+        auto out = create_sa_svp_memory(AES_BLOCK_SIZE);
+        ASSERT_NE(out, nullptr);
         sa_svp_offset offset = {0, 0, 1};
-        sa_status const status = sa_svp_buffer_write(*out_buffer, nullptr, 0, &offset, 1);
+        sa_status const status = sa_svp_write(out.get(), nullptr, 0, &offset, 1);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace

@@ -51,8 +51,8 @@ class TaProcessCommonEncryptionTest : public ::testing::TestWithParam<TaProcessC
                                       public ProcessCommonEncryptionBase {
 protected:
     void SetUp() override;
-    sa_status svp_buffer_write(
-            sa_svp_buffer out,
+    sa_status svp_write(
+            void* out,
             const void* in,
             size_t in_length) override;
 };

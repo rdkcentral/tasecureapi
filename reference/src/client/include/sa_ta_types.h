@@ -38,6 +38,7 @@ extern "C" {
 #define CHACHA20_NONCE_LENGTH 12
 #define CHACHA20_TAG_LENGTH 16
 #define API_VERSION 1
+#define SVP_API_VERSION 2
 
 /**
  * Command IDs of the SecApi 3 commands, used in the ta_invoke_command function.
@@ -70,14 +71,14 @@ typedef enum {
     SA_CRYPTO_MAC_RELEASE,
     SA_CRYPTO_SIGN,
     SA_SVP_SUPPORTED,
-    SA_SVP_BUFFER_ALLOC,
-    SA_SVP_BUFFER_CREATE,
-    SA_SVP_BUFFER_FREE,
-    SA_SVP_BUFFER_RELEASE,
-    SA_SVP_BUFFER_WRITE,
-    SA_SVP_BUFFER_COPY,
+    DEPRECATED_1,
+    DEPRECATED_2,
+    DEPRECATED_3,
+    DEPRECATED_4,
+    SA_SVP_WRITE,
+    SA_SVP_COPY,
     SA_SVP_KEY_CHECK,
-    SA_SVP_BUFFER_CHECK,
+    SA_SVP_CHECK,
     SA_PROCESS_COMMON_ENCRYPTION
 } SA_COMMAND_ID;
 
@@ -457,32 +458,14 @@ typedef struct {
     uint8_t api_version;
 } sa_svp_supported_s;
 
-// sa_svp_buffer_create
-// param[0] INOUT - sa_svp_buffer
-typedef struct {
-    uint8_t api_version;
-    sa_svp_buffer svp_buffer;
-    uint64_t svp_memory;
-    uint64_t size;
-} sa_svp_buffer_create_s;
-
-// sa_svp_buffer_release
-// param[0] INOUT - sa_svp_buffer_release_s
-typedef struct {
-    uint8_t api_version;
-    uint64_t svp_memory;
-    uint64_t size;
-    sa_svp_buffer svp_buffer;
-} sa_svp_buffer_release_s;
-
-// sa_svp_buffer_write
-// param[0] INOUT - sa_svp_buffer_write_s
+// sa_svp_write
+// param[0] INOUT - sa_svp_write_s
 // param[1] IN - in + in_length
 // param[2] IN - sa_svp_offset_s
+// param[3] OUT - out
 typedef struct {
     uint8_t api_version;
-    sa_svp_buffer out;
-} sa_svp_buffer_write_s;
+} sa_svp_write_s;
 
 typedef struct {
     uint64_t out_offset;
@@ -490,14 +473,14 @@ typedef struct {
     uint64_t length;
 } sa_svp_offset_s;
 
-// sa_svp_buffer_copy
-// param[0] INOUT - sa_svp_buffer_copy_s
+// sa_svp_copy
+// param[0] INOUT - sa_svp_copy_s
 // param[1] IN - sa_svp_offset_s
+// param[2] OUT - out
+// param[3] IN - in
 typedef struct {
     uint8_t api_version;
-    sa_svp_buffer out;
-    sa_svp_buffer in;
-} sa_svp_buffer_copy_s;
+} sa_svp_copy_s;
 
 // sa_svp_key_check
 // param[0] INOUT - sa_svp_key_check_s
@@ -511,16 +494,16 @@ typedef struct {
     uint64_t bytes_to_process;
 } sa_svp_key_check_s;
 
-// sa_svp_buffer_check
-// param[0] IN - sa_svp_buffer_check_s
+// sa_svp_check
+// param[0] IN - sa_svp_check_s
 // param[1] IN - hash+length
+// param[2] IN - svp_memory
 typedef struct {
     uint8_t api_version;
-    sa_svp_buffer svp_buffer;
     uint64_t offset;
     uint64_t length;
     uint32_t digest_algorithm;
-} sa_svp_buffer_check_s;
+} sa_svp_check_s;
 
 // sa_process_common_encryption (1 sample per call)
 // param[0] INOUT - sa_process_common_encryption_s

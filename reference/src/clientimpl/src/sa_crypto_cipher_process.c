@@ -77,13 +77,17 @@ sa_status sa_crypto_cipher_process(
                 param1_type = TA_PARAM_OUT;
                 CREATE_OUT_PARAM(param1, ((uint8_t*) out->context.clear.buffer) + out->context.clear.offset,
                         param1_size);
-            } else {
+            } else if (out->buffer_type == SA_BUFFER_TYPE_SVP) {
                 cipher_process->out_offset = out->context.svp.offset;
-                param1_size = sizeof(sa_svp_buffer);
-
+                param1_size = sizeof(void*);
                 param1_type = TA_PARAM_IN;
-                CREATE_PARAM(param1, &out->context.svp.buffer, param1_size);
+                param1 = out->context.svp.svp_memory;
+            } else {
+                ERROR("Unknown buffer type");
+                status = SA_STATUS_INVALID_PARAMETER;
+                break;
             }
+
         } else {
             cipher_process->out_offset = 0;
             param1 = NULL;
@@ -109,11 +113,14 @@ sa_status sa_crypto_cipher_process(
             cipher_process->in_offset = 0;
             param2_size = in->context.clear.length - in->context.clear.offset;
             CREATE_PARAM(param2, ((uint8_t*) in->context.clear.buffer) + in->context.clear.offset, param2_size);
-        } else {
+        } else if (in->buffer_type == SA_BUFFER_TYPE_SVP) {
             cipher_process->in_offset = in->context.svp.offset;
-            param2_size = sizeof(sa_svp_buffer);
-
-            CREATE_PARAM(param2, &in->context.svp.buffer, param2_size);
+            param2_size = sizeof(void*);
+            param2 = in->context.svp.svp_memory;
+        } else {
+            ERROR("Unknown buffer type");
+            status = SA_STATUS_INVALID_PARAMETER;
+            break;
         }
 
         // clang-format off
@@ -148,7 +155,11 @@ sa_status sa_crypto_cipher_process(
     } while (false);
 
     RELEASE_COMMAND(cipher_process);
-    RELEASE_PARAM(param1);
-    RELEASE_PARAM(param2);
+    if (out != NULL && out->buffer_type == SA_BUFFER_TYPE_CLEAR)
+        RELEASE_PARAM(param1);
+
+    if (in != NULL && in->buffer_type == SA_BUFFER_TYPE_CLEAR)
+        RELEASE_PARAM(param2);
+
     return status;
 }

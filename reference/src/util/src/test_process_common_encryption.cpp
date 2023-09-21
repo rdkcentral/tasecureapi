@@ -266,8 +266,8 @@ bool ProcessCommonEncryptionBase::build_samples(
     if (sample_data.in->buffer_type == SA_BUFFER_TYPE_CLEAR) {
         memcpy(sample_data.in->context.clear.buffer, in.data(), in.size());
     } else {
-        if (svp_buffer_write(sample_data.in->context.svp.buffer, in.data(), in.size()) != SA_STATUS_OK) {
-            ERROR("svp_buffer_write");
+        if (svp_write(sample_data.in->context.svp.svp_memory, in.data(), in.size()) != SA_STATUS_OK) {
+            ERROR("svp_write");
             return false;
         }
 

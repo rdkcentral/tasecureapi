@@ -632,7 +632,7 @@ static int cipher_set_ctx_params(void* cctx,
 
     param = OSSL_PARAM_locate_const(params, OSSL_PARAM_SA_KEY);
     if (param != NULL) {
-        unsigned long key;
+        uint64_t key;
         if (!OSSL_PARAM_get_uint64(param, &key)) {
             ERROR("OSSL_PARAM_get_uint64 failed");
             return 0;

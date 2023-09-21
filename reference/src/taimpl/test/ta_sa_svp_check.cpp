@@ -26,69 +26,69 @@
 using namespace ta_test_helpers;
 
 namespace {
-    TEST_P(TaSvpBufferCheckTest, nominal) {
+    TEST_P(TaSvpCheckTest, nominal) {
         auto digest = GetParam();
-        auto buffer = create_sa_svp_buffer(1024);
-        ASSERT_NE(buffer, nullptr);
+        auto svp_memory = create_sa_svp_memory(1024);
+        ASSERT_NE(svp_memory, nullptr);
         auto in = random(1024);
         sa_svp_offset offset = {0, 0, in.size()};
-        sa_status status = ta_sa_svp_buffer_write(*buffer, in.data(), in.size(), &offset, 1, client(), ta_uuid());
+        sa_status status = ta_sa_svp_write(svp_memory.get(), in.data(), in.size(), &offset, 1, client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
 
         size_t const length = digest_length(digest);
         std::vector<uint8_t> hash(length);
         ASSERT_TRUE(digest_openssl(hash, digest, in, {}, {}));
-        status = ta_sa_svp_buffer_check(*buffer, 0, 1024, digest, hash.data(), hash.size(), client(), ta_uuid());
+        status = ta_sa_svp_check(svp_memory.get(), 0, 1024, digest, hash.data(), hash.size(), client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
     }
 
-    TEST_P(TaSvpBufferCheckTest, failsHashMismatch) {
+    TEST_P(TaSvpCheckTest, failsHashMismatch) {
         auto digest = GetParam();
-        auto buffer = create_sa_svp_buffer(1024);
-        ASSERT_NE(buffer, nullptr);
+        auto svp_memory = create_sa_svp_memory(1024);
+        ASSERT_NE(svp_memory, nullptr);
         auto in = random(1024);
         sa_svp_offset offset = {0, 0, in.size()};
-        sa_status status = ta_sa_svp_buffer_write(*buffer, in.data(), in.size(), &offset, 1, client(), ta_uuid());
+        sa_status status = ta_sa_svp_write(svp_memory.get(), in.data(), in.size(), &offset, 1, client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
 
         size_t const length = digest_length(digest);
         std::vector<uint8_t> hash(length);
         ASSERT_TRUE(digest_openssl(hash, digest, in, {}, {}));
         hash[0]++;
-        status = ta_sa_svp_buffer_check(*buffer, 0, 1024, digest, hash.data(), hash.size(), client(), ta_uuid());
+        status = ta_sa_svp_check(svp_memory.get(), 0, 1024, digest, hash.data(), hash.size(), client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_VERIFICATION_FAILED);
     }
 
-    TEST_F(TaSvpBufferCheckTest, failsHashWrongSize) {
-        auto buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(buffer, nullptr);
+    TEST_F(TaSvpCheckTest, failsHashWrongSize) {
+        auto svp_memory = create_sa_svp_memory(AES_BLOCK_SIZE);
+        ASSERT_NE(svp_memory, nullptr);
         std::vector<uint8_t> hash(SHA1_DIGEST_LENGTH);
-        sa_status const status = ta_sa_svp_buffer_check(*buffer, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
+        sa_status const status = ta_sa_svp_check(svp_memory.get(), 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
                 hash.data(), hash.size(), client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
-    TEST_F(TaSvpBufferCheckTest, failsNullHash) {
-        auto buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(buffer, nullptr);
-        sa_status const status = ta_sa_svp_buffer_check(*buffer, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256, nullptr,
-                0, client(), ta_uuid());
+    TEST_F(TaSvpCheckTest, failsNullHash) {
+        auto svp_memory = create_sa_svp_memory(AES_BLOCK_SIZE);
+        ASSERT_NE(svp_memory, nullptr);
+        sa_status const status = ta_sa_svp_check(svp_memory.get(), 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
+                nullptr, 0, client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(TaSvpBufferCheckTest, failsInvalidBuffer) {
+    TEST_F(TaSvpCheckTest, failsNullBuffer) {
         auto in = random(AES_BLOCK_SIZE);
         std::vector<uint8_t> hash(SHA256_DIGEST_LENGTH);
-        sa_status const status = ta_sa_svp_buffer_check(INVALID_HANDLE, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
+        sa_status const status = ta_sa_svp_check(nullptr, 0, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
                 hash.data(), hash.size(), client(), ta_uuid());
-        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+        ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
-    TEST_F(TaSvpBufferCheckTest, failsInvalidSize) {
-        auto buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(buffer, nullptr);
+    TEST_F(TaSvpCheckTest, failsInvalidSize) {
+        auto svp_memory = create_sa_svp_memory(AES_BLOCK_SIZE);
+        ASSERT_NE(svp_memory, nullptr);
         std::vector<uint8_t> hash(SHA1_DIGEST_LENGTH);
-        sa_status const status = ta_sa_svp_buffer_check(*buffer, 1, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
+        sa_status const status = ta_sa_svp_check(svp_memory.get(), 1, AES_BLOCK_SIZE, SA_DIGEST_ALGORITHM_SHA256,
                 hash.data(), hash.size(), client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }

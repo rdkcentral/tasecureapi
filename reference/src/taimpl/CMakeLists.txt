@@ -95,7 +95,6 @@ add_library(taimpl STATIC
         include/internal/soc_key_container.h
         include/internal/stored_key.h
         include/internal/stored_key_internal.h
-        include/internal/svp_store.h
         include/internal/symmetric.h
         include/internal/typej.h
         include/internal/unwrap.h
@@ -123,7 +122,6 @@ add_library(taimpl STATIC
         src/internal/slots.c
         src/internal/soc_key_container.c
         src/internal/stored_key.c
-        src/internal/svp_store.c
         src/internal/symmetric.c
         src/internal/ta.c
         src/internal/typej.c
@@ -166,11 +164,9 @@ add_library(taimpl STATIC
         src/ta_sa_key_release.c
         src/ta_sa_key_unwrap.c
         src/ta_sa_process_common_encryption.c
-        src/ta_sa_svp_buffer_check.c
-        src/ta_sa_svp_buffer_copy.c
-        src/ta_sa_svp_buffer_create.c
-        src/ta_sa_svp_buffer_release.c
-        src/ta_sa_svp_buffer_write.c
+        src/ta_sa_svp_check.c
+        src/ta_sa_svp_copy.c
+        src/ta_sa_svp_write.c
         src/ta_sa_svp_key_check.c
         src/ta_sa_svp_supported.c)
 
@@ -215,9 +211,9 @@ add_executable(taimpltest
         test/rights.cpp
         test/slots.cpp
         test/ta_sa_init.cpp
-        test/ta_sa_svp_buffer_check.cpp
-        test/ta_sa_svp_buffer_copy.cpp
-        test/ta_sa_svp_buffer_write.cpp
+        test/ta_sa_svp_check.cpp
+        test/ta_sa_svp_copy.cpp
+        test/ta_sa_svp_write.cpp
         test/ta_sa_svp_common.cpp
         test/ta_sa_svp_crypto.cpp
         test/ta_sa_svp_crypto.h

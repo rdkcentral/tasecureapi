@@ -17,40 +17,41 @@
  */
 
 /** @section Description
- * @file buffer.h
+ * @file svp.h
  *
- * This file contains the functions implementing buffer access.
+ * This file contains the internal functions and structures implementing validation of and writing to secure
+ * video pipeline buffers. Implementors shall replace this functionality with platform dependent
+ * functionality.
  */
 
-#ifndef BUFFER_H
-#define BUFFER_H
+#ifndef SVP_H
+#define SVP_H
 
-#include "client_store.h"
 #include "sa_types.h"
+#include "porting/svp.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * Converts a sa_buffer into byte and checks the parameters for validity.
+ * Get the protected SVP memory location.
  *
- * @param[out] bytes the array of bytes.
- * @param[in] buffer the buffer to convert.
- * @param[in] bytes_to_process the number of bytes that will be written to or read from the buffer.
- * @param[in] client the client from which to retrieve the SVP store.
- * @param[in] caller_uuid the UUID of the caller.
- * @return the status of the validity check.
+ * @param[in] svp_memory the SVP memory.
+ * @return the SVP buffer.
  */
-sa_status convert_buffer(
-        uint8_t** bytes,
-        const sa_buffer* buffer,
-        size_t bytes_to_process,
-        const client_t* client,
-        const sa_uuid* caller_uuid);
+void* svp_get_svp_memory(void* svp_memory);
+
+/**
+ * Get the protected SVP memory size.
+ *
+ * @param[in] svp_memory svp.
+ * @return the buffer length.
+ */
+size_t svp_get_size(const void* svp_memory);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // BUFFER_H
+#endif // SVP_H

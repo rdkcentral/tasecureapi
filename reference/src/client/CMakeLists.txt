@@ -273,12 +273,9 @@ add_executable(saclienttest
         test/sa_provider_mac.cpp
         test/sa_provider_pkcs7.cpp
         test/sa_provider_signature.cpp
-        test/sa_svp_buffer_alloc.cpp
-        test/sa_svp_buffer_check.cpp
-        test/sa_svp_buffer_copy.cpp
-        test/sa_svp_buffer_create.cpp
-        test/sa_svp_buffer_release.cpp
-        test/sa_svp_buffer_write.cpp
+        test/sa_svp_check.cpp
+        test/sa_svp_copy.cpp
+        test/sa_svp_write.cpp
         test/sa_svp_key_check.cpp
         test/sa_svp_common.cpp
         test/sa_svp_common.h)

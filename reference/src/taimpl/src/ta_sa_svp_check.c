@@ -17,25 +17,43 @@
  */
 
 #include "client_store.h"
+#include "digest_util.h"
 #include "log.h"
-#include "svp_store.h"
+#include "porting/memory.h"
+#include "porting/svp.h"
+#include "porting/transport.h"
 #include "ta_sa.h"
 
-sa_status ta_sa_svp_buffer_create(
-        sa_svp_buffer* svp_buffer,
-        void* buffer,
-        size_t size,
+sa_status ta_sa_svp_check(
+        void* svp_memory,
+        size_t offset,
+        size_t length,
+        sa_digest_algorithm digest_algorithm,
+        const void* hash,
+        size_t hash_length,
         ta_client client_slot,
         const sa_uuid* caller_uuid) {
 
-    if (caller_uuid == NULL) {
-        ERROR("NULL caller_uuid");
+    if (svp_memory == NULL) {
+        ERROR("NULL svp_memory");
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (svp_buffer == NULL) {
-        ERROR("NULL svp_buffer");
+    if (hash == NULL) {
+        ERROR("NULL hash");
         return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (is_ree(caller_uuid)) {
+        ERROR("ta_sa_svp_check can only be called by a TA");
+        return SA_STATUS_OPERATION_NOT_ALLOWED;
+    }
+
+    size_t required_length = digest_length(digest_algorithm);
+
+    if (hash_length != required_length) {
+        ERROR("Invalid hash_length");
+        return SA_STATUS_INVALID_PARAMETER;
     }
 
     sa_status status;
@@ -48,12 +66,21 @@ sa_status ta_sa_svp_buffer_create(
             break;
         }
 
-        svp_store_t* svp_store = client_get_svp_store(client);
-        status = svp_store_create(svp_buffer, svp_store, buffer, size, caller_uuid);
-        if (status != SA_STATUS_OK) {
-            ERROR("svp_store_alloc failed");
+        size_t buffer_digest_length = required_length;
+        uint8_t buffer_digest[required_length];
+        if (!svp_digest(buffer_digest, &buffer_digest_length, digest_algorithm, svp_memory, offset, length)) {
+            ERROR("digest_sha failed");
+            status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
+
+        if (buffer_digest_length != hash_length || memory_memcmp_constant(buffer_digest, hash, hash_length) != 0) {
+            ERROR("hashes don't match");
+            status = SA_STATUS_VERIFICATION_FAILED;
+            break;
+        }
+
+        status = SA_STATUS_OK;
     } while (false);
 
     client_store_release(client_store, client_slot, client, caller_uuid);

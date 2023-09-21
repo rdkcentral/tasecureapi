@@ -26,26 +26,18 @@ void SaSvpBase::SetUp() {
         GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
 }
 
-std::shared_ptr<sa_svp_buffer> SaSvpBase::create_sa_svp_buffer(size_t size) {
-    auto svp_buffer = std::shared_ptr<sa_svp_buffer>(
-            new sa_svp_buffer(INVALID_HANDLE),
-            [](const sa_svp_buffer* p) {
-                if (p != nullptr) {
-                    if (*p != INVALID_HANDLE) {
-                        sa_svp_buffer_free(*p);
+std::shared_ptr<void> SaSvpBase::create_sa_svp_memory(size_t size) {
+    void* svp_memory = nullptr;
+    if (sa_svp_memory_alloc(&svp_memory, size) == SA_STATUS_OK) {
+        return {svp_memory,
+                [](void* p) {
+                    if (p != nullptr) {
+                        sa_svp_memory_free(p);
                     }
-
-                    delete p;
-                }
-            });
-
-    sa_status const status = sa_svp_buffer_alloc(svp_buffer.get(), size);
-    if (status != SA_STATUS_OK) {
-        ERROR("sa_svp_buffer_alloc failed");
-        return nullptr;
+                }};
     }
 
-    return svp_buffer;
+    return {};
 }
 
 INSTANTIATE_TEST_SUITE_P(

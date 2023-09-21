@@ -93,7 +93,10 @@ static sa_status ta_invoke_get_name(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_get_name((char*) params[1].mem_ref, &get_name->name_length, context->client, uuid);
+    size_t name_length = get_name->name_length;
+    sa_status status = ta_sa_get_name((char*) params[1].mem_ref, &name_length, context->client, uuid);
+    get_name->name_length = name_length;
+    return status;
 }
 
 static sa_status ta_invoke_get_device_id(
@@ -233,8 +236,11 @@ static sa_status ta_invoke_key_export(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_key_export(params[1].mem_ref, &key_export->out_length, params[2].mem_ref, params[2].mem_ref_size,
+    size_t out_length = key_export->out_length;
+    sa_status status = ta_sa_key_export(params[1].mem_ref, &out_length, params[2].mem_ref, params[2].mem_ref_size,
             key_export->key, context->client, uuid);
+    key_export->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_key_import(
@@ -252,7 +258,7 @@ static sa_status ta_invoke_key_import(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (params[1].mem_ref == NULL || params[1].mem_ref_size == 0) {
+    if (CHECK_TA_PARAM_NULL(param_types[1], params[1])) {
         ERROR("NULL param[1]");
         return SA_STATUS_NULL_PARAMETER;
     }
@@ -584,8 +590,11 @@ static sa_status ta_invoke_key_get_public(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_key_get_public(params[1].mem_ref, &key_get_public->out_length, key_get_public->key,
+    size_t out_length = key_get_public->out_length;
+    sa_status status = ta_sa_key_get_public(params[1].mem_ref, &out_length, key_get_public->key,
             context->client, uuid);
+    key_get_public->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_key_derive(
@@ -740,7 +749,7 @@ static sa_status ta_invoke_key_exchange(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (params[1].mem_ref == NULL || params[1].mem_ref_size == 0) {
+    if (CHECK_TA_PARAM_NULL(param_types[1], params[1])) {
         ERROR("NULL param[1]");
         return SA_STATUS_NULL_PARAMETER;
     }
@@ -872,8 +881,11 @@ static sa_status ta_invoke_key_digest(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_key_digest(params[1].mem_ref, &key_digest->out_length, key_digest->key,
+    size_t out_length = key_digest->out_length;
+    sa_status status = ta_sa_key_digest(params[1].mem_ref, &out_length, key_digest->key,
             key_digest->digest_algorithm, context->client, uuid);
+    key_digest->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_crypto_random(
@@ -891,7 +903,7 @@ static sa_status ta_invoke_crypto_random(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (params[1].mem_ref == NULL || params[1].mem_ref_size == 0) {
+    if (CHECK_TA_PARAM_NULL(param_types[1], params[1])) {
         ERROR("NULL param[1]");
         return SA_STATUS_NULL_PARAMETER;
     }
@@ -1053,13 +1065,8 @@ static sa_status ta_invoke_crypto_cipher_update_iv(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (params[1].mem_ref == NULL || params[1].mem_ref_size == 0) {
+    if (CHECK_TA_PARAM_NULL(param_types[1], params[1])) {
         ERROR("NULL param[1]");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (params[1].mem_ref == NULL) {
-        ERROR("NULL params[x].mem_ref");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -1108,7 +1115,7 @@ static sa_status ta_invoke_crypto_cipher_process(
         out.context.clear.length = params[1].mem_ref_size;
         out.context.clear.offset = crypto_cipher_process->out_offset;
     } else {
-        out.context.svp.buffer = *(sa_svp_buffer*) params[1].mem_ref;
+        out.context.svp.svp_memory = params[1].mem_ref;
         out.context.svp.offset = crypto_cipher_process->out_offset;
     }
 
@@ -1120,7 +1127,7 @@ static sa_status ta_invoke_crypto_cipher_process(
         in.context.clear.offset = crypto_cipher_process->in_offset;
     } else {
         in.buffer_type = crypto_cipher_process->in_buffer_type;
-        in.context.svp.buffer = *(sa_svp_buffer*) params[2].mem_ref;
+        in.context.svp.svp_memory = params[2].mem_ref;
         in.context.svp.offset = crypto_cipher_process->in_offset;
     }
 
@@ -1136,12 +1143,15 @@ static sa_status ta_invoke_crypto_cipher_process(
             parameters = NULL;
         }
 
+        size_t bytes_to_process = crypto_cipher_process->bytes_to_process;
         status = ta_sa_crypto_cipher_process_last(params[1].mem_ref == NULL ? NULL : &out,
-                crypto_cipher_process->context, &in, &crypto_cipher_process->bytes_to_process, parameters,
-                context->client, uuid);
+                crypto_cipher_process->context, &in, &bytes_to_process, parameters, context->client, uuid);
+        crypto_cipher_process->bytes_to_process = bytes_to_process;
     } else {
+        size_t bytes_to_process = crypto_cipher_process->bytes_to_process;
         status = ta_sa_crypto_cipher_process(params[1].mem_ref == NULL ? NULL : &out, crypto_cipher_process->context,
-                &in, &crypto_cipher_process->bytes_to_process, context->client, uuid);
+                &in, &bytes_to_process, context->client, uuid);
+        crypto_cipher_process->bytes_to_process = bytes_to_process;
     }
 
     // clang-format off
@@ -1291,8 +1301,11 @@ static sa_status ta_invoke_crypto_mac_compute(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_crypto_mac_compute(params[1].mem_ref, &crypto_mac_compute->out_length, crypto_mac_compute->context,
+    size_t out_length = crypto_mac_compute->out_length;
+    sa_status status = ta_sa_crypto_mac_compute(params[1].mem_ref, &out_length, crypto_mac_compute->context,
             context->client, uuid);
+    crypto_mac_compute->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_crypto_mac_release(
@@ -1376,8 +1389,11 @@ static sa_status ta_invoke_crypto_sign(
             parameters = NULL;
     }
 
-    return ta_sa_crypto_sign(params[1].mem_ref, &crypto_sign->out_length, crypto_sign->signature_algorithm,
+    size_t out_length = crypto_sign->out_length;
+    sa_status status = ta_sa_crypto_sign(params[1].mem_ref, &out_length, crypto_sign->signature_algorithm,
             crypto_sign->key, params[2].mem_ref, params[2].mem_ref_size, parameters, context->client, uuid);
+    crypto_sign->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_svp_supported(
@@ -1403,79 +1419,30 @@ static sa_status ta_invoke_svp_supported(
     return ta_sa_svp_supported(context->client, uuid);
 }
 
-static sa_status ta_invoke_svp_buffer_create(
-        sa_svp_buffer_create_s* svp_buffer_create,
+static sa_status ta_invoke_svp_write(
+        sa_svp_write_s* svp_write,
         const uint32_t param_types[NUM_TA_PARAMS],
         ta_param params[NUM_TA_PARAMS],
         const ta_session_context* context,
         const sa_uuid* uuid) {
 
     if (CHECK_NOT_TA_PARAM_INOUT(param_types[0]) ||
-            params[0].mem_ref_size != sizeof(sa_svp_buffer_create_s) ||
-            CHECK_NOT_TA_PARAM_NULL(param_types[1], params[1]) ||
-            CHECK_NOT_TA_PARAM_NULL(param_types[2], params[2]) ||
-            CHECK_NOT_TA_PARAM_NULL(param_types[3], params[3])) {
-        ERROR("Invalid param[0] or param type");
-        return SA_STATUS_INVALID_PARAMETER;
-    }
-
-    if (svp_buffer_create->api_version != API_VERSION) {
-        ERROR("Invalid api_version");
-        return SA_STATUS_INVALID_PARAMETER;
-    }
-
-    return ta_sa_svp_buffer_create(&svp_buffer_create->svp_buffer, (void*) svp_buffer_create->svp_memory, // NOLINT
-            svp_buffer_create->size, context->client, uuid);
-}
-
-static sa_status ta_invoke_svp_buffer_release(
-        sa_svp_buffer_release_s* svp_buffer_release,
-        const uint32_t param_types[NUM_TA_PARAMS],
-        ta_param params[NUM_TA_PARAMS],
-        const ta_session_context* context,
-        const sa_uuid* uuid) {
-
-    if (CHECK_NOT_TA_PARAM_INOUT(param_types[0]) ||
-            params[0].mem_ref_size != sizeof(sa_svp_buffer_release_s) ||
-            CHECK_NOT_TA_PARAM_NULL(param_types[1], params[1]) ||
-            CHECK_NOT_TA_PARAM_NULL(param_types[2], params[2]) ||
-            CHECK_NOT_TA_PARAM_NULL(param_types[3], params[3])) {
-        ERROR("Invalid param[0] or param type");
-        return SA_STATUS_INVALID_PARAMETER;
-    }
-
-    if (svp_buffer_release->api_version != API_VERSION) {
-        ERROR("Invalid api_version");
-        return SA_STATUS_INVALID_PARAMETER;
-    }
-
-    return ta_sa_svp_buffer_release((void**) &svp_buffer_release->svp_memory, &svp_buffer_release->size,
-            svp_buffer_release->svp_buffer, context->client, uuid);
-}
-
-static sa_status ta_invoke_svp_buffer_write(
-        sa_svp_buffer_write_s* svp_buffer_write,
-        const uint32_t param_types[NUM_TA_PARAMS],
-        ta_param params[NUM_TA_PARAMS],
-        const ta_session_context* context,
-        const sa_uuid* uuid) {
-
-    if (CHECK_NOT_TA_PARAM_INOUT(param_types[0]) ||
-            params[0].mem_ref_size != sizeof(sa_svp_buffer_write_s) ||
+            params[0].mem_ref_size != sizeof(sa_svp_write_s) ||
             CHECK_NOT_TA_PARAM_IN(param_types[1]) ||
             CHECK_NOT_TA_PARAM_IN(param_types[2]) ||
-            CHECK_NOT_TA_PARAM_NULL(param_types[3], params[3])) {
+            CHECK_NOT_TA_PARAM_OUT(param_types[3])) {
         ERROR("Invalid param[0] or param type");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (params[1].mem_ref == NULL || params[1].mem_ref_size == 0 ||
-            params[2].mem_ref == NULL || params[2].mem_ref_size == 0) {
+    if (CHECK_TA_PARAM_NULL(param_types[1], params[1]) ||
+            CHECK_TA_PARAM_NULL(param_types[2], params[2]) ||
+            CHECK_TA_PARAM_NULL(param_types[3], params[3])) {
         ERROR("NULL param[1] or param[2]");
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (svp_buffer_write->api_version != API_VERSION) {
+    if (svp_write->api_version != SVP_API_VERSION) {
         ERROR("Invalid api_version");
         return SA_STATUS_INVALID_PARAMETER;
     }
@@ -1498,7 +1465,7 @@ static sa_status ta_invoke_svp_buffer_write(
             offsets[i].length = offset_s[i].length;
         }
 
-        status = ta_sa_svp_buffer_write(svp_buffer_write->out, params[1].mem_ref, params[1].mem_ref_size,
+        status = ta_sa_svp_write(params[3].mem_ref, params[1].mem_ref, params[1].mem_ref_size,
                 offsets, offsets_length, context->client, uuid);
     } while (false);
 
@@ -1508,28 +1475,30 @@ static sa_status ta_invoke_svp_buffer_write(
     return status;
 }
 
-static sa_status ta_invoke_svp_buffer_copy(
-        sa_svp_buffer_copy_s* svp_buffer_copy,
+static sa_status ta_invoke_svp_copy(
+        sa_svp_copy_s* svp_copy,
         const uint32_t param_types[NUM_TA_PARAMS],
         ta_param params[NUM_TA_PARAMS],
         const ta_session_context* context,
         const sa_uuid* uuid) {
 
     if (CHECK_NOT_TA_PARAM_INOUT(param_types[0]) ||
-            params[0].mem_ref_size != sizeof(sa_svp_buffer_copy_s) ||
+            params[0].mem_ref_size != sizeof(sa_svp_copy_s) ||
             CHECK_NOT_TA_PARAM_IN(param_types[1]) ||
-            CHECK_NOT_TA_PARAM_NULL(param_types[2], params[2]) ||
-            CHECK_NOT_TA_PARAM_NULL(param_types[3], params[3])) {
+            CHECK_NOT_TA_PARAM_OUT(param_types[2]) ||
+            CHECK_NOT_TA_PARAM_IN(param_types[3])) {
         ERROR("Invalid param[0] or param type");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (params[1].mem_ref == NULL || params[1].mem_ref_size == 0) {
+    if (CHECK_TA_PARAM_NULL(param_types[1], params[1]) ||
+            CHECK_TA_PARAM_NULL(param_types[2], params[2]) ||
+            CHECK_TA_PARAM_NULL(param_types[3], params[3])) {
         ERROR("NULL param[1]");
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (svp_buffer_copy->api_version != API_VERSION) {
+    if (svp_copy->api_version != SVP_API_VERSION) {
         ERROR("Invalid api_version");
         return SA_STATUS_INVALID_PARAMETER;
     }
@@ -1552,8 +1521,7 @@ static sa_status ta_invoke_svp_buffer_copy(
             offsets[i].length = offset_s[i].length;
         }
 
-        status = ta_sa_svp_buffer_copy(svp_buffer_copy->out, svp_buffer_copy->in,
-                offsets, offsets_length, context->client, uuid);
+        status = ta_sa_svp_copy(params[2].mem_ref, params[3].mem_ref, offsets, offsets_length, context->client, uuid);
     } while (false);
 
     if (offsets != NULL)
@@ -1577,8 +1545,8 @@ static sa_status ta_invoke_svp_key_check(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (params[1].mem_ref == NULL || params[1].mem_ref_size == 0 ||
-            params[2].mem_ref == NULL || params[2].mem_ref_size == 0) {
+    if (CHECK_TA_PARAM_NULL(param_types[1], params[1]) ||
+            CHECK_TA_PARAM_NULL(param_types[2], params[2])) {
         ERROR("NULL param[1] or param[2]");
         return SA_STATUS_NULL_PARAMETER;
     }
@@ -1596,7 +1564,7 @@ static sa_status ta_invoke_svp_key_check(
         in.context.clear.offset = svp_key_check->in_offset;
     } else {
         in.buffer_type = svp_key_check->in_buffer_type;
-        in.context.svp.buffer = *(sa_svp_buffer*) params[1].mem_ref;
+        in.context.svp.svp_memory = params[1].mem_ref;
         in.context.svp.offset = svp_key_check->in_offset;
     }
 
@@ -1607,39 +1575,34 @@ static sa_status ta_invoke_svp_key_check(
     return status;
 }
 
-static sa_status ta_invoke_svp_buffer_check(
-        sa_svp_buffer_check_s* svp_buffer_check,
+static sa_status ta_invoke_svp_check(
+        sa_svp_check_s* svp_check,
         const uint32_t param_types[NUM_TA_PARAMS],
         ta_param params[NUM_TA_PARAMS],
         const ta_session_context* context,
         const sa_uuid* uuid) {
 
     if (CHECK_NOT_TA_PARAM_IN(param_types[0]) ||
-            params[0].mem_ref_size != sizeof(sa_svp_buffer_check_s) ||
+            params[0].mem_ref_size != sizeof(sa_svp_check_s) ||
             CHECK_NOT_TA_PARAM_IN(param_types[1]) ||
-            CHECK_NOT_TA_PARAM_NULL(param_types[2], params[2]) ||
+            CHECK_NOT_TA_PARAM_IN(param_types[2]) ||
             CHECK_NOT_TA_PARAM_NULL(param_types[3], params[3])) {
         ERROR("Invalid param[0] or param type");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (params[1].mem_ref == NULL || params[1].mem_ref_size == 0) {
+    if (CHECK_TA_PARAM_NULL(param_types[1], params[1])) {
         ERROR("NULL param[1]");
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (params[1].mem_ref == NULL) {
-        ERROR("NULL params[x].mem_ref");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (svp_buffer_check->api_version != API_VERSION) {
+    if (svp_check->api_version != SVP_API_VERSION) {
         ERROR("Invalid api_version");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_svp_buffer_check(svp_buffer_check->svp_buffer, svp_buffer_check->offset, svp_buffer_check->length,
-            svp_buffer_check->digest_algorithm, params[1].mem_ref, params[1].mem_ref_size, context->client,
+    return ta_sa_svp_check(params[2].mem_ref, svp_check->offset, svp_check->length,
+            svp_check->digest_algorithm, params[1].mem_ref, params[1].mem_ref_size, context->client,
             uuid);
 }
 
@@ -1711,7 +1674,7 @@ static sa_status ta_invoke_process_common_encryption(
             out.context.clear.length = params[2].mem_ref_size;
             out.context.clear.offset = process_common_encryption->out_offset;
         } else {
-            out.context.svp.buffer = *(sa_svp_buffer*) params[2].mem_ref;
+            out.context.svp.svp_memory = params[2].mem_ref;
             out.context.svp.offset = process_common_encryption->out_offset;
         }
 
@@ -1724,7 +1687,7 @@ static sa_status ta_invoke_process_common_encryption(
             in.context.clear.offset = process_common_encryption->in_offset;
         } else {
             in.buffer_type = process_common_encryption->in_buffer_type;
-            in.context.svp.buffer = *(sa_svp_buffer*) params[3].mem_ref;
+            in.context.svp.svp_memory = params[3].mem_ref;
             in.context.svp.offset = process_common_encryption->in_offset;
         }
 
@@ -1924,23 +1887,13 @@ sa_status ta_invoke_command_handler(
                         &uuid);
                 break;
 
-            case SA_SVP_BUFFER_CREATE:
-                status = ta_invoke_svp_buffer_create((sa_svp_buffer_create_s*) command_parameter, param_types, params,
+            case SA_SVP_WRITE:
+                status = ta_invoke_svp_write((sa_svp_write_s*) command_parameter, param_types, params,
                         context, &uuid);
                 break;
 
-            case SA_SVP_BUFFER_RELEASE:
-                status = ta_invoke_svp_buffer_release((sa_svp_buffer_release_s*) command_parameter, param_types, params,
-                        context, &uuid);
-                break;
-
-            case SA_SVP_BUFFER_WRITE:
-                status = ta_invoke_svp_buffer_write((sa_svp_buffer_write_s*) command_parameter, param_types, params,
-                        context, &uuid);
-                break;
-
-            case SA_SVP_BUFFER_COPY:
-                status = ta_invoke_svp_buffer_copy((sa_svp_buffer_copy_s*) command_parameter, param_types, params,
+            case SA_SVP_COPY:
+                status = ta_invoke_svp_copy((sa_svp_copy_s*) command_parameter, param_types, params,
                         context, &uuid);
                 break;
 
@@ -1949,8 +1902,8 @@ sa_status ta_invoke_command_handler(
                         &uuid);
                 break;
 
-            case SA_SVP_BUFFER_CHECK:
-                status = ta_invoke_svp_buffer_check((sa_svp_buffer_check_s*) command_parameter, param_types, params,
+            case SA_SVP_CHECK:
+                status = ta_invoke_svp_check((sa_svp_check_s*) command_parameter, param_types, params,
                         context, &uuid);
                 break;
 

@@ -18,12 +18,12 @@
 
 #include "client_store.h"
 #include "log.h"
+#include "porting/svp.h"
 #include "ta_sa.h"
 
-sa_status ta_sa_svp_buffer_write(
-        sa_svp_buffer out,
-        const void* in,
-        size_t in_length,
+sa_status ta_sa_svp_copy(
+        void* out,
+        void* in,
         sa_svp_offset* offsets,
         size_t offsets_length,
         ta_client client_slot,
@@ -34,21 +34,24 @@ sa_status ta_sa_svp_buffer_write(
         return SA_STATUS_NULL_PARAMETER;
     }
 
+    if (out == NULL) {
+        ERROR("NULL out");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
     if (in == NULL) {
         ERROR("NULL in");
         return SA_STATUS_NULL_PARAMETER;
     }
 
     if (offsets == NULL) {
-        ERROR("NULL offset");
+        ERROR("NULL offsets");
         return SA_STATUS_NULL_PARAMETER;
     }
 
     sa_status status;
     client_store_t* client_store = client_store_global();
     client_t* client = NULL;
-    svp_store_t* svp_store = NULL;
-    svp_t* out_svp = NULL;
     do {
         status = client_store_acquire(&client, client_store, client_slot, caller_uuid);
         if (status != SA_STATUS_OK) {
@@ -56,23 +59,12 @@ sa_status ta_sa_svp_buffer_write(
             break;
         }
 
-        svp_store = client_get_svp_store(client);
-        status = svp_store_acquire_exclusive(&out_svp, svp_store, out, caller_uuid);
-        if (status != SA_STATUS_OK) {
-            ERROR("svp_store_acquire_exclusive failed");
-            break;
-        }
-
-        svp_buffer_t* out_svp_buffer = svp_get_buffer(out_svp);
-        if (!svp_write(out_svp_buffer, in, in_length, offsets, offsets_length)) {
-            ERROR("svp_write failed");
-            status = SA_STATUS_INVALID_SVP_BUFFER;
+        if (!svp_copy(out, in, offsets, offsets_length)) {
+            ERROR("svp_copy failed");
+            status = SA_STATUS_INVALID_SVP_MEMORY;
             break;
         }
     } while (false);
-
-    if (out_svp != NULL)
-        svp_store_release_exclusive(svp_store, out, out_svp, caller_uuid);
 
     client_store_release(client_store, client_slot, client, caller_uuid);
 

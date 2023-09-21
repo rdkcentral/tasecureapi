@@ -17,13 +17,19 @@
  */
 
 #include "sa.h"
+#include "svp.h"
 #include "ta_client.h"
 
 sa_status sa_svp_memory_free(void* svp_memory) {
 
     // TODO SoC Vendor: replace this call to a call to free secure memory.
-    if (svp_memory != NULL)
-        free(svp_memory);
+    svp_memory_s* temp = svp_memory;
+
+    if (temp->svp_memory != NULL)
+        free(temp->svp_memory);
+
+    if (temp != NULL)
+        free(temp);
 
     return SA_STATUS_OK;
 }

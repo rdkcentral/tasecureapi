@@ -25,10 +25,10 @@ using namespace client_test_helpers;
 
 namespace {
     TEST_F(SaSvpBufferCheckTest, failsRee) {
-        auto buffer = create_sa_svp_buffer(AES_BLOCK_SIZE);
-        ASSERT_NE(buffer, nullptr);
+        auto svp_memory = create_sa_svp_memory(AES_BLOCK_SIZE);
+        ASSERT_NE(svp_memory, nullptr);
         std::vector<uint8_t> hash(SHA1_DIGEST_LENGTH);
-        sa_status const status = sa_svp_buffer_check(*buffer, 0, 1024, SA_DIGEST_ALGORITHM_SHA1, hash.data(),
+        sa_status const status = sa_svp_check(svp_memory.get(), 0, 1024, SA_DIGEST_ALGORITHM_SHA1, hash.data(),
                 hash.size());
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }

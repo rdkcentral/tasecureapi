@@ -16,104 +16,33 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "porting/svp.h" // NOLINT
 #include "digest.h"
 #include "log.h"
 #include "porting/memory.h"
 #include "porting/otp_internal.h"
 #include "porting/overflow.h"
+#include "porting/svp_internal.h"
 #include "stored_key_internal.h"
 #include <memory.h>
 
-// An SVP buffer contains a pointer to the SVP memory region and its size.
-struct svp_buffer_s {
-    void* svp_memory;
-    size_t size;
-};
+// This is sample code for example purposes only and matches the definition in svp.h.
+typedef struct {
+    size_t svp_memory_size;
+    uint8_t* svp_memory;
+} svp_memory_s;
 
-static bool svp_validate_buffer(const svp_buffer_t* svp_buffer) {
-    if (svp_buffer == NULL) {
-        ERROR("NULL svp_buffer");
-        return false;
-    }
-
-    if (!memory_is_valid_svp(svp_buffer->svp_memory, svp_buffer->size)) {
-        ERROR("memory range is not within SVP memory");
-        return SA_STATUS_INVALID_PARAMETER;
-    }
-
-    return true;
-}
-
-bool svp_create_buffer(
-        svp_buffer_t** svp_buffer,
-        void* svp_memory,
-        size_t size) {
-
-    if (svp_buffer == NULL) {
-        ERROR("NULL svp_buffer");
-        return false;
-    }
-
-    if (svp_memory == NULL) {
-        ERROR("NULL svp_memory");
-        return false;
-    }
-
-    if (!memory_is_valid_svp(svp_memory, size)) {
-        ERROR("memory range is not within SVP memory");
-        return SA_STATUS_INVALID_PARAMETER;
-    }
-
-    *svp_buffer = memory_internal_alloc(sizeof(svp_buffer_t));
-    if (!*svp_buffer) {
-        ERROR("memory_internal_alloc failed");
-        return false;
-    }
-
-    memory_memset_unoptimizable(*svp_buffer, 0, sizeof(svp_buffer_t));
-
-    (*svp_buffer)->svp_memory = svp_memory;
-    (*svp_buffer)->size = size;
-    return true;
-}
-
-bool svp_release_buffer(
-        void** svp_memory,
-        size_t* size,
-        svp_buffer_t* svp_buffer) {
-
-    if (svp_memory == NULL) {
-        ERROR("NULL svp_memory");
-        return false;
-    }
-
-    if (size == NULL) {
-        ERROR("NULL size");
-        return false;
-    }
-
-    if (svp_buffer == NULL) {
-        ERROR("NULL svp_buffer");
-        return false;
-    }
-
-    *svp_memory = svp_buffer->svp_memory;
-    *size = svp_buffer->size;
-    svp_buffer->svp_memory = NULL;
-    svp_buffer->size = 0;
-    memory_internal_free(svp_buffer);
-    return true;
+sa_status svp_supported() {
+    return SA_STATUS_OK;
 }
 
 bool svp_write(
-        svp_buffer_t* out_svp_buffer,
+        void* out,
         const void* in,
         size_t in_length,
         sa_svp_offset* offsets,
         size_t offsets_length) {
 
-    if (out_svp_buffer == NULL) {
+    if (out == NULL) {
         ERROR("NULL out_svp_buffer");
         return false;
     }
@@ -128,11 +57,7 @@ bool svp_write(
         return false;
     }
 
-    if (!svp_validate_buffer(out_svp_buffer)) {
-        ERROR("svp_validate_buffer failed");
-        return false;
-    }
-
+    size_t size = svp_get_size(out);
     for (size_t i = 0; i < offsets_length; i++) {
         size_t range;
         if (add_overflow(offsets[i].out_offset, offsets[i].length, &range)) {
@@ -140,7 +65,7 @@ bool svp_write(
             return false;
         }
 
-        if (range > out_svp_buffer->size) {
+        if (range > size) {
             ERROR("attempting to write outside the bounds of output secure buffer");
             return false;
         }
@@ -156,7 +81,7 @@ bool svp_write(
         }
     }
 
-    uint8_t* out_bytes = (uint8_t*) out_svp_buffer->svp_memory;
+    uint8_t* out_bytes = svp_get_svp_memory(out);
     for (size_t i = 0; i < offsets_length; i++)
         memcpy(out_bytes + offsets[i].out_offset, in + offsets[i].in_offset, offsets[i].length);
 
@@ -164,17 +89,17 @@ bool svp_write(
 }
 
 bool svp_copy(
-        svp_buffer_t* out_svp_buffer,
-        const svp_buffer_t* in_svp_buffer,
+        void* out,
+        void* in,
         sa_svp_offset* offsets,
         size_t offsets_length) {
 
-    if (out_svp_buffer == NULL) {
+    if (out == NULL) {
         ERROR("NULL out_svp_buffer");
         return false;
     }
 
-    if (in_svp_buffer == NULL) {
+    if (in == NULL) {
         ERROR("NULL in_svp_buffer");
         return false;
     }
@@ -184,16 +109,8 @@ bool svp_copy(
         return false;
     }
 
-    if (!svp_validate_buffer(out_svp_buffer)) {
-        ERROR("svp_validate_buffer failed");
-        return false;
-    }
-
-    if (!svp_validate_buffer(in_svp_buffer)) {
-        ERROR("svp_validate_buffer failed");
-        return false;
-    }
-
+    size_t out_size = svp_get_size(out);
+    size_t in_size = svp_get_size(in);
     for (size_t i = 0; i < offsets_length; i++) {
         size_t range;
         if (add_overflow(offsets[i].out_offset, offsets[i].length, &range)) {
@@ -201,7 +118,7 @@ bool svp_copy(
             return false;
         }
 
-        if (range > out_svp_buffer->size) {
+        if (range > out_size) {
             ERROR("attempting to write outside the bounds of output secure buffer");
             return false;
         }
@@ -211,27 +128,30 @@ bool svp_copy(
             return false;
         }
 
-        if (range > in_svp_buffer->size) {
+        if (range > in_size) {
             ERROR("attempting to read outside the bounds of input secure buffer");
             return false;
         }
     }
 
+    uint8_t* out_bytes = svp_get_svp_memory(out);
+    uint8_t* in_bytes = svp_get_svp_memory(in);
     for (size_t i = 0; i < offsets_length; i++) {
         unsigned long out_position;
-        if (add_overflow((unsigned long) out_svp_buffer->svp_memory, offsets[i].out_offset, &out_position)) {
+        if (add_overflow((unsigned long) out_bytes, offsets[i].out_offset, &out_position)) {
             ERROR("Integer overflow");
             return false;
         }
 
         unsigned long in_position;
-        if (add_overflow((unsigned long) in_svp_buffer->svp_memory, offsets[i].in_offset, &in_position)) {
+        if (add_overflow((unsigned long) in_bytes, offsets[i].in_offset, &in_position)) {
             ERROR("Integer overflow");
             return false;
         }
 
         memcpy((void*) out_position, (void*) in_position, offsets[i].length); // NOLINT
     }
+
     return true;
 }
 
@@ -297,7 +217,7 @@ bool svp_digest(
         void* out,
         size_t* out_length,
         sa_digest_algorithm digest_algorithm,
-        const svp_buffer_t* svp_buffer,
+        void* svp_buffer,
         size_t offset,
         size_t length) {
 
@@ -307,18 +227,14 @@ bool svp_digest(
         return false;
     }
 
-    if (range > svp_buffer->size) {
-        ERROR("attempting to write outside the bounds of output secure buffer");
-        return false;
-    }
-
-    if (!svp_validate_buffer(svp_buffer)) {
-        ERROR("svp_validate_buffer failed");
+    size_t size = svp_get_size(svp_buffer);
+    if (range > size) {
+        ERROR("attempting to read outside the bounds of input secure buffer");
         return false;
     }
 
     unsigned long position;
-    if (add_overflow((unsigned long) svp_buffer->svp_memory, offset, &position)) {
+    if (add_overflow((unsigned long) svp_get_svp_memory(svp_buffer), offset, &position)) {
         ERROR("Integer overflow");
         return false;
     }
@@ -331,21 +247,22 @@ bool svp_digest(
     return true;
 }
 
-void* svp_get_svp_memory(const svp_buffer_t* svp_buffer) {
-    if (svp_buffer == NULL)
+void* svp_get_svp_memory(void* svp_memory) {
+    if (svp_memory == NULL)
         return NULL;
 
-    if (!svp_validate_buffer(svp_buffer)) {
-        ERROR("svp_validate_buffer failed");
+    svp_memory_s* svp = (svp_memory_s*) svp_memory;
+    if (!memory_is_valid_svp(svp->svp_memory, svp->svp_memory_size)) {
+        ERROR("memory range is not within SVP memory");
         return NULL;
     }
 
-    return svp_buffer->svp_memory;
+    return svp->svp_memory;
 }
 
-size_t svp_get_size(const svp_buffer_t* svp_buffer) {
-    if (svp_buffer == NULL)
+size_t svp_get_size(const void* svp_memory) {
+    if (svp_memory == NULL)
         return 0;
 
-    return svp_buffer->size;
+    return ((svp_memory_s*) svp_memory)->svp_memory_size;
 }

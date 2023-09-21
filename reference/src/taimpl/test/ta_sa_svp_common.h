@@ -28,17 +28,18 @@
 class TaSvpBase : public ::testing::Test {
 protected:
     void SetUp() override;
-    static std::shared_ptr<sa_svp_buffer> create_sa_svp_buffer(size_t size);
+    static std::shared_ptr<void> create_sa_svp_memory(size_t size);
+
 };
 
-class TaSvpBufferCheckTest : public ::testing::WithParamInterface<sa_digest_algorithm>, public TaSvpBase {};
+class TaSvpCheckTest : public ::testing::WithParamInterface<sa_digest_algorithm>, public TaSvpBase {};
 
 class TaSvpKeyCheckTest : public TaSvpBase, public TaCryptoCipherBase {};
 
 typedef std::tuple<long> TaSvpBufferTestType; // NOLINT
 
-class TaSvpBufferCopyTest : public ::testing::WithParamInterface<TaSvpBufferTestType>, public TaSvpBase {};
+class TaSvpCopyTest : public ::testing::WithParamInterface<TaSvpBufferTestType>, public TaSvpBase {};
 
-class TaSvpBufferWriteTest : public ::testing::WithParamInterface<TaSvpBufferTestType>, public TaSvpBase {};
+class TaSvpWriteTest : public ::testing::WithParamInterface<TaSvpBufferTestType>, public TaSvpBase {};
 
 #endif // TA_SA_SVP_COMMON_H

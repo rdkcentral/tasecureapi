@@ -28,51 +28,23 @@
 #define SVP_H
 
 #include "sa_types.h"
+#include "stored_key.h"
 
 #ifdef __cplusplus
-
-#include <cstdbool>
-#include <cstddef>
-
 extern "C" {
-#else
-#include <stdbool.h>
-#include <stddef.h>
-#include <stored_key.h>
 #endif
 
-typedef struct svp_buffer_s svp_buffer_t;
-
 /**
- * Creates a protected SVP buffer from a previously allocated SVP memory region and its size.
+ * Identifies if SVP is supported.
  *
- * @param[out] svp_buffer the SVP buffer that was allocated.
- * @param[in] svp_memory the previously allocated SVP memory region.
- * @param[in] size the size of the previously allocated SVP region.
- * @return true if successful.
+ * @return SA_STATUS_OK if supported. SA_STATUS_OPERATION_NOT_SUPPORTED if not supported.
  */
-bool svp_create_buffer(
-        svp_buffer_t** svp_buffer,
-        void* svp_memory,
-        size_t size);
-
-/**
- * Releases a protected SVP buffer and returns the SVP memory region and its size.
- *
- * @param[out] svp_memory a reference to the SVP memory region.
- * @param[out] size the size of the SVP memory region.
- * @param[in] svp_buffer the SVP buffer to release.
- * @return true if successful.
- */
-bool svp_release_buffer(
-        void** svp_memory,
-        size_t* size,
-        svp_buffer_t* svp_buffer);
+sa_status svp_supported();
 
 /**
  * Write the specified data into a protected SVP buffer
  *
- * @param[out] out_svp_buffer the buffer into which the data should be written.
+ * @param[out] out the SVP memory into which the data should be written.
  * @param[in] in the buffer from which to copy the data.
  * @param[in] in_length the length of the input data.
  * @param[in] offsets the offsets to write.
@@ -80,7 +52,7 @@ bool svp_release_buffer(
  * @return true if successful.
  */
 bool svp_write(
-        svp_buffer_t* out_svp_buffer,
+        void* out,
         const void* in,
         size_t in_length,
         sa_svp_offset* offsets,
@@ -89,15 +61,15 @@ bool svp_write(
 /**
  * Copy the specified data from one protected SVP buffer to another
  *
- * @param[out] out_svp_buffer the buffer into which the data should be written.
- * @param[in] in_svp_buffer the buffer from which to copy the data.
+ * @param[out] out the SVP memory into which the data should be written.
+ * @param[in] in the SVP memory from which to copy the data.
  * @param[in] offsets the offsets to write.
  * @param[in] offsets_length the number of offsets to write.
  * @return true if successful.
  */
 bool svp_copy(
-        svp_buffer_t* out_svp_buffer,
-        const svp_buffer_t* in_svp_buffer,
+        void* out,
+        const void* in,
         sa_svp_offset* offsets,
         size_t offsets_length);
 
@@ -123,7 +95,7 @@ bool svp_key_check(
  * @param[out] out the location to olace the digest.
  * @param[inout] out_length the length of the digest location and the number of bytes written.
  * @param[in] digest_algorithm the digest algorithm to use.
- * @param[in] svp_buffer_t* the SVP buffer to digest.
+ * @param[in] svp_memory* the SVP memory to digest.
  * @param[in] offset the offset into SVP at which to start.
  * @param[in] length the number of bytes in the SVP buffer to include in the digest.
  * @return the digest of the SBP buffer.
@@ -132,25 +104,9 @@ bool svp_digest(
         void* out,
         size_t* out_length,
         sa_digest_algorithm digest_algorithm,
-        const svp_buffer_t* svp_buffer,
+        const void* svp_memory,
         size_t offset,
         size_t length);
-
-/**
- * Get the protected SVP memory location.
- *
- * @param[in] svp_buffer svp.
- * @return the SVP buffer.
- */
-void* svp_get_svp_memory(const svp_buffer_t* svp_buffer);
-
-/**
- * Get the protected SVP memory size.
- *
- * @param[in] svp_buffer svp.
- * @return the buffer length.
- */
-size_t svp_get_size(const svp_buffer_t* svp_buffer);
 
 #ifdef __cplusplus
 }

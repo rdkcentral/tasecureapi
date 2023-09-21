@@ -194,12 +194,12 @@ void TaCryptoCipherTest::SetUp() {
     }
 }
 
-sa_status TaProcessCommonEncryptionTest::svp_buffer_write(
-        sa_svp_buffer out,
+sa_status TaProcessCommonEncryptionTest::svp_write(
+        void* out,
         const void* in,
         size_t in_length) {
     sa_svp_offset offsets = {0, 0, in_length};
-    return ta_sa_svp_buffer_write(out, in, in_length, &offsets, 1, client(), ta_uuid());
+    return ta_sa_svp_write(out, in, in_length, &offsets, 1, client(), ta_uuid());
 }
 
 namespace {
@@ -245,7 +245,6 @@ namespace {
 
     size_t get_required_length(
             sa_cipher_algorithm cipher_algorithm,
-            sa_cipher_mode cipher_mode,
             size_t key_length,
             size_t bytes_to_process) {
 
@@ -280,7 +279,7 @@ namespace {
         if (!digest_openssl(hash, SA_DIGEST_ALGORITHM_SHA256, data, {}, {}))
             return false;
 
-        return ta_sa_svp_buffer_check(buffer->context.svp.buffer, 0, data.size(), SA_DIGEST_ALGORITHM_SHA256,
+        return ta_sa_svp_check(buffer->context.svp.svp_memory, 0, data.size(), SA_DIGEST_ALGORITHM_SHA256,
                        hash.data(), hash.size(), client(), ta_uuid()) == SA_STATUS_OK;
     }
 
@@ -330,7 +329,7 @@ namespace {
                     client(), ta_uuid());
 
         ASSERT_EQ(status, SA_STATUS_OK);
-        size_t const required_length = get_required_length(cipher_algorithm, cipher_mode, key_size, in.size());
+        size_t const required_length = get_required_length(cipher_algorithm, key_size, in.size());
         ASSERT_EQ(bytes_to_process, required_length);
 
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_SVP, bytes_to_process);
@@ -506,7 +505,7 @@ namespace {
         }
         std::vector<uint8_t> digest;
         ASSERT_TRUE(digest_openssl(digest, SA_DIGEST_ALGORITHM_SHA256, sample_data.clear, {}, {}));
-        status = ta_sa_svp_buffer_check(sample_data.out->context.svp.buffer, 0, sample_data.clear.size(),
+        status = ta_sa_svp_check(sample_data.out->context.svp.svp_memory, 0, sample_data.clear.size(),
                 SA_DIGEST_ALGORITHM_SHA256, digest.data(), digest.size(), client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_OK);
 #ifndef DISABLE_CENC_TIMING

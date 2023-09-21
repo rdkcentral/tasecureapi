@@ -32,7 +32,6 @@
 #include "mac_store.h"
 #include "object_store.h"
 #include "sa_types.h"
-#include "svp_store.h"
 #include "ta_sa_types.h"
 
 #ifdef __cplusplus
@@ -40,6 +39,7 @@ extern "C" {
 #endif
 
 typedef struct client_s client_t;
+typedef object_store_t client_store_t;
 
 /**
  * Get the key store.
@@ -64,16 +64,6 @@ cipher_store_t* client_get_cipher_store(const client_t* client);
  * @return mac store.
  */
 mac_store_t* client_get_mac_store(const client_t* client);
-
-/**
- * Get the svp store.
- *
- * @param[in] client client.
- * @return svp store.
- */
-svp_store_t* client_get_svp_store(const client_t* client);
-
-typedef object_store_t client_store_t;
 
 /**
  * Obtain global client store instance. There will be only one instance of this store in the SecApi

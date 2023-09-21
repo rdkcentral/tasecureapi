@@ -25,12 +25,12 @@
 
 using namespace client_test_helpers;
 
-sa_status SaProcessCommonEncryptionBase::svp_buffer_write(
-        sa_svp_buffer out,
+sa_status SaProcessCommonEncryptionBase::svp_write(
+        void* out,
         const void* in,
         size_t in_length) {
     sa_svp_offset offsets = {0, 0, in_length};
-    return sa_svp_buffer_write(out, in, in_length, &offsets, 1);
+    return sa_svp_write(out, in, in_length, &offsets, 1);
 }
 
 void SaProcessCommonEncryptionTest::SetUp() {
@@ -500,11 +500,11 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutSvpBuffer) {
 
     sa_buffer out;
     out.buffer_type = SA_BUFFER_TYPE_SVP;
-    out.context.svp.buffer = INVALID_HANDLE;
+    out.context.svp.svp_memory = nullptr;
     out.context.svp.offset = 0;
     sample.out = &out;
     sa_status const status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullIn) {
@@ -604,14 +604,14 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullInSvpBuffer) {
     sample.context = *cipher;
     sample_data.clear = random(SUBSAMPLE_SIZE);
 
-    sa_buffer in = {SA_BUFFER_TYPE_SVP, {.svp = {INVALID_HANDLE, 0}}};
+    sa_buffer in = {SA_BUFFER_TYPE_SVP, {.svp = {nullptr, 0}}};
     sample.in = &in;
 
     sample_data.out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, SUBSAMPLE_SIZE);
     ASSERT_NE(sample_data.out, nullptr);
     sample.out = sample_data.out.get();
     sa_status const status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
+    ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidSkipByteBlock) {

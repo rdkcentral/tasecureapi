@@ -4363,8 +4363,8 @@ namespace client_test_helpers {
                             if (buffer->context.clear.buffer != nullptr)
                                 free(buffer->context.clear.buffer);
                         } else {
-                            if (buffer->context.svp.buffer != INVALID_HANDLE)
-                                sa_svp_buffer_free(buffer->context.svp.buffer);
+                            if (buffer->context.svp.svp_memory != nullptr)
+                                free(buffer->context.svp.svp_memory);
                         }
                     }
 
@@ -4382,14 +4382,11 @@ namespace client_test_helpers {
             }
         } else if (buffer_type == SA_BUFFER_TYPE_SVP) {
             buffer->buffer_type = SA_BUFFER_TYPE_SVP;
-            buffer->context.svp.buffer = INVALID_HANDLE;
-            sa_svp_buffer svp_buffer;
-            if (sa_svp_buffer_alloc(&svp_buffer, size) != SA_STATUS_OK) {
-                ERROR("sa_svp_buffer_alloc failed");
+            if (sa_svp_memory_alloc(&buffer->context.svp.svp_memory, size) != SA_STATUS_OK) {
+                ERROR("sa_svp_alloc failed");
                 return nullptr;
             }
 
-            buffer->context.svp.buffer = svp_buffer;
             buffer->context.svp.offset = 0;
         }
 
@@ -4408,9 +4405,9 @@ namespace client_test_helpers {
             memcpy(buffer->context.clear.buffer, initial_value.data(), initial_value.size());
         } else {
             sa_svp_offset offsets = {0, 0, initial_value.size()};
-            if (sa_svp_buffer_write(buffer->context.svp.buffer, initial_value.data(), initial_value.size(),
+            if (sa_svp_write(buffer->context.svp.svp_memory, initial_value.data(), initial_value.size(),
                         &offsets, 1) != SA_STATUS_OK) {
-                ERROR("sa_svp_buffer_write");
+                ERROR("sa_svp_write");
                 return nullptr;
             }
 

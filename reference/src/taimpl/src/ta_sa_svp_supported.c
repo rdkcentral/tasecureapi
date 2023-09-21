@@ -17,7 +17,7 @@
  */
 
 #include "log.h"
-#include "svp_store.h"
+#include "porting/svp.h"
 #include "ta_sa.h"
 
 sa_status ta_sa_svp_supported(

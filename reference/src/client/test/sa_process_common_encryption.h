@@ -32,8 +32,8 @@ typedef std::tuple<std::tuple<size_t, int64_t>, size_t, size_t, size_t, sa_ciphe
 
 class SaProcessCommonEncryptionBase : public ProcessCommonEncryptionBase {
 protected:
-    sa_status svp_buffer_write(
-        sa_svp_buffer out,
+    sa_status svp_write(
+        void* out,
         const void* in,
         size_t in_length) override;
 

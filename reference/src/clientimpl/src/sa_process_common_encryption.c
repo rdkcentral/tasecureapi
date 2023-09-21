@@ -127,11 +127,15 @@ sa_status sa_process_common_encryption(
                 CREATE_OUT_PARAM(param2,
                         ((uint8_t*) samples[i].out->context.clear.buffer) + samples[i].out->context.clear.offset,
                         param2_size);
-            } else {
+            } else if (samples[i].out->buffer_type == SA_BUFFER_TYPE_SVP) {
                 process_common_encryption->out_offset = samples[i].out->context.svp.offset;
-                param2_size = sizeof(sa_svp_buffer);
-                param2_type = TA_PARAM_IN;
-                CREATE_PARAM(param2, &samples[i].out->context.svp.buffer, param2_size);
+                param2_size = sizeof(void*);
+                param2_type = TA_PARAM_OUT;
+                param2 = samples[i].out->context.svp.svp_memory;
+            } else {
+                ERROR("Unknown buffer type");
+                status = SA_STATUS_INVALID_PARAMETER;
+                break;
             }
 
             size_t param3_size;
@@ -154,10 +158,14 @@ sa_status sa_process_common_encryption(
                 CREATE_PARAM(param3,
                         ((uint8_t*) samples[i].in->context.clear.buffer) + samples[i].in->context.clear.offset,
                         param3_size);
-            } else {
+            } else if (samples[i].in->buffer_type == SA_BUFFER_TYPE_SVP) {
                 process_common_encryption->in_offset = samples[i].in->context.svp.offset;
-                param3_size = sizeof(sa_svp_buffer);
-                CREATE_PARAM(param3, &samples[i].in->context.svp.buffer, param3_size);
+                param3_size = sizeof(void*);
+                param3 = samples[i].in->context.svp.svp_memory;
+            } else {
+                ERROR("Unknown buffer type");
+                status = SA_STATUS_INVALID_PARAMETER;
+                break;
             }
 
             // clang-format off
@@ -191,9 +199,13 @@ sa_status sa_process_common_encryption(
             subsample_length_s = NULL;
             RELEASE_PARAM(param1);
             param1 = NULL;
-            RELEASE_PARAM(param2);
+            if (samples[i].out->buffer_type == SA_BUFFER_TYPE_CLEAR)
+                 RELEASE_PARAM(param2);
+
+            if (samples[i].in->buffer_type == SA_BUFFER_TYPE_CLEAR)
+                 RELEASE_PARAM(param3);
+
             param2 = NULL;
-            RELEASE_PARAM(param3);
             param3 = NULL;
         }
     } while (false);

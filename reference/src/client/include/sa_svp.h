@@ -46,7 +46,7 @@ extern "C" {
 sa_status sa_svp_supported();
 
 /**
- * Allocate an SVP memory block.
+ * Allocate an SVP memory block. The output of this function must be compatible with RDK SVP functions.
  *
  * @param[out] svp_memory pointer to the SVP memory region.
  * @param[in] size Size of the restricted SVP memory region in bytes.
@@ -62,49 +62,7 @@ sa_status sa_svp_memory_alloc(
         size_t size);
 
 /**
- * Allocate an SVP buffer handle. This is a convenience function that calls sa_svp_memory_alloc to allocate an SVP
- * memory region and then calls sa_svp_buffer_create to create a handle to an SVP buffer.
- *
- * @param[out] svp_buffer SVP buffer handle.
- * @param[in] size Size of the restricted SVP region buffer in bytes.
- * @return Operation status. Possible values are:
- * + SA_STATUS_OK - Operation succeeded.
- * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - No available SVP slots.
- * + SA_STATUS_NULL_PARAMETER - SVP_buffer or buffer is NULL.
- * + SA_STATUS_INVALID_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
- * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
- * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
- * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
- */
-sa_status sa_svp_buffer_alloc(
-        sa_svp_buffer* svp_buffer,
-        size_t size);
-
-/**
- * Create an SVP buffer handle. An SVP buffer is a TA data structure that points to an SVP memory region and holds the
- * size of the buffer. The SVP memory is allocated before calling this function and then is passed in via the svp_memory
- * parameter. The size of the SVP memory region is passed in via the size parameter. SVP memory passed in must be
- * validated to be wholly contained within the restricted SVP memory region.
- *
- * @param[out] svp_buffer SVP buffer handle.
- * @param[in] svp_memory Restricted SVP memory region.
- * @param[in] size Size of the restricted SVP memory region in bytes.
- * @return Operation status. Possible values are:
- * + SA_STATUS_OK - Operation succeeded.
- * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - No available SVP slots.
- * + SA_STATUS_NULL_PARAMETER - SVP_buffer or buffer is NULL.
- * + SA_STATUS_INVALID_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
- * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
- * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
- * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
- */
-sa_status sa_svp_buffer_create(
-        sa_svp_buffer* svp_buffer,
-        void* svp_memory,
-        size_t size);
-
-/**
- * Free an SVP memory block.
+ * Free an SVP memory block. The input of this function must be compatible with RDK SVP functions.
  *
  * @param[in] svp_memory pointer to the SVP memory region.
  * @return Operation status. Possible values are:
@@ -117,42 +75,10 @@ sa_status sa_svp_buffer_create(
 sa_status sa_svp_memory_free(void* svp_memory);
 
 /**
- * Free the SVP buffer handle. This is a convenience functions that calls sa_svp_buffer_release followed by
- * sa_svp_memory_free.
+ * Write a block of data into an SVP memory region. The input of this function must be compatible with RDK SVP
+ * functions.
  *
- * @param[in] svp_buffer SVP buffer handle.
- * @return Operation status. Possible values are:
- * + SA_STATUS_OK - Operation succeeded.
- * + SA_STATUS_NULL_PARAMETER - svp_buffer is NULL.
- * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
- * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
- * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
- */
-sa_status sa_svp_buffer_free(sa_svp_buffer svp_buffer);
-
-/**
- * Releases the SVP buffer handle. This call does not free the SVP memory region buffer associated with it. The SVP
- * memory region and its length are returned to the caller and the caller must free the SVP memory region.
- *
- * @param[out] svp_memory A reference to the SVP memory region.
- * @param[out] size The size of the SVP memory region.
- * @param[in] svp_buffer SVP buffer handle.
- * @return Operation status. Possible values are:
- * + SA_STATUS_OK - Operation succeeded.
- * + SA_STATUS_NULL_PARAMETER - svp_buffer is NULL.
- * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
- * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
- * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
- */
-sa_status sa_svp_buffer_release(
-        void** svp_memory,
-        size_t* size,
-        sa_svp_buffer svp_buffer);
-
-/**
- * Write a block of data into an SVP buffer.
- *
- * @param[in] out Destination SVP buffer.
+ * @param[in] out Destination SVP memory.
  * @param[in] in Source data to write.
  * @param[in] in_length The length of the source data.
  * @param[in] offsets a list of offsets into the source and destination of the block to copy and the length of the
@@ -161,41 +87,42 @@ sa_status sa_svp_buffer_release(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - out, out_offset, or in is NULL.
- * + SA_STATUS_INVALID_PARAMETER - Writing past the end of the SVP buffer detected.
- * + SA_STATUS_INVALID_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
+ * + SA_STATUS_INVALID_PARAMETER - Writing past the end of the SVP memory region detected.
+ * + SA_STATUS_INVALID_SVP_MEMORY - memory is not fully contained withing SVP memory region.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
  */
-sa_status sa_svp_buffer_write(
-        sa_svp_buffer out,
+sa_status sa_svp_write(
+        void* out,
         const void* in,
         size_t in_length,
         sa_svp_offset* offsets,
         size_t offsets_length);
 
 /**
- * Copy a block of data from one secure buffer to another. Destination buffer is validated to be wholly contained within
- * the restricted SVP memory region. Destination range is validated to be wholly contained within the destination SVP
- * buffer. Input range is validated to be wholly contained within the input SVP buffer.
+ * Copy a block of data from one secure memory region to another. Destination memory region is validated to be wholly
+ * contained within the restricted SVP memory region. Destination range is validated to be wholly contained within the
+ * destination SVP memory region. Input range is validated to be wholly contained within the input SVP memory region.
+ * The inputs of this function must be compatible with RDK SVP functions.
  *
- * @param[in] out Destination SVP buffer.
- * @param[in] in Source data to write.
+ * @param[in] out Destination SVP memory.
+ * @param[in] in Source data to copy.
  * @param[in] offsets a list of offsets into the source and destination of the block to copy and the length of the
  * block.
  * @param[in] offsets_length Number of offset blocks to copy.
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_NULL_PARAMETER - out, out_offset or in is NULL.
- * + SA_STATUS_INVALID_PARAMETER - Reading or writing past the end of the SVP buffer detected.
- * + SA_STATUS_INVALID_SVP_BUFFER - SVP buffer is not fully contained withing SVP memory region.
+ * + SA_STATUS_INVALID_PARAMETER - Reading or writing past the end of the SVP memory region detected.
+ * + SA_STATUS_INVALID_SVP_MEMORY - SVP memory region is not fully contained withing SVP memory region.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
  */
-sa_status sa_svp_buffer_copy(
-        sa_svp_buffer out,
-        sa_svp_buffer in,
+sa_status sa_svp_copy(
+        void* out,
+        void* in,
         sa_svp_offset* offsets,
         size_t offsets_length);
 
@@ -227,11 +154,11 @@ sa_status sa_svp_key_check(
         size_t expected_length);
 
 /**
- * Perform a buffer check by digesting the data in the buffer at the offset and length and comparing it with the input
- * hash. This function can only be called from another TA. Calls from the REE will return
+ * Perform an SVP memory region check by digesting the data in the SVP memory region at the offset and length and
+ * comparing it with the input hash. This function can only be called from another TA. Calls from the REE will return
  * SA_STATUS_OPERATION_NOT_SUPPORTED.
  *
- * @param[in] svp_buffer Buffer to hash.
+ * @param[in] svp_memory SVP memory region to hash.
  * @param[in] offset Offset at which to begin the hash.
  * @param[in] length Length of the data to hash.
  * @param[in] digest_algorithm Digest algorithm to use.
@@ -240,15 +167,15 @@ sa_status sa_svp_key_check(
  * @return Operation status. Possible values are:
  * + SA_STATUS_OK - Operation succeeded. Key check passed.
  * + SA_STATUS_NULL_PARAMETER - hash is NULL.
- * + SA_STATUS_INVALID_PARAMETER - offset or length is outside the buffer range.
+ * + SA_STATUS_INVALID_PARAMETER - offset or length is outside the SVP memory region range.
  * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
- * + SA_STATUS_INVALID_SVP_BUFFER - invalid SVP buffer.
+ * + SA_STATUS_INVALID_SVP_MEMORY - invalid SVP memory region.
  * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
  * + SA_STATUS_VERIFICATION_FAILED - Computed value does not match the expected one.
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
  */
-sa_status sa_svp_buffer_check(
-        sa_svp_buffer svp_buffer,
+sa_status sa_svp_check(
+        void* svp_memory,
         size_t offset,
         size_t length,
         sa_digest_algorithm digest_algorithm,

@@ -18,12 +18,15 @@
 
 #include "client_store.h"
 #include "log.h"
+#include "porting/svp.h"
 #include "ta_sa.h"
 
-sa_status ta_sa_svp_buffer_release(
-        void** out,
-        size_t* out_length,
-        sa_svp_buffer svp_buffer,
+sa_status ta_sa_svp_write(
+        void* out,
+        const void* in,
+        size_t in_length,
+        sa_svp_offset* offsets,
+        size_t offsets_length,
         ta_client client_slot,
         const sa_uuid* caller_uuid) {
 
@@ -37,8 +40,13 @@ sa_status ta_sa_svp_buffer_release(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (out_length == NULL) {
-        ERROR("NULL out_length");
+    if (in == NULL) {
+        ERROR("NULL in");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (offsets == NULL) {
+        ERROR("NULL offset");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -52,10 +60,9 @@ sa_status ta_sa_svp_buffer_release(
             break;
         }
 
-        svp_store_t* svp_store = client_get_svp_store(client);
-        status = svp_store_release(out, out_length, svp_store, svp_buffer, caller_uuid);
-        if (status != SA_STATUS_OK) {
-            ERROR("svp_store_release failed");
+        if (!svp_write(out, in, in_length, offsets, offsets_length)) {
+            ERROR("svp_write failed");
+            status = SA_STATUS_INVALID_SVP_MEMORY;
             break;
         }
     } while (false);

@@ -78,16 +78,13 @@ add_library(saclientimpl STATIC
         src/sa_key_release.c
         src/sa_key_unwrap.c
         src/sa_process_common_encryption.c
-        src/sa_svp_buffer_alloc.c
-        src/sa_svp_buffer_check.c
-        src/sa_svp_buffer_copy.c
-        src/sa_svp_buffer_free.c
-        src/sa_svp_buffer_release.c
-        src/sa_svp_buffer_write.c
+        src/sa_svp_check.c
+        src/sa_svp_copy.c
+        src/sa_svp_write.c
         src/sa_svp_key_check.c
         src/sa_svp_supported.c
-        src/sa_svp_buffer_create.c
-        )
+        src/porting/svp.h
+)
 
 target_include_directories(saclientimpl
         PRIVATE

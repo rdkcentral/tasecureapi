@@ -68,7 +68,7 @@ void* memory_memset_unoptimizable(void* destination, uint8_t value, size_t size)
 }
 
 bool memory_is_valid_svp(
-        void* memory_location,
+        const void* memory_location,
         size_t size) {
 
     if (memory_location == NULL) {
@@ -88,7 +88,7 @@ bool memory_is_valid_svp(
 }
 
 bool memory_is_valid_clear(
-        void* memory_location,
+        const void* memory_location,
         size_t size) {
 
     if (memory_location == NULL) {

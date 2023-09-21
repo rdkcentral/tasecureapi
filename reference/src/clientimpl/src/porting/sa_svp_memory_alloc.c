@@ -18,6 +18,7 @@
 
 #include "log.h"
 #include "sa.h"
+#include "svp.h"
 #include "ta_client.h"
 
 sa_status sa_svp_memory_alloc(
@@ -30,11 +31,20 @@ sa_status sa_svp_memory_alloc(
     }
 
     // TODO SoC Vendor: replace this call with a call to allocate secure memory.
-    *svp_memory = malloc(size);
-    if (*svp_memory == NULL) {
+    svp_memory_s* temp = malloc(sizeof(svp_memory_s));
+    if (temp == NULL) {
         ERROR("malloc failed");
         return SA_STATUS_INTERNAL_ERROR;
     }
 
+    temp->svp_memory = malloc(size);
+    if (temp->svp_memory == NULL) {
+        ERROR("malloc failed");
+        free(temp);
+        return SA_STATUS_INTERNAL_ERROR;
+    }
+
+    temp->svp_memory_size = size;
+    *svp_memory = temp;
     return SA_STATUS_OK;
 }
