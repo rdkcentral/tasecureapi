@@ -104,25 +104,16 @@ if (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
             PRIVATE
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
             )
-
-    target_link_libraries(saclient
-            PRIVATE
-            -Wl,-all_load
-            saclientimpl
-            util
-            ${OPENSSL_CRYPTO_LIBRARY}
-            )
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # using GCC
-    target_link_libraries(saclient
-            PRIVATE
-            -Wl,--whole-archive
-            saclientimpl
-            -Wl,--no-whole-archive
-            util
-            ${OPENSSL_CRYPTO_LIBRARY}
-            )
 endif ()
+
+target_link_libraries(saclient
+        PRIVATE
+        -Wl,--whole-archive
+        saclientimpl
+        -Wl,--no-whole-archive
+        util
+        ${OPENSSL_CRYPTO_LIBRARY}
+        )
 
 target_clangformat_setup(saclient)
 
