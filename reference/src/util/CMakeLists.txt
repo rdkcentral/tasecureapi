@@ -72,33 +72,35 @@ target_compile_options(util PRIVATE -Werror -Wall -Wextra -Wno-unused-parameter)
 
 target_clangformat_setup(util)
 
-# Google test
-add_executable(utiltest
-        test/pkcs12test.cpp
-        )
+if (BUILD_TESTS)
+    # Google test
+    add_executable(utiltest
+            test/pkcs12test.cpp
+            )
 
-target_include_directories(utiltest
-        PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        ${OPENSSL_INCLUDE_DIR}
-        )
+    target_include_directories(utiltest
+            PRIVATE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            ${OPENSSL_INCLUDE_DIR}
+            )
 
-target_compile_options(utiltest PRIVATE -Werror -Wall -Wextra -Wno-unused-parameter)
+    target_compile_options(utiltest PRIVATE -Werror -Wall -Wextra -Wno-unused-parameter)
 
-target_link_libraries(utiltest
-        PRIVATE
-        gtest
-        gmock_main
-        util
-        ${OPENSSL_CRYPTO_LIBRARY}
-        )
+    target_link_libraries(utiltest
+            PRIVATE
+            gtest
+            gmock_main
+            util
+            ${OPENSSL_CRYPTO_LIBRARY}
+            )
 
-target_clangformat_setup(utiltest)
+    target_clangformat_setup(utiltest)
 
-add_custom_command(
-        TARGET utiltest POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/test/root_keystore.p12
-        ${CMAKE_CURRENT_BINARY_DIR}/root_keystore.p12)
+    add_custom_command(
+            TARGET utiltest POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_SOURCE_DIR}/test/root_keystore.p12
+            ${CMAKE_CURRENT_BINARY_DIR}/root_keystore.p12)
 
-gtest_discover_tests(utiltest)
+    gtest_discover_tests(utiltest)
+endif ()
