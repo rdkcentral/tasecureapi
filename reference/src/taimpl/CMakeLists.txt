@@ -202,48 +202,50 @@ target_compile_options(taimpl PRIVATE -Werror -Wall -Wextra -Wno-unused-paramete
 
 target_clangformat_setup(taimpl)
 
-# Google test
-add_executable(taimpltest
-        test/environment.cpp
-        test/ta_test_helpers.cpp
-        test/json.cpp
-        test/object_store.cpp
-        test/rights.cpp
-        test/slots.cpp
-        test/ta_sa_init.cpp
-        test/ta_sa_svp_check.cpp
-        test/ta_sa_svp_copy.cpp
-        test/ta_sa_svp_write.cpp
-        test/ta_sa_svp_common.cpp
-        test/ta_sa_svp_crypto.cpp
-        test/ta_sa_svp_crypto.h
-        test/ta_sa_svp_key_check.cpp)
+if (BUILD_TESTS)
+    # Google test
+    add_executable(taimpltest
+            test/environment.cpp
+            test/ta_test_helpers.cpp
+            test/json.cpp
+            test/object_store.cpp
+            test/rights.cpp
+            test/slots.cpp
+            test/ta_sa_init.cpp
+            test/ta_sa_svp_check.cpp
+            test/ta_sa_svp_copy.cpp
+            test/ta_sa_svp_write.cpp
+            test/ta_sa_svp_common.cpp
+            test/ta_sa_svp_crypto.cpp
+            test/ta_sa_svp_crypto.h
+            test/ta_sa_svp_key_check.cpp)
 
-target_include_directories(taimpltest
-        PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../client/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/internal>
-        ${OPENSSL_INCLUDE_DIR}
-        )
+    target_include_directories(taimpltest
+            PRIVATE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../client/include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util/include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/internal>
+            ${OPENSSL_INCLUDE_DIR}
+            )
 
-target_compile_options(taimpltest PRIVATE -Werror -Wall -Wextra -Wno-unused-parameter)
+    target_compile_options(taimpltest PRIVATE -Werror -Wall -Wextra -Wno-unused-parameter)
 
-target_link_libraries(taimpltest
-        PRIVATE
-        gtest_main
-        gmock_main
-        taimpl
-        util
-        ${OPENSSL_CRYPTO_LIBRARY}
-        )
+    target_link_libraries(taimpltest
+            PRIVATE
+            gtest_main
+            gmock_main
+            taimpl
+            util
+            ${OPENSSL_CRYPTO_LIBRARY}
+            )
 
-target_clangformat_setup(taimpltest)
+    target_clangformat_setup(taimpltest)
 
-add_custom_command(
-        TARGET taimpltest POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/test/root_keystore.p12
-        ${CMAKE_CURRENT_BINARY_DIR}/root_keystore.p12)
+    add_custom_command(
+            TARGET taimpltest POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_SOURCE_DIR}/test/root_keystore.p12
+            ${CMAKE_CURRENT_BINARY_DIR}/root_keystore.p12)
 
-gtest_discover_tests(taimpltest)
+    gtest_discover_tests(taimpltest)
+endif ()
