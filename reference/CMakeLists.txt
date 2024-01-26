@@ -19,22 +19,27 @@ cmake_minimum_required(VERSION 3.16)
 
 project(tasecureapi)
 
-# Download and unpack googletest at configure time
-include(FetchContent)
-FetchContent_Declare(
-        googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG v1.13.0
-)
+option(BUILD_TESTS "Builds and installs the unit tests" ON)
+option(BUILD_DOC   "Build documentation" ON)
 
-FetchContent_GetProperties(googletest)
-if(NOT googletest_POPULATED)
-    FetchContent_Populate(googletest)
-    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
+if(${BUILD_TESTS})
+    # Download and unpack googletest at configure time
+    include(FetchContent)
+    FetchContent_Declare(
+            googletest
+            GIT_REPOSITORY https://github.com/google/googletest.git
+            GIT_TAG v1.13.0
+    )
+
+    FetchContent_GetProperties(googletest)
+    if(NOT googletest_POPULATED)
+        FetchContent_Populate(googletest)
+        add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
+    endif()
+
+    set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
+    include(CTest)
+    include(GoogleTest)
 endif()
-
-set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
-include(CTest)
-include(GoogleTest)
 
 add_subdirectory(src)
