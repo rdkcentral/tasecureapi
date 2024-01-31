@@ -87,7 +87,10 @@ application.
 + `in` (void pointer) pointer to the input key and credential data.
 + `in_length` (integer) size of the data buffer pointed to by `in` in bytes.
 + `parameters` (pointer) format specific parameters for the protection key used by the key
-  provisioning service.
+  provisioning service. Keys delivered via the operator's key provisioning service are typically
+  of key format type SA_KEY_FORMAT_SOC which correspond to the import parameters for a SOC key
+  container as specified via the structure `sa_import_parameters_soc`. Since the TA key will
+  be provisioned and wielded by the TA rather than the SecAPI, the value of `object_id` is ignored.
 
 ### TA Key Type Definition
 
@@ -97,6 +100,8 @@ The operator provisioning key type will be communicated through the following en
 enum sa_ta_key_type {
   WIDEVINE_OEM_PROVISIONING,
   PLAYREADY_MODEL_PROVISIONING,
+  APPLE_MFI_PROVISIONING,
+  APPLE_FAIRPLAY_PROVISIONING,
   NETFLIX_PROVISIONING};
 ```
 
@@ -108,11 +113,11 @@ properties.
 
 ```c
 struct {
-  unsigned int oemPrivateKeyLength;
-  void * oemPrivateKey;
-  unsigned int oemCertificateLength;
-  void * oemCertificate;
-} WidevineProvisioning;
+  unsigned int oemDevicePrivateKeyLength;
+  void * oemDevicePrivateKey;
+  unsigned int oemDeviceCertificateLength;
+  void * oemDeviceCertificate;
+} WidevineOemProvisioning;
 ```
 
 **PlayReady Model Provisioning Structure**
@@ -122,12 +127,38 @@ The object provided as input to the `sa_ta_key_provision` API via the `in` param
 
 ```c
 struct {
-  unsigned int model_type; // 2K or 3K
+  unsigned int modelType; // 2K or 3K
   unsigned int privateKeyLength;
   void * privateKey;
   unsigned int modelCertificateLength;
   void * modelCertificate;
 } PlayReadyProvisioning;
+```
+
+**Apple MFi Provisioning Structure**
+
+The object provided as input to the `sa_ta_key_provision` API via the `in` parameter for the
+`APPLE_MFI_PROVISIONING` key type contains the following properties.
+
+```c
+struct {
+  unsigned int mfiBaseKeyLength;
+  void * mfiBaseKey;
+  unsigned int mfiProvisioningObjectLength;
+  void * mfiProvisioningObject;
+} AppleMfiProvisioning;
+```
+
+**Apple FairPlay Provisioning Structure**
+
+The object provided as input to the `sa_ta_key_provision` API via the `in` parameter for the
+`APPLE_FAIRPLAY_PROVISIONING` key type contains the following properties.
+
+```c
+struct {
+  unsigned int fairPlaySecretLength;
+  void * fairPlaySecret;
+} AppleFairPlayProvisioning;
 ```
 
 **Netflix Provisioning Structure**
@@ -138,11 +169,11 @@ The object provided as input to the `sa_ta_key_provision` API via the `in` param
 ```c
 struct {
   unsigned int hmacKeyLength;
-  void * hmacKey;
+  void * hmacKey;                  // Kdh
   unsigned int wrappingKeyLength;
-  void * wrappingKey;
+  void * wrappingKey;              // Kdw
   unsigned int esnContainerLength;
-  void * esnContainer;
+  void * esnContainer;             // ESN
 } NetflixProvisioning;
 ```
 
@@ -151,7 +182,7 @@ struct {
 ![SOC Vendor TA Key Provisioning](./KeyProvisioningSocVendorTas.png)
 
 1.	Field provisioning service delivers the encrypted TA Key to the device.
-2.	The TA Key is imported and provisioned to SecAPI3 using new API: sa_ta_key_provision().
+2.	The TA Key is imported and provisioned to SecAPI3 using new API: `sa_ta_key_provision`.
 3.	SecAPI3 TA decrypts TA Key and converts key to SOC vendor TA Key format.
 4.	SecAPI3 TA calls the SOC vendor-specific API to deliver the key to the TA.
 5.	The key will be loaded for use within the TA. If the key received by the TA is new or updated
@@ -199,11 +230,12 @@ feature management and rollbacks:
 
 ## Unresolved questions
 
-+ Support for Widevine Provisioning model 4.0 has not been completely defined.
+None.
 
 ## Future possibilities
 
-None at this time.
++ Support for Widevine 2.0 provisioning model.
++ Support for Widevine 4.0 provisioning model.
 
 ## References
 
