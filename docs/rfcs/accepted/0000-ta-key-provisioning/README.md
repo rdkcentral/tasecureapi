@@ -57,8 +57,8 @@ A new SecAPI function is proposed to support the provisioning of keys from an op
 provisioning service to a specific TA:
 
 ```c
-sa_status sa_ta_key_provision (
-  sa_ta_key_type ta_key_type,
+sa_status sa_key_provision_ta (
+  sa_key_type_ta ta_key_type,
   const void* in,
   size_t in_length,
   void* parameters)
@@ -72,7 +72,7 @@ structure that the TA is able to ingest and utilize.
 
 Keys and credentials may be securely stored within the TA. However, this storage mechanism is not
 required. In order to facilitate a wide variety of SoC vendor TA implementatons and to support key
-and credential updates from the operator's key provsioning service, the `sa_ta_key_provision`
+and credential updates from the operator's key provsioning service, the `sa_key_provision_ta`
 function should support key loading on a regular basis, e.g. code initialization, device restart,
 device power cycle start from persistently stored materials in the REE domain. The persistent
 materials may be stored in a protected format in the file system of the device upon reception from
@@ -97,7 +97,7 @@ application.
 The operator provisioning key type will be communicated through the following enumeration:
 
 ```c
-enum sa_ta_key_type {
+enum sa_key_type_ta {
   WIDEVINE_OEM_PROVISIONING,
   PLAYREADY_MODEL_PROVISIONING,
   APPLE_MFI_PROVISIONING,
@@ -107,7 +107,7 @@ enum sa_ta_key_type {
 
 **Widevine OEM Provisioning Structure**
 
-The object provided as input to the `sa_ta_key_provision` API via the `in` parameter for the
+The object provided as input to the `sa_key_provision_ta` API via the `in` parameter for the
 `WIDEVINE_OEM_PROVISIONING` key type contains the following Widevine OEM Provisioning 3.0 model
 properties.
 
@@ -122,7 +122,7 @@ struct {
 
 **PlayReady Model Provisioning Structure**
 
-The object provided as input to the `sa_ta_key_provision` API via the `in` parameter for the
+The object provided as input to the `sa_key_provision_ta` API via the `in` parameter for the
 `PLAYREADY_MODEL_PROVISIONING` key type contains the following properties.
 
 ```c
@@ -137,7 +137,7 @@ struct {
 
 **Apple MFi Provisioning Structure**
 
-The object provided as input to the `sa_ta_key_provision` API via the `in` parameter for the
+The object provided as input to the `sa_key_provision_ta` API via the `in` parameter for the
 `APPLE_MFI_PROVISIONING` key type contains the following properties.
 
 ```c
@@ -151,7 +151,7 @@ struct {
 
 **Apple FairPlay Provisioning Structure**
 
-The object provided as input to the `sa_ta_key_provision` API via the `in` parameter for the
+The object provided as input to the `sa_key_provision_ta` API via the `in` parameter for the
 `APPLE_FAIRPLAY_PROVISIONING` key type contains the following properties.
 
 ```c
@@ -163,7 +163,7 @@ struct {
 
 **Netflix Provisioning Structure**
 
-The object provided as input to the `sa_ta_key_provision` API via the `in` parameter for the
+The object provided as input to the `sa_key_provision_ta` API via the `in` parameter for the
 `NETFLIX_PROVISIONING` key type contains the following properties.
 
 ```c
@@ -182,19 +182,19 @@ struct {
 ![SOC Vendor TA Key Provisioning](./KeyProvisioningSocVendorTas.png)
 
 1.	Field provisioning service delivers the encrypted TA Key to the device.
-2.	The TA Key is imported and provisioned to SecAPI3 using new API: `sa_ta_key_provision`.
+2.	The TA Key is imported and provisioned to SecAPI3 using new API: `sa_key_provision_ta`.
 3.	SecAPI3 TA decrypts TA Key and converts key to SOC vendor TA Key format.
 4.	SecAPI3 TA calls the SOC vendor-specific API to deliver the key to the TA.
 5.	The key will be loaded for use within the TA. If the key received by the TA is new or updated
     and the TA supports secure storage, it will store the key to TA Secure Storage.
 6.	This provisioning flow (Steps 2-5) will occur upon every device reboot/initialization. SOC
     Vendor TA Key updates will only be written to TAs supporting secure store upon receiving a new
-    or updated key. The TA Key is not imported/stored in SecAPI3 when the sa_ta_key_provision() API
+    or updated key. The TA Key is not imported/stored in SecAPI3 when the sa_key_provision_ta() API
     is used.
 
 ### Error Status
 
-The `sa_ta_key_provision` API will return one of the following status conditions:
+The `sa_key_provision_ta` API will return one of the following status conditions:
 
 + SA_STATUS_OK - Operation succeeded.
 + SA_STATUS_INVALID_KEY_FORMAT - Input data failed the format validation.
