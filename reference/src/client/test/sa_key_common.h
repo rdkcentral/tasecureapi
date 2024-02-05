@@ -125,6 +125,7 @@ class SaKeyGetPublicTest : public ::testing::TestWithParam<SaKeyType>, public Sa
 class SaKeyGenerateTest : public ::testing::TestWithParam<SaKeyType> {};
 
 class SaKeyExportTest : public ::testing::TestWithParam<SaKeyType>, public SaKeyBase {};
+class SaKeyProvisionTest : public ::testing::TestWithParam<SaKeyType>, public SaKeyBase {};
 
 class SaKeyHeaderTest : public ::testing::Test {};
 
