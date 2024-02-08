@@ -68,6 +68,7 @@ add_library(saclientimpl STATIC
         src/sa_get_ta_uuid.c
         src/sa_get_version.c
         src/sa_key_derive.c
+        src/sa_key_provision.c
         src/sa_key_digest.c
         src/sa_key_exchange.c
         src/sa_key_export.c
