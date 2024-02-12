@@ -694,6 +694,36 @@ void SaKeyImportSocBase::set_key_usage_flags(
 
     rights.child_usage_flags = child_usage_flags;
 }
+sa_status SaKeyImportSocBase::create_key_container(
+        std::string& key_type_string,
+        const sa_key_type clear_key_type,
+        std::vector<uint8_t>& clear_key,
+        std::string &key_container) {
+
+    sa_rights key_rights;
+    const std::string& root_key_type = "";
+    const uint8_t container_version = 5;
+    const uint8_t key_usage = SOC_DATA_AND_KEY;
+    const uint8_t decrypted_key_usage = KEY_ONLY;
+    std::vector<std::string>& entitled_ta_ids = ENTITLED_TA_IDS;
+
+    auto iv = random(GCM_IV_LENGTH);
+    auto c1 = random(AES_BLOCK_SIZE);
+    auto c2 = random(AES_BLOCK_SIZE);
+    auto c3 = random(AES_BLOCK_SIZE);
+
+    std::vector<uint8_t> tag;
+    auto jwt_header = generate_header();
+    auto jwt_payload = generate_payload(container_version, root_key_type, key_type_string, clear_key, iv, key_usage,
+            decrypted_key_usage, entitled_ta_ids, c1, c2, c3, tag);
+    key_container = jwt_header + "." + jwt_payload + "." + b64_encode(tag.data(), tag.size(), true);
+
+    bool const hmac = memcmp(key_type_string.data(), "HMAC", 4) == 0;
+    sa_rights_set_allow_all(&key_rights);
+    set_key_usage_flags(key_usage, decrypted_key_usage, key_rights, clear_key_type, hmac);
+
+    return SA_STATUS_OK;
+}
 
 sa_status SaKeyImportSocBase::import_key(
         sa_key* key,
@@ -771,6 +801,50 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_2048_BYTE_LENGTH),
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_3072_BYTE_LENGTH),
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_4096_BYTE_LENGTH)));
+
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyProvisionNetflixTests,
+        SaKeyProvisionNetflixTest,
+        ::testing::Values(
+                std::make_tuple(SYM_128_KEY_SIZE, "HMAC-128"),
+                std::make_tuple(SYM_256_KEY_SIZE, "HMAC-256")));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyProvisionWidevineTests,
+        SaKeyProvisionWidevineTest,
+        ::testing::Values(
+                std::make_tuple(RSA_1024_BYTE_LENGTH, "RSA-1024"),
+                std::make_tuple(RSA_2048_BYTE_LENGTH, "RSA-2048"),
+                std::make_tuple(RSA_3072_BYTE_LENGTH, "RSA-3072"),
+                std::make_tuple(RSA_4096_BYTE_LENGTH, "RSA-4096")));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyProvisionPlayreadyTests,
+        SaKeyProvisionPlayreadyTest,
+        ::testing::Values(
+                std::make_tuple(RSA_1024_BYTE_LENGTH, "RSA-1024"),
+                std::make_tuple(RSA_2048_BYTE_LENGTH, "RSA-2048"),
+                std::make_tuple(RSA_3072_BYTE_LENGTH, "RSA-3072"),
+                std::make_tuple(RSA_4096_BYTE_LENGTH, "RSA-4096")));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyProvisionAppleMfiTests,
+        SaKeyProvisionAppleMfiTest,
+        ::testing::Values(
+                std::make_tuple(SYM_128_KEY_SIZE, "AES-128"),
+                std::make_tuple(SYM_160_KEY_SIZE, "AES-160"),
+                std::make_tuple(SYM_256_KEY_SIZE, "AES-256"),
+                std::make_tuple(SYM_MAX_KEY_SIZE, "AES-512")));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyProvisionAppleFairplayTests,
+        SaKeyProvisionAppleFairplayTest,
+        ::testing::Values(
+                std::make_tuple(SYM_128_KEY_SIZE, "AES-128"),
+                std::make_tuple(SYM_160_KEY_SIZE, "AES-160"),
+                std::make_tuple(SYM_256_KEY_SIZE, "AES-256"),
+                std::make_tuple(SYM_MAX_KEY_SIZE, "AES-512")));
 
 INSTANTIATE_TEST_SUITE_P(
         SaKeyImportTypejTest,
