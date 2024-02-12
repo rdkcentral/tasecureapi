@@ -848,6 +848,54 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(SA_KEY_TYPE_DH, DH_4096_BYTE_LENGTH)));
 
 INSTANTIATE_TEST_SUITE_P(
+        SaKeyProvisionWidevineTests,
+        SaKeyProvisionWidevineTest,
+        ::testing::Values(
+                std::make_tuple(SA_KEY_TYPE_RSA, RSA_1024_BYTE_LENGTH),
+                std::make_tuple(SA_KEY_TYPE_RSA, RSA_2048_BYTE_LENGTH),
+                std::make_tuple(SA_KEY_TYPE_RSA, RSA_3072_BYTE_LENGTH),
+                std::make_tuple(SA_KEY_TYPE_RSA, RSA_4096_BYTE_LENGTH)));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyProvisionPlayreadyTests,
+        SaKeyProvisionPlayreadyTest,
+        ::testing::Values(
+                std::make_tuple(SA_KEY_TYPE_RSA, RSA_1024_BYTE_LENGTH),
+                std::make_tuple(SA_KEY_TYPE_RSA, RSA_2048_BYTE_LENGTH),
+                std::make_tuple(SA_KEY_TYPE_RSA, RSA_3072_BYTE_LENGTH),
+                std::make_tuple(SA_KEY_TYPE_RSA, RSA_4096_BYTE_LENGTH)));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyProvisionNetflixTests,
+        SaKeyProvisionNetflixTest,
+        ::testing::Values(
+                std::make_tuple(SYM_128_KEY_SIZE, SYM_160_KEY_SIZE),
+                std::make_tuple(SYM_160_KEY_SIZE, SYM_256_KEY_SIZE),
+                std::make_tuple(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                std::make_tuple(SYM_128_KEY_SIZE, SYM_256_KEY_SIZE),
+                std::make_tuple(SYM_128_KEY_SIZE, SYM_MAX_KEY_SIZE),
+                std::make_tuple(SYM_160_KEY_SIZE, SYM_MAX_KEY_SIZE),
+                std::make_tuple(SYM_256_KEY_SIZE,SYM_MAX_KEY_SIZE)));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyProvisionAppleMfiTests,
+        SaKeyProvisionAppleMfiTest,
+        ::testing::Values(
+                std::make_tuple(SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, SYM_128_KEY_SIZE),
+                std::make_tuple(SA_KEY_TYPE_SYMMETRIC, SYM_160_KEY_SIZE, SYM_160_KEY_SIZE),
+                std::make_tuple(SA_KEY_TYPE_SYMMETRIC, SYM_256_KEY_SIZE, SYM_256_KEY_SIZE),
+                std::make_tuple(SA_KEY_TYPE_SYMMETRIC, SYM_MAX_KEY_SIZE, SYM_MAX_KEY_SIZE)));
+
+INSTANTIATE_TEST_SUITE_P(
+        SaKeyProvisionAppleFairplayTests,
+        SaKeyProvisionAppleFairplayTest,
+        ::testing::Values(
+                std::make_tuple(SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE),
+                std::make_tuple(SA_KEY_TYPE_SYMMETRIC, SYM_160_KEY_SIZE),
+                std::make_tuple(SA_KEY_TYPE_SYMMETRIC, SYM_256_KEY_SIZE),
+                std::make_tuple(SA_KEY_TYPE_SYMMETRIC, SYM_MAX_KEY_SIZE)));
+
+INSTANTIATE_TEST_SUITE_P(
         SaKeyDigestTests,
         SaKeyDigestTest,
         ::testing::Combine(

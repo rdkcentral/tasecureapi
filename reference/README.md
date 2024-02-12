@@ -158,6 +158,24 @@ This is a SecAPI unit test suite that uses the SecAPI public interfaces to test 
 of the implementation.  It links against saclient. Comcast is responsible for implementing these
 tests.
 
+To run with key provision test, you must export these system variables beforehand,
+
+#1. apple fair play secret key
+export  apple_fairplay_secret_key=~/PATH/tasecureapi/reference/src/client/0691000006910002.bin
+#2. apple mfi base key and provisioning object
+export  apple_mfi_base_key=~/PATH/tasecureapi/reference/src/client/0391000003910001.key
+export  apple_mfi_provisioning_object=~/PATH/tasecureapi/reference/src/client/0691000006910001.bin
+#3. netflix hamc, wrapping key and estn number
+export  netflix_hmac_key=~/PATH/tasecureapi/reference/src/client/0371000003710002.key
+export  netflix_wrapping_key=~/PATH/tasecureapi/reference/src/client/0371000003710003.key
+export  netflix_estn=~/PATH/tasecureapi/reference/src/client/0671000006710001.bin
+#4. playready private key, certification
+export  playready_privatekey=~/PATH/tasecureapi/reference/src/client/0331000003310001.key
+export  playready_cert=~/PATH/tasecureapi/reference/src/client/0631000006310001.bin
+#5. widevine oem private key
+export  wievine_oem_privatekey=~/PATH/tasecureapi/reference/src/client/0351000003510001.key
+export  widevine_oem_cert=~/PATH/tasecureapi/reference/src/client/0651000006510001.bin
+
 #### saclientimpl
 
 This is a library that implements the SecAPI client interfaces. This library is implemented by the

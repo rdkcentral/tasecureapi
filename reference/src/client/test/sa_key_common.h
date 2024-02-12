@@ -119,12 +119,19 @@ private:
 };
 
 typedef std::tuple<sa_key_type, size_t> SaKeyType;
+typedef std::tuple<sa_key_type, size_t, size_t> SaKeyType2;
+typedef std::tuple<size_t, size_t> SaKeyType3;
 
 class SaKeyGetPublicTest : public ::testing::TestWithParam<SaKeyType>, public SaKeyBase {};
 
 class SaKeyGenerateTest : public ::testing::TestWithParam<SaKeyType> {};
 
 class SaKeyExportTest : public ::testing::TestWithParam<SaKeyType>, public SaKeyBase {};
+class SaKeyProvisionWidevineTest : public ::testing::TestWithParam<SaKeyType>, public SaKeyBase {};
+class SaKeyProvisionPlayreadyTest : public ::testing::TestWithParam<SaKeyType>, public SaKeyBase {};
+class SaKeyProvisionAppleMfiTest : public ::testing::TestWithParam<SaKeyType2>, public SaKeyBase {};
+class SaKeyProvisionAppleFairplayTest : public ::testing::TestWithParam<SaKeyType>, public SaKeyBase {};
+class SaKeyProvisionNetflixTest : public ::testing::TestWithParam<SaKeyType3>, public SaKeyBase {};
 
 class SaKeyHeaderTest : public ::testing::Test {};
 
