@@ -93,7 +93,10 @@ static sa_status ta_invoke_get_name(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_get_name((char*) params[1].mem_ref, &get_name->name_length, context->client, uuid);
+    size_t name_length = get_name->name_length;
+    sa_status status = ta_sa_get_name((char*) params[1].mem_ref, &name_length, context->client, uuid);
+    get_name->name_length = name_length;
+    return status;
 }
 
 static sa_status ta_invoke_get_device_id(
@@ -233,8 +236,11 @@ static sa_status ta_invoke_key_export(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_key_export(params[1].mem_ref, &key_export->out_length, params[2].mem_ref, params[2].mem_ref_size,
+    size_t out_length = key_export->out_length;
+    sa_status status = ta_sa_key_export(params[1].mem_ref, &out_length, params[2].mem_ref, params[2].mem_ref_size,
             key_export->key, context->client, uuid);
+    key_export->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_key_import(
@@ -584,8 +590,11 @@ static sa_status ta_invoke_key_get_public(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_key_get_public(params[1].mem_ref, &key_get_public->out_length, key_get_public->key,
+    size_t out_length = key_get_public->out_length;
+    sa_status status = ta_sa_key_get_public(params[1].mem_ref, &out_length, key_get_public->key,
             context->client, uuid);
+    key_get_public->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_key_derive(
@@ -872,8 +881,11 @@ static sa_status ta_invoke_key_digest(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_key_digest(params[1].mem_ref, &key_digest->out_length, key_digest->key,
+    size_t out_length = key_digest->out_length;
+    sa_status status = ta_sa_key_digest(params[1].mem_ref, &out_length, key_digest->key,
             key_digest->digest_algorithm, context->client, uuid);
+    key_digest->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_crypto_random(
@@ -1136,12 +1148,15 @@ static sa_status ta_invoke_crypto_cipher_process(
             parameters = NULL;
         }
 
+        size_t bytes_to_process = crypto_cipher_process->bytes_to_process;
         status = ta_sa_crypto_cipher_process_last(params[1].mem_ref == NULL ? NULL : &out,
-                crypto_cipher_process->context, &in, &crypto_cipher_process->bytes_to_process, parameters,
-                context->client, uuid);
+                crypto_cipher_process->context, &in, &bytes_to_process, parameters, context->client, uuid);
+        crypto_cipher_process->bytes_to_process = bytes_to_process;
     } else {
+        size_t bytes_to_process = crypto_cipher_process->bytes_to_process;
         status = ta_sa_crypto_cipher_process(params[1].mem_ref == NULL ? NULL : &out, crypto_cipher_process->context,
-                &in, &crypto_cipher_process->bytes_to_process, context->client, uuid);
+                &in, &bytes_to_process, context->client, uuid);
+        crypto_cipher_process->bytes_to_process = bytes_to_process;
     }
 
     // clang-format off
@@ -1291,8 +1306,11 @@ static sa_status ta_invoke_crypto_mac_compute(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_crypto_mac_compute(params[1].mem_ref, &crypto_mac_compute->out_length, crypto_mac_compute->context,
+    size_t out_length = crypto_mac_compute->out_length;
+    sa_status status = ta_sa_crypto_mac_compute(params[1].mem_ref, &out_length, crypto_mac_compute->context,
             context->client, uuid);
+    crypto_mac_compute->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_crypto_mac_release(
@@ -1376,8 +1394,11 @@ static sa_status ta_invoke_crypto_sign(
             parameters = NULL;
     }
 
-    return ta_sa_crypto_sign(params[1].mem_ref, &crypto_sign->out_length, crypto_sign->signature_algorithm,
+    size_t out_length = crypto_sign->out_length;
+    sa_status status = ta_sa_crypto_sign(params[1].mem_ref, &out_length, crypto_sign->signature_algorithm,
             crypto_sign->key, params[2].mem_ref, params[2].mem_ref_size, parameters, context->client, uuid);
+    crypto_sign->out_length = out_length;
+    return status;
 }
 
 static sa_status ta_invoke_svp_supported(
@@ -1449,8 +1470,11 @@ static sa_status ta_invoke_svp_buffer_release(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    return ta_sa_svp_buffer_release((void**) &svp_buffer_release->svp_memory, &svp_buffer_release->size,
+    size_t release_size = svp_buffer_release->size;
+    sa_status status = ta_sa_svp_buffer_release((void**) &svp_buffer_release->svp_memory, &release_size,
             svp_buffer_release->svp_buffer, context->client, uuid);
+	svp_buffer_release->size = release_size;
+	return status;
 }
 
 static sa_status ta_invoke_svp_buffer_write(
