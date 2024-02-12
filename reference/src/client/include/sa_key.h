@@ -93,6 +93,51 @@ sa_status sa_key_export(
         size_t mixin_length,
         sa_key key);
 
+
+/**
+ * Provision a key.
+ * This function is proposed to support the provisioning of keys from an operator's key
+ * provisioning service to a specific TA.
+ * #1.	Field provisioning service delivers the encrypted TA Key to the device.
+ * #2.	The TA Key is imported and provisioned to SecAPI3 using new API: sa_key_provision_ta().
+ * #3.	SecAPI3 TA decrypts TA Key and converts key to SOC vendor TA Key format.
+ * #4.	SecAPI3 TA calls the SOC vendor-specific API to deliver the key to the TA.
+ * #5.	The key will be loaded for use within the TA. If the key received by the TA is new or updated
+        and the TA supports secure storage, it will store the key to TA Secure Storage.
+ * #6.	This provisioning flow (Steps 2-5) will occur upon every device reboot/initialization. SOC
+    Vendor TA Key updates will only be written to TAs supporting secure store upon receiving a new
+    or updated key. The TA Key is not imported/stored in SecAPI3 when the sa_key_provision_ta() API
+    is used.
+ *
+ * @param[in] ta_key_type (enum) specifies the type of key being provisioned to the TA as defined in
+    [TA Key Type Definition](#ta-key-type-definition).
+ * @param[in] in (void pointer) pointer to the input key and credential data.
+ * @param[in] in_length (integer) size of the data buffer pointed to by in bytes.
+ * @param[in] parameters (pointer) format specific parameters for the protection key used by the key
+   provisioning service.
+
+ * The sa_key_provision_ta API will return one of the following status conditions:
+
+ * + SA_STATUS_OK - Operation succeeded.
+ * + SA_STATUS_INVALID_KEY_FORMAT - Input data failed the format validation.
+ * + SA_STATUS_NULL_PARAMETER - ta_key_type, in, in_length, or the key provisioning object
+ *   parameters are NULL.
+ * + SA_STATUS_INVALID_PARAMETER
+ *   - Invalid key format.
+ *   - Invalid format value.
+ *   - Invalid format specific parameter value encountered.
+ * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
+ * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
+ * + SA_STATUS_VERIFICATION_FAILED - Signature verification has failed.
+ * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
+ */
+
+sa_status sa_key_provision_ta (
+        sa_key_type_ta ta_key_type,
+        const void* in,
+        size_t in_length,
+        void* parameters);
+
 /**
  * Import a key.
  * + Symmetric keys are raw bytes in big-endian byte order.
