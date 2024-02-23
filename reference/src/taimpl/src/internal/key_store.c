@@ -27,8 +27,8 @@
 #include "rights.h"
 #include "stored_key_internal.h"
 #include <memory.h>
-#include <time.h>
 #include <stdio.h>
+#include <time.h>
 
 /**
  * Key ladder inputs for Kwrap (Key wrapping key) and Kint (Key integrity key). These keys are used
@@ -163,19 +163,23 @@ static bool write_to_storage(const void *data, const size_t length, const char *
         return false;
     }
 
+    // TODO SoC Vendor: replace this with code to write to secure storage (using TEE supplicant or other such method).
+    // The following code is for demonstration purposes of writing to disk using fopen/fwrite, and won't work in
+    // TEE environments.
+#if WRITE_TO_FILE_TEST
     INFO("data length: %d, suffix:%s", length, suffix);
     FILE *fp = NULL;
     const char *prefix_name = "tee_key_";
     char file_name[256] = {0};
-    memory_memset_unoptimizable(file_name, 0, sizeof(prefix_name));
+    memory_memset_unoptimizable(file_name, 0, strlen(prefix_name));
     strncpy(file_name, prefix_name, strlen(prefix_name));
-    if(0 != strlen(suffix)) {
-       strncat(file_name + strlen(prefix_name), suffix, strlen(suffix));
+    if((0 != strlen(suffix)) && (sizeof(file_name)-strlen(prefix_name)-strlen(".bin") > strlen(suffix))) {
+      strcat(file_name, suffix);
     }
+    strcat(file_name, ".bin");
 
-    strncpy(file_name + strlen(prefix_name) + strlen(suffix), ".bin", strlen(".bin"));
     INFO("file_name : %s", file_name);
-    if(NULL == (fp = fopen(file_name, "wb"))) {
+    if(NULL == (fp = fopen(file_name, "wbe"))) {
         ERROR("failed to open file");
         return false;
     }
@@ -187,6 +191,7 @@ static bool write_to_storage(const void *data, const size_t length, const char *
     }
     fflush(fp);
     fclose(fp);
+#endif
 
     return true;
 }
