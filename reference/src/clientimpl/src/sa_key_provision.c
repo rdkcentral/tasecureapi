@@ -10,10 +10,10 @@
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specif ic language governing permissions and
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * SPDX-License-Identif ier: Apache-2.0
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "sa.h"
@@ -263,6 +263,7 @@ sa_status sa_key_provision_ta (
 
             nflxProvision->hmacKey =
                (void*)calloc(nflxProvision->hmacKeyLength, 1);
+
             if (NULL == nflxProvision->hmacKey) {
                ERROR("calloc failed");
                return SA_STATUS_INTERNAL_ERROR;

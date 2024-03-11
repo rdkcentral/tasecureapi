@@ -93,7 +93,6 @@ sa_status sa_key_export(
         size_t mixin_length,
         sa_key key);
 
-
 /**
  * Provision a key.
  * This function is proposed to support the provisioning of keys from an operator's key
@@ -117,7 +116,6 @@ sa_status sa_key_export(
    provisioning service.
 
  * The sa_key_provision_ta API will return one of the following status conditions:
-
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_INVALID_KEY_FORMAT - Input data failed the format validation.
  * + SA_STATUS_NULL_PARAMETER - ta_key_type, in, in_length, or the key provisioning object
