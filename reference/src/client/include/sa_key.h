@@ -93,11 +93,6 @@ sa_status sa_key_export(
         size_t mixin_length,
         sa_key key);
 
-
-/**
- * Provision a key.
- * This function is proposed to support the provisioning of keys from an operator's key
- * provisioning service to a specific TA.
  * #1.	Field provisioning service delivers the encrypted TA Key to the device.
  * #2.	The TA Key is imported and provisioned to SecAPI3 using new API: sa_key_provision_ta().
  * #3.	SecAPI3 TA decrypts TA Key and converts key to SOC vendor TA Key format.
@@ -117,7 +112,6 @@ sa_status sa_key_export(
    provisioning service.
 
  * The sa_key_provision_ta API will return one of the following status conditions:
-
  * + SA_STATUS_OK - Operation succeeded.
  * + SA_STATUS_INVALID_KEY_FORMAT - Input data failed the format validation.
  * + SA_STATUS_NULL_PARAMETER - ta_key_type, in, in_length, or the key provisioning object

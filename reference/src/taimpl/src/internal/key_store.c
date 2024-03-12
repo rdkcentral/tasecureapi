@@ -279,6 +279,10 @@ static stored_key_t* unwrap(
             ERROR("stored_key_create failed");
             break;
         }
+        /*here provide an option to save the stored key into secure storage*/
+        if(!write_to_storage(stored_key_get_key(stored_key), stored_key_get_length(stored_key), "stored")) {
+            ERROR("failed to write data into storage");
+        }
     } while (false);
 
     if (cleartext != NULL) {
@@ -842,6 +846,11 @@ sa_status key_store_export(
         memcpy(out_bytes + offset, &rewrapped_key->signature, sizeof(signature_t));
 
         *out_length = required_out_length;
+        /*here provide an option to save the exported key into secure storage,
+          this key is exactly same as input one*/
+        if(!write_to_storage(out, *out_length, "exported")) {
+            ERROR("failed to write data into storage");
+        }
         status = SA_STATUS_OK;
     } while (false);
 
