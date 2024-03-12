@@ -27,10 +27,8 @@
 #include "rights.h"
 #include "stored_key_internal.h"
 #include <memory.h>
-#include <stdio.h>
 #include <time.h>
 
-//#define WRITE_TO_FILE_TEST
 /**
  * Key ladder inputs for Kwrap (Key wrapping key) and Kint (Key integrity key). These keys are used
  * for confidentiality and integrity envelopes around exported key material.
@@ -155,47 +153,6 @@ static void* pad(
     memcpy(padded, in, in_length);
 
     return padded;
-}
-
-static bool write_to_storage(const void *data, const size_t length, const char *suffix) {
-    if(NULL == data ||
-       0 == length) {
-        ERROR("null inout or input length is 0");
-        return false;
-    }
-
-    // TODO SoC Vendor: replace this with code to write to secure storage (using TEE
-    // supplicant or other such method).
-    // The following code is for demonstration purposes of writing to disk using
-    // fopen/fwrite, and won't work in TEE environments.
-#ifdef WRITE_TO_FILE_TEST
-    INFO("data length: %d, suffix:%s", length, suffix);
-    const char *prefix_name = "tee_key_";
-    char file_name[256] = {0};
-    memory_memset_unoptimizable(file_name, 0, sizeof(file_name));
-    strncpy(file_name, prefix_name, strlen(prefix_name));
-    if((0 != strlen(suffix)) &&
-      (sizeof(file_name) - strlen(prefix_name) - strlen(".bin") > strlen(suffix))) {
-       strncat(file_name, suffix, strlen(suffix));
-    }
-    strncat(file_name, ".bin", strlen(".bin"));
-
-    INFO("file_name : %s, ", file_name);
-    FILE *fp = NULL;
-    if(NULL == (fp = fopen(file_name, "wbe"))) {
-        ERROR("failed to open file");
-        return false;
-    }
-
-    size_t ret = fwrite(data, 1, length, fp);
-    if(ret != length) {
-        ERROR("failed to write data into file");
-        return false;
-    }
-    fflush(fp);
-    fclose(fp);
-#endif //WRITE_TO_FILE_TEST
-    return true;
 }
 
 static stored_key_t* unwrap(
@@ -446,11 +403,6 @@ sa_status key_store_import_stored_key(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    /*here provide an option to save the stored key into secure storage*/
-    if(!write_to_storage(stored_key_get_key(stored_key),
-        stored_key_get_length(stored_key), "stored")) {
-        ERROR("failed to write data into storage");
-    }
     const sa_header* header = stored_key_get_header(stored_key);
     if (header == NULL) {
         ERROR("stored_key_get_header failed");

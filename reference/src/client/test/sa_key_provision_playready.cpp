@@ -24,16 +24,15 @@
 
 using namespace client_test_helpers;
 
-#define CERTIFICATION_LENGTH 4096
-
-//Note: turn on this if you want to read data from files
-//#define FILE_BASED_FETCH_KEY
+#define CERTIFICATE_LENGTH 4096
 
 #ifdef FILE_BASED_FETCH_KEY
-static PlayReadyProvisioning* createPlayreadyblob(FILE *file_private_key,
+#define playready_privatekey "/keys/playready_private_key.key"
+#define playready_cert       "/keys/playready_cert.bin"
+static PlayReadyProvisioning* createPlayreadyBlob(FILE *file_private_key,
    FILE *file_oem_cert);
 static bool readPlayreadyData(PlayReadyProvisioning **prProvision);
-#endif //FILE_BASED_FETCH_KEY
+#endif // FILE_BASED_FETCH_KEY
 
 namespace {
     TEST_P(SaKeyProvisionPlayreadyTest, nominal) {
@@ -41,15 +40,19 @@ namespace {
         auto key_length = std::get<0>(GetParam());
         std::vector<uint8_t> clear_rsa_key = get_rsa_private_key(key_length);
 
-        //create a rsa key container
+        // Create a rsa key container
         std::string rsa_key_type_string = std::get<1>(GetParam());;
-
         std::string rsa_key_container;
+
+        sa_import_parameters_soc *parameters = new sa_import_parameters_soc;
+        ASSERT_NE(nullptr, parameters);
         sa_status status = create_key_container(
-             rsa_key_type_string, //key type string
-             rsa_key_type, //key type
+             rsa_key_type_string, // key type string
+             rsa_key_type, // key type
              clear_rsa_key,
-             rsa_key_container);
+             rsa_key_container,
+             SA_SPECIFICATION_MAJOR,
+             parameters);
 
         ASSERT_EQ(SA_STATUS_OK, status);
         INFO("rsa_key_container length : %d", rsa_key_container.size());
@@ -59,35 +62,44 @@ namespace {
         prProvision->privateKey = (void*)rsa_key_container.data();
         prProvision->privateKeyLength = rsa_key_container.size();
 
-        //Note: here just provide an examlpe to create certification data and passed
-        //into sa_key_provision_ta, how to use certification data is all up to
-        //SOC vendors.
-        auto certificate = random(CERTIFICATION_LENGTH);
+        // Note: Here is an example of creating a test certificate, and passing it into
+	// sa_key_provision_ta. Format of keys and certs may vary depending on how 
+	// each platform has these data encoded and delivered.
+        auto certificate = random(CERTIFICATE_LENGTH);
         prProvision->modelCertificate = certificate.data();
-        prProvision->modelCertificateLength = CERTIFICATION_LENGTH;
+        prProvision->modelCertificateLength = CERTIFICATE_LENGTH;
 
         status = sa_key_provision_ta(PLAYREADY_MODEL_PROVISIONING, prProvision,
-           sizeof(PlayReadyProvisioning), nullptr);
-        ASSERT_EQ(status, SA_STATUS_OK);
+           sizeof(PlayReadyProvisioning), parameters);
 
         if (nullptr != prProvision) {
            delete prProvision;
            prProvision = nullptr;
         }
+        if (nullptr != parameters) {
+           delete parameters;
+           parameters = nullptr;
+        }
+        ASSERT_EQ(status, SA_STATUS_OK);
     }
-    TEST_F(SaKeyProvisionPlayreadyTest, simpleCheck) {
+
+    TEST_F(SaKeyProvisionPlayreadyTest, invalidParameters) {
         auto key_length = RSA_2048_BYTE_LENGTH;
         std::vector<uint8_t> clear_rsa_key = get_rsa_private_key(key_length);
 
-        //create a rsa key container
+        // Create a rsa key container
         auto rsa_key_type = SA_KEY_TYPE_RSA;
         std::string rsa_key_type_string = "RSA-2048";
         std::string rsa_key_container;
+        sa_import_parameters_soc *parameters = new sa_import_parameters_soc;
+        ASSERT_NE(nullptr, parameters);
         sa_status status = create_key_container(
-             rsa_key_type_string, //key type string
-             rsa_key_type, //key type
+             rsa_key_type_string, // key type string
+             rsa_key_type, // key type
              clear_rsa_key,
-             rsa_key_container);
+             rsa_key_container,
+             SA_SPECIFICATION_MAJOR,
+             parameters);
         ASSERT_EQ(SA_STATUS_OK, status);
         INFO("rsa_key_container length : %d", rsa_key_container.size());
 
@@ -96,36 +108,91 @@ namespace {
         prProvision->privateKey = (void*)rsa_key_container.data();
         prProvision->privateKeyLength = rsa_key_container.size();
 
-        //Note: here just provide an examlpe to create certification data and passed
-        //into sa_key_provision_ta, how to use certification data is all up to
-        //SOC vendors.
-        auto certificate = random(CERTIFICATION_LENGTH);
+        // Note: Here is an example of creating a test certificate, and passing it into
+	// sa_key_provision_ta. Format of keys and certs may vary depending on how 
+	// each platform has these data encoded and delivered.
+        auto certificate = random(CERTIFICATE_LENGTH);
         prProvision->modelCertificate = certificate.data();
-        prProvision->modelCertificateLength = CERTIFICATION_LENGTH;
+        prProvision->modelCertificateLength = CERTIFICATE_LENGTH;
 
+	parameters->version = 0;
         status = sa_key_provision_ta(PLAYREADY_MODEL_PROVISIONING, prProvision,
-          sizeof(PlayReadyProvisioning), nullptr);
-        ASSERT_EQ(status, SA_STATUS_OK);
+           sizeof(PlayReadyProvisioning), parameters);
 
         if (nullptr != prProvision) {
            delete prProvision;
            prProvision = nullptr;
         }
+	if (nullptr != parameters) {
+           delete parameters;
+           parameters = nullptr;
+        }
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
-    TEST_F(SaKeyProvisionPlayreadyTest, failsNullProvision) {
+
+    TEST_F(SaKeyProvisionPlayreadyTest, invalidKeyFormat) {
         auto key_length = RSA_2048_BYTE_LENGTH;
         std::vector<uint8_t> clear_rsa_key = get_rsa_private_key(key_length);
 
-        //create a rsa key container
+        // Create a rsa key container
+        auto rsa_key_type = SA_KEY_TYPE_RSA;
+        std::string rsa_key_type_string = "RSA-2048";
+        std::string rsa_key_container;
+        sa_import_parameters_soc *parameters = new sa_import_parameters_soc;
+        ASSERT_NE(nullptr, parameters);
+        sa_status status = create_key_container(
+             rsa_key_type_string, // key type string
+             rsa_key_type, // key type
+             clear_rsa_key,
+             rsa_key_container,
+             SA_SPECIFICATION_MAJOR,
+             parameters);
+        ASSERT_EQ(SA_STATUS_OK, status);
+        INFO("rsa_key_container length : %d", rsa_key_container.size());
+
+        PlayReadyProvisioning *prProvision = new PlayReadyProvisioning;
+        ASSERT_NE(nullptr, prProvision);
+        prProvision->privateKey = (void*)rsa_key_container.data();
+        prProvision->privateKeyLength = rsa_key_container.size()>>1;
+
+        // Note: Here is an example of creating a test certificate, and passing it into
+	// sa_key_provision_ta. Format of keys and certs may vary depending on how 
+	// each platform has these data encoded and delivered.
+        auto certificate = random(CERTIFICATE_LENGTH);
+        prProvision->modelCertificate = certificate.data();
+        prProvision->modelCertificateLength = CERTIFICATE_LENGTH;
+        status = sa_key_provision_ta(PLAYREADY_MODEL_PROVISIONING, prProvision,
+           sizeof(PlayReadyProvisioning), parameters);
+
+        if (nullptr != prProvision) {
+           delete prProvision;
+           prProvision = nullptr;
+        }
+	if (nullptr != parameters) {
+           delete parameters;
+           parameters = nullptr;
+        }
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+    }
+
+    TEST_F(SaKeyProvisionPlayreadyTest, wrongProvisionType) {
+        auto key_length = RSA_2048_BYTE_LENGTH;
+        std::vector<uint8_t> clear_rsa_key = get_rsa_private_key(key_length);
+
+        // Create a rsa key container
         auto rsa_key_type = SA_KEY_TYPE_RSA;
         std::string rsa_key_type_string = "RSA-2048";
 
         std::string rsa_key_container;
+        sa_import_parameters_soc *parameters = new sa_import_parameters_soc;
+        ASSERT_NE(nullptr, parameters);
         sa_status status = create_key_container(
-             rsa_key_type_string, //key type string
-             rsa_key_type, //key type
+             rsa_key_type_string, // key type string
+             rsa_key_type, // key type
              clear_rsa_key,
-             rsa_key_container);
+             rsa_key_container,
+             SA_SPECIFICATION_MAJOR,
+             parameters);
         ASSERT_EQ(SA_STATUS_OK, status);
         INFO("rsa_key_container length : %d", rsa_key_container.size());
 
@@ -134,36 +201,44 @@ namespace {
         prProvision->privateKey = (void*)rsa_key_container.data();
         prProvision->privateKeyLength = rsa_key_container.size();
 
-        //Note: here just provide an examlpe to create certification data and passed
-        //into sa_key_provision_ta, how to use certification data is all up to
-        //SOC vendors.
-        auto certificate = random(CERTIFICATION_LENGTH);
+        // Note: Here is an example of creating a test certificate, and passing it into
+	// sa_key_provision_ta. Format of keys and certs may vary depending on how 
+	// each platform has these data encoded and delivered.
+        auto certificate = random(CERTIFICATE_LENGTH);
         prProvision->modelCertificate = certificate.data();
-        prProvision->modelCertificateLength = CERTIFICATION_LENGTH;
-
-        status = sa_key_provision_ta(WIDEVINE_OEM_PROVISIONING, nullptr,
-           sizeof(PlayReadyProvisioning), nullptr);
+        prProvision->modelCertificateLength = CERTIFICATE_LENGTH;
+        status = sa_key_provision_ta((sa_key_type_ta)(WIDEVINE_OEM_PROVISIONING+8), prProvision,
+           sizeof(PlayReadyProvisioning), parameters);
 
         if (nullptr != prProvision) {
            delete prProvision;
            prProvision = nullptr;
         }
-        ASSERT_NE(status, SA_STATUS_OK);
+	if (nullptr != parameters) {
+           delete parameters;
+           parameters = nullptr;
+        }
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
+
     TEST_F(SaKeyProvisionPlayreadyTest, failsZeroInLength) {
         auto key_length = RSA_2048_BYTE_LENGTH;
         std::vector<uint8_t> clear_rsa_key = get_rsa_private_key(key_length);
 
-        //create a rsa key container
+        // Create a rsa key container
         auto rsa_key_type = SA_KEY_TYPE_RSA;
         std::string rsa_key_type_string = "RSA-2048";
 
         std::string rsa_key_container;
+	sa_import_parameters_soc *parameters = new sa_import_parameters_soc;
+        ASSERT_NE(nullptr, parameters);
         sa_status status = create_key_container(
-             rsa_key_type_string, //key type string
-             rsa_key_type, //key type
+             rsa_key_type_string, // key type string
+             rsa_key_type, // key type
              clear_rsa_key,
-             rsa_key_container);
+             rsa_key_container,
+             SA_SPECIFICATION_MAJOR,
+             parameters);
         ASSERT_EQ(SA_STATUS_OK, status);
         INFO("rsa_key_container length : %d", rsa_key_container.size());
 
@@ -172,59 +247,69 @@ namespace {
         prProvision->privateKey = (void*)rsa_key_container.data();
         prProvision->privateKeyLength = rsa_key_container.size();
 
-        //Note: here just provide an examlpe to create certification data and passed
-        //into sa_key_provision_ta, how to use certification data is all up to
-        //SOC vendors.
-        auto certificate = random(CERTIFICATION_LENGTH);
+        // Note: Here is an example of creating a test certificate, and passing it into
+	// sa_key_provision_ta. Format of keys and certs may vary depending on how 
+	// each platform has these data encoded and delivered.
+        auto certificate = random(CERTIFICATE_LENGTH);
         prProvision->modelCertificate = certificate.data();
-        prProvision->modelCertificateLength = CERTIFICATION_LENGTH;
-
+        prProvision->modelCertificateLength = CERTIFICATE_LENGTH;
         status = sa_key_provision_ta(PLAYREADY_MODEL_PROVISIONING,
-           prProvision, 0, nullptr);
+           prProvision, 0, parameters);
         if (nullptr != prProvision) {
            delete prProvision;
            prProvision = nullptr;
         }
-        ASSERT_NE(status, SA_STATUS_OK);
+	if (nullptr != parameters) {
+           delete parameters;
+           parameters = nullptr;
+        }
+        ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 #ifdef FILE_BASED_FETCH_KEY
-   //There are two file playready_private_key.key and playready_cert.bin under
-   //tasecureapi/reference/src/client/,
-   //these files are playready private key and certification. you can do
-   //"export  playready_privatekey=
-   //~/PATH/tasecureapi/reference/src/client/playready_private_key.key",
-   //"export  playready_cert=~/PATH/tasecureapi/reference/src/client/playready_cert.bin",
-   //the following test fromFileBased will pick up them and test
-   //Or
-   //you just simply copy these two files and put under /opt/drm/
+   // There are two file playready_private_key.key and playready_cert.bin under
+   // tasecureapi/reference/test/,
+   // these files are playready private key and certification. you can do
+   // "export  playready_privatekey=
+   // ~/PATH/tasecureapi/reference/test/playready_private_key.key",
+   // "export  playready_cert=~/PATH/tasecureapi/reference/test/playready_cert.bin",
+   // the following test fromFileBased will pick up them and test
+   // Or
+   // you just simply put these two files under /keys.
 
  TEST_F(SaKeyProvisionPlayreadyTest, fromFileBased) {
      PlayReadyProvisioning *prProvision = new PlayReadyProvisioning;
      ASSERT_NE(nullptr, prProvision);
      ASSERT_TRUE(readPlayreadyData(&prProvision));
+     sa_import_parameters_soc *parameters = new sa_import_parameters_soc;
+     ASSERT_NE(nullptr, parameters);
+     createParameters(parameters,SA_SPECIFICATION_MAJOR);
+     sa_status status = sa_key_provision_ta(PLAYREADY_MODEL_PROVISIONING,
+        prProvision, sizeof(prProvision), parameters);
+     ASSERT_EQ(status, SA_STATUS_OK);
 
-      sa_status status = sa_key_provision_ta(PLAYREADY_MODEL_PROVISIONING,
-      prProvision, sizeof(prProvision), nullptr);
-      ASSERT_EQ(status, SA_STATUS_OK);
-
-      if (nullptr != prProvision->privateKey){
+     if (nullptr != prProvision->privateKey){
          free(prProvision->privateKey);
          prProvision->privateKey = nullptr;
-      }
-      if (nullptr != prProvision->modelCertificate){
+     }
+     if (nullptr != prProvision->modelCertificate){
          free(prProvision->modelCertificate);
          prProvision->modelCertificate = nullptr;
-      }
-    }
-#endif //FILE_BASED_FETCH_KEY
+     }
+     if (nullptr != prProvision) {
+          delete prProvision;
+          prProvision = nullptr;
+     }
+     if (nullptr != parameters) {
+          delete parameters;
+          parameters = nullptr;
+     }
+ }
+#endif // FILE_BASED_FETCH_KEY
 } // namespace
 
 #ifdef FILE_BASED_FETCH_KEY
 #include <sys/stat.h>
 #include <string.h>
-
-#define playready_privatekey "/opt/drm/playready_private_key.key"
-#define playready_cert       "/opt/drm/playready_cert.bin"
 
 static void* readBlob(FILE *fp, size_t *key_size) {
    if (NULL == fp) {
@@ -256,7 +341,7 @@ static void* readBlob(FILE *fp, size_t *key_size) {
    return key;
 }
 
-static PlayReadyProvisioning* createPlayreadyblob(FILE *file_private_key,
+static PlayReadyProvisioning* createPlayreadyBlob(FILE *file_private_key,
    FILE *file_oem_cert) {
    if (NULL == file_private_key ||
       NULL == file_oem_cert) {
@@ -334,7 +419,7 @@ static bool readPlayreadyData(PlayReadyProvisioning **prProvision) {
        return false;
    }
 
-   *prProvision = createPlayreadyblob(file_private_key, file_oem_cert);
+   *prProvision = createPlayreadyBlob(file_private_key, file_oem_cert);
 
    if (file_private_key)
       fclose(file_private_key);
@@ -347,4 +432,4 @@ static bool readPlayreadyData(PlayReadyProvisioning **prProvision) {
    } 
    return true;
 }
-#endif //FILE_BASED_FETCH_KEY
+#endif // FILE_BASED_FETCH_KEY
