@@ -1,10 +1,10 @@
-# RFC 0000-TA Key Provisioning
+# RFC 0009-TA Key Provisioning
 
 - Feature Name: TA Key Provisioning
 - Author(s): Mike Habrat
 - Start Date: 2023-10-31
-- RFC PR: (leave this empty)
-- Leader(s): (leave this empty)
+- RFC PR: [RFC-0009](https://github.com/rdkcentral/tasecureapi/pull/100)
+- Leader(s): Mike Habrat, Joe Hewitt, Richard Woh
 
 ## Introduction
 
