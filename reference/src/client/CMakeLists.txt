@@ -230,6 +230,7 @@ if (BUILD_TESTS)
             test/sa_key_exchange_ecdh.cpp
             test/sa_key_exchange_netflix.cpp
             test/sa_key_export.cpp
+            test/sa_key_provision.cpp
             test/sa_key_generate.cpp
             test/sa_key_generate_dh.cpp
             test/sa_key_generate_ec.cpp
