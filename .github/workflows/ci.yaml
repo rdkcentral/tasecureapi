@@ -1,29 +1,194 @@
 name: ci
 
-on: [push, pull_request]
+# We build and test on both x64 and aarch64 using ubuntu-20.04 and
+# ubuntu-22.04. We build using various toolchains only on aarch64. This is to
+# ensure that we will be able to build on the various versions of Yocto.
+# Since Github uses x64 runners, we use qemu to emulate an aarch64
+# environment.
+#
+# Toolchains based on Yocto version
+# Dunfell:    GCC 9  & Clang (10 or 12)
+# Kirkstone:  GCC 11 & Clang (12 or 14)
+# Mickledore: GCC 12 & Clang 15
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
-  core:
+  build_and_test_x86:
+    name: Build and Test on x86 ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-20.04, ubuntu-22.04]
-
-    runs-on: ${{ matrix.os }}
-
     steps:
-    - uses: actions/checkout@v3
-    - name: Install YAJL
-      run: sudo apt-get install -y libyajl-dev
-      continue-on-error: true
-    - name: config
-      run: >-
-        cmake
-        -S reference
-        -B reference/cmake-build
-        -DENABLE_SOC_KEY_TESTS=1
-        -DENABLE_CLANG_TIDY=TRUE
-        -DENABLE_CLANG_TIDY_TESTS=TRUE
-    - name: build
-      run: cmake --build reference/cmake-build
-    - name: test
-      run: cmake --build reference/cmake-build --target test
+      - uses: actions/checkout@v4
+      - name: Install YAJL
+        run: sudo apt-get install -y libyajl-dev
+      - name: config
+        run: >-
+          cmake
+          -S reference
+          -B reference/cmake-build
+          -DENABLE_SOC_KEY_TESTS=1
+          -DENABLE_CLANG_TIDY=TRUE
+          -DENABLE_CLANG_TIDY_TESTS=TRUE
+      - name: build
+        run: cmake --build reference/cmake-build
+      - name: test
+        run: cmake --build reference/cmake-build --target test
+
+  build_and_test_aarch64:
+    name: Build and Test on ${{ matrix.arch }} ${{ matrix.os }}
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - arch: aarch64
+            distro: ubuntu20.04
+            os: ubuntu-20.04
+
+          - arch: aarch64
+            distro: ubuntu22.04
+            os: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build and Test
+        uses: uraimo/run-on-arch-action@v2.5.1
+        id: build_and_test
+        with:
+          arch: ${{ matrix.arch }}
+          distro: ${{ matrix.distro }}
+          githubToken: ${{ github.token }}
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y --no-install-recommends \
+              ${{ matrix.dependencies }} \
+              ca-certificates \
+              git \
+              build-essential \
+              cmake \
+              libyajl-dev \
+              libssl-dev
+          run: |
+            cmake -S reference -B reference/cmake-build -DENABLE_SOC_KEY_TESTS=1 -DENABLE_CLANG_TIDY=TRUE -DENABLE_CLANG_TIDY_TESTS=TRUE
+            cmake --build reference/cmake-build
+            cmake --build reference/cmake-build --target test
+
+  build_aarch64_gcc:
+    name: Build with ${{ matrix.name }} ${{ matrix.arch }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: GCC-9
+            dependencies: g++-9
+            c_compiler: gcc-9
+            cxx_compiler: g++-9
+            arch: aarch64
+            distro: ubuntu20.04
+
+          - name: GCC-11
+            dependencies: g++-11
+            c_compiler: gcc-11
+            cxx_compiler: g++-11
+            arch: aarch64
+            distro: ubuntu22.04
+
+          - name: GCC-12
+            dependencies: g++-12
+            c_compiler: gcc-12
+            cxx_compiler: g++-12
+            arch: aarch64
+            distro: ubuntu22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build
+        uses: uraimo/run-on-arch-action@v2.5.1
+        id: build
+        with:
+          arch: ${{ matrix.arch }}
+          distro: ${{ matrix.distro }}
+          githubToken: ${{ github.token }}
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y --no-install-recommends \
+              ${{ matrix.dependencies }} \
+              ca-certificates \
+              git \
+              make \
+              cmake \
+              libyajl-dev \
+              libssl-dev
+          run: |
+            CC=${{ matrix.c_compiler }} CXX=${{ matrix.cxx_compiler }} cmake ${{ matrix.cmake_flags }} -S reference -B reference/cmake-build -DENABLE_SOC_KEY_TESTS=1 -DENABLE_CLANG_TIDY=TRUE -DENABLE_CLANG_TIDY_TESTS=TRUE
+            cmake --build reference/cmake-build
+
+  build_aarch64_clang:
+    name: Build with ${{ matrix.name }} ${{ matrix.arch }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Clang-10
+            dependencies: clang-10 lld-10
+            c_compiler: clang-10
+            cxx_compiler: clang++-10
+            linker: lld-10
+            arch: aarch64
+            distro: ubuntu20.04
+
+          - name: Clang-12
+            dependencies: clang-12 lld-12
+            c_compiler: clang-12
+            cxx_compiler: clang++-12
+            linker: lld-12
+            arch: aarch64
+            distro: ubuntu20.04
+
+          - name: Clang-14
+            dependencies: clang-14 lld-14
+            c_compiler: clang-14
+            cxx_compiler: clang++-14
+            linker: lld-14
+            arch: aarch64
+            distro: ubuntu22.04
+
+          - name: Clang-15
+            dependencies: clang-15 lld-15
+            c_compiler: clang-15
+            cxx_compiler: clang++-15
+            linker: lld-15
+            arch: aarch64
+            distro: ubuntu22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build
+        uses: uraimo/run-on-arch-action@v2.5.1
+        id: build
+        with:
+          arch: ${{ matrix.arch }}
+          distro: ${{ matrix.distro }}
+          githubToken: ${{ github.token }}
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y --no-install-recommends \
+              ${{ matrix.dependencies }} \
+              ca-certificates \
+              git \
+              make \
+              cmake \
+              libyajl-dev \
+              libssl-dev
+            ln -sf /usr/bin/ld.${{ matrix.linker }} /usr/bin/ld
+          run: |
+            CC=${{ matrix.c_compiler }} CXX=${{ matrix.cxx_compiler }} cmake ${{ matrix.cmake_flags }} -S reference -B reference/cmake-build -DENABLE_SOC_KEY_TESTS=1 -DENABLE_CLANG_TIDY=TRUE -DENABLE_CLANG_TIDY_TESTS=TRUE
+            cmake --build reference/cmake-build
