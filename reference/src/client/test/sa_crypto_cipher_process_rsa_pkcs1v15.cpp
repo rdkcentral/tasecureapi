@@ -113,7 +113,7 @@ namespace {
         auto rsa = rsa_import_pkcs8(clear_key);
         ASSERT_NE(rsa, nullptr);
 
-        auto in = std::vector<uint8_t>(EVP_PKEY_bits(rsa.get()) / 8);
+        auto in = std::vector<uint8_t>((EVP_PKEY_bits(rsa.get()) / 8) + 1) ;
 
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -141,7 +141,7 @@ namespace {
         auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, EVP_PKEY_bits(rsa.get()) / 8);
         ASSERT_NE(out_buffer, nullptr);
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
-        ASSERT_EQ(status, SA_STATUS_VERIFICATION_FAILED);
+        ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
     TEST_F(SaCryptoCipherSvpOnlyTest, processRsaPkcs1v15FailsInvalidBufferType) {
