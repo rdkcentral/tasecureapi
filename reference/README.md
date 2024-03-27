@@ -159,7 +159,7 @@ of the implementation.  It links against saclient. Comcast is responsible for im
 tests.
 
 To run with key provision file based test, you must export these system variables beforehand,
- and turn on FILE_BASED_FETCH_KEY in all sa_key_provision_xxx.cpp files
+and turn on FILE_BASED_FETCH_KEY in all sa_key_provision_xxx.cpp files
 
 #1. apple fair play secret key
 export  apple_fairplay_secret_key=~/PATH/tasecureapi/reference/src/client/apple_fairplay_secret.key
