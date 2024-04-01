@@ -205,7 +205,7 @@ The `sa_key_provision_ta` API will return one of the following status conditions
   - Invalid format value.
   - Invalid format specific parameter value encountered.
 + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
-+ SA_STATUS_SELF_TEST - Implementation self-test has failed.
++ SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - There are no available key slots.
 + SA_STATUS_VERIFICATION_FAILED - Signature verification has failed.
 + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
 
