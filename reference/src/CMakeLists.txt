@@ -50,10 +50,19 @@ add_subdirectory(taimpl)
 add_subdirectory(util)
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS saclient saclienttest taimpltest utiltest EXPORT sa-client-config
+include(GNUInstallDirs)
+install(TARGETS saclient EXPORT sa-client-config
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin
         )
 
 install(DIRECTORY client/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+if (BUILD_TESTS)
+    install(TARGETS saclienttest taimpltest utiltest
+            ARCHIVE DESTINATION lib
+            LIBRARY DESTINATION lib
+            RUNTIME DESTINATION bin
+            )
+endif ()
