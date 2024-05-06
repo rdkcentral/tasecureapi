@@ -93,72 +93,10 @@ sa_status sa_key_export(
         size_t mixin_length,
         sa_key key);
 
-/* **TA Key Type Definition**
-
-The operator provisioning key type will be communicated through the following enumeration:
-*/
-typedef enum  {
-  WIDEVINE_OEM_PROVISIONING,
-  PLAYREADY_MODEL_PROVISIONING,
-  NETFLIX_PROVISIONING
-} sa_ta_key_type;
-
-/* **playready model types** */
-
-typedef enum {
-  PLAYREADY_MODEL_2K,
-  PLAYREADY_MODEL_3K
-}PLAYREADY_MODEL_TYPE;
-
-/* **Widevine OEM Provisioning Structure**
-
-The object provided as input to the sa_key_provision_ta API via the in parameter for the
-`WIDEVINE_OEM_PROVISIONING` key type contains the following Widevine OEM Provisioning 3.0 model
-properties.
-*/
-
-typedef struct {
-  unsigned int oemDevicePrivateKeyLength;
-  void * oemDevicePrivateKey;
-  unsigned int oemDeviceCertificateLength;
-  void * oemDeviceCertificate;
-} WidevineOemProvisioning;
-
-
-/* **PlayReady Model Provisioning Structure**
-
-The object provided as input to the sa_ta_key_provision API via the in parameter for the
-PLAYREADY_MODEL_PROVISIONING key type contains the following properties.
-*/
-
-typedef struct {
-  unsigned int modelType; // 2K or 3K
-  unsigned int privateKeyLength;
-  void * privateKey;
-  unsigned int modelCertificateLength;
-  void * modelCertificate;
-} PlayReadyProvisioning;
-
-/* **Netflix Provisioning Structure**
-
-The object provided as input to the sa_ta_key_provision API via the in parameter for the
-`NETFLIX_PROVISIONING` key type contains the following properties.
-*/
-
-typedef struct {
-  unsigned int hmacKeyLength;
-  void * hmacKey; //kdh
-  unsigned int wrappingKeyLength;
-  void * wrappingKey; //kdw
-  unsigned int esnContainerLength;
-  void * esnContainer; //ESN
-} NetflixProvisioning;
-
 /**
- * provision a key.
- * this  SecAPI function is proposed to support the provisioning of keys from an operator's key
- * provisioning service to a specific TA
- *
+ * Provision a key.
+ * This function is proposed to support the provisioning of keys from an operator's key
+ * provisioning service to a specific TA.
  * #1.	Field provisioning service delivers the encrypted TA Key to the device.
  * #2.	The TA Key is imported and provisioned to SecAPI3 using new API: sa_key_provision_ta().
  * #3.	SecAPI3 TA decrypts TA Key and converts key to SOC vendor TA Key format.
@@ -178,23 +116,22 @@ typedef struct {
    provisioning service.
 
  * The sa_key_provision_ta API will return one of the following status conditions:
-
- *+ SA_STATUS_OK - Operation succeeded.
- *+ SA_STATUS_INVALID_KEY_FORMAT - Input data failed the format validation.
- *+ SA_STATUS_NULL_PARAMETER - ta_key_type, in, in_length, or the key provisioning object
- *  parameters are NULL.
- *+ SA_STATUS_INVALID_PARAMETER
- * - Invalid key format.
- * - Invalid format value.
- * - Invalid format specific parameter value encountered.
- *+ SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
- *+ SA_STATUS_SELF_TEST - Implementation self-test has failed.
- *+ SA_STATUS_VERIFICATION_FAILED - Signature verification has failed.
- *+ SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
+ * + SA_STATUS_OK - Operation succeeded.
+ * + SA_STATUS_INVALID_KEY_FORMAT - Input data failed the format validation.
+ * + SA_STATUS_NULL_PARAMETER - ta_key_type, in, in_length, or the key provisioning object
+ *   parameters are NULL.
+ * + SA_STATUS_INVALID_PARAMETER
+ *   - Invalid key format.
+ *   - Invalid format value.
+ *   - Invalid format specific parameter value encountered.
+ * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
+ * + SA_STATUS_VERIFICATION_FAILED - Signature verification has failed.
+ * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - There are no available key slots.
+ * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
  */
 
 sa_status sa_key_provision_ta (
-        sa_ta_key_type ta_key_type,
+        sa_key_type_ta ta_key_type,
         const void* in,
         size_t in_length,
         void* parameters);

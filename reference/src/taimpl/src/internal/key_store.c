@@ -27,7 +27,6 @@
 #include "rights.h"
 #include "stored_key_internal.h"
 #include <memory.h>
-#include <stdio.h>
 #include <time.h>
 
 /**
@@ -156,46 +155,6 @@ static void* pad(
     return padded;
 }
 
-static bool write_to_storage(const void *data, const size_t length, const char *suffix) {
-    if(NULL == data ||
-       0 == length) {
-        ERROR("null inout or input length is 0");
-        return false;
-    }
-
-    // TODO SoC Vendor: replace this with code to write to secure storage (using TEE supplicant or other such method).
-    // The following code is for demonstration purposes of writing to disk using fopen/fwrite, and won't work in
-    // TEE environments.
-#if WRITE_TO_FILE_TEST
-    INFO("data length: %d, suffix:%s", length, suffix);
-    FILE *fp = NULL;
-    const char *prefix_name = "tee_key_";
-    char file_name[256] = {0};
-    memory_memset_unoptimizable(file_name, 0, strlen(prefix_name));
-    strncpy(file_name, prefix_name, strlen(prefix_name));
-    if((0 != strlen(suffix)) && (sizeof(file_name)-strlen(prefix_name)-strlen(".bin") > strlen(suffix))) {
-      strcat(file_name, suffix);
-    }
-    strcat(file_name, ".bin");
-
-    INFO("file_name : %s", file_name);
-    if(NULL == (fp = fopen(file_name, "wbe"))) {
-        ERROR("failed to open file");
-        return false;
-    }
-
-    size_t ret = fwrite(data, 1, length, fp);
-    if(ret != length) {
-        ERROR("failed to write data into file");
-        return false;
-    }
-    fflush(fp);
-    fclose(fp);
-#endif
-
-    return true;
-}
-
 static stored_key_t* unwrap(
         const derivation_inputs_t* derivation_inputs,
         const sa_header* header,
@@ -276,10 +235,6 @@ static stored_key_t* unwrap(
                     header->size, cleartext, cipher_parameters->ciphertext_length - pad_value) != SA_STATUS_OK) {
             ERROR("stored_key_create failed");
             break;
-        }
-        /*here provide an option to save the stored key into secure storage*/
-        if(!write_to_storage(stored_key_get_key(stored_key), stored_key_get_length(stored_key), "stored")) {
-            ERROR("failed to write data into storage");
         }
     } while (false);
 
@@ -839,11 +794,6 @@ sa_status key_store_export(
         memcpy(out_bytes + offset, &rewrapped_key->signature, sizeof(signature_t));
 
         *out_length = required_out_length;
-        /*here provide an option to save the exported key into secure storage,
-          this key is exactly same as input one*/
-        if(!write_to_storage(out, *out_length, "exported")) {
-            ERROR("failed to write data into storage");
-        }
         status = SA_STATUS_OK;
     } while (false);
 

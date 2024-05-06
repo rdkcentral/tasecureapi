@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2024 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,349 +16,96 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sa.h"
-#include "sa_rights.h"
+#include "client.h"
 #include "log.h"
+#include "ta_client.h"
+#include "sa_key_provision_impl.h"
+#include "sa.h"
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <assert.h>
-
-sa_key *create_uninitialized_sa_key() {
-   sa_key *handle = (sa_key*)calloc(sizeof(sa_key), 1);
-   if(NULL == handle) {
-      ERROR("Failed to allcate memory");
-      return NULL;
-   }
-   *handle = INVALID_HANDLE;
-   return handle;
-}
-
-sa_status release_sa_key(sa_key *key) {
-   sa_status status = SA_STATUS_OK;
-
-   if(NULL != key) {
-      if(INVALID_HANDLE != *key) {
-         status = sa_key_release(*key);
-         if(SA_STATUS_OK != status) {
-            ERROR("Failed to release key, status:%d", status);
-         }
-      }
-      free(key);
-      key = NULL;
-   }
-   return status;
-}
 
 sa_status sa_key_provision_ta (
-        sa_ta_key_type ta_key_type,
-        const void* in,
-        size_t in_length,
-        void* parameters) {
+   sa_key_type_ta ta_key_type,
+   const void* in,
+   size_t in_length,
+   void* parameters) {
 
    sa_status status = SA_STATUS_OK;
-   WidevineOemProvisioning *wvProvision = NULL;
-   PlayReadyProvisioning   *prProvision = NULL;
-   NetflixProvisioning     *nflxProvision = NULL;
-
-   if(NULL == in ||
-      0 == in_length) {
-      ERROR("null input or input size is  0");
-      return SA_STATUS_NULL_PARAMETER;
+   if (SA_STATUS_OK != 
+      (status = sa_key_provision_preprocessing(ta_key_type, in, in_length, parameters))) {
+      return status; 
    }
 
-   switch(ta_key_type) {
-      case WIDEVINE_OEM_PROVISIONING:
-         {
-            DEBUG(" case WIDEVINE_OEM_PROVISIONING");
+   void* session = client_session();
+   if (NULL == session) {
+       ERROR("client_session failed");
+       return SA_STATUS_INTERNAL_ERROR;
+   }
+   sa_key_provision_ta_s* key_provision_ta = NULL;
+   void* param1 = NULL;
+   void* param2 = NULL;
+   void* param3 = NULL;
+   do {
+        CREATE_COMMAND(sa_key_provision_ta_s, key_provision_ta);
+        key_provision_ta->api_version = API_VERSION;
+        key_provision_ta->key = INVALID_HANDLE;
+        key_provision_ta->key_format = SA_KEY_FORMAT_PROVISION_TA;
+        key_provision_ta->curve = 0;
 
-            if(NULL == ((WidevineOemProvisioning*)in)->oemDevicePrivateKey      ||
-               0 == ((WidevineOemProvisioning*)in)->oemDevicePrivateKeyLength   ||
-               NULL == ((WidevineOemProvisioning*)in)->oemDeviceCertificate     ||
-               0 == ((WidevineOemProvisioning*)in)->oemDeviceCertificateLength) {
-               ERROR("null private key/certor or size is  0");
-               return SA_STATUS_NULL_PARAMETER;
-            }
+        size_t param1_size;
+        uint32_t param1_type;
+        if (NULL != in) {
+            CREATE_PARAM(param1, (void*)in,in_length);
+            param1_size = in_length;
+            param1_type = TA_PARAM_IN;
+        } else {
+            param1_size = 0;
+            param1_type = TA_PARAM_NULL;
+        }
+        size_t param2_size;
+        uint32_t param2_type;
 
-            wvProvision = calloc(sizeof(WidevineOemProvisioning), 1);
-            if(NULL == wvProvision) {
-               ERROR("OOM");
-               return SA_STATUS_INTERNAL_ERROR;
-            }
+        if (NULL != parameters) {
+            param2_size = ((size_t) ((uint8_t*) parameters)[0] << 8) + (size_t) ((uint8_t*) parameters)[1];
+            CREATE_PARAM(param2, parameters, param2_size);
+            param2_type = TA_PARAM_IN;
+        } else {
+            param2 = NULL;
+            param2_size = 0;
+            param2_type = TA_PARAM_NULL;
+        }
+        size_t param3_size = sizeof(ta_key_type);
+        CREATE_PARAM(param3, (void*)&ta_key_type, param3_size);
+        uint32_t param3_type = TA_PARAM_IN;
 
-            /*deep copy*/
-            wvProvision->oemDevicePrivateKeyLength =
-               ((WidevineOemProvisioning*)in)->oemDevicePrivateKeyLength;
-            wvProvision->oemDeviceCertificateLength =
-               ((WidevineOemProvisioning*)in)->oemDeviceCertificateLength;
+        
+        // clang-format off
+        uint32_t param_types[NUM_TA_PARAMS] = {TA_PARAM_INOUT, param1_type, param2_type, param3_type};
+        ta_param params[NUM_TA_PARAMS] = {{key_provision_ta, sizeof(sa_key_provision_ta_s)},
+                                          {param1, param1_size},
+                                          {param2, param2_size},
+                                          {param3, param3_size}};
+        INFO("param0: 0x%x, param0_size: %d", key_provision_ta, sizeof(sa_key_provision_ta_s));
+        INFO("param1: 0x%x, param1_size: %d", param1, param1_size);
+        INFO("param2: 0x%x, param2_size: %d", param2,param2_size);
+        INFO("ta_key_type:%d, param3: %d, param3_size: %d",ta_key_type,*((int*)param3),param3_size);
+        // clang-format on
+        status = ta_invoke_command(session, SA_KEY_PROVISION_TA, param_types, params);
 
-            wvProvision->oemDevicePrivateKey =
-               (void*)calloc(wvProvision->oemDevicePrivateKeyLength, 1);
-            if(NULL == wvProvision->oemDevicePrivateKey) {
-               ERROR("OOM");
-               return SA_STATUS_INTERNAL_ERROR;
-            }
-            memcpy(wvProvision->oemDevicePrivateKey,
-                   ((WidevineOemProvisioning*)in)->oemDevicePrivateKey,
-                   wvProvision->oemDevicePrivateKeyLength);
+        if (SA_STATUS_OK != status) {
+            ERROR("ta_invoke_command failed: %d", status);
+            break;
+        }
+        INFO("key:%d", key_provision_ta->key);
+    } while (false);
 
-            /*here just provide an examlpe to pass certification data,
-             how to use certification data is all up to SOC vendors.
-            */
-            wvProvision->oemDeviceCertificate =
-               (void*)calloc(wvProvision->oemDeviceCertificateLength, 1);
-            if(NULL == wvProvision->oemDeviceCertificate) {
-               ERROR("OOM");
-               return SA_STATUS_INTERNAL_ERROR;
-            }
-            memcpy(wvProvision->oemDeviceCertificate,
-                   ((WidevineOemProvisioning*)in)->oemDeviceCertificate,
-                   wvProvision->oemDeviceCertificateLength);
+    // ATTENTION: If you dont release the key, you will get resource leaked.
+    if (INVALID_HANDLE != key_provision_ta->key) {
+        sa_key_release(key_provision_ta->key);
+    }
+    RELEASE_COMMAND(key_provision_ta);
+    RELEASE_PARAM(param1);
+    RELEASE_PARAM(param2);
+    RELEASE_PARAM(param3);
 
-            INFO("wvProvision:%x",wvProvision);
-            INFO("keyLen : %d", wvProvision->oemDevicePrivateKeyLength);
-            INFO("certLen : %d", wvProvision->oemDeviceCertificateLength);
-
-            if(0 == (memcmp(wvProvision->oemDevicePrivateKey, "SIGN", 4))) {
-               wvProvision->oemDevicePrivateKey += 8;
-               wvProvision->oemDevicePrivateKeyLength -=8;
-            } else {
-              INFO("NO SIGN in the header");
-            }
-
-            sa_key *rsa_key = create_uninitialized_sa_key();
-            assert(NULL != rsa_key);
-            status = sa_key_import(rsa_key, SA_KEY_FORMAT_EXPORTED,
-                        wvProvision->oemDevicePrivateKey,
-                        wvProvision->oemDevicePrivateKeyLength,NULL);
-
-            if(NULL != wvProvision->oemDevicePrivateKey) {
-               free(wvProvision->oemDevicePrivateKey);
-               wvProvision->oemDevicePrivateKey = NULL;
-            }
-            if(NULL != wvProvision->oemDeviceCertificate) {
-               free(wvProvision->oemDeviceCertificate);
-               wvProvision->oemDeviceCertificate = NULL;
-            }
-            if(NULL != wvProvision) {
-               free(wvProvision);
-               wvProvision = NULL;
-            }
-            release_sa_key(rsa_key);
-
-            if(SA_STATUS_OK != status) {
-               ERROR("Faild to import widevine oem private key");
-            }
-            return status;
-         }
-         break;
-      case PLAYREADY_MODEL_PROVISIONING:
-         {
-            DEBUG(" case PLAYREADY_MODEL_PROVISIONING");
-            INFO("private length: %d", ((PlayReadyProvisioning*)(in))->privateKeyLength);
-            INFO("cert length: %d", ((PlayReadyProvisioning*)(in))->modelCertificateLength);
-            INFO("in_length: %d", in_length);
-
-            if(NULL == ((PlayReadyProvisioning*)in)->privateKey             ||
-               0 == ((PlayReadyProvisioning*)in)->privateKeyLength          ||
-               NULL == ((PlayReadyProvisioning*)in)->modelCertificate       ||
-               0 == ((PlayReadyProvisioning*)in)->modelCertificateLength)   {
-               ERROR("null private key / cert or input size is  0");
-               return SA_STATUS_NULL_PARAMETER;
-            }
-
-            prProvision = calloc(sizeof(PlayReadyProvisioning), 1);
-            if(NULL == prProvision) {
-               ERROR("OOM");
-               return SA_STATUS_INTERNAL_ERROR;
-            }
-
-            /*deep copy*/
-            prProvision->privateKeyLength =
-               ((PlayReadyProvisioning*)in)->privateKeyLength;
-            prProvision->modelCertificateLength =
-               ((PlayReadyProvisioning*)in)->modelCertificateLength;
-
-            prProvision->privateKey =
-               (uint8_t*)calloc(prProvision->privateKeyLength, 1);
-            if(NULL == prProvision->privateKey) {
-               ERROR("OOM");
-               return SA_STATUS_INTERNAL_ERROR;
-            }
-            memcpy(prProvision->privateKey, ((PlayReadyProvisioning*)in)->privateKey,
-                   prProvision->privateKeyLength);
-
-            /*here just provide an examlpe to pass certification data
-              and model type,how to use them is all up to SOC vendors.
-            */
-            prProvision->modelCertificate =
-               (void*)calloc(prProvision->modelCertificateLength, 1);
-            if(NULL == prProvision->modelCertificate) {
-               ERROR("OOM");
-               return SA_STATUS_INTERNAL_ERROR;
-            }
-            memcpy(prProvision->modelCertificate,
-                   ((PlayReadyProvisioning*)in)->modelCertificate,
-                   prProvision->modelCertificateLength);
-
-            INFO("prProvision:%x",prProvision);
-            INFO("keyLen : %d", prProvision->privateKeyLength);
-            INFO("CertLen : %d", prProvision->modelCertificateLength);
-            INFO("Model type : %s",
-                  (prProvision->modelType == PLAYREADY_MODEL_2K)? "model 2000" :
-                  ((prProvision->modelType == PLAYREADY_MODEL_3K)? "model 3000":
-                   "No such model type"));
-
-            if(0 == (memcmp(prProvision->privateKey, "SIGN", 4))) {
-               prProvision->privateKey += 8;
-               prProvision->privateKeyLength -=8;
-            } else {
-              INFO("NO SIGN in the header");
-            }
-
-            sa_key *rsa_key = create_uninitialized_sa_key();
-            assert(NULL != rsa_key);
-            status = sa_key_import(rsa_key, SA_KEY_FORMAT_EXPORTED,
-                                  prProvision->privateKey,prProvision->privateKeyLength, NULL);
-
-            if(NULL != prProvision->privateKey) {
-               free(prProvision->privateKey);
-               prProvision->privateKey = NULL;
-            }
-            if(NULL != prProvision->modelCertificate) {
-               free(prProvision->modelCertificate);
-               prProvision->modelCertificate = NULL;
-            }
-            if(NULL != prProvision) {
-               free(prProvision);
-               prProvision = NULL;
-            }
-            release_sa_key(rsa_key);
-
-            if(SA_STATUS_OK != status) {
-               ERROR("Faild to import playready private key");
-            }
-            return status;
-         }
-         break;
-      case NETFLIX_PROVISIONING:
-         {
-            DEBUG("case NETFLIX_PROVISIONING");
-            INFO("hmac length: %d", ((NetflixProvisioning*)(in))->hmacKeyLength);
-            INFO("wraaping length: %d", ((NetflixProvisioning*)(in))->wrappingKeyLength);
-            INFO("ESN length: %d", ((NetflixProvisioning*)(in))->esnContainerLength);
-            INFO("in_length: %d", in_length);
-
-            if(NULL == ((NetflixProvisioning*)in)->hmacKey         ||
-               0 == ((NetflixProvisioning*)in)->hmacKeyLength      ||
-               NULL == ((NetflixProvisioning*)in)->wrappingKey     ||
-               0 == ((NetflixProvisioning*)in)->wrappingKeyLength  ||
-               NULL == ((NetflixProvisioning*)in)->esnContainer    ||
-               0 == ((NetflixProvisioning*)in)->esnContainerLength) {
-               ERROR("null input or input size is  0");
-               return SA_STATUS_NULL_PARAMETER;
-            }
-
-            nflxProvision = calloc(sizeof(NetflixProvisioning), 1);
-            if(NULL == nflxProvision) {
-               ERROR("OOM");
-               return SA_STATUS_INTERNAL_ERROR;
-            }
-
-            /*deep copy*/
-            nflxProvision->hmacKeyLength =
-               ((NetflixProvisioning*)in)->hmacKeyLength;
-            nflxProvision->wrappingKeyLength =
-               ((NetflixProvisioning*)in)->wrappingKeyLength;
-            nflxProvision->esnContainerLength =
-               ((NetflixProvisioning*)in)->esnContainerLength;
-
-            nflxProvision->hmacKey =
-               (void*)calloc(nflxProvision->hmacKeyLength, 1);
-            if(NULL == nflxProvision->hmacKey) {
-               ERROR("OOM");
-               return SA_STATUS_INTERNAL_ERROR;
-            }
-            memcpy(nflxProvision->hmacKey, ((NetflixProvisioning*)in)->hmacKey,
-                   nflxProvision->hmacKeyLength);
-
-            nflxProvision->wrappingKey =
-               (void*)calloc(nflxProvision->wrappingKeyLength, 1);
-            if(NULL == nflxProvision->wrappingKey) {
-               ERROR("OOM");
-               return SA_STATUS_INTERNAL_ERROR;
-            }
-            memcpy(nflxProvision->wrappingKey,
-                   ((NetflixProvisioning*)in)->wrappingKey,
-                   nflxProvision->wrappingKeyLength);
-
-            /*here just provide an examlpe to pass ESN data,
-             how to use it is all up toSOC vendors.
-            */
-            nflxProvision->esnContainer =
-               (void*)calloc(nflxProvision->esnContainerLength, 1);
-            if(NULL == nflxProvision->esnContainer) {
-               ERROR("OOM");
-               return SA_STATUS_INTERNAL_ERROR;
-            }
-            memcpy(nflxProvision->esnContainer,
-                   ((NetflixProvisioning*)in)->esnContainer,
-                   nflxProvision->esnContainerLength);
-
-            INFO("nflxProvision:%x",nflxProvision);
-            INFO("hmacLen : %d", nflxProvision->hmacKeyLength);
-            INFO("wrappingLen : %d", nflxProvision->wrappingKeyLength);
-            INFO("ESNLen : %d", nflxProvision->esnContainerLength);
-
-            sa_key *sa_hmac_key = create_uninitialized_sa_key();
-            assert(NULL != sa_hmac_key);
-            sa_status status_hmac = sa_key_import(sa_hmac_key, SA_KEY_FORMAT_EXPORTED,
-                                  nflxProvision->hmacKey,nflxProvision->hmacKeyLength,
-                                  NULL);
-
-            sa_key *sa_wrapping_key = create_uninitialized_sa_key();
-            assert(NULL != sa_wrapping_key);
-
-            sa_status status_wrapping = sa_key_import(sa_wrapping_key, SA_KEY_FORMAT_EXPORTED,
-                                  nflxProvision->wrappingKey,nflxProvision->wrappingKeyLength,
-                                  NULL);
-
-            if(NULL != nflxProvision->hmacKey) {
-               free(nflxProvision->hmacKey);
-               nflxProvision->hmacKey = NULL;
-            }
-            if(NULL != nflxProvision->wrappingKey) {
-               free(nflxProvision->wrappingKey);
-               nflxProvision->wrappingKey = NULL;
-            }
-            if(NULL != nflxProvision->esnContainer) {
-               free(nflxProvision->esnContainer);
-               nflxProvision->esnContainer = NULL;
-            }
-            if(NULL != nflxProvision) {
-               free(nflxProvision);
-               nflxProvision = NULL;
-            }
-            release_sa_key(sa_hmac_key);
-            release_sa_key(sa_wrapping_key);
-
-            if(SA_STATUS_OK != status_hmac) {
-               ERROR("Faild to import netflix hmac key");
-               return status_hmac;
-            }
-            if(SA_STATUS_OK != status_wrapping) {
-               ERROR("Faild to import netflix wrapping key");
-            }
-            return status_wrapping;
-         }
-         break;
-      default:
-         break;
-  }
-
-
-  return status;
+    return status;   
 }
-

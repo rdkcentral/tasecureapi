@@ -266,7 +266,9 @@ typedef enum {
     /** SoC Key Format - encoded according to the SoC Specific Key Specification */
     SA_KEY_FORMAT_SOC,
     /** TypeJ Key Format - encoded according to the SecApi Key Container Specification */
-    SA_KEY_FORMAT_TYPEJ
+    SA_KEY_FORMAT_TYPEJ,
+    /** Provision key into SoC Key Format */
+    SA_KEY_FORMAT_PROVISION_TA,
 } sa_key_format;
 
 /**
@@ -1029,6 +1031,93 @@ typedef struct {
     /** numbers of bytes to copy or write. */
     size_t length;
 } sa_svp_offset;
+
+/** TA Key Type Definition */
+
+/*The operator provisioning key type will be communicated through the following enumeration:
+ */
+typedef enum  {
+  WIDEVINE_OEM_PROVISIONING,
+  PLAYREADY_MODEL_PROVISIONING,
+  APPLE_MFI_PROVISIONING,
+  APPLE_FAIRPLAY_PROVISIONING,
+  NETFLIX_PROVISIONING
+} sa_key_type_ta;
+
+/** PlayReady model types */
+
+typedef enum {
+  PLAYREADY_MODEL_2K,
+  PLAYREADY_MODEL_3K
+}PLAYREADY_MODEL_TYPE;
+
+/** Widevine OEM Provisioning Structure */
+
+/*The object provided as input to the sa_key_provision_ta API via the in parameter for the
+  WIDEVINE_OEM_PROVISIONING key type contains the following Widevine OEM Provisioning 3.0 model
+  properties.
+ */
+
+typedef struct {
+  unsigned int oemDevicePrivateKeyLength;
+  void * oemDevicePrivateKey;
+  unsigned int oemDeviceCertificateLength;
+  void * oemDeviceCertificate;
+} WidevineOemProvisioning;
+
+
+/** PlayReady Model Provisioning Structure */
+
+/*The object provided as input to the sa_ta_key_provision API via the in parameter for the
+  PLAYREADY_MODEL_PROVISIONING key type contains the following properties.
+ */
+
+typedef struct {
+  unsigned int modelType; // 2K or 3K
+  unsigned int privateKeyLength;
+  void * privateKey;
+  unsigned int modelCertificateLength;
+  void * modelCertificate;
+} PlayReadyProvisioning;
+
+/** Netflix Provisioning Structure */
+
+/*The object provided as input to the sa_ta_key_provision API via the in parameter for the
+  NETFLIX_PROVISIONING key type contains the following properties.
+ */
+
+typedef struct {
+  unsigned int hmacKeyLength;
+  void * hmacKey; //kdh
+  unsigned int wrappingKeyLength;
+  void * wrappingKey; //kdw
+  unsigned int esnContainerLength;
+  void * esnContainer; //ESN
+} NetflixProvisioning;
+
+/** Apple MFi Provisioning Structure */
+
+/*The object provided as input to the sa_key_provision_ta API via the in parameter for the
+  APPLE_MFI_PROVISIONING key type contains the following properties.
+ */
+
+typedef struct {
+  unsigned int mfiBaseKeyLength;
+  void * mfiBaseKey;
+  unsigned int mfiProvisioningObjectLength;
+  void * mfiProvisioningObject;
+} AppleMfiProvisioning;
+
+/** Apple FairPlay Provisioning Structure */
+
+/*The object provided as input to the sa_key_provision_ta API via the in parameter for the
+  APPLE_FAIRPLAY_PROVISIONING key type contains the following properties.
+ */
+
+typedef struct {
+  unsigned int fairPlaySecretLength;
+  void * fairPlaySecret;
+} AppleFairPlayProvisioning;
 
 #ifdef __cplusplus
 }

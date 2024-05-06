@@ -133,7 +133,7 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_NE(cipher, nullptr);
-
+        
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, in);
         ASSERT_NE(in_buffer, nullptr);
         size_t bytes_to_process = in.size();
