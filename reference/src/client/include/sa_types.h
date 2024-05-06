@@ -1049,7 +1049,7 @@ typedef enum  {
 typedef enum {
   PLAYREADY_MODEL_2K,
   PLAYREADY_MODEL_3K
-}PLAYREADY_MODEL_TYPE;
+} PLAYREADY_MODEL_TYPE;
 
 /** Widevine OEM Provisioning Structure */
 
