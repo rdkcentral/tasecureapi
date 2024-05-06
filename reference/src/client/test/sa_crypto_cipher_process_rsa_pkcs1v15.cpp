@@ -134,6 +134,9 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_NE(cipher, nullptr);
 
+        // Initializing PKCS#1 v1.5 input buffer with garbage padding.
+        std::fill(in.begin(), in.begin() + 4, 0xff);
+
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, in);
         ASSERT_NE(in_buffer, nullptr);
         size_t bytes_to_process = in.size();
