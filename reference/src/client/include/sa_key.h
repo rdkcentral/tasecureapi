@@ -104,9 +104,9 @@ sa_status sa_key_export(
  * #5.	The key will be loaded for use within the TA. If the key received by the TA is new or updated
         and the TA supports secure storage, it will store the key to TA Secure Storage.
  * #6.	This provisioning flow (Steps 2-5) will occur upon every device reboot/initialization. SOC
-    Vendor TA Key updates will only be written to TAs supporting secure store upon receiving a new
-    or updated key. The TA Key is not imported/stored in SecAPI3 when the sa_key_provision_ta() API
-    is used.
+        Vendor TA Key updates will only be written to TAs supporting secure store upon receiving a new
+        or updated key. The TA Key is not imported/stored in SecAPI3 when the sa_key_provision_ta() API
+        is used.
  *
  * @param[in] ta_key_type (enum) specifies the type of key being provisioned to the TA as defined in
    [TA Key Type Definition](#ta-key-type-definition).
