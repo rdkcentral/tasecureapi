@@ -109,7 +109,7 @@ sa_status sa_key_export(
     is used.
  *
  * @param[in] ta_key_type (enum) specifies the type of key being provisioned to the TA as defined in
-    [TA Key Type Definition](#ta-key-type-definition).
+   [TA Key Type Definition](#ta-key-type-definition).
  * @param[in] in (void pointer) pointer to the input key and credential data.
  * @param[in] in_length (integer) size of the data buffer pointed to by in bytes.
  * @param[in] parameters (pointer) format specific parameters for the protection key used by the key
