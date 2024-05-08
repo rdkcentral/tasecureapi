@@ -47,7 +47,7 @@
 /**
  * SecAPI specification minor version
  */
-#define SA_SPECIFICATION_MINOR 3
+#define SA_SPECIFICATION_MINOR 4
 
 /**
  * SecAPI specification revision
