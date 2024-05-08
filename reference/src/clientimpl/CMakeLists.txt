@@ -51,6 +51,7 @@ add_library(saclientimpl STATIC
         src/porting/sa_svp_memory_free.c
         src/porting/ta_client.c
         src/porting/ta_client.h
+        src/porting/sa_key_provision_impl.c
         src/sa_crypto_cipher_init.c
         src/sa_crypto_cipher_process.c
         src/sa_crypto_cipher_process_last.c
@@ -68,6 +69,7 @@ add_library(saclientimpl STATIC
         src/sa_get_ta_uuid.c
         src/sa_get_version.c
         src/sa_key_derive.c
+        src/sa_key_provision.c
         src/sa_key_digest.c
         src/sa_key_exchange.c
         src/sa_key_export.c

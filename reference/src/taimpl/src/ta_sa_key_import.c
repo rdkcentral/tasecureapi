@@ -354,6 +354,66 @@ static sa_status ta_sa_key_import_soc(
     return status;
 }
 
+static sa_status ta_sa_key_provision(
+        sa_key* key,
+        const void* in,
+        size_t in_length,
+        void* parameters,
+        client_t* client,
+        const sa_uuid* caller_uuid) {
+
+    if (key == NULL) {
+        ERROR("NULL key");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+    *key = INVALID_HANDLE;
+
+    if (in == NULL) {
+        ERROR("NULL in");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (in_length <= 0) {
+        ERROR("Invalid in_length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
+    if (client == NULL) {
+        ERROR("NULL client");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    if (caller_uuid == NULL) {
+        ERROR("NULL caller_uuid");
+        return SA_STATUS_NULL_PARAMETER;
+    }
+
+    sa_status status;
+    stored_key_t* stored_key = NULL;
+
+    do {
+        /*TODO SoC Vendor:here just provide an example to get an stored key,
+          it contains decrypted key which is stored_key->key,and other
+          attributes.
+        */
+        status = soc_kc_unwrap(&stored_key, in, in_length, parameters);
+        if (status != SA_STATUS_OK) {
+            ERROR("soc_kc_unwrap failed");
+            break;
+        }
+        key_store_t* key_store = client_get_key_store(client);
+        status = key_store_import_stored_key(key, key_store, stored_key, caller_uuid);
+        if (status != SA_STATUS_OK) {
+            ERROR("key_store_import_stored_key failed");
+            break;
+        }
+    } while (false);
+
+    stored_key_free(stored_key);
+
+    return status;
+}
+
 static sa_status ta_sa_key_import_typej(
         sa_key* key,
         const void* in,
@@ -484,8 +544,9 @@ sa_status ta_sa_key_import(
     }
 
     if (key_format != SA_KEY_FORMAT_SYMMETRIC_BYTES && key_format != SA_KEY_FORMAT_EC_PRIVATE_BYTES &&
-            key_format != SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO && key_format != SA_KEY_FORMAT_EXPORTED &&
-            key_format != SA_KEY_FORMAT_SOC && key_format != SA_KEY_FORMAT_TYPEJ) {
+        key_format != SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO && key_format != SA_KEY_FORMAT_EXPORTED &&
+        key_format != SA_KEY_FORMAT_SOC && key_format != SA_KEY_FORMAT_TYPEJ &&
+        key_format != SA_KEY_FORMAT_PROVISION_TA) {
         ERROR("Invalid format");
         return SA_STATUS_INVALID_PARAMETER;
     }
@@ -538,6 +599,12 @@ sa_status ta_sa_key_import(
             status = ta_sa_key_import_soc(key, in, in_length, parameters, client, caller_uuid);
             if (status != SA_STATUS_OK) {
                 ERROR("ta_sa_key_import_soc failed");
+                break;
+            }
+        } else if (key_format == SA_KEY_FORMAT_PROVISION_TA) {
+            status = ta_sa_key_provision(key, in, in_length, parameters, client, caller_uuid);
+            if (status != SA_STATUS_OK) {
+                ERROR("ta_sa_key_provision failed");
                 break;
             }
         } else { // format == SA_KEY_FORMAT_TYPEJ

@@ -25,6 +25,8 @@
 #include <memory>
 #include <vector>
 
+// Note: turn on this if you want to read data from files for key provision test
+// #define FILE_BASED_FETCH_KEY
 #define DATA_AND_KEY_MASK 0
 
 #define DATA_ONLY_MASK SA_USAGE_BIT_MASK(SA_USAGE_FLAG_UNWRAP)
@@ -193,9 +195,27 @@ protected:
             std::vector<uint8_t>& c1,
             std::vector<uint8_t>& c2,
             std::vector<uint8_t>& c3);
+
+     static sa_status create_key_container(
+            std::string& key_type_string,
+            const sa_key_type clear_key_type,
+            std::vector<uint8_t>& clear_key,
+            std::string &key_container,
+            const uint8_t secapi_version,
+            sa_import_parameters_soc *parameters);
+			
+	 static sa_status createParameters(
+	    sa_import_parameters_soc *parameters,
+            const uint8_t secapi_version);
 };
 
 class SaKeyImportSocTest : public ::testing::Test, public SaKeyImportSocBase {};
+class SaKeyProvisionNetflixTest : public ::testing::TestWithParam<SaKeyProvisionTestType>,
+       public SaKeyImportSocBase {};
+class SaKeyProvisionWidevineTest : public ::testing::TestWithParam<SaKeyProvisionTestType>,
+       public SaKeyImportSocBase {};
+class SaKeyProvisionPlayreadyTest : public ::testing::TestWithParam<SaKeyProvisionTestType>,
+       public SaKeyImportSocBase {};
 
 // clang-format off
 typedef std::tuple<std::tuple<std::string, size_t, sa_key_type>, std::tuple<uint8_t, uint8_t>, uint8_t,

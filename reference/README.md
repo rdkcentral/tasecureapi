@@ -158,6 +158,9 @@ This is a SecAPI unit test suite that uses the SecAPI public interfaces to test 
 of the implementation.  It links against saclient. Comcast is responsible for implementing these
 tests.
 
+To Run Key Provision File Based Tests, please refer to:
+[SecApiKeyProvisionTaTests.md](./test/SecApiKeyProvisionTaTests.md).
+
 #### saclientimpl
 
 This is a library that implements the SecAPI client interfaces. This library is implemented by the

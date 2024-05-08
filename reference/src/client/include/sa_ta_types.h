@@ -78,7 +78,8 @@ typedef enum {
     SA_SVP_BUFFER_COPY,
     SA_SVP_KEY_CHECK,
     SA_SVP_BUFFER_CHECK,
-    SA_PROCESS_COMMON_ENCRYPTION
+    SA_PROCESS_COMMON_ENCRYPTION,
+    SA_KEY_PROVISION_TA
 } SA_COMMAND_ID;
 
 /**
@@ -166,6 +167,18 @@ typedef struct {
     uint32_t key_format;
     uint32_t curve;
 } sa_key_import_s;
+
+// sa_key_provision_ta
+// param[0] INOUT - sa_key_provision_ta_s
+// param[1] IN - in + in_length
+// param[2] IN - sa_import_parameters_soc
+// param[3] IN - ta_key_type
+typedef struct {
+    uint8_t api_version;
+    sa_key key;
+    uint32_t key_format;
+    uint32_t curve;
+} sa_key_provision_ta_s;
 
 // sa_key_unwrap
 // param[0] INOUT - sa_key_unwrap_s
