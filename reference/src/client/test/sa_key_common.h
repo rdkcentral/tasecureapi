@@ -119,6 +119,7 @@ private:
 };
 
 typedef std::tuple<sa_key_type, size_t> SaKeyType;
+typedef std::tuple<size_t, std::string> SaKeyProvisionTestType;
 
 class SaKeyGetPublicTest : public ::testing::TestWithParam<SaKeyType>, public SaKeyBase {};
 

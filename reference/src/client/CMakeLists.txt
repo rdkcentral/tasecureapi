@@ -85,8 +85,8 @@ target_compile_options(saclient PRIVATE -Werror -Wall -Wextra -Wno-type-limits -
 
 set_target_properties(saclient PROPERTIES
         LINKER_LANGUAGE C
-        SO_VERSION 3.3
-        VERSION 3.3.0
+        SO_VERSION 3.4
+        VERSION 3.4.0
         )
 
 target_include_directories(saclient
@@ -221,6 +221,9 @@ if (BUILD_TESTS)
             test/sa_key_exchange_ecdh.cpp
             test/sa_key_exchange_netflix.cpp
             test/sa_key_export.cpp
+            test/sa_key_provision_widevine.cpp
+            test/sa_key_provision_playready.cpp
+            test/sa_key_provision_netflix.cpp
             test/sa_key_generate.cpp
             test/sa_key_generate_dh.cpp
             test/sa_key_generate_ec.cpp
