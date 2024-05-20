@@ -77,7 +77,7 @@ function should support key loading on a regular basis, e.g. code initialization
 device power cycle start from persistently stored materials in the REE domain. The persistent
 materials may be stored in a protected format in the file system of the device upon reception from
 the operator's key provisioning service. the operator's key provisioning materials may be loaded
-into the SoC vendor TA via a separate provisoning application not associated with the TA-specific
+into the SoC vendor TA via a separate provisioning application not associated with the TA-specific
 application.
 
 ### API Parameters
