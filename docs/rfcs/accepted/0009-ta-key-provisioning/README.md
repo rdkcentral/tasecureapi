@@ -72,7 +72,7 @@ structure that the TA is able to ingest and utilize.
 
 Keys and credentials may be securely stored within the TA. However, this storage mechanism is not
 required. In order to facilitate a wide variety of SoC vendor TA implementatons and to support key
-and credential updates from the operator's key provsioning service, the `sa_key_provision_ta`
+and credential updates from the operator's key provisioning service, the `sa_key_provision_ta`
 function should support key loading on a regular basis, e.g. code initialization, device restart,
 device power cycle start from persistently stored materials in the REE domain. The persistent
 materials may be stored in a protected format in the file system of the device upon reception from
