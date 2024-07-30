@@ -52,6 +52,9 @@ typedef struct {
     uint8_t c1[SYM_128_KEY_SIZE];
     uint8_t c2[SYM_128_KEY_SIZE];
     uint8_t c3[SYM_128_KEY_SIZE];
+#ifdef AES_CBC_ALGORITHM
+    uint8_t c4[SYM_128_KEY_SIZE];
+#endif // AES_CBC_ALGORITHM
 } key_ladder_inputs_t;
 
 /**

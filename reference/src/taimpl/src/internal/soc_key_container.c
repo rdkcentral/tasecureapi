@@ -48,7 +48,11 @@ typedef struct {
     size_t header_length;
     void* payload;
     size_t payload_length;
+#ifndef AES_CBC_ALGORITHM
     uint8_t mac[AES_BLOCK_SIZE];
+#else  //AES_CBC_ALGORITHM
+    uint8_t mac[AES_BLOCK_SIZE*2];
+#endif //AES_CBC_ALGORITHM
     size_t mac_length;
 } soc_kc_unpacked_t;
 
@@ -68,7 +72,11 @@ typedef struct {
     const char* key_type_string;
     size_t encrypted_key_length;
     char* encrypted_key;
+#ifndef AES_CBC_ALGORITHM
     uint8_t iv[GCM_IV_LENGTH];
+#else  //AES_CBC_ALGORITHM
+    uint8_t iv[AES_BLOCK_SIZE];
+#endif //AES_CBC_ALGORITHM
     uint8_t key_usage;
     uint8_t decrypted_key_usage;
     size_t entitled_ta_ids_length;
@@ -173,8 +181,13 @@ static soc_kc_unpacked_t* unpack_soc_kc(
         }
 
         unpacked->mac_length = b64_decoded_length(unpacked->mac_b64_length);
+#ifndef AES_CBC_ALGORITHM
         if (!b64_decode(unpacked->mac, &unpacked->mac_length, unpacked->mac_b64, unpacked->mac_b64_length, true) &&
                 unpacked->mac_length != AES_BLOCK_SIZE) {
+#else  //AES_CBC_ALGORITHM
+        if (!b64_decode(unpacked->mac, &unpacked->mac_length, unpacked->mac_b64, unpacked->mac_b64_length, true) &&
+                unpacked->mac_length != (AES_BLOCK_SIZE * 2)) {
+#endif //AES_CBC_ALGORITHM
             ERROR("b64_decode failed");
             break;
         }
@@ -390,7 +403,11 @@ static sa_status parse_payload(
     size_t b64_iv_length;
     const char* iv = json_value_as_string(&b64_iv_length, iv_field->value);
     size_t iv_length = b64_decoded_length(b64_iv_length);
+#ifndef AES_CBC_ALGORITHM
     if (!b64_decode(payload->iv, &iv_length, iv, b64_iv_length, false) && iv_length != GCM_IV_LENGTH) {
+#else  //AES_CBC_ALGORITHM
+    if (!b64_decode(payload->iv, &iv_length, iv, b64_iv_length, false) && iv_length != AES_BLOCK_SIZE) {
+#endif //AES_CBC_ALGORITHM
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
@@ -404,6 +421,7 @@ static sa_status parse_payload(
 
     payload->key_usage = json_value_as_integer(key_usage_field->value);
 
+#ifndef AES_CBC_ALGORITHM
     if (payload->key_usage == KEY_ONLY) {
         // read decrypted key usage
         const json_key_value_t* decrypted_key_usage_field = json_key_value_find("decryptedKeyUsage", fields,
@@ -417,6 +435,11 @@ static sa_status parse_payload(
     } else {
         payload->decrypted_key_usage = 0;
     }
+#else //AES_CBC_ALGORITHM
+    if (payload->key_usage == KEY_ONLY) {
+        payload->decrypted_key_usage = 0;
+    }
+#endif //AES_CBC_ALGORITHM
 
     // read entitled TA IDs
     json_value_t** entitled_ta_ids = NULL;
@@ -488,9 +511,28 @@ static sa_status parse_payload(
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
+#ifdef AES_CBC_ALGORITHM
+    // read c4
+    const json_key_value_t* c4_field = json_key_value_find("c4", fields, fields_count);
+    if (c4_field == NULL) {
+        ERROR("Missing c4");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
+    size_t b64_c4_length;
+    const char* c4 = json_value_as_string(&b64_c4_length, c4_field->value);
+    size_t c4_length = b64_decoded_length(b64_c4_length);
+    if (!b64_decode(payload->key_ladder_inputs.c4, &c4_length, c4, b64_c4_length, false) &&
+        c4_length != AES_BLOCK_SIZE) {
+        ERROR("b64_decode failed");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+#endif //AES_CBC_ALGORITHM
+
     return SA_STATUS_OK;
 }
 
+#ifndef AES_CBC_ALGORITHM
 static size_t build_aad(
         uint8_t* aad,
         soc_kc_header_t* header,
@@ -611,6 +653,7 @@ static size_t build_aad(
 
     return length;
 }
+#endif //AES_CBC_ALGORITHM
 
 static bool get_key_type_and_size(
         const char* key_type_string,
@@ -764,12 +807,14 @@ static sa_status decrypt_key_and_verify_mac(
         return SA_STATUS_NULL_PARAMETER;
     }
 
+#ifndef AES_CBC_ALGORITHM
     uint8_t aad[MAX_AAD_SIZE];
     size_t aad_length = build_aad(aad, header, payload);
     if (aad_length == 0) {
         ERROR("build_aad failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
+#endif //AES_CBC_ALGORITHM
 
     sa_key_type key_type;
     size_t key_size;
@@ -791,6 +836,7 @@ static sa_status decrypt_key_and_verify_mac(
             break;
         }
 
+#ifndef AES_CBC_ALGORITHM
         status = otp_unwrap_aes_gcm(key, &payload->key_ladder_inputs,
                 payload->root_key_type == UNDEFINED ? UNIQUE : payload->root_key_type, payload->encrypted_key,
                 payload->encrypted_key_length, payload->iv, GCM_IV_LENGTH, aad, aad_length, unpacked->mac,
@@ -799,6 +845,14 @@ static sa_status decrypt_key_and_verify_mac(
             ERROR("otp_unwrap_aes_gcm failed");
             break;
         }
+#else //AES_CBC_ALGORITHM
+        status = otp_unwrap_aes_cbc(key, &payload->key_ladder_inputs,
+                 payload->encrypted_key, payload->encrypted_key_length, payload->iv);
+        if (status != SA_STATUS_OK) {
+            ERROR("otp_unwrap_aes_cbc failed");
+            break;
+        }
+#endif //AES_CBC_ALGORITHM
 
         sa_rights rights;
         status = fields_to_rights(&rights, key_type, subtype, payload, parameters);
