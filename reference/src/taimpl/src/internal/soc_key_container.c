@@ -48,7 +48,7 @@ typedef struct {
     size_t header_length;
     void* payload;
     size_t payload_length;
-    uint8_t mac[AES_BLOCK_SIZE];
+    uint8_t *mac;
     size_t mac_length;
 } soc_kc_unpacked_t;
 
@@ -92,6 +92,7 @@ static void soc_kc_unpacked_free(soc_kc_unpacked_t* unpacked) {
         return;
     }
 
+    memory_internal_free(unpacked->mac);
     memory_internal_free(unpacked->header);
     memory_internal_free(unpacked->payload);
     memory_internal_free(unpacked);
@@ -173,8 +174,13 @@ static soc_kc_unpacked_t* unpack_soc_kc(
         }
 
         unpacked->mac_length = b64_decoded_length(unpacked->mac_b64_length);
-        if (!b64_decode(unpacked->mac, &unpacked->mac_length, unpacked->mac_b64, unpacked->mac_b64_length, true) &&
-                unpacked->mac_length != AES_BLOCK_SIZE) {
+        unpacked->mac = memory_internal_alloc(unpacked->mac_length);
+        if (unpacked->mac == NULL) {
+            ERROR("memory_internal_alloc failed");
+            break;
+        }
+        memory_memset_unoptimizable(unpacked->mac, 0, unpacked->mac_length);
+        if (!b64_decode(unpacked->mac, &unpacked->mac_length, unpacked->mac_b64, unpacked->mac_b64_length, true)) {
             ERROR("b64_decode failed");
             break;
         }
@@ -409,11 +415,11 @@ static sa_status parse_payload(
         const json_key_value_t* decrypted_key_usage_field = json_key_value_find("decryptedKeyUsage", fields,
                 fields_count);
         if (decrypted_key_usage_field == NULL) {
-            ERROR("json_key_value_find failed");
-            return SA_STATUS_INVALID_KEY_FORMAT;
+            // For sake of compatibility,sometimes there is no field of decrypted_key_usage.
+            payload->decrypted_key_usage = 0;
+        } else {
+            payload->decrypted_key_usage = json_value_as_integer(decrypted_key_usage_field->value);
         }
-
-        payload->decrypted_key_usage = json_value_as_integer(decrypted_key_usage_field->value);
     } else {
         payload->decrypted_key_usage = 0;
     }
@@ -871,7 +877,7 @@ sa_status soc_kc_unwrap(
         void* parameters) {
 
     if (stored_key == NULL) {
-        ERROR("NULL out");
+        ERROR("NULL stored key");
         return SA_STATUS_NULL_PARAMETER;
     }
 
