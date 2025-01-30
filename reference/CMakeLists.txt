@@ -33,7 +33,13 @@ if(BUILD_TESTS)
     )
     FetchContent_MakeAvailable(googletest)
 
-    enable_testing()
+    # The following line is a hack to avoid adding a bunch of CTest targets to
+    # the build. By setting this internal property used by the CTest module and
+    # its dependencies, it skips the generation of the extra targets. This
+    # property could change in the future.
+    # - https://stackoverflow.com/a/57240389
+    set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
+    include(CTest)
     include(GoogleTest)
 endif()
 
