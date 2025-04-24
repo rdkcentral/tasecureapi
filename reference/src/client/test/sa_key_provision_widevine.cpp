@@ -360,7 +360,7 @@ static WidevineOemProvisioning* createWidevineBlob(FILE *file_private_key,
    INFO("private_key_size: %d", private_key_size);
 
    size_t oem_cert_size = 0;
-   void *oem_cert = readBlob(file_private_key, &oem_cert_size);
+   void *oem_cert = readBlob(file_oem_cert, &oem_cert_size);
    if (NULL == oem_cert) {
       ERROR("this file :%s has problem", widevine_oem_cert);
       return NULL;
