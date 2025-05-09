@@ -27,8 +27,8 @@ using namespace client_test_helpers;
 #define CERTIFICATE_LENGTH 4096
 
 #ifdef FILE_BASED_FETCH_KEY
-#define playready_privatekey "/keys/playready_private_key.key"
-#define playready_cert       "/keys/playready_cert.bin"
+#define playready_privatekey "/keys/fake_playready_private_key.key"
+#define playready_cert       "/keys/fake_playready_cert.bin"
 static PlayReadyProvisioning* createPlayreadyBlob(FILE *file_private_key,
    FILE *file_oem_cert);
 static bool readPlayreadyData(PlayReadyProvisioning **prProvision);
@@ -266,12 +266,12 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 #ifdef FILE_BASED_FETCH_KEY
-   // There are two file playready_private_key.key and playready_cert.bin under
+   // There are two file fake_playready_private_key.key and fake_playready_cert.bin under
    // tasecureapi/reference/test/,
    // these files are playready private key and certification. you can do
    // "export  playready_privatekey=
-   // ~/PATH/tasecureapi/reference/test/playready_private_key.key",
-   // "export  playready_cert=~/PATH/tasecureapi/reference/test/playready_cert.bin",
+   // ~/PATH/tasecureapi/reference/test/fake_playready_private_key.key",
+   // "export  playready_cert=~/PATH/tasecureapi/reference/test/fake_playready_cert.bin",
    // the following test fromFileBased will pick up them and test
    // Or
    // you just simply put these two files under /keys.
@@ -321,7 +321,7 @@ static void* readBlob(FILE *fp, size_t *key_size) {
       return NULL;
    }
    *key_size = ftell(fp);
-   void *key = calloc(*key_size, 1);
+   void *key = calloc(1, *key_size);
    if (NULL == key) {
        ERROR("calloc failed");
        return NULL;
@@ -366,7 +366,7 @@ static PlayReadyProvisioning* createPlayreadyBlob(FILE *file_private_key,
    INFO("oem_cert_size: %d",oem_cert_size);
 
    PlayReadyProvisioning *prProvision =
-       (PlayReadyProvisioning*)calloc(sizeof(PlayReadyProvisioning), 1);
+       (PlayReadyProvisioning*)calloc(1, sizeof(PlayReadyProvisioning));
    if (NULL == prProvision) {
       ERROR("calloc failed");
       return NULL;
