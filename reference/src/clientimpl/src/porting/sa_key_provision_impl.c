@@ -58,11 +58,13 @@ sa_status sa_key_provision_preprocessing(
          break;
 
       case NETFLIX_PROVISIONING:
-         if (NULL == ((NetflixProvisioning*)in)->hmacKey         ||
-             0 == ((NetflixProvisioning*)in)->hmacKeyLength      ||
-             NULL == ((NetflixProvisioning*)in)->wrappingKey     ||
-             0 == ((NetflixProvisioning*)in)->wrappingKeyLength  ||
-             NULL == ((NetflixProvisioning*)in)->esnContainer    ||
+         if (NULL == ((NetflixProvisioning*)in)->encryptionKey    ||
+             0 == ((NetflixProvisioning*)in)->encryptionKeyLength ||
+             NULL == ((NetflixProvisioning*)in)->hmacKey          ||
+             0 == ((NetflixProvisioning*)in)->hmacKeyLength       ||
+             NULL == ((NetflixProvisioning*)in)->wrappingKey      ||
+             0 == ((NetflixProvisioning*)in)->wrappingKeyLength   ||
+             NULL == ((NetflixProvisioning*)in)->esnContainer     ||
              0 == ((NetflixProvisioning*)in)->esnContainerLength) {
              ERROR("null input or input size is  0");
              return SA_STATUS_NULL_PARAMETER;
