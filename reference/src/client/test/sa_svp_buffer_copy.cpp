@@ -37,7 +37,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
         long chunk_size = offset_length > 1 ? (1024 / (2 * offset_length)) : 1024; // NOLINT
         std::vector<uint8_t> digest_vector;
-        sa_svp_offset offsets[offset_length];
+        std::vector<sa_svp_offset> offsets(offset_length);
         for (long i = 0; i < offset_length; i++) { // NOLINT
             offsets[i].out_offset = i * chunk_size;
             offsets[i].in_offset = i * 2 * chunk_size;
@@ -46,7 +46,7 @@ namespace {
                     std::back_inserter(digest_vector));
         }
 
-        status = sa_svp_buffer_copy(*out_buffer, *in_buffer, offsets, offset_length);
+        status = sa_svp_buffer_copy(*out_buffer, *in_buffer, offsets.data(), offset_length);
         ASSERT_EQ(status, SA_STATUS_OK);
 
         // Copy verified in taimpltest.
