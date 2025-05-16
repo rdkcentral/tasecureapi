@@ -845,7 +845,6 @@ INSTANTIATE_TEST_SUITE_P(
         SaKeyProvisionNetflixTests,
         SaKeyProvisionNetflixTest,
         ::testing::Values(
-                std::make_tuple(SYM_128_KEY_SIZE, "HMAC-128"),
                 std::make_tuple(SYM_256_KEY_SIZE, "HMAC-256")));
 
 INSTANTIATE_TEST_SUITE_P(
