@@ -38,7 +38,7 @@ typedef pthread_cond_t cnd_t;
 typedef pthread_key_t tss_t;
 typedef pthread_once_t once_flag;
 
-typedef int (*thrd_start_t)(void*);
+typedef void *(*thrd_start_t)(void*);
 typedef void (*tss_dtor_t)(void*);
 
 enum {
@@ -60,7 +60,7 @@ enum {
 
 static inline int thrd_create(thrd_t *thr, thrd_start_t func, void *arg)
 {
-	int res = pthread_create(thr, 0, (void*(*)(void*))func, arg);
+	int res = pthread_create(thr, 0, func, arg);
 	if(res == 0) {
 		return thrd_success;
 	}

@@ -28,7 +28,7 @@ The creation of this new SecAPI key provisioning API:
   to be used in systems which utilize SecAPI for in-field key provisioning keys. This eliminates the
   requirement for existing SoC vendor-based TAs to be rewritten to use SecAPI functions to wield
   key(s).
-+ Eliminates the need for independent third-party verification and security audits on SOC vendor
++ Eliminates the need for independent third-party verification and security audits on SoC vendor
   based DRM TAs since there are no changes to the DRM TA implementation.
 + Maintains key privacy and protection by keeping all access and usage of the unencrypted key value
   within the TEE domain, preventing exposure to the REE space.
@@ -66,19 +66,22 @@ sa_status sa_key_provision_ta (
 
 ### Description
 
-This function, implemented by SoC vendors, will handle the unwrapping of keys and credentials
-protected via the the operator's key provisioning service and convert the materials into a format or
-structure that the TA is able to ingest and utilize.
+This function, implemented by SoC vendors, will handle the unwrapping of keys protected via the
+operator's key provisioning service and convert the materials into a format or structure that the
+target TA is able to ingest and utilize. Keys or credentials protected via third-party TA vendor-
+specific mechanisms may be delivered by the provisioning service in their native protected format.
+Credentials not requiring protection, e.g X509 certificates, may be delivered by the
+provisioning service unencrypted.
 
 Keys and credentials may be securely stored within the TA. However, this storage mechanism is not
-required. In order to facilitate a wide variety of SoC vendor TA implementatons and to support key
+required. In order to facilitate a wide variety of SoC vendor TA implementations and to support key
 and credential updates from the operator's key provisioning service, the `sa_key_provision_ta`
-function should support key loading on a regular basis, e.g. code initialization, device restart,
-device power cycle start from persistently stored materials in the REE domain. The persistent
-materials may be stored in a protected format in the file system of the device upon reception from
-the operator's key provisioning service. the operator's key provisioning materials may be loaded
-into the SoC vendor TA via a separate provisioning application not associated with the TA-specific
-application.
+function should support key loading on a regular, periodic basis, e.g. code initialization, device
+restart, device power cycle start from persistently stored materials in the REE domain. The
+persistent materials may be stored in a protected format in the file system of the device upon
+reception from the operator's key provisioning service. The operator's key provisioning materials
+may be loaded into the SoC vendor TA via a separate provisioning application not associated with the
+TA-specific application.
 
 ### API Parameters
 
@@ -88,7 +91,7 @@ application.
 + `in_length` (integer) size of the data buffer pointed to by `in` in bytes.
 + `parameters` (pointer) format specific parameters for the protection key used by the key
   provisioning service. Keys delivered via the operator's key provisioning service are typically
-  of key format type SA_KEY_FORMAT_SOC which correspond to the import parameters for a SOC key
+  of key format type SA_KEY_FORMAT_SOC which correspond to the import parameters for a SoC key
   container as specified via the structure `sa_import_parameters_soc`. Since the TA key will
   be provisioned and wielded by the TA rather than the SecAPI, the value of `object_id` is ignored.
 
@@ -168,6 +171,8 @@ The object provided as input to the `sa_key_provision_ta` API via the `in` param
 
 ```c
 struct {
+  unsigned int encryptionKeyLength;
+  void * encryptionKey;            // Kde
   unsigned int hmacKeyLength;
   void * hmacKey;                  // Kdh
   unsigned int wrappingKeyLength;
@@ -179,18 +184,23 @@ struct {
 
 ### Provisioning Flow
 
-![SOC Vendor TA Key Provisioning](./KeyProvisioningSocVendorTas.png)
+![SoC Vendor TA Key Provisioning](./KeyProvisioningSocVendorTas.png)
 
-1.	Field provisioning service delivers the encrypted TA Key to the device.
-2.	The TA Key is imported and provisioned to SecAPI3 using new API: `sa_key_provision_ta`.
-3.	SecAPI3 TA decrypts TA Key and converts key to SOC vendor TA Key format.
-4.	SecAPI3 TA calls the SOC vendor-specific API to deliver the key to the TA.
-5.	The key will be loaded for use within the TA. If the key received by the TA is new or updated
-    and the TA supports secure storage, it will store the key to TA Secure Storage.
-6.	This provisioning flow (Steps 2-5) will occur upon every device reboot/initialization. SOC
-    Vendor TA Key updates will only be written to TAs supporting secure store upon receiving a new
-    or updated key. The TA Key is not imported/stored in SecAPI3 when the sa_key_provision_ta() API
-    is used.
+1.	Field provisioning service delivers the encrypted TA Key(s) and/or credentials to the device.
+2.	For each TA being provisioned, a set of TA Key(s) and credentials are imported to SecAPI3 using
+    the `sa_key_provision_ta` API. The provisioning structures defined in the
+    [TA Key Type Definition](#ta-key-type-definition) section are used to convey the provisioning
+    data to SecAPI3.
+3.	SecAPI3 TA decrypts each TA Key and converts the key to SoC vendor TA Key format.
+4.	SecAPI3 TA calls SoC vendor-specific APIs to deliver the key(s) and any supporting credentials
+    to the TA.
+5.	Keys and credentials will be loaded for use within the TA. If the keys/credentials received by
+    the TA are new or updated and the TA supports secure storage, it will store the keys/credentials
+    to TA Secure Storage.
+6.	This provisioning flow (Steps 2-5) will occur upon every device reboot/initialization. SoC
+    Vendor TA key and credential updates will only be written to TAs supporting secure store upon
+    receiving a new or updated key/credential. The TA Key should not be imported/stored in SecAPI3
+    when the `sa_key_provision_ta` API is used.
 
 ### Error Status
 
