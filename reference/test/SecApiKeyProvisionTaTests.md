@@ -7,6 +7,10 @@ This function retrieves the key provision data from the specified location (eith
 environment variables or from the `/keys` directory). It then uses this data to run the specific
 tests designed for key provision files.
 
+> **Note:** All DRM keys, data, and file paths mentioned in this document are **fake**.
+> They are intended for testing and demonstration purposes only.
+> Do not use these keys or paths in a production environment.
+
 This document explains how to run tests that rely on key provision files. There are two approaches:
 
 ## Using System Variables:
@@ -20,18 +24,19 @@ Enable Flag in `sa_key_import_common.h`:
 based on the environment variables.
 
 Examples on how to set environment variables :
-- Netflix HMAC, wrapping key and ESN number
-  - ``` export  netflix_hmac_key=~/PATH/tasecureapi/reference/test/netflix_hmac_key.key ```
-  - ``` export  netflix_wrapping_key=~/PATH/tasecureapi/reference/test/netflix_wrapping_key.key ```
-  - ``` export  netflix_esn=~/PATH/tasecureapi/reference/test/netflix_esn.bin ```
+- Netflix Encryption key, HMAC, wrapping key and ESN number
+  - ``` export  netflix_encryption_key=~/PATH/tasecureapi/reference/test/fake_netflix_encryption_key.key ```
+  - ``` export  netflix_hmac_key=~/PATH/tasecureapi/reference/test/fake_netflix_hmac_key.key ```
+  - ``` export  netflix_wrapping_key=~/PATH/tasecureapi/reference/test/fake_netflix_wrapping_key.key ```
+  - ``` export  netflix_esn=~/PATH/tasecureapi/reference/test/fake_netflix_esn.bin ```
 
 - PlayReady private key and certificate
-  - ``` export  playready_privatekey=~/PATH/tasecureapi/reference/test/playready_private_key.key ```
-  - ``` export  playready_cert=~/PATH/tasecureapi/reference/test/playready_cert.bin ```
+  - ``` export  playready_privatekey=~/PATH/tasecureapi/reference/test/fake_playready_private_key.key ```
+  - ``` export  playready_cert=~/PATH/tasecureapi/reference/test/fake_playready_cert.bin ```
 
 - Widevine OEM private key and certificate:
-  - ``` export  widevine_oem_privatekey=~/PATH/tasecureapi/reference/test/widevine_oem_private.key ```
-  - ``` export  widevine_oem_cert=~/PATH/tasecureapi/reference/test/widevine_oem_cert.bin ```
+  - ``` export  widevine_oem_privatekey=~/PATH/tasecureapi/reference/test/fake_widevine_oem_private.key ```
+  - ``` export  widevine_oem_cert=~/PATH/tasecureapi/reference/test/fake_widevine_oem_cert.bin ```
 
 ## Placing Files in `/keys` Directory:
 
