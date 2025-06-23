@@ -27,8 +27,8 @@ using namespace client_test_helpers;
 #define CERTIFICATE_LENGTH 4096
 
 #ifdef FILE_BASED_FETCH_KEY
-#define widevine_oem_privatekey "/keys/widevine_oem_private.key"
-#define widevine_oem_cert       "/keys/widevine_oem_cert.bin"
+#define widevine_oem_privatekey "/keys/fake_widevine_oem_private.key"
+#define widevine_oem_cert       "/keys/fake_widevine_oem_cert.bin"
 static WidevineOemProvisioning* createWidevineBlob(FILE *file_private_key,
    FILE *file_oem_cert);
 static bool readWidevineData(WidevineOemProvisioning **wvProvision);
@@ -268,12 +268,12 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 #ifdef FILE_BASED_FETCH_KEY
-    // There are two file widevine_oem_private.key and widevine_oem_cert.bin under
+    // There are two file fake_widevine_oem_private.key and fake_widevine_oem_cert.bin under
     // tasecureapi/reference/test/,
     // these files are widevine oem private key and certification. you can do
     // "export  widevine_oem_privatekey=
-    // ~/PATH/tasecureapi/reference/test/widevine_oem_private.key",
-    // "export  widevine_oem_cert=~/PATH/tasecureapi/reference/test/widevine_oem_cert.bin",
+    // ~/PATH/tasecureapi/reference/test/fake_widevine_oem_private.key",
+    // "export  widevine_oem_cert=~/PATH/tasecureapi/reference/test/fake_widevine_oem_cert.bin",
     // the following test fromFileBased will pick up them and test
     // Or
     // you just simply put these two files under /keys.
@@ -323,7 +323,7 @@ static void* readBlob(FILE *fp, size_t *key_size) {
       return NULL;
    }
    *key_size = ftell(fp);
-   void *key = calloc(*key_size, 1);
+   void *key = calloc(1, *key_size);
    if (NULL == key) {
        ERROR("calloc failed");
        return NULL;
@@ -368,7 +368,7 @@ static WidevineOemProvisioning* createWidevineBlob(FILE *file_private_key,
    INFO("oem_cert_size: %d", oem_cert_size);
 
    WidevineOemProvisioning *wvProvision =
-       (WidevineOemProvisioning*)calloc(sizeof(WidevineOemProvisioning), 1);
+       (WidevineOemProvisioning*)calloc(1, sizeof(WidevineOemProvisioning));
    if (NULL == wvProvision) {
       ERROR("calloc failed");
       return NULL;

@@ -1087,6 +1087,8 @@ typedef struct {
  */
 
 typedef struct {
+  unsigned int encryptionKeyLength;
+  void * encryptionKey; // kde
   unsigned int hmacKeyLength;
   void * hmacKey; //kdh
   unsigned int wrappingKeyLength;
