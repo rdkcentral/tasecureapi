@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 
 using namespace client_test_helpers;
 
+#ifdef ENABLE_SVP
 sa_status SaProcessCommonEncryptionBase::svp_buffer_write(
         sa_svp_buffer out,
         const void* in,
@@ -32,6 +33,7 @@ sa_status SaProcessCommonEncryptionBase::svp_buffer_write(
     sa_svp_offset offsets = {0, 0, in_length};
     return sa_svp_buffer_write(out, in, in_length, &offsets, 1);
 }
+#endif // ENABLE_SVP 
 
 void SaProcessCommonEncryptionTest::SetUp() {
     if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED) {
@@ -42,6 +44,7 @@ void SaProcessCommonEncryptionTest::SetUp() {
             GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
     }
 }
+
 
 TEST_P(SaProcessCommonEncryptionTest, nominal) {
     auto sample_size_and_time = std::get<0>(GetParam());
@@ -467,6 +470,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullOutBuffer) {
     ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
 }
 
+#ifdef ENABLE_SVP
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutSvpBuffer) {
     if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
         GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
@@ -506,6 +510,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutSvpBuffer) {
     sa_status const status = sa_process_common_encryption(1, &sample);
     ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
+#endif // ENABLE_SVP
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullIn) {
     cipher_parameters parameters;
@@ -576,6 +581,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullInBuffer) {
     ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
 }
 
+#ifdef ENABLE_SVP
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullInSvpBuffer) {
     if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
         GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
@@ -613,6 +619,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullInSvpBuffer) {
     sa_status const status = sa_process_common_encryption(1, &sample);
     ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
+#endif
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidSkipByteBlock) {
     cipher_parameters parameters;
@@ -824,6 +831,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipherAlgorithm) {
     ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
+#ifdef ENABLE_SVP
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidBufferTypeCombo) {
     if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
         GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
@@ -911,7 +919,7 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTypeDisallowed) {
     status = sa_process_common_encryption(1, &sample);
     ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
 }
-
+#endif // ENABLE_SVP
 TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTooShort) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;

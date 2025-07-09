@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 
 using namespace client_test_helpers;
 
+#ifdef ENABLE_SVP
 namespace {
     TEST_P(SaSvpBufferWriteTest, nominal) {
         auto offset_length = std::get<0>(GetParam());
@@ -97,3 +98,4 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 } // namespace
+#endif //ENABLE_SVP

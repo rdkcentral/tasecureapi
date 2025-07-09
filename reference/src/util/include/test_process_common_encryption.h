@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,11 +46,13 @@ protected:
             sample_data& sample_data,
             std::vector<sa_sample>& samples);
 
+#ifdef ENABLE_SVP
     virtual sa_status svp_buffer_write(
             sa_svp_buffer out,
             const void* in,
             size_t in_length) = 0;
 
+#endif
     ~ProcessCommonEncryptionBase() = default;
 
 private:
