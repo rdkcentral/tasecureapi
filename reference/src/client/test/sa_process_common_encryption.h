@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,10 +32,13 @@ typedef std::tuple<std::tuple<size_t, int64_t>, size_t, size_t, size_t, sa_ciphe
 
 class SaProcessCommonEncryptionBase : public ProcessCommonEncryptionBase {
 protected:
+
+#ifdef ENABLE_SVP
     sa_status svp_buffer_write(
         sa_svp_buffer out,
         const void* in,
         size_t in_length) override;
+#endif // ENABLE_SVP
 
     ~SaProcessCommonEncryptionBase() = default;
 };
