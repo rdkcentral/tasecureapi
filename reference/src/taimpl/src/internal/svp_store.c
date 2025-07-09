@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,24 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
 #include "svp_store.h" // NOLINT
 #include "log.h"
 #include "porting/memory.h"
 #include "porting/svp.h"
 #include <threads.h>
 
+sa_status svp_supported() {
+#ifdef ENABLE_SVP
+    return SA_STATUS_OK;
+#else
+    return SA_STATUS_OPERATION_NOT_SUPPORTED;
+#endif // ENABLE_SVP 
+}
+#ifdef ENABLE_SVP
 struct svp_s {
     svp_buffer_t* buffer;
     mtx_t mutex;
 };
-
 static void svp_free(void* object) {
     if (object == NULL) {
         return;
@@ -131,9 +137,6 @@ void svp_store_shutdown(svp_store_t* store) {
     object_store_shutdown(store);
 }
 
-sa_status svp_supported() {
-    return SA_STATUS_OK;
-}
 
 sa_status svp_store_create(
         sa_svp_buffer* svp_buffer,
@@ -329,3 +332,4 @@ sa_status svp_store_release_exclusive(
 
     return SA_STATUS_OK;
 }
+#endif // ENABLE_SVP

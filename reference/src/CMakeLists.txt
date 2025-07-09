@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2023 Comcast Cable Communications Management, LLC
+# Copyright 2020-2025 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,6 +44,10 @@ if (DEFINED DISABLE_CENC_TIMING)
     set(CMAKE_C_FLAGS "-DDISABLE_CENC_TIMING ${CMAKE_C_FLAGS}")
 endif ()
 
+if (ENABLE_SVP)
+    set(CMAKE_CXX_FLAGS "-DENABLE_SVP ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "-DENABLE_SVP ${CMAKE_C_FLAGS}")
+endif ()
 add_subdirectory(client)
 add_subdirectory(clientimpl)
 add_subdirectory(taimpl)

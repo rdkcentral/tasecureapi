@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -175,8 +175,10 @@ namespace {
         ASSERT_NE(out_buffer, nullptr);
         if (buffer_type == SA_BUFFER_TYPE_CLEAR)
             out_buffer->context.clear.offset = SIZE_MAX - 4;
-        else
+#ifdef ENABLE_SVP
+        else if (buffer_type == SA_BUFFER_TYPE_SVP)
             out_buffer->context.svp.offset = SIZE_MAX - 4;
+#endif // ENABLE_SVP
 
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
@@ -210,8 +212,10 @@ namespace {
         ASSERT_NE(out_buffer, nullptr);
         if (buffer_type == SA_BUFFER_TYPE_CLEAR)
             in_buffer->context.clear.offset = SIZE_MAX - 4;
-        else
+#ifdef ENABLE_SVP
+        else if (buffer_type == SA_BUFFER_TYPE_SVP)
             in_buffer->context.svp.offset = SIZE_MAX - 4;
+#endif // ENABLE_SVP
 
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
