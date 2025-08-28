@@ -106,7 +106,7 @@ sa_status ta_sa_key_export(
         const sa_uuid* caller_uuid);
 
 /**
- * Provision a provisioning object,it receives a provisioning object from REE then pass down to TEE
+ * Provision a provisioning object. Function receives a provisioning object from REE then passed down to TEE
  * for further process.
  *
  * @param[in] in ta_key_type, a type of sa_key_type_ta
