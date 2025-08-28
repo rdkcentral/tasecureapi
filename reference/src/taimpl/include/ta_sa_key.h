@@ -107,7 +107,7 @@ sa_status ta_sa_key_export(
 
 /**
  * Provision a provisioning object. Function receives a provisioning object from REE then passed down to TEE
- * for further process.
+ * for further processing.
  *
  * @param[in] in ta_key_type, a type of sa_key_type_ta
  * @param[in] in input data, it contains a whole provisioning object.

@@ -255,8 +255,7 @@ sa_status ta_sa_key_provision(
     ta_client client_slot,
     const sa_uuid* caller_uuid) {
 
-    if (in == NULL ||
-	in_length == 0) {
+    if (in == NULL || in_length == 0) {
         ERROR("NULL in");
         return SA_STATUS_NULL_PARAMETER;
     }
