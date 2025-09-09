@@ -163,6 +163,7 @@ add_library(taimpl STATIC
         src/ta_sa_key_get_public.c
         src/ta_sa_key_header.c
         src/ta_sa_key_import.c
+        src/ta_sa_key_provision.c
         src/ta_sa_key_release.c
         src/ta_sa_key_unwrap.c
         src/ta_sa_process_common_encryption.c
