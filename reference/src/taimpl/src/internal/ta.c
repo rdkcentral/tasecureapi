@@ -1871,6 +1871,13 @@ sa_status ta_invoke_command_handler(
             break;
         }
 
+        // Verify params[0] is a valid memref input before copying the buffer.
+        if (CHECK_NOT_TA_PARAM_IN(param_types[0]) && CHECK_NOT_TA_PARAM_INOUT(param_types[0])) {
+            ERROR("Invalid param[0] type");
+            status = SA_STATUS_INVALID_PARAMETER;
+            break;
+        }
+
         // Cache the command parameter to prevent Time-of-use Time-of-check errors.
         command_parameter = memory_secure_alloc(params[0].mem_ref_size);
         if (command_parameter == NULL) {
