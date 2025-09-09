@@ -379,7 +379,8 @@ static sa_status ta_invoke_key_provision(
         const ta_session_context* context,
         const sa_uuid* uuid) {
 
-    if (CHECK_NOT_TA_PARAM_INOUT(param_types[0]) || params[0].mem_ref_size != sizeof(sa_key_provision_ta_s) ||
+    if (CHECK_NOT_TA_PARAM_INOUT(param_types[0]) ||
+        params[0].mem_ref_size != sizeof(sa_key_provision_ta_s) ||
         CHECK_NOT_TA_PARAM_IN(param_types[1]) ||
         (CHECK_NOT_TA_PARAM_IN(param_types[2]) && CHECK_NOT_TA_PARAM_NULL(param_types[2], params[2])) ||
         (CHECK_NOT_TA_PARAM_IN(param_types[3]) && CHECK_NOT_TA_PARAM_NULL(param_types[3], params[3]))) {
@@ -397,6 +398,11 @@ static sa_status ta_invoke_key_provision(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
+    if (key_provision_ta->key_format != SA_KEY_FORMAT_PROVISION_TA) {
+        ERROR("Invalid key format");
+        return SA_STATUS_INVALID_PARAMETER;
+    }
+
     sa_import_parameters_soc parameters_soc;
     void* parameters = NULL;
     if (CHECK_TA_PARAM_IN(param_types[2])) {
@@ -408,140 +414,29 @@ static sa_status ta_invoke_key_provision(
          memcpy(&parameters_soc, params[2].mem_ref, params[2].mem_ref_size);
          parameters = &parameters_soc;
      }
-    
-     sa_key_type_ta ta_key_type = *(int*)(params[3].mem_ref);
 
-     void   *in = NULL;
-     size_t in_length = 0;
-     void   *in_hmac = NULL;
-     size_t in_hmac_length = 0;
-     void   *in_wrapping_key = NULL;
-     size_t in_wrapping_key_length = 0;
-     void   *in_encryption_key = NULL;
-     size_t in_encryption_key_length = 0;
-     switch(ta_key_type) {
-         case WIDEVINE_OEM_PROVISIONING:
-	      in = ((WidevineOemProvisioning*)params[1].mem_ref)->oemDevicePrivateKey;
-	      in_length = ((WidevineOemProvisioning*)params[1].mem_ref)->oemDevicePrivateKeyLength;
-	      
-	      /*TODO SoC Vendor:here just provide an example to pass certificate data,
-                how to use it is all up to SOC vendor.
-               */
-	      {
-                  void *oemDeviceCertificate =
-                      ((WidevineOemProvisioning*)params[1].mem_ref)->oemDeviceCertificate;
-                  size_t oemDeviceCertificateLength =
-                      ((WidevineOemProvisioning*)params[1].mem_ref)->oemDeviceCertificateLength;
-                  INFO("oemDeviceCertificate:0x%x, oemDeviceCertificateLength:%d",
-                      oemDeviceCertificate, oemDeviceCertificateLength);
-	      }
-	      break;
-	  case PLAYREADY_MODEL_PROVISIONING:
-               in = ((PlayReadyProvisioning*)params[1].mem_ref)->privateKey;
-               in_length = ((PlayReadyProvisioning*)params[1].mem_ref)->privateKeyLength;
-
-               /*TODO SoC Vendor:here just provide an example to pass certificate data
-                 and model type. How to use them is all up to SOC vendor.
-                */
-               {
-                   void *modelCertificate =
-                       ((PlayReadyProvisioning*)params[1].mem_ref)->modelCertificate;
-                   size_t modelCertificateLength =
-                       ((PlayReadyProvisioning*)params[1].mem_ref)->modelCertificateLength;
-                   INFO("modelCertificate:0x%x, modelCertificateLength:%d",
-                       modelCertificate, modelCertificateLength);
-                   INFO("Model type : %s",
-                       (((PlayReadyProvisioning*)params[1].mem_ref)->modelType == PLAYREADY_MODEL_2K)?
-                           "model 2000" :
-                       ((((PlayReadyProvisioning*)params[1].mem_ref)->modelType == PLAYREADY_MODEL_3K)?
-                           "model 3000":
-                           "No such model type"));
-	       }
-               break;
-	  case NETFLIX_PROVISIONING:
-               in_encryption_key = ((NetflixProvisioning*)params[1].mem_ref)->encryptionKey;
-               in_encryption_key_length = ((NetflixProvisioning*)params[1].mem_ref)->encryptionKeyLength;
-               in_hmac = ((NetflixProvisioning*)params[1].mem_ref)->hmacKey;
-               in_hmac_length = ((NetflixProvisioning*)params[1].mem_ref)->hmacKeyLength;
-               in_wrapping_key = ((NetflixProvisioning*)params[1].mem_ref)->wrappingKey;
-               in_wrapping_key_length = ((NetflixProvisioning*)params[1].mem_ref)->wrappingKeyLength;
-               INFO("in_encryption_key:0x%x, in_encryption_key_length:%d",
-                   in_encryption_key, in_encryption_key_length);
-               INFO("in_hmac:0x%x, in_hmac_length:%d",
-                   in_hmac, in_hmac_length);
-               INFO("in_wrapping_key:0x%x, in_wrapping_key_length:%d",
-                   in_wrapping_key, in_wrapping_key_length);
-
-               /*TODO SoC Vendor:here just provide an example to pass ESN data,
-                 how to use it is all up to SOC vendor.
-                */
-               {
-                    void *esn = ((NetflixProvisioning*)params[1].mem_ref)->esnContainer;
-                    size_t esnLength = ((NetflixProvisioning*)params[1].mem_ref)->esnContainerLength;
-                    INFO("esn:0x%x, esnLength:%d", esn, esnLength);
-               }
-               break;
-	  default:
-	       ERROR("unknown key provisioning type");
-               break;
+     sa_key_type_ta ta_key_type = (sa_key_type_ta)ULONG_MAX;
+     if (CHECK_TA_PARAM_IN(param_types[3])) {
+        if (params[3].mem_ref == NULL || params[3].mem_ref_size == 0) {
+            ERROR("NULL params[3].mem_ref");
+            return SA_STATUS_NULL_PARAMETER;
+        }
+        ta_key_type = *(int*)(params[3].mem_ref);
+        INFO("ta_key_type: %d", ta_key_type);
      }
-     INFO("ta_key_type: %d", ta_key_type);
-     INFO("in_length: %d", in_length);
-     INFO("key_import->key: 0x%x", key_provision_ta->key);
+
+     const void*  ProvisioningObject = params[1].mem_ref;
+     const size_t ProvisioningObjectLen = params[1].mem_ref_size;
+
      sa_status status = SA_STATUS_OK;
-     if (WIDEVINE_OEM_PROVISIONING == ta_key_type ||
-         PLAYREADY_MODEL_PROVISIONING == ta_key_type) {
-         status = ta_sa_key_import(&key_provision_ta->key, key_provision_ta->key_format,
-             in,in_length,parameters, context->client, uuid);
-         if (SA_STATUS_OK != status) {
-	     ERROR("ta_sa_key_import failed");
-	     return status;
-	 }
-     } else if (NETFLIX_PROVISIONING == ta_key_type) {
-         status = ta_sa_key_import(&key_provision_ta->key, key_provision_ta->key_format,
-	     in_encryption_key,in_encryption_key_length, parameters, context->client, uuid);
+     status = ta_sa_key_provision(ta_key_type, ProvisioningObject,
+         ProvisioningObjectLen, parameters, context->client, uuid);
+     if (SA_STATUS_OK != status) {
+         ERROR("ta_sa_key_provision failed");
+	 return status;
+     }
 
-         if (SA_STATUS_OK != status) {
-	     ERROR("ta_sa_key_import failed");
-	     return status;
-	 }
-         /*Note: since here it creates three key slot and the last one will be returned to REE
-          * by default,so it needs to release this key slot to avoid memory leak.
-          */
-         if (INVALID_HANDLE != key_provision_ta->key) {
-             status = ta_sa_key_release(key_provision_ta->key, context->client,uuid);
-             if (SA_STATUS_OK != status) {
-                 ERROR("ta_sa_key_import failed");
-                 return status;
-             }
-         }
-
-         status = ta_sa_key_import(&key_provision_ta->key, key_provision_ta->key_format,
-	     in_hmac,in_hmac_length, parameters, context->client, uuid);
-
-         if (SA_STATUS_OK != status) {
-	     ERROR("ta_sa_key_import failed");
-	     return status;
-         }
-         /*Note: since here it creates three key slot and the last one will be returned to REE
-          * by default,so it needs to release this key slot to avoid memory leak.
-          */
-         if (INVALID_HANDLE != key_provision_ta->key) {
-	     status = ta_sa_key_release(key_provision_ta->key, context->client,uuid);
-             if (SA_STATUS_OK != status) {
-                 ERROR("ta_sa_key_import failed");
-                 return status;
-             }
-         }
-         status = ta_sa_key_import(&key_provision_ta->key, key_provision_ta->key_format,
-             in_wrapping_key,in_wrapping_key_length,parameters, context->client, uuid);
-         if (SA_STATUS_OK != status) {
-             ERROR("ta_sa_key_import failed");
-             return status;
-         }
-    }
-    INFO("key_provision_ta->key: %d, 0x%x", key_provision_ta->key, &key_provision_ta->key);
-    return status;
+     return status;
 }
 
 static sa_status ta_invoke_key_unwrap(

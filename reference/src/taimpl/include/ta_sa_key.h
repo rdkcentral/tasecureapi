@@ -106,6 +106,41 @@ sa_status ta_sa_key_export(
         const sa_uuid* caller_uuid);
 
 /**
+ * Provision a provisioning object. Function receives a provisioning object from REE then passed down to TEE
+ * for further processing.
+ *
+ * @param[in] in ta_key_type, a type of sa_key_type_ta
+ * @param[in] in input data, it contains a whole provisioning object.
+ * @param[in] in_length, size of whole provisioning object in bytes.
+ * @param[in] parameters Format specific import parameters. Use sa_import_parameters_symmetric with
+ * SA_KEY_FORMAT_SYMMETRIC_BYTES, sa_import_parameters_ec_private_bytes with
+ * SA_KEY_FORMAT_EC_PRIVATE_BYTES, sa_import_parameters_rsa_private_key_info with
+ * SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO, sa_import_parameters_exported with SA_KEY_FORMAT_EXPORTED,
+ * sa_import_parameters_typej with SA_KEY_FORMAT_TYPEJ.
+ * @param[in] client_slot the client slot ID.
+ * @param[in] caller_uuid the UUID of the caller.
+ * @return Operation status. Possible values are:
+ * + SA_STATUS_OK - Operation succeeded.
+ * + SA_STATUS_NO_AVAILABLE_RESOURCE_SLOT - There are no available key slots.
+ * + SA_STATUS_INVALID_KEY_FORMAT - Input data failed the format validation.
+ * + SA_STATUS_NULL_PARAMETER - key, in, or parameters (if required) is NULL.
+ * + SA_STATUS_INVALID_PARAMETER
+ *   + Invalid format value.
+ *   + Invalid format specific parameter value encountered.
+ * + SA_STATUS_OPERATION_NOT_SUPPORTED - Implementation does not support the specified operation.
+ * + SA_STATUS_SELF_TEST - Implementation self-test has failed.
+ * + SA_STATUS_VERIFICATION_FAILED - Signature verification has failed.
+ * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
+ */
+sa_status ta_sa_key_provision(
+        sa_key_type_ta ta_key_type,
+        const void* in,
+        const size_t in_length,
+        const void* parameters,
+        ta_client client_slot,
+        const sa_uuid* caller_uuid);
+
+/**
  * Import a key.
  *
  * @param[out] key Imported key handle.
