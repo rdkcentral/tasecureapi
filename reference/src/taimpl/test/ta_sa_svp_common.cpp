@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
+#ifndef DISABLE_SVP
 #include "ta_sa_svp_common.h" // NOLINT
 #include "log.h"
 #include "ta_test_helpers.h"
@@ -77,3 +77,5 @@ INSTANTIATE_TEST_SUITE_P(
         TaSvpBufferWriteTests,
         TaSvpBufferWriteTest,
         ::testing::Values(1, 3, 10));
+
+#endif // DISABLE_SVP

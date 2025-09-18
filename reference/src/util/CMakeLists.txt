@@ -104,3 +104,4 @@ if (BUILD_TESTS)
 
     gtest_discover_tests(utiltest)
 endif ()
+

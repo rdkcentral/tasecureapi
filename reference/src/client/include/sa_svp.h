@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ extern "C" {
  * + SA_STATUS_INTERNAL_ERROR - An unexpected error has occurred.
  */
 sa_status sa_svp_supported();
-
+#ifndef DISABLE_SVP
 /**
  * Allocate an SVP memory block.
  *
@@ -254,7 +254,7 @@ sa_status sa_svp_buffer_check(
         sa_digest_algorithm digest_algorithm,
         const void* hash,
         size_t hash_length);
-
+#endif // DISABLE_SVP
 #ifdef __cplusplus
 }
 #endif

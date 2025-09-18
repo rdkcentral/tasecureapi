@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,9 @@ struct client_s {
     key_store_t* key_store;
     cipher_store_t* cipher_store;
     mac_store_t* mac_store;
+#ifndef DISABLE_SVP
     svp_store_t* svp_store;
+#endif // DISABLE_SVP
 };
 
 key_store_t* client_get_key_store(const client_t* client) {
@@ -66,6 +68,7 @@ mac_store_t* client_get_mac_store(const client_t* client) {
     return client->mac_store;
 }
 
+#ifndef DISABLE_SVP
 svp_store_t* client_get_svp_store(const client_t* client) {
     if (client == NULL) {
         ERROR("NULL client");
@@ -74,6 +77,7 @@ svp_store_t* client_get_svp_store(const client_t* client) {
 
     return client->svp_store;
 }
+#endif // DISABLE_SVP
 
 static void client_free(void* object) {
     if (object == NULL) {
@@ -85,18 +89,25 @@ static void client_free(void* object) {
     key_store_shutdown(client->key_store);
     cipher_store_shutdown(client->cipher_store);
     mac_store_shutdown(client->mac_store);
+#ifndef DISABLE_SVP
     svp_store_shutdown(client->svp_store);
-
+#endif // DISABLE_SVP
     memory_internal_free(client);
 }
-
+#ifndef DISABLE_SVP
 static client_t* client_init(
         const sa_uuid* uuid,
         size_t key_store_size,
         size_t cipher_store_size,
         size_t mac_store_size,
         size_t svp_store_size) {
-
+#else
+static client_t* client_init(
+        const sa_uuid* uuid,
+        size_t key_store_size,
+        size_t cipher_store_size,
+        size_t mac_store_size) {
+#endif // DISABLE_SVP
     if (uuid == NULL) {
         ERROR("NULL uuid");
         return NULL;
@@ -129,13 +140,13 @@ static client_t* client_init(
             ERROR("mac_store_init failed");
             break;
         }
-
+#ifndef DISABLE_SVP
         client->svp_store = svp_store_init(svp_store_size);
         if (client->svp_store == NULL) {
             ERROR("svp_store_init failed");
             break;
         }
-
+#endif // DISABLE_SVP
         status = true;
     } while (false);
 
@@ -240,7 +251,11 @@ sa_status client_store_add(
     sa_status status = SA_STATUS_INTERNAL_ERROR;
     client_t* client = NULL;
     do {
+#ifndef DISABLE_SVP
         client = client_init(caller_uuid, NUM_KEY_SLOTS, NUM_CIPHER_SLOTS, NUM_MAC_SLOTS, NUM_SVP_SLOTS);
+#else
+        client = client_init(caller_uuid, NUM_KEY_SLOTS, NUM_CIPHER_SLOTS, NUM_MAC_SLOTS);
+#endif // DISABLE_SVP
         if (client == NULL) {
             ERROR("client_init failed");
             break;

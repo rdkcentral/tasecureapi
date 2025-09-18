@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
+#ifndef DISABLE_SVP
 #include "porting/svp.h" // NOLINT
 #include "digest.h"
 #include "log.h"
@@ -234,7 +234,6 @@ bool svp_copy(
     }
     return true;
 }
-
 bool svp_key_check(
         uint8_t* in_bytes,
         size_t bytes_to_process,
@@ -292,7 +291,6 @@ bool svp_key_check(
 
     return status;
 }
-
 bool svp_digest(
         void* out,
         size_t* out_length,
@@ -349,3 +347,4 @@ size_t svp_get_size(const svp_buffer_t* svp_buffer) {
 
     return svp_buffer->size;
 }
+#endif // DISABLE_SVP

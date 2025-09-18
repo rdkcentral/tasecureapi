@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2023 Comcast Cable Communications Management, LLC
+# Copyright 2020-2025 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,15 @@ cmake_minimum_required(VERSION 3.16)
 
 project(tasecureapi)
 
-option(BUILD_TESTS "Builds and installs the unit tests" ON)
-option(BUILD_DOC   "Build documentation" ON)
+option(BUILD_TESTS  "Builds and installs the unit tests" ON)
+option(BUILD_DOC    "Build documentation" ON)
+option(DISABLE_SVP  "Build SecAPI without SVP" OFF)
+
+if(DISABLE_SVP)
+    message(STATUS "DISABLE_SVP is ENABLED: Building SecAPI without SVP functionality")
+else()
+    message(STATUS "DISABLE_SVP is DISABLED: Building SecAPI with SVP functionality")
+endif()
 
 if(${BUILD_TESTS})
     # Download and unpack googletest at configure time

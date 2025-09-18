@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,36 @@ sa_status convert_buffer(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (buffer->buffer_type == SA_BUFFER_TYPE_SVP) {
+    if (buffer->buffer_type == SA_BUFFER_TYPE_CLEAR) {
+        if (buffer->context.clear.buffer == NULL) {
+            ERROR("NULL buffer");
+            return SA_STATUS_NULL_PARAMETER;
+        }
+
+        size_t memory_range;
+        if (add_overflow(buffer->context.clear.offset, bytes_to_process, &memory_range)) {
+            ERROR("Integer overflow");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        if (memory_range > buffer->context.clear.length) {
+            ERROR("buffer not large enough");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        if (!memory_is_valid_clear(buffer->context.clear.buffer, buffer->context.clear.length)) {
+            ERROR("memory range is not within clear memory");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        if (add_overflow((unsigned long) buffer->context.clear.buffer, buffer->context.clear.offset,
+                    (unsigned long*) bytes)) {
+            ERROR("Integer overflow");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+    }
+#ifndef DISABLE_SVP
+    else if (buffer->buffer_type == SA_BUFFER_TYPE_SVP) {
         svp_store_t* svp_store = client_get_svp_store(client);
         sa_status status = svp_store_acquire_exclusive(svp, svp_store, buffer->context.svp.buffer, caller_uuid);
         if (status != SA_STATUS_OK) {
@@ -88,34 +117,9 @@ sa_status convert_buffer(
             ERROR("Integer overflow");
             return SA_STATUS_INVALID_PARAMETER;
         }
-    } else {
-        if (buffer->context.clear.buffer == NULL) {
-            ERROR("NULL buffer");
-            return SA_STATUS_NULL_PARAMETER;
-        }
 
-        size_t memory_range;
-        if (add_overflow(buffer->context.clear.offset, bytes_to_process, &memory_range)) {
-            ERROR("Integer overflow");
-            return SA_STATUS_INVALID_PARAMETER;
-        }
-
-        if (memory_range > buffer->context.clear.length) {
-            ERROR("buffer not large enough");
-            return SA_STATUS_INVALID_PARAMETER;
-        }
-
-        if (!memory_is_valid_clear(buffer->context.clear.buffer, buffer->context.clear.length)) {
-            ERROR("memory range is not within clear memory");
-            return SA_STATUS_INVALID_PARAMETER;
-        }
-
-        if (add_overflow((unsigned long) buffer->context.clear.buffer, buffer->context.clear.offset,
-                    (unsigned long*) bytes)) {
-            ERROR("Integer overflow");
-            return SA_STATUS_INVALID_PARAMETER;
-        }
     }
+#endif // DISABLE_SVP
 
     return SA_STATUS_OK;
 }

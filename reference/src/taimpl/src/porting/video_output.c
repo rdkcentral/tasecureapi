@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
 #include "porting/video_output.h" // NOLINT
 #include "log.h"
 #include <memory.h>
@@ -29,7 +28,11 @@ static struct {
                 .digital_unprotected_count = 0,
                 .digital_hdcp14_count = 0,
                 .digital_hdcp22_count = 1,
+#ifndef DISABLE_SVP
                 .svp_enabled = true}};
+#else
+                .svp_enabled = false}};
+#endif
 
 bool video_output_poll(video_output_state_t* state) {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -470,6 +470,7 @@ typedef struct {
     uint8_t api_version;
 } sa_svp_supported_s;
 
+#ifndef DISABLE_SVP
 // sa_svp_buffer_create
 // param[0] INOUT - sa_svp_buffer
 typedef struct {
@@ -511,7 +512,6 @@ typedef struct {
     sa_svp_buffer out;
     sa_svp_buffer in;
 } sa_svp_buffer_copy_s;
-
 // sa_svp_key_check
 // param[0] INOUT - sa_svp_key_check_s
 // param[1] IN - in
@@ -534,6 +534,7 @@ typedef struct {
     uint64_t length;
     uint32_t digest_algorithm;
 } sa_svp_buffer_check_s;
+#endif // DISABLE_SVP
 
 // sa_process_common_encryption (1 sample per call)
 // param[0] INOUT - sa_process_common_encryption_s

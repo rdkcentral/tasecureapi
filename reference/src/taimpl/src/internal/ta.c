@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1151,7 +1151,6 @@ static sa_status ta_invoke_crypto_cipher_update_iv(
     return ta_sa_crypto_cipher_update_iv(cipher_update_iv->context, params[1].mem_ref, params[1].mem_ref_size,
             context->client, uuid);
 }
-
 static sa_status ta_invoke_crypto_cipher_process(
         bool last,
         sa_crypto_cipher_process_s* crypto_cipher_process,
@@ -1187,10 +1186,13 @@ static sa_status ta_invoke_crypto_cipher_process(
         out.context.clear.buffer = params[1].mem_ref;
         out.context.clear.length = params[1].mem_ref_size;
         out.context.clear.offset = crypto_cipher_process->out_offset;
-    } else {
+    } 
+#ifndef DISABLE_SVP
+    else if (crypto_cipher_process->out_buffer_type == SA_BUFFER_TYPE_SVP) {
         out.context.svp.buffer = *(sa_svp_buffer*) params[1].mem_ref;
         out.context.svp.offset = crypto_cipher_process->out_offset;
     }
+#endif // DISABLE_SVP
 
     sa_buffer in;
     in.buffer_type = crypto_cipher_process->in_buffer_type;
@@ -1198,11 +1200,14 @@ static sa_status ta_invoke_crypto_cipher_process(
         in.context.clear.buffer = params[2].mem_ref;
         in.context.clear.length = params[2].mem_ref_size;
         in.context.clear.offset = crypto_cipher_process->in_offset;
-    } else {
+    } 
+#ifndef DISABLE_SVP
+    else if (crypto_cipher_process->in_buffer_type == SA_BUFFER_TYPE_SVP) {
         in.buffer_type = crypto_cipher_process->in_buffer_type;
         in.context.svp.buffer = *(sa_svp_buffer*) params[2].mem_ref;
         in.context.svp.offset = crypto_cipher_process->in_offset;
     }
+#endif // DISABLE_SVP
 
     sa_status status;
     if (last) {
@@ -1228,12 +1233,21 @@ static sa_status ta_invoke_crypto_cipher_process(
     }
 
     // clang-format off
-    if (params[1].mem_ref != NULL)
+    if (params[1].mem_ref != NULL) {
+#ifndef DISABLE_SVP
         crypto_cipher_process->out_offset = (crypto_cipher_process->out_buffer_type == SA_BUFFER_TYPE_CLEAR)
                                              ? out.context.clear.offset : out.context.svp.offset;
+#else
+        crypto_cipher_process->out_offset = out.context.clear.offset;
+#endif // DISABLE_SVP
+    }
 
+#ifndef DISABLE_SVP
     crypto_cipher_process->in_offset = (crypto_cipher_process->in_buffer_type == SA_BUFFER_TYPE_CLEAR)
                                                ? in.context.clear.offset : in.context.svp.offset;
+#else
+    crypto_cipher_process->in_offset = in.context.clear.offset;
+#endif // DISABLE_SVP
     // clang-format on
     return status;
 }
@@ -1468,7 +1482,6 @@ static sa_status ta_invoke_crypto_sign(
     crypto_sign->out_length = out_length;
     return status;
 }
-
 static sa_status ta_invoke_svp_supported(
         sa_svp_supported_s* svp_supported,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -1492,6 +1505,7 @@ static sa_status ta_invoke_svp_supported(
     return ta_sa_svp_supported(context->client, uuid);
 }
 
+#ifndef DISABLE_SVP
 static sa_status ta_invoke_svp_buffer_create(
         sa_svp_buffer_create_s* svp_buffer_create,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -1516,7 +1530,6 @@ static sa_status ta_invoke_svp_buffer_create(
     return ta_sa_svp_buffer_create(&svp_buffer_create->svp_buffer, (void*) svp_buffer_create->svp_memory, // NOLINT
             svp_buffer_create->size, context->client, uuid);
 }
-
 static sa_status ta_invoke_svp_buffer_release(
         sa_svp_buffer_release_s* svp_buffer_release,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -1653,7 +1666,6 @@ static sa_status ta_invoke_svp_buffer_copy(
 
     return status;
 }
-
 static sa_status ta_invoke_svp_key_check(
         sa_svp_key_check_s* svp_key_check,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -1686,7 +1698,8 @@ static sa_status ta_invoke_svp_key_check(
         in.context.clear.buffer = params[1].mem_ref;
         in.context.clear.length = params[1].mem_ref_size;
         in.context.clear.offset = svp_key_check->in_offset;
-    } else {
+    } 
+    else if (svp_key_check->in_buffer_type == SA_BUFFER_TYPE_SVP) {
         in.buffer_type = svp_key_check->in_buffer_type;
         in.context.svp.buffer = *(sa_svp_buffer*) params[1].mem_ref;
         in.context.svp.offset = svp_key_check->in_offset;
@@ -1696,6 +1709,8 @@ static sa_status ta_invoke_svp_key_check(
             params[2].mem_ref_size, context->client, uuid);
     svp_key_check->in_offset =
             (svp_key_check->in_buffer_type == SA_BUFFER_TYPE_CLEAR) ? in.context.clear.offset : in.context.svp.offset;
+    svp_key_check->in_offset = svp_key_check->in_buffer_type = in.context.clear.offset;
+
     return status;
 }
 
@@ -1734,6 +1749,7 @@ static sa_status ta_invoke_svp_buffer_check(
             svp_buffer_check->digest_algorithm, params[1].mem_ref, params[1].mem_ref_size, context->client,
             uuid);
 }
+#endif // DISABLE_SVP
 
 static sa_status ta_invoke_process_common_encryption(
         sa_process_common_encryption_s* process_common_encryption,
@@ -1802,10 +1818,18 @@ static sa_status ta_invoke_process_common_encryption(
             out.context.clear.buffer = params[2].mem_ref;
             out.context.clear.length = params[2].mem_ref_size;
             out.context.clear.offset = process_common_encryption->out_offset;
-        } else {
+        } 
+#ifndef DISABLE_SVP
+	else if (process_common_encryption->out_buffer_type == SA_BUFFER_TYPE_SVP) {
             out.context.svp.buffer = *(sa_svp_buffer*) params[2].mem_ref;
             out.context.svp.offset = process_common_encryption->out_offset;
         }
+#else
+	else if (process_common_encryption->out_buffer_type == SA_BUFFER_TYPE_SVP) {
+	    ERROR("SVP is not supported when DISABLE_SVP flag is enabled");
+	    return SA_STATUS_OPERATION_NOT_SUPPORTED; 
+	}
+#endif // DISABLE_SVP
 
         sa_buffer in;
         sample.in = &in;
@@ -1814,18 +1838,31 @@ static sa_status ta_invoke_process_common_encryption(
             in.context.clear.buffer = params[3].mem_ref;
             in.context.clear.length = params[3].mem_ref_size;
             in.context.clear.offset = process_common_encryption->in_offset;
-        } else {
+        } 
+#ifndef DISABLE_SVP
+	else if (process_common_encryption->in_buffer_type == SA_BUFFER_TYPE_SVP) {
             in.buffer_type = process_common_encryption->in_buffer_type;
             in.context.svp.buffer = *(sa_svp_buffer*) params[3].mem_ref;
             in.context.svp.offset = process_common_encryption->in_offset;
         }
+#endif
 
         status = ta_sa_process_common_encryption(1, &sample, context->client, uuid);
 
+#ifndef DISABLE_SVP
         process_common_encryption->out_offset =
                 (out.buffer_type == SA_BUFFER_TYPE_CLEAR) ? out.context.clear.offset : out.context.svp.offset;
+#else
+        process_common_encryption->out_offset = out.context.clear.offset;
+#endif // DISABLE_SVP
+
+#ifndef DISABLE_SVP
         process_common_encryption->in_offset =
                 (in.buffer_type == SA_BUFFER_TYPE_CLEAR) ? in.context.clear.offset : in.context.svp.offset;
+#else
+        process_common_encryption->in_offset = in.context.clear.offset;
+#endif // DISABLE_SVP
+
     } while (false);
 
     if (sample.subsample_lengths != NULL)
@@ -1976,7 +2013,6 @@ sa_status ta_invoke_command_handler(
                 status = ta_invoke_crypto_cipher_update_iv((sa_crypto_cipher_update_iv_s*) command_parameter,
                         param_types, params, context, &uuid);
                 break;
-
             case SA_CRYPTO_CIPHER_PROCESS:
                 status = ta_invoke_crypto_cipher_process(false, (sa_crypto_cipher_process_s*) command_parameter,
                         param_types, params, context, &uuid);
@@ -1986,7 +2022,6 @@ sa_status ta_invoke_command_handler(
                 status = ta_invoke_crypto_cipher_process(true, (sa_crypto_cipher_process_s*) command_parameter,
                         param_types, params, context, &uuid);
                 break;
-
             case SA_CRYPTO_CIPHER_RELEASE:
                 status = ta_invoke_crypto_cipher_release((sa_crypto_cipher_release_s*) command_parameter, param_types,
                         params, context, &uuid);
@@ -2021,10 +2056,25 @@ sa_status ta_invoke_command_handler(
                 status = ta_invoke_crypto_sign((sa_crypto_sign_s*) command_parameter, param_types, params, context,
                         &uuid);
                 break;
-
             case SA_SVP_SUPPORTED:
                 status = ta_invoke_svp_supported((sa_svp_supported_s*) command_parameter, param_types, params, context,
                         &uuid);
+                break;
+
+	    case SA_PROCESS_COMMON_ENCRYPTION:
+                status = ta_invoke_process_common_encryption((sa_process_common_encryption_s*) command_parameter,
+                        param_types, params, context, &uuid);
+                break;
+            
+#ifndef DISABLE_SVP
+            case SA_SVP_KEY_CHECK:
+                status = ta_invoke_svp_key_check((sa_svp_key_check_s*) command_parameter, param_types, params, context,
+                        &uuid);
+                break;
+
+	    case SA_SVP_BUFFER_CHECK:
+                status = ta_invoke_svp_buffer_check((sa_svp_buffer_check_s*) command_parameter, param_types, params,
+                        context, &uuid);
                 break;
 
             case SA_SVP_BUFFER_CREATE:
@@ -2047,21 +2097,7 @@ sa_status ta_invoke_command_handler(
                         context, &uuid);
                 break;
 
-            case SA_SVP_KEY_CHECK:
-                status = ta_invoke_svp_key_check((sa_svp_key_check_s*) command_parameter, param_types, params, context,
-                        &uuid);
-                break;
-
-            case SA_SVP_BUFFER_CHECK:
-                status = ta_invoke_svp_buffer_check((sa_svp_buffer_check_s*) command_parameter, param_types, params,
-                        context, &uuid);
-                break;
-
-            case SA_PROCESS_COMMON_ENCRYPTION:
-                status = ta_invoke_process_common_encryption((sa_process_common_encryption_s*) command_parameter,
-                        param_types, params, context, &uuid);
-                break;
-
+#endif // DISABLE_SVP
             default:
                 status = SA_STATUS_OPERATION_NOT_SUPPORTED;
         }

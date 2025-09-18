@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
+#ifndef DISABLE_SVP
 
 #ifndef TA_SA_SVP_COMMON_H
 #define TA_SA_SVP_COMMON_H
@@ -42,3 +44,6 @@ class TaSvpBufferCopyTest : public ::testing::WithParamInterface<TaSvpBufferTest
 class TaSvpBufferWriteTest : public ::testing::WithParamInterface<TaSvpBufferTestType>, public TaSvpBase {};
 
 #endif // TA_SA_SVP_COMMON_H
+
+#endif // DISABLE_SVP
+

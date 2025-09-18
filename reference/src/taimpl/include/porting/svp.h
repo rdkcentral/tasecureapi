@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,8 @@
  * video pipeline buffers. Implementors shall replace this functionality with platform dependent
  * functionality.
  */
-
 #ifndef SVP_H
 #define SVP_H
-
 #include "sa_types.h"
 
 #ifdef __cplusplus
@@ -43,6 +41,7 @@ extern "C" {
 
 typedef struct svp_buffer_s svp_buffer_t;
 
+#ifndef DISABLE_SVP
 /**
  * Creates a protected SVP buffer from a previously allocated SVP memory region and its size.
  *
@@ -111,6 +110,7 @@ bool svp_copy(
  * @param stored_key the key to use in the decryption.
  * @return true if the decrypted bytes match the expected bytes.
  */
+#endif // DISABLE_SVP
 bool svp_key_check(
         uint8_t* in_bytes,
         size_t bytes_to_process,
@@ -128,6 +128,7 @@ bool svp_key_check(
  * @param[in] length the number of bytes in the SVP buffer to include in the digest.
  * @return the digest of the SBP buffer.
  */
+#ifndef DISABLE_SVP
 bool svp_digest(
         void* out,
         size_t* out_length,
@@ -151,7 +152,7 @@ void* svp_get_svp_memory(const svp_buffer_t* svp_buffer);
  * @return the buffer length.
  */
 size_t svp_get_size(const svp_buffer_t* svp_buffer);
-
+#endif // DISABLE_SVP
 #ifdef __cplusplus
 }
 #endif

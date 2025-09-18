@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ void SaSvpBase::SetUp() {
         GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
 }
 
+#ifndef DISABLE_SVP
 std::shared_ptr<sa_svp_buffer> SaSvpBase::create_sa_svp_buffer(size_t size) {
     auto svp_buffer = std::shared_ptr<sa_svp_buffer>(
             new sa_svp_buffer(INVALID_HANDLE),
@@ -57,3 +58,4 @@ INSTANTIATE_TEST_SUITE_P(
         SaSvpBufferWriteTests,
         SaSvpBufferWriteTest,
         ::testing::Values(1, 3, 10));
+#endif //DISABLE_SVP

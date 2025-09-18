@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2023 Comcast Cable Communications Management, LLC
+# Copyright 2020-2025 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,11 +44,9 @@ endif ()
 include_directories(AFTER SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 find_package(Threads REQUIRED)
 
-add_library(saclientimpl STATIC
+set(SACLIENTIMPL_SOURCES
         src/internal/client.c
         src/internal/client.h
-        src/porting/sa_svp_memory_alloc.c
-        src/porting/sa_svp_memory_free.c
         src/porting/ta_client.c
         src/porting/ta_client.h
         src/porting/sa_key_provision_impl.c
@@ -80,16 +78,24 @@ add_library(saclientimpl STATIC
         src/sa_key_release.c
         src/sa_key_unwrap.c
         src/sa_process_common_encryption.c
-        src/sa_svp_buffer_alloc.c
-        src/sa_svp_buffer_check.c
-        src/sa_svp_buffer_copy.c
-        src/sa_svp_buffer_free.c
-        src/sa_svp_buffer_release.c
-        src/sa_svp_buffer_write.c
-        src/sa_svp_key_check.c
-        src/sa_svp_supported.c
-        src/sa_svp_buffer_create.c
+	src/sa_svp_supported.c
+	)
+if(NOT DISABLE_SVP)
+    list(APPEND SACLIENTIMPL_SOURCES 
+	src/porting/sa_svp_memory_alloc.c
+	src/porting/sa_svp_memory_free.c
+	src/sa_svp_buffer_check.c
+	src/sa_svp_buffer_alloc.c
+	src/sa_svp_buffer_copy.c
+	src/sa_svp_buffer_free.c
+	src/sa_svp_buffer_release.c
+	src/sa_svp_buffer_write.c
+	src/sa_svp_key_check.c
+	src/sa_svp_buffer_create.c
         )
+endif()
+
+add_library(saclientimpl STATIC ${SACLIENTIMPL_SOURCES})
 
 target_include_directories(saclientimpl
         PRIVATE
