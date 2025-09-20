@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2023 Comcast Cable Communications Management, LLC
+# Copyright 2020-2025 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,21 +22,22 @@ project(tasecureapi)
 option(BUILD_TESTS "Builds and installs the unit tests" ON)
 option(BUILD_DOC   "Build documentation" ON)
 
-if(${BUILD_TESTS})
-    # Download and unpack googletest at configure time
+if(BUILD_TESTS)
     include(FetchContent)
+
+    # Download and unpack googletest at configure time
     FetchContent_Declare(
-            googletest
-            GIT_REPOSITORY https://github.com/google/googletest.git
-            GIT_TAG v1.13.0
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.15.2
     )
+    FetchContent_MakeAvailable(googletest)
 
-    FetchContent_GetProperties(googletest)
-    if(NOT googletest_POPULATED)
-        FetchContent_Populate(googletest)
-        add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
-    endif()
-
+    # The following line is a hack to avoid adding a bunch of CTest targets to
+    # the build. By setting this internal property used by the CTest module and
+    # its dependencies, it skips the generation of the extra targets. This
+    # property could change in the future.
+    # - https://stackoverflow.com/a/57240389
     set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
     include(CTest)
     include(GoogleTest)
