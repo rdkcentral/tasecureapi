@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@
 #define PADDED_SIZE(size) AES_BLOCK_SIZE*(((size) / AES_BLOCK_SIZE) + 1)
 #define SUBSAMPLE_SIZE 256UL
 
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(TaProcessCommonEncryptionTest);
 using namespace ta_test_helpers;
 
 std::shared_ptr<sa_key> TaCryptoCipherBase::import_key(
@@ -193,7 +194,7 @@ void TaCryptoCipherTest::SetUp() {
         GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
     }
 }
-
+#ifndef DISABLE_SVP
 sa_status TaProcessCommonEncryptionTest::svp_buffer_write(
         sa_svp_buffer out,
         const void* in,
@@ -201,7 +202,7 @@ sa_status TaProcessCommonEncryptionTest::svp_buffer_write(
     sa_svp_offset offsets = {0, 0, in_length};
     return ta_sa_svp_buffer_write(out, in, in_length, &offsets, 1, client(), ta_uuid());
 }
-
+#endif
 namespace {
     void get_cipher_parameters(
             sa_cipher_algorithm cipher_algorithm,
@@ -243,6 +244,7 @@ namespace {
         }
     }
 
+#ifndef DISABLE_SVP
     size_t get_required_length(
             sa_cipher_algorithm cipher_algorithm,
             sa_cipher_mode cipher_mode,
@@ -283,7 +285,6 @@ namespace {
         return ta_sa_svp_buffer_check(buffer->context.svp.buffer, 0, data.size(), SA_DIGEST_ALGORITHM_SHA256,
                        hash.data(), hash.size(), client(), ta_uuid()) == SA_STATUS_OK;
     }
-
     TEST_P(TaCryptoCipherTest, processNominal) {
         auto cipher_algorithm = std::get<0>(GetParam());
         auto cipher_mode = std::get<1>(GetParam());
@@ -371,7 +372,7 @@ namespace {
             ASSERT_TRUE(verify(out_buffer.get(), clear));
         }
     }
-
+#endif //DISABLE_SVP
     TEST_P(TaCryptoCipherTest, processFailsOutOffsetOverflow) {
         auto cipher_algorithm = std::get<0>(GetParam());
         auto cipher_mode = std::get<1>(GetParam());
@@ -446,7 +447,7 @@ namespace {
                 ta_uuid());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
-
+#ifndef DISABLE_SVP
     TEST_P(TaProcessCommonEncryptionTest, nominal) {
         auto sample_size_and_time = std::get<0>(GetParam());
         auto sample_size = std::get<0>(sample_size_and_time);
@@ -513,7 +514,6 @@ namespace {
         ASSERT_LE(duration.count(), sample_time);
 #endif
     }
-
     TEST_F(TaProcessCommonEncryptionTest, failsOutBufferOverflow) {
         std::shared_ptr<void> parameters;
         std::vector<uint8_t> iv;
@@ -607,6 +607,7 @@ namespace {
         status = ta_sa_process_common_encryption(1, &sample, client(), ta_uuid());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
+#endif // DISABLE_SVP
 
 } // namespace
 

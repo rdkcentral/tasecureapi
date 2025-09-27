@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -4362,10 +4362,15 @@ namespace client_test_helpers {
                         if (buffer_type == SA_BUFFER_TYPE_CLEAR) {
                             if (buffer->context.clear.buffer != nullptr)
                                 free(buffer->context.clear.buffer);
-                        } else {
-                            if (buffer->context.svp.buffer != INVALID_HANDLE)
-                                sa_svp_buffer_free(buffer->context.svp.buffer);
                         }
+#ifndef DISABLE_SVP	
+			else if (buffer_type == SA_BUFFER_TYPE_SVP) {
+                            if (buffer->context.svp.buffer != INVALID_HANDLE)
+			    {
+                                sa_svp_buffer_free(buffer->context.svp.buffer);
+                            }
+                        }
+#endif
                     }
 
                     delete buffer;
@@ -4380,7 +4385,9 @@ namespace client_test_helpers {
                 ERROR("malloc failed");
                 return nullptr;
             }
-        } else if (buffer_type == SA_BUFFER_TYPE_SVP) {
+        } 
+#ifndef DISABLE_SVP
+	else if (buffer_type == SA_BUFFER_TYPE_SVP) {
             buffer->buffer_type = SA_BUFFER_TYPE_SVP;
             buffer->context.svp.buffer = INVALID_HANDLE;
             sa_svp_buffer svp_buffer;
@@ -4392,6 +4399,7 @@ namespace client_test_helpers {
             buffer->context.svp.buffer = svp_buffer;
             buffer->context.svp.offset = 0;
         }
+#endif // DISABLE_SVP
 
         return buffer;
     }
@@ -4406,7 +4414,9 @@ namespace client_test_helpers {
 
         if (buffer_type == SA_BUFFER_TYPE_CLEAR) {
             memcpy(buffer->context.clear.buffer, initial_value.data(), initial_value.size());
-        } else {
+        }
+#ifndef DISABLE_SVP	
+	else if (buffer_type == SA_BUFFER_TYPE_SVP) {
             sa_svp_offset offsets = {0, 0, initial_value.size()};
             if (sa_svp_buffer_write(buffer->context.svp.buffer, initial_value.data(), initial_value.size(),
                         &offsets, 1) != SA_STATUS_OK) {
@@ -4416,7 +4426,7 @@ namespace client_test_helpers {
 
             buffer->context.svp.offset = 0;
         }
-
+#endif // DISABLE_SVP
         return buffer;
     }
 

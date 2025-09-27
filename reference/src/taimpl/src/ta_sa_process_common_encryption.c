@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@
 #include "common.h"
 #include "log.h"
 #include "rights.h"
-
 static sa_status verify_sample(
         sa_sample* sample,
         client_t* client,
@@ -161,14 +160,14 @@ static sa_status verify_sample(
             break;
         }
     } while (false);
-
+#ifndef DISABLE_SVP
     if (in_svp != NULL)
         svp_store_release_exclusive(client_get_svp_store(client), sample->in->context.svp.buffer, in_svp, caller_uuid);
 
     if (out_svp != NULL)
         svp_store_release_exclusive(client_get_svp_store(client), sample->out->context.svp.buffer, out_svp,
                 caller_uuid);
-
+#endif // DISABLE_SVP
     if (cipher != NULL)
         cipher_store_release_exclusive(cipher_store, sample->context, cipher, caller_uuid);
 

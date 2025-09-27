@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,12 +79,21 @@ sa_status sa_crypto_cipher_process_last(
                 param1_type = TA_PARAM_OUT;
                 CREATE_OUT_PARAM(param1, ((uint8_t*) out->context.clear.buffer) + out->context.clear.offset,
                         param1_size);
-            } else {
+            } 
+#ifndef DISABLE_SVP
+	    else if (out->buffer_type == SA_BUFFER_TYPE_SVP)
+	    {
                 cipher_process->out_offset = out->context.svp.offset;
                 param1_size = sizeof(sa_svp_buffer);
                 param1_type = TA_PARAM_IN;
                 CREATE_PARAM(param1, &out->context.svp.buffer, param1_size);
-            }
+	    }
+#else  // DISABLE_SVP
+       	    else if (out->buffer_type == SA_BUFFER_TYPE_SVP) {
+		ERROR("SVP is not supported whrn DISABLE_SVP flag enbaled");
+		return SA_STATUS_OPERATION_NOT_SUPPORTED;
+	    }
+#endif // DISABLE_SVP
         } else {
             cipher_process->out_offset = 0;
             param1 = NULL;
@@ -110,12 +119,21 @@ sa_status sa_crypto_cipher_process_last(
             cipher_process->in_offset = 0;
             param2_size = in->context.clear.length - in->context.clear.offset;
             CREATE_PARAM(param2, ((uint8_t*) in->context.clear.buffer) + in->context.clear.offset, param2_size);
-        } else {
+        } 
+#ifndef DISABLE_SVP
+	else if (out->buffer_type == SA_BUFFER_TYPE_SVP) 
+	{
             cipher_process->in_offset = in->context.svp.offset;
             param2_size = sizeof(sa_svp_buffer);
 
             CREATE_PARAM(param2, &in->context.svp.buffer, param2_size);
         }
+#else  // DISABLE_SVP
+        else if (out->buffer_type == SA_BUFFER_TYPE_SVP) {
+            ERROR("SVP is not supported whrn DISABLE_SVP flag enbaled");
+            return SA_STATUS_OPERATION_NOT_SUPPORTED;
+        }
+#endif // DISABLE_SVP
 
         size_t param3_size;
         uint32_t param3_type;
@@ -154,16 +172,22 @@ sa_status sa_crypto_cipher_process_last(
                 COPY_OUT_PARAM(((uint8_t*) out->context.clear.buffer) + out->context.clear.offset, param1,
                         cipher_process->bytes_to_process);
                 out->context.clear.offset += cipher_process->out_offset;
-            } else {
+            } 
+#ifndef DISABLE_SVP
+	    else if (out->buffer_type == SA_BUFFER_TYPE_SVP) {
                 out->context.svp.offset = cipher_process->out_offset;
             }
+
+#endif // DISABLE_SVP
         }
 
         if (in->buffer_type == SA_BUFFER_TYPE_CLEAR)
             in->context.clear.offset += cipher_process->in_offset;
-        else
+#ifndef DISABLE_SVP
+        else if (in->buffer_type == SA_BUFFER_TYPE_SVP) {
             in->context.svp.offset = cipher_process->in_offset;
-
+	}
+#endif // DISABLE_SVP
         if (parameters != NULL)
             COPY_OUT_PARAM(((sa_cipher_end_parameters_aes_gcm*) parameters)->tag, param3,
                     ((sa_cipher_end_parameters_aes_gcm*) parameters)->tag_length);

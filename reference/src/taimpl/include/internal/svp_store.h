@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@
  * is stored. This mechanism allows applications to reference SVP buffer objects stored in a TA
  * without having explicit pointers to them.
  */
-
 #ifndef SVP_STORE_H
 #define SVP_STORE_H
 
@@ -38,7 +37,14 @@ extern "C" {
 #endif
 
 typedef struct svp_s svp_t;
+/**
+ * Identifies if SVP is supported.
+ *
+ * @return SA_STATUS_OK if supported. SA_STATUS_OPERATION_NOT_SUPPORTED if not supported.
+ */
+sa_status svp_supported();
 
+#ifndef DISABLE_SVP
 typedef object_store_t svp_store_t;
 
 /**
@@ -64,12 +70,6 @@ svp_store_t* svp_store_init(size_t size);
  */
 void svp_store_shutdown(svp_store_t* store);
 
-/**
- * Identifies if SVP is supported.
- *
- * @return SA_STATUS_OK if supported. SA_STATUS_OPERATION_NOT_SUPPORTED if not supported.
- */
-sa_status svp_supported();
 
 /**
  * Takes a previously allocated SVP region and adds it to the SVP store.
@@ -137,6 +137,7 @@ sa_status svp_store_release_exclusive(
         svp_t* svp,
         const sa_uuid* caller_uuid);
 
+#endif // DISABLE_SVP
 #ifdef __cplusplus
 }
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,6 +67,7 @@ void* memory_memset_unoptimizable(void* destination, uint8_t value, size_t size)
     return destination;
 }
 
+#ifndef DISABLE_SVP
 bool memory_is_valid_svp(
         void* memory_location,
         size_t size) {
@@ -86,6 +87,7 @@ bool memory_is_valid_svp(
     // space.
     return true;
 }
+#endif // DISABLE_SVP
 
 bool memory_is_valid_clear(
         void* memory_location,

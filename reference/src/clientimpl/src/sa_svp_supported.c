@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,10 @@
 #include <stdbool.h>
 
 sa_status sa_svp_supported() {
+#ifdef DISABLE_SVP
+    ERROR("SA_STATUS_OPERATION_NOT_SUPPORTED");
+    return SA_STATUS_OPERATION_NOT_SUPPORTED;
+#endif // DISABLE_SVP
 
     void* session = client_session();
     if (session == NULL) {

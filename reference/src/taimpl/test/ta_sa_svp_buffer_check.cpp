@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef DISABLE_SVP
 #include "common.h"
 #include "digest_util.h"
 #include "ta_sa.h"
@@ -93,3 +94,4 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace
+#endif // DISABLE_SVP

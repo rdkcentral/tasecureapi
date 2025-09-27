@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
+#ifndef DISABLE_SVP
 #include "client.h"
 #include "log.h"
 #include "sa.h"
@@ -70,3 +70,4 @@ sa_status sa_svp_buffer_release(
     RELEASE_COMMAND(svp_buffer_release);
     return status;
 }
+#endif // DISABLE_SVP

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,6 +53,7 @@ sa_status ta_sa_svp_supported(
         ta_client client_slot,
         const sa_uuid* caller_uuid);
 
+#ifndef DISABLE_SVP
 /**
  * Create an SVP buffer handle. Buffer passed in is validated to be wholly contained within the
  * restricted SVP memory region. SecAPI does not provide functionality for allocating and
@@ -158,7 +159,7 @@ sa_status ta_sa_svp_buffer_copy(
         size_t offsets_length,
         ta_client client_slot,
         const sa_uuid* caller_uuid);
-
+#endif // DISABLE_SVP
 /**
  * Perform a key check by decrypting input data with an AES ECB into restricted memory and comparing with reference
  * value. This operation allows validation of keys that cannot decrypt into non-SVP buffers.
@@ -189,7 +190,7 @@ sa_status ta_sa_svp_key_check(
         size_t expected_length,
         ta_client client_slot,
         const sa_uuid* caller_uuid);
-
+#ifndef DISABLE_SVP
 /**
  * Perform a buffer check by digesting the data in the buffer at the offset and length and comparing it with the input
  * hash.
@@ -222,8 +223,11 @@ sa_status ta_sa_svp_buffer_check(
         ta_client client_slot,
         const sa_uuid* caller_uuid);
 
+#endif // DISABLE_SVP
 #ifdef __cplusplus
 }
 #endif
 
 #endif // TA_SA_SVP_H
+
+

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ namespace ta_test_helpers {
 
         return client;
     }
-
+#ifndef DISABLE_SVP
     // TODO SoC Vendor: replace this call with a call to allocate secure memory.
     sa_status ta_sa_svp_memory_alloc(
             void** svp_memory,
@@ -78,7 +78,7 @@ namespace ta_test_helpers {
 
         return SA_STATUS_OK;
     }
-
+#endif // DISABLE_SVP
     std::shared_ptr<sa_key> create_uninitialized_sa_key() {
         return {new sa_key(INVALID_HANDLE),
                 [](const sa_key* p) {
@@ -117,6 +117,7 @@ namespace ta_test_helpers {
                             if (buffer->context.clear.buffer != nullptr)
                                 free(buffer->context.clear.buffer);
                         } else {
+#ifndef DISABLE_SVP
                             if (buffer->context.svp.buffer != INVALID_HANDLE) {
                                 void* svp_memory;
                                 size_t svp_memory_size;
@@ -124,6 +125,7 @@ namespace ta_test_helpers {
                                             buffer->context.svp.buffer, client(), ta_uuid()) == SA_STATUS_OK)
                                     ta_sa_svp_memory_free(svp_memory);
                             }
+#endif
                         }
                     }
 
@@ -140,6 +142,7 @@ namespace ta_test_helpers {
                 return nullptr;
             }
         } else if (buffer_type == SA_BUFFER_TYPE_SVP) {
+#ifndef DISABLE_SVP
             buffer->buffer_type = SA_BUFFER_TYPE_SVP;
             buffer->context.svp.buffer = INVALID_HANDLE;
             void* svp_memory;
@@ -151,6 +154,7 @@ namespace ta_test_helpers {
                 }
 
             buffer->context.svp.offset = 0;
+#endif // DISABLE_SVP
         }
 
         return buffer;
@@ -167,6 +171,7 @@ namespace ta_test_helpers {
         if (buffer_type == SA_BUFFER_TYPE_CLEAR) {
             memcpy(buffer->context.clear.buffer, initial_value.data(), initial_value.size());
         } else {
+#ifndef DISABLE_SVP
             sa_svp_offset offsets = {0, 0, initial_value.size()};
             if (ta_sa_svp_buffer_write(buffer->context.svp.buffer, initial_value.data(), initial_value.size(),
                         &offsets, 1, client(), ta_uuid()) != SA_STATUS_OK) {
@@ -175,6 +180,7 @@ namespace ta_test_helpers {
             }
 
             buffer->context.svp.offset = 0;
+#endif //DISABLE_SVP
         }
 
         return buffer;
