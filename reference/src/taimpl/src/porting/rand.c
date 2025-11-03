@@ -16,9 +16,39 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "pkcs12_mbedtls.h"
 #include "porting/rand.h" // NOLINT
 #include "log.h"
-#include <openssl/rand.h>
+
+// Global DRBG context for random number generation
+// CTR-DRBG (Counter mode Deterministic Random Bit Generator)
+// Seeds from hardware entropy sources via mbedtls_entropy_func()
+static mbedtls_ctr_drbg_context ctr_drbg;
+static mbedtls_entropy_context entropy;
+static bool rand_initialized = false;
+
+static bool rand_init(void) {
+    if (rand_initialized) {
+        return true;
+    }
+
+    mbedtls_ctr_drbg_init(&ctr_drbg);
+    mbedtls_entropy_init(&entropy);
+
+    const char *personalization = "secapi_rand";
+    int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                    (const unsigned char *)personalization,
+                                    strlen(personalization));
+    if (ret != 0) {
+        ERROR("mbedtls_ctr_drbg_seed failed: -0x%04x", -ret);
+        mbedtls_ctr_drbg_free(&ctr_drbg);
+        mbedtls_entropy_free(&entropy);
+        return false;
+    }
+
+    rand_initialized = true;
+    return true;
+}
 
 bool rand_bytes(void* out, size_t out_length) {
     if (out == NULL) {
@@ -26,8 +56,14 @@ bool rand_bytes(void* out, size_t out_length) {
         return false;
     }
 
-    if (!RAND_bytes(out, (int) out_length)) {
-        ERROR("RAND_bytes failed");
+    if (!rand_init()) {
+        ERROR("rand_init failed");
+        return false;
+    }
+
+    int ret = mbedtls_ctr_drbg_random(&ctr_drbg, out, out_length);
+    if (ret != 0) {
+        ERROR("mbedtls_ctr_drbg_random failed: -0x%04x", -ret);
         return false;
     }
 

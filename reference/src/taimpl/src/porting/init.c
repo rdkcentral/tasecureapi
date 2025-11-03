@@ -18,57 +18,42 @@
 
 #include "porting/init.h"
 #include "porting/memory.h"
-#include <openssl/crypto.h>
+#include "log.h"
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#ifdef MBEDTLS_PLATFORM_MEMORY
+#include "pkcs12_mbedtls.h"
 
-static void* openssl_secure_malloc(size_t size) {
-#else
-
-static void* openssl_secure_malloc(
-        size_t size,
-        ossl_unused const char* file,
-        ossl_unused int line) {
-#endif
-    void* buffer = memory_secure_alloc(size);
+static void* mbedtls_secure_calloc(size_t nmemb, size_t size) {
+    size_t total_size = nmemb * size;
+    void* buffer = memory_secure_alloc(total_size);
 
     if (buffer != NULL) {
-        memory_memset_unoptimizable(buffer, 0, size);
+        memory_memset_unoptimizable(buffer, 0, total_size);
     }
 
+    DEBUG("[MBEDTLS_ALLOCATOR] mbedtls_secure_calloc: allocated %zu bytes at %p\n", total_size, buffer);
     return buffer;
 }
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-
-static void* openssl_secure_realloc(
-        void* buffer,
-        size_t size) {
-#else
-
-static void* openssl_secure_realloc(
-        void* buffer,
-        size_t size,
-        ossl_unused const char* file,
-        ossl_unused int line) {
-#endif
-    return memory_secure_realloc(buffer, size);
-}
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-
-static void openssl_secure_free(void* buffer) {
-#else
-
-static void openssl_secure_free(
-        void* buffer,
-        ossl_unused const char* file,
-        ossl_unused int line) {
-#endif
+static void mbedtls_secure_free(void* buffer) {
+    if (buffer == NULL) {
+        return;
+    }
+    DEBUG("[MBEDTLS_ALLOCATOR] mbedtls_secure_free: freeing memory at %p\n", buffer);
     memory_secure_free(buffer);
 }
+#endif
 
-void init_openssl_allocator() {
-    // use secure heap for OpenSSL memory allocations
-    CRYPTO_set_mem_functions(openssl_secure_malloc, openssl_secure_realloc, openssl_secure_free);
+void init_mbedtls_allocator() {
+#ifdef MBEDTLS_PLATFORM_MEMORY
+    // Configure mbedTLS to use secure heap for all crypto memory allocations
+    // This requires mbedTLS to be built with MBEDTLS_PLATFORM_MEMORY defined
+    DEBUG("[MBEDTLS_ALLOCATOR] Configuring mbedTLS to use custom secure memory allocators\n");
+    mbedtls_platform_set_calloc_free(mbedtls_secure_calloc, mbedtls_secure_free);
+    DEBUG("[MBEDTLS_ALLOCATOR] mbedTLS custom allocators configured successfully\n");
+#else
+    // mbedTLS not built with MBEDTLS_PLATFORM_MEMORY support
+    // Using standard library allocators (calloc/free)
+    DEBUG("[MBEDTLS_ALLOCATOR] WARNING: MBEDTLS_PLATFORM_MEMORY not defined - using standard library allocators\n");
+#endif
 }

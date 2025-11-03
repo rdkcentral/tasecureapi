@@ -30,11 +30,18 @@ static size_t get_required_length(
         cipher_t* cipher,
         size_t bytes_to_process) {
     sa_cipher_algorithm cipher_algorithm = cipher_get_algorithm(cipher);
+    sa_cipher_mode cipher_mode = cipher_get_mode(cipher);
 
     switch (cipher_algorithm) {
         case SA_CIPHER_ALGORITHM_AES_CBC_PKCS7:
         case SA_CIPHER_ALGORITHM_AES_ECB_PKCS7:
-            return PADDED_SIZE(bytes_to_process);
+            // For encryption, need to add padding block
+            // For decryption, output will be <= input (padding removed)
+            if (cipher_mode == SA_CIPHER_MODE_ENCRYPT) {
+                return PADDED_SIZE(bytes_to_process);
+            } else {
+                return bytes_to_process;
+            }
 
         case SA_CIPHER_ALGORITHM_AES_CTR:
         case SA_CIPHER_ALGORITHM_AES_GCM:

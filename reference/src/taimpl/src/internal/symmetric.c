@@ -24,13 +24,27 @@
 #include "porting/rand.h"
 #include "sa_types.h"
 #include "stored_key_internal.h"
+#include "pkcs12_mbedtls.h"
 #include <memory.h>
-#include <openssl/evp.h>
+
 
 struct symmetric_context_s {
     sa_cipher_algorithm cipher_algorithm;
     sa_cipher_mode cipher_mode;
-    EVP_CIPHER_CTX* evp_cipher;
+    union {
+        mbedtls_cipher_context_t cipher_ctx;      // For AES-CBC, AES-CTR
+        mbedtls_aes_context aes_ctx;              // For AES-ECB (direct API)
+        mbedtls_gcm_context gcm_ctx;              // For AES-GCM
+        mbedtls_chacha20_context chacha20_ctx;    // For ChaCha20
+        mbedtls_chachapoly_context chachapoly_ctx;// For ChaCha20-Poly1305
+    } ctx;
+    bool is_gcm;
+    bool is_chacha;         // true for ChaCha20
+    bool is_chachapoly;     // true for ChaCha20-Poly1305
+    uint8_t gcm_tag[MAX_GCM_TAG_LENGTH];        // Store GCM tag for verification during decrypt
+    size_t gcm_tag_length;
+    uint8_t chachapoly_tag[CHACHA20_TAG_LENGTH]; // Store ChaCha20-Poly1305 tag for verification
+    size_t chachapoly_tag_length;
 };
 
 sa_status symmetric_generate_key(
@@ -153,33 +167,18 @@ symmetric_context_t* symmetric_create_aes_ecb_encrypt_context(
             break;
         }
 
+        memory_memset_unoptimizable(context, 0, sizeof(symmetric_context_t));
         context->cipher_algorithm = padded ? SA_CIPHER_ALGORITHM_AES_ECB_PKCS7 : SA_CIPHER_ALGORITHM_AES_ECB;
         context->cipher_mode = SA_CIPHER_MODE_ENCRYPT;
+        context->is_gcm = false;
+        context->is_chacha = false;
 
-        context->evp_cipher = EVP_CIPHER_CTX_new();
-        if (context->evp_cipher == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
-            break;
-        }
+        // Use direct AES API for ECB mode (doesn't support padding in cipher API)
+        mbedtls_aes_init(&context->ctx.aes_ctx);
 
-        const EVP_CIPHER* cipher = NULL;
-        if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_ecb();
-        else // key_length == SYM_256_KEY_SIZE
-            cipher = EVP_aes_256_ecb();
-
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_ecb failed");
-            break;
-        }
-
-        if (EVP_EncryptInit_ex(context->evp_cipher, cipher, NULL, key, NULL) != 1) {
-            ERROR("EVP_EncryptInit_ex failed");
-            break;
-        }
-
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, padded) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
+        int ret = mbedtls_aes_setkey_enc(&context->ctx.aes_ctx, key, key_length * 8);
+        if (ret != 0) {
+            ERROR("mbedtls_aes_setkey_enc failed: -0x%04x", -ret);
             break;
         }
 
@@ -236,33 +235,48 @@ symmetric_context_t* symmetric_create_aes_cbc_encrypt_context(
             break;
         }
 
+        memory_memset_unoptimizable(context, 0, sizeof(symmetric_context_t));
         context->cipher_algorithm = padded ? SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 : SA_CIPHER_ALGORITHM_AES_CBC;
         context->cipher_mode = SA_CIPHER_MODE_ENCRYPT;
+        context->is_gcm = false;
+        context->is_chacha = false;
 
-        context->evp_cipher = EVP_CIPHER_CTX_new();
-        if (context->evp_cipher == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        mbedtls_cipher_init(&context->ctx.cipher_ctx);
+
+        // Select cipher type based on key length
+        mbedtls_cipher_type_t cipher_type = (key_length == SYM_128_KEY_SIZE) ?
+            MBEDTLS_CIPHER_AES_128_CBC : MBEDTLS_CIPHER_AES_256_CBC;
+
+        const mbedtls_cipher_info_t* cipher_info = mbedtls_cipher_info_from_type(cipher_type);
+        if (cipher_info == NULL) {
+            ERROR("mbedtls_cipher_info_from_type failed");
             break;
         }
 
-        const EVP_CIPHER* cipher = NULL;
-        if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_cbc();
-        else // key_length == SYM_256_KEY_SIZE
-            cipher = EVP_aes_256_cbc();
-
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_cbc failed");
+        int ret = mbedtls_cipher_setup(&context->ctx.cipher_ctx, cipher_info);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_setup failed: -0x%04x", -ret);
             break;
         }
 
-        if (EVP_EncryptInit_ex(context->evp_cipher, cipher, NULL, key, iv) != 1) {
-            ERROR("EVP_EncryptInit_ex failed");
+        ret = mbedtls_cipher_setkey(&context->ctx.cipher_ctx, key, key_length * 8, MBEDTLS_ENCRYPT);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, padded) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
+        // Set padding mode
+        mbedtls_cipher_padding_t padding = padded ? MBEDTLS_PADDING_PKCS7 : MBEDTLS_PADDING_NONE;
+        ret = mbedtls_cipher_set_padding_mode(&context->ctx.cipher_ctx, padding);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_set_padding_mode failed: -0x%04x", -ret);
+            break;
+        }
+
+        // Set IV for CBC mode
+        ret = mbedtls_cipher_set_iv(&context->ctx.cipher_ctx, iv, iv_length);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_set_iv failed: -0x%04x", -ret);
             break;
         }
 
@@ -318,36 +332,44 @@ symmetric_context_t* symmetric_create_aes_ctr_encrypt_context(
             break;
         }
 
+        memory_memset_unoptimizable(context, 0, sizeof(symmetric_context_t));
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
         context->cipher_mode = SA_CIPHER_MODE_ENCRYPT;
+        context->is_gcm = false;
+        context->is_chacha = false;
 
-        context->evp_cipher = EVP_CIPHER_CTX_new();
-        if (context->evp_cipher == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        mbedtls_cipher_init(&context->ctx.cipher_ctx);
+
+        // Select cipher type based on key length
+        mbedtls_cipher_type_t cipher_type = (key_length == SYM_128_KEY_SIZE) ?
+            MBEDTLS_CIPHER_AES_128_CTR : MBEDTLS_CIPHER_AES_256_CTR;
+
+        const mbedtls_cipher_info_t* cipher_info = mbedtls_cipher_info_from_type(cipher_type);
+        if (cipher_info == NULL) {
+            ERROR("mbedtls_cipher_info_from_type failed");
             break;
         }
 
-        const EVP_CIPHER* cipher = NULL;
-        if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_ctr();
-        else // key_length == SYM_256_KEY_SIZE
-            cipher = EVP_aes_256_ctr();
-
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_ctr failed");
+        int ret = mbedtls_cipher_setup(&context->ctx.cipher_ctx, cipher_info);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_setup failed: -0x%04x", -ret);
             break;
         }
 
-        if (EVP_EncryptInit_ex(context->evp_cipher, cipher, NULL, key, counter) != 1) {
-            ERROR("EVP_EncryptInit_ex failed");
+        ret = mbedtls_cipher_setkey(&context->ctx.cipher_ctx, key, key_length * 8, MBEDTLS_ENCRYPT);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
+        // Set counter/IV for CTR mode
+        ret = mbedtls_cipher_set_iv(&context->ctx.cipher_ctx, counter, counter_length);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_set_iv failed: -0x%04x", -ret);
             break;
         }
+
+        // CTR mode is a stream cipher - no padding needed
 
         status = true;
     } while (false);
@@ -408,55 +430,35 @@ symmetric_context_t* symmetric_create_aes_gcm_encrypt_context(
             break;
         }
 
+        memory_memset_unoptimizable(context, 0, sizeof(symmetric_context_t));
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
         context->cipher_mode = SA_CIPHER_MODE_ENCRYPT;
+        context->is_gcm = true;
+        context->is_chacha = false;
 
-        context->evp_cipher = EVP_CIPHER_CTX_new();
-        if (context->evp_cipher == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        mbedtls_gcm_init(&context->ctx.gcm_ctx);
+
+        // Set up GCM with key
+        mbedtls_cipher_id_t cipher_id = MBEDTLS_CIPHER_ID_AES;
+        int ret = mbedtls_gcm_setkey(&context->ctx.gcm_ctx, cipher_id, key, key_length * 8);
+        if (ret != 0) {
+            ERROR("mbedtls_gcm_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        const EVP_CIPHER* cipher = NULL;
-        if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_gcm();
-        else // key_length == SYM_256_KEY_SIZE
-            cipher = EVP_aes_256_gcm();
-
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_counter failed");
+        // Start GCM encryption with IV (mbedTLS 3.x API)
+        ret = mbedtls_gcm_starts(&context->ctx.gcm_ctx, MBEDTLS_GCM_ENCRYPT,
+                                  iv, iv_length);
+        if (ret != 0) {
+            ERROR("mbedtls_gcm_starts failed: -0x%04x", -ret);
             break;
         }
 
-        // init cipher
-        if (EVP_EncryptInit_ex(context->evp_cipher, cipher, NULL, NULL, NULL) != 1) {
-            ERROR("EVP_EncryptInit_ex failed");
-            break;
-        }
-
-        // set iv length
-        if (EVP_CIPHER_CTX_ctrl(context->evp_cipher, EVP_CTRL_GCM_SET_IVLEN, (int) iv_length, NULL) != 1) {
-            ERROR("EVP_CIPHER_CTX_counterl failed");
-            break;
-        }
-
-        // init key and iv
-        if (EVP_EncryptInit_ex(context->evp_cipher, cipher, NULL, key, iv) != 1) {
-            ERROR("EVP_EncryptInit_ex failed");
-            break;
-        }
-
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
-            break;
-        }
-
-        // set aad
-        if (aad != NULL) {
-            int out_length = 0;
-            if (EVP_EncryptUpdate(context->evp_cipher, NULL, &out_length, aad, (int) aad_length) != 1) {
-                ERROR("EVP_EncryptUpdate failed");
+        // Update AAD if present
+        if (aad_length > 0) {
+            ret = mbedtls_gcm_update_ad(&context->ctx.gcm_ctx, aad, aad_length);
+            if (ret != 0) {
+                ERROR("mbedtls_gcm_update_ad failed: -0x%04x", -ret);
                 break;
             }
         }
@@ -530,30 +532,28 @@ symmetric_context_t* symmetric_create_chacha20_encrypt_context(
 
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20;
         context->cipher_mode = SA_CIPHER_MODE_ENCRYPT;
+        context->is_gcm = false;
+        context->is_chacha = true;
+        context->is_chachapoly = false;
 
-        context->evp_cipher = EVP_CIPHER_CTX_new();
-        if (context->evp_cipher == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        // Initialize ChaCha20 context
+        mbedtls_chacha20_init(&context->ctx.chacha20_ctx);
+
+        // Set the 256-bit key
+        int ret = mbedtls_chacha20_setkey(&context->ctx.chacha20_ctx, key);
+        if (ret != 0) {
+            ERROR("mbedtls_chacha20_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        const EVP_CIPHER* cipher = EVP_chacha20();
-        if (cipher == NULL) {
-            ERROR("EVP_chacha20 failed");
-            break;
-        }
+        // Extract 32-bit counter from counter buffer (4 bytes)
+        uint32_t initial_counter;
+        memcpy(&initial_counter, counter, sizeof(uint32_t));
 
-        uint8_t iv[CHACHA20_COUNTER_LENGTH + CHACHA20_NONCE_LENGTH];
-        memcpy(iv, counter, counter_length);
-        memcpy(iv + CHACHA20_COUNTER_LENGTH, nonce, nonce_length);
-        if (EVP_EncryptInit_ex(context->evp_cipher, cipher, NULL, key, iv) != 1) {
-            ERROR("EVP_EncryptInit_ex failed");
-            break;
-        }
-
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
+        // Start ChaCha20 with the nonce (12 bytes) and counter
+        ret = mbedtls_chacha20_starts(&context->ctx.chacha20_ctx, nonce, initial_counter);
+        if (ret != 0) {
+            ERROR("mbedtls_chacha20_starts failed: -0x%04x", -ret);
             break;
         }
 
@@ -622,48 +622,32 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_encrypt_context(
 
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20_POLY1305;
         context->cipher_mode = SA_CIPHER_MODE_ENCRYPT;
+        context->is_gcm = false;
+        context->is_chacha = false;
+        context->is_chachapoly = true;
 
-        context->evp_cipher = EVP_CIPHER_CTX_new();
-        if (context->evp_cipher == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        // Initialize ChaCha20-Poly1305 context
+        mbedtls_chachapoly_init(&context->ctx.chachapoly_ctx);
+
+        // Set the 256-bit key
+        int ret = mbedtls_chachapoly_setkey(&context->ctx.chachapoly_ctx, key);
+        if (ret != 0) {
+            ERROR("mbedtls_chachapoly_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        const EVP_CIPHER* cipher = EVP_chacha20_poly1305();
-        if (cipher == NULL) {
-            ERROR("EVP_chacha20_poly1305 failed");
+        // Start encryption with nonce (12 bytes for ChaCha20-Poly1305)
+        ret = mbedtls_chachapoly_starts(&context->ctx.chachapoly_ctx, nonce, MBEDTLS_CHACHAPOLY_ENCRYPT);
+        if (ret != 0) {
+            ERROR("mbedtls_chachapoly_starts failed: -0x%04x", -ret);
             break;
         }
 
-        // init cipher
-        if (EVP_EncryptInit_ex(context->evp_cipher, cipher, NULL, NULL, NULL) != 1) {
-            ERROR("EVP_EncryptInit_ex failed");
-            break;
-        }
-
-        // set nonce length
-        if (EVP_CIPHER_CTX_ctrl(context->evp_cipher, EVP_CTRL_AEAD_SET_IVLEN, (int) nonce_length, NULL) != 1) {
-            ERROR("EVP_CIPHER_CTX_counterl failed");
-            break;
-        }
-
-        // init key and nonce
-        if (EVP_EncryptInit_ex(context->evp_cipher, cipher, NULL, key, nonce) != 1) {
-            ERROR("EVP_EncryptInit_ex failed");
-            break;
-        }
-
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
-            break;
-        }
-
-        // set aad
-        if (aad != NULL) {
-            int out_length = 0;
-            if (EVP_EncryptUpdate(context->evp_cipher, NULL, &out_length, aad, (int) aad_length) != 1) {
-                ERROR("EVP_EncryptUpdate failed");
+        // Set AAD (Additional Authenticated Data) if present
+        if (aad != NULL && aad_length > 0) {
+            ret = mbedtls_chachapoly_update_aad(&context->ctx.chachapoly_ctx, aad, aad_length);
+            if (ret != 0) {
+                ERROR("mbedtls_chachapoly_update_aad failed: -0x%04x", -ret);
                 break;
             }
         }
@@ -709,33 +693,18 @@ symmetric_context_t* symmetric_create_aes_ecb_decrypt_context(
             break;
         }
 
+        memory_memset_unoptimizable(context, 0, sizeof(symmetric_context_t));
         context->cipher_algorithm = padded ? SA_CIPHER_ALGORITHM_AES_ECB_PKCS7 : SA_CIPHER_ALGORITHM_AES_ECB;
         context->cipher_mode = SA_CIPHER_MODE_DECRYPT;
+        context->is_gcm = false;
+        context->is_chacha = false;
 
-        context->evp_cipher = EVP_CIPHER_CTX_new();
-        if (context->evp_cipher == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
-            break;
-        }
+        // Use direct AES API for ECB mode (doesn't support padding in cipher API)
+        mbedtls_aes_init(&context->ctx.aes_ctx);
 
-        const EVP_CIPHER* cipher = NULL;
-        if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_ecb();
-        else // key_length == SYM_256_KEY_SIZE
-            cipher = EVP_aes_256_ecb();
-
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_ecb failed");
-            break;
-        }
-
-        if (EVP_DecryptInit_ex(context->evp_cipher, cipher, NULL, key, NULL) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
-            break;
-        }
-
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, padded) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
+        int ret = mbedtls_aes_setkey_dec(&context->ctx.aes_ctx, key, key_length * 8);
+        if (ret != 0) {
+            ERROR("mbedtls_aes_setkey_dec failed: -0x%04x", -ret);
             break;
         }
 
@@ -792,33 +761,48 @@ symmetric_context_t* symmetric_create_aes_cbc_decrypt_context(
             break;
         }
 
+        memory_memset_unoptimizable(context, 0, sizeof(symmetric_context_t));
         context->cipher_algorithm = padded ? SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 : SA_CIPHER_ALGORITHM_AES_CBC;
         context->cipher_mode = SA_CIPHER_MODE_DECRYPT;
+        context->is_gcm = false;
+        context->is_chacha = false;
 
-        context->evp_cipher = EVP_CIPHER_CTX_new();
-        if (context->evp_cipher == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        mbedtls_cipher_init(&context->ctx.cipher_ctx);
+
+        // Select cipher type based on key length
+        mbedtls_cipher_type_t cipher_type = (key_length == SYM_128_KEY_SIZE) ?
+            MBEDTLS_CIPHER_AES_128_CBC : MBEDTLS_CIPHER_AES_256_CBC;
+
+        const mbedtls_cipher_info_t* cipher_info = mbedtls_cipher_info_from_type(cipher_type);
+        if (cipher_info == NULL) {
+            ERROR("mbedtls_cipher_info_from_type failed");
             break;
         }
 
-        const EVP_CIPHER* cipher = NULL;
-        if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_cbc();
-        else // key_length == SYM_256_KEY_SIZE
-            cipher = EVP_aes_256_cbc();
-
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_cbc failed");
+        int ret = mbedtls_cipher_setup(&context->ctx.cipher_ctx, cipher_info);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_setup failed: -0x%04x", -ret);
             break;
         }
 
-        if (EVP_DecryptInit_ex(context->evp_cipher, cipher, NULL, key, iv) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
+        ret = mbedtls_cipher_setkey(&context->ctx.cipher_ctx, key, key_length * 8, MBEDTLS_DECRYPT);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, padded) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
+        // Set padding mode
+        mbedtls_cipher_padding_t padding = padded ? MBEDTLS_PADDING_PKCS7 : MBEDTLS_PADDING_NONE;
+        ret = mbedtls_cipher_set_padding_mode(&context->ctx.cipher_ctx, padding);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_set_padding_mode failed: -0x%04x", -ret);
+            break;
+        }
+
+        // Set IV for CBC mode
+        ret = mbedtls_cipher_set_iv(&context->ctx.cipher_ctx, iv, iv_length);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_set_iv failed: -0x%04x", -ret);
             break;
         }
 
@@ -874,34 +858,40 @@ symmetric_context_t* symmetric_create_aes_ctr_decrypt_context(
             break;
         }
 
+        memory_memset_unoptimizable(context, 0, sizeof(symmetric_context_t));
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
         context->cipher_mode = SA_CIPHER_MODE_DECRYPT;
+        context->is_gcm = false;
+        context->is_chacha = false;
 
-        context->evp_cipher = EVP_CIPHER_CTX_new();
-        if (context->evp_cipher == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        mbedtls_cipher_init(&context->ctx.cipher_ctx);
+
+        // Select cipher type based on key length
+        mbedtls_cipher_type_t cipher_type = (key_length == SYM_128_KEY_SIZE) ?
+            MBEDTLS_CIPHER_AES_128_CTR : MBEDTLS_CIPHER_AES_256_CTR;
+
+        const mbedtls_cipher_info_t* cipher_info = mbedtls_cipher_info_from_type(cipher_type);
+        if (cipher_info == NULL) {
+            ERROR("mbedtls_cipher_info_from_type failed");
             break;
         }
 
-        const EVP_CIPHER* cipher = NULL;
-        if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_ctr();
-        else // key_length == SYM_256_KEY_SIZE
-            cipher = EVP_aes_256_ctr();
-
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_ctr failed");
+        int ret = mbedtls_cipher_setup(&context->ctx.cipher_ctx, cipher_info);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_setup failed: -0x%04x", -ret);
             break;
         }
 
-        if (EVP_DecryptInit_ex(context->evp_cipher, cipher, NULL, key, counter) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
+        ret = mbedtls_cipher_setkey(&context->ctx.cipher_ctx, key, key_length * 8, MBEDTLS_DECRYPT);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
+        // Set counter/IV for CTR mode
+        ret = mbedtls_cipher_set_iv(&context->ctx.cipher_ctx, counter, counter_length);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_set_iv failed: -0x%04x", -ret);
             break;
         }
 
@@ -964,55 +954,35 @@ symmetric_context_t* symmetric_create_aes_gcm_decrypt_context(
             break;
         }
 
+        memory_memset_unoptimizable(context, 0, sizeof(symmetric_context_t));
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_AES_GCM;
         context->cipher_mode = SA_CIPHER_MODE_DECRYPT;
+        context->is_gcm = true;
+        context->is_chacha = false;
 
-        context->evp_cipher = EVP_CIPHER_CTX_new();
-        if (context->evp_cipher == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        mbedtls_gcm_init(&context->ctx.gcm_ctx);
+
+        // Set up GCM with key
+        mbedtls_cipher_id_t cipher_id = MBEDTLS_CIPHER_ID_AES;
+        int ret = mbedtls_gcm_setkey(&context->ctx.gcm_ctx, cipher_id, key, key_length * 8);
+        if (ret != 0) {
+            ERROR("mbedtls_gcm_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        const EVP_CIPHER* cipher = NULL;
-        if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_gcm();
-        else // key_length == SYM_256_KEY_SIZE
-            cipher = EVP_aes_256_gcm();
-
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_ctr failed");
+        // Start GCM decryption with IV (mbedTLS 3.x API)
+        ret = mbedtls_gcm_starts(&context->ctx.gcm_ctx, MBEDTLS_GCM_DECRYPT,
+                                  iv, iv_length);
+        if (ret != 0) {
+            ERROR("mbedtls_gcm_starts failed: -0x%04x", -ret);
             break;
         }
 
-        // init cipher
-        if (EVP_DecryptInit_ex(context->evp_cipher, cipher, NULL, NULL, NULL) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
-            break;
-        }
-
-        // set iv length
-        if (EVP_CIPHER_CTX_ctrl(context->evp_cipher, EVP_CTRL_GCM_SET_IVLEN, (int) iv_length, NULL) != 1) {
-            ERROR("EVP_CIPHER_CTX_ctrl failed");
-            break;
-        }
-
-        // init key and iv
-        if (EVP_DecryptInit_ex(context->evp_cipher, cipher, NULL, key, iv) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
-            break;
-        }
-
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
-            break;
-        }
-
-        // set aad
-        if (aad != NULL) {
-            int out_length = 0;
-            if (EVP_DecryptUpdate(context->evp_cipher, NULL, &out_length, aad, (int) aad_length) != 1) {
-                ERROR("EVP_DecryptUpdate failed");
+        // Update AAD if present
+        if (aad_length > 0) {
+            ret = mbedtls_gcm_update_ad(&context->ctx.gcm_ctx, aad, aad_length);
+            if (ret != 0) {
+                ERROR("mbedtls_gcm_update_ad failed: -0x%04x", -ret);
                 break;
             }
         }
@@ -1086,30 +1056,29 @@ symmetric_context_t* symmetric_create_chacha20_decrypt_context(
 
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20;
         context->cipher_mode = SA_CIPHER_MODE_DECRYPT;
+        context->is_gcm = false;
+        context->is_chacha = true;
+        context->is_chachapoly = false;
 
-        context->evp_cipher = EVP_CIPHER_CTX_new();
-        if (context->evp_cipher == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        // Initialize ChaCha20 context
+        mbedtls_chacha20_init(&context->ctx.chacha20_ctx);
+
+        // Set the 256-bit key
+        int ret = mbedtls_chacha20_setkey(&context->ctx.chacha20_ctx, key);
+        if (ret != 0) {
+            ERROR("mbedtls_chacha20_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        const EVP_CIPHER* cipher = EVP_chacha20();
-        if (cipher == NULL) {
-            ERROR("EVP_chacha20 failed");
-            break;
-        }
+        // Extract 32-bit counter from counter buffer (4 bytes)
+        uint32_t initial_counter;
+        memcpy(&initial_counter, counter, sizeof(uint32_t));
 
-        uint8_t iv[CHACHA20_COUNTER_LENGTH + CHACHA20_NONCE_LENGTH];
-        memcpy(iv, counter, counter_length);
-        memcpy(iv + CHACHA20_COUNTER_LENGTH, nonce, nonce_length);
-        if (EVP_DecryptInit_ex(context->evp_cipher, cipher, NULL, key, iv) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
-            break;
-        }
-
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
+        // Start ChaCha20 with the nonce (12 bytes) and counter
+        // Note: ChaCha20 is a stream cipher, same operation for encrypt/decrypt
+        ret = mbedtls_chacha20_starts(&context->ctx.chacha20_ctx, nonce, initial_counter);
+        if (ret != 0) {
+            ERROR("mbedtls_chacha20_starts failed: -0x%04x", -ret);
             break;
         }
 
@@ -1178,48 +1147,32 @@ symmetric_context_t* symmetric_create_chacha20_poly1305_decrypt_context(
 
         context->cipher_algorithm = SA_CIPHER_ALGORITHM_CHACHA20_POLY1305;
         context->cipher_mode = SA_CIPHER_MODE_DECRYPT;
+        context->is_gcm = false;
+        context->is_chacha = false;
+        context->is_chachapoly = true;
 
-        context->evp_cipher = EVP_CIPHER_CTX_new();
-        if (context->evp_cipher == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        // Initialize ChaCha20-Poly1305 context
+        mbedtls_chachapoly_init(&context->ctx.chachapoly_ctx);
+
+        // Set the 256-bit key
+        int ret = mbedtls_chachapoly_setkey(&context->ctx.chachapoly_ctx, key);
+        if (ret != 0) {
+            ERROR("mbedtls_chachapoly_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        const EVP_CIPHER* cipher = EVP_chacha20_poly1305();
-        if (cipher == NULL) {
-            ERROR("EVP_chacha20_poly1305 failed");
+        // Start decryption with nonce (12 bytes for ChaCha20-Poly1305)
+        ret = mbedtls_chachapoly_starts(&context->ctx.chachapoly_ctx, nonce, MBEDTLS_CHACHAPOLY_DECRYPT);
+        if (ret != 0) {
+            ERROR("mbedtls_chachapoly_starts failed: -0x%04x", -ret);
             break;
         }
 
-        // init cipher
-        if (EVP_DecryptInit_ex(context->evp_cipher, cipher, NULL, NULL, NULL) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
-            break;
-        }
-
-        // set nonce length
-        if (EVP_CIPHER_CTX_ctrl(context->evp_cipher, EVP_CTRL_AEAD_SET_IVLEN, (int) nonce_length, NULL) != 1) {
-            ERROR("EVP_CIPHER_CTX_ctrl failed");
-            break;
-        }
-
-        // init key and nonce
-        if (EVP_DecryptInit_ex(context->evp_cipher, cipher, NULL, key, nonce) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
-            break;
-        }
-
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context->evp_cipher, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
-            break;
-        }
-
-        // set aad
-        if (aad != NULL) {
-            int out_length = 0;
-            if (EVP_DecryptUpdate(context->evp_cipher, NULL, &out_length, aad, (int) aad_length) != 1) {
-                ERROR("EVP_DecryptUpdate failed");
+        // Set AAD (Additional Authenticated Data) if present
+        if (aad != NULL && aad_length > 0) {
+            ret = mbedtls_chachapoly_update_aad(&context->ctx.chachapoly_ctx, aad, aad_length);
+            if (ret != 0) {
+                ERROR("mbedtls_chachapoly_update_aad failed: -0x%04x", -ret);
                 break;
             }
         }
@@ -1273,13 +1226,54 @@ sa_status symmetric_context_encrypt(
         }
     }
 
-    int length = (int) *out_length;
-    if (EVP_EncryptUpdate(context->evp_cipher, out, &length, in, (int) in_length) != 1) {
-        ERROR("EVP_EncryptUpdate failed");
-        return SA_STATUS_INTERNAL_ERROR;
+    if (context->is_chachapoly) {
+        // ChaCha20-Poly1305 uses mbedTLS chachapoly update
+        int ret = mbedtls_chachapoly_update(&context->ctx.chachapoly_ctx, in_length, in, out);
+        if (ret != 0) {
+            ERROR("mbedtls_chachapoly_update failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+        *out_length = in_length;  // ChaCha20-Poly1305 is a stream cipher, output size = input size
+    } else if (context->is_chacha) {
+        // ChaCha20 uses mbedTLS chacha20 update
+        int ret = mbedtls_chacha20_update(&context->ctx.chacha20_ctx, in_length, in, out);
+        if (ret != 0) {
+            ERROR("mbedtls_chacha20_update failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+        *out_length = in_length;  // ChaCha20 is a stream cipher, output size = input size
+    } else if (context->is_gcm) {
+        // AES-GCM uses mbedTLS GCM update (mbedTLS 3.x API)
+        size_t olen;
+        int ret = mbedtls_gcm_update(&context->ctx.gcm_ctx, in, in_length, out, in_length, &olen);
+        if (ret != 0) {
+            ERROR("mbedtls_gcm_update failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+        *out_length = olen;  // Use actual output length from mbedTLS
+    } else if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB ||
+               context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7) {
+        // AES-ECB uses direct AES API - process block by block
+        *out_length = 0;
+        for (size_t i = 0; i < in_length; i += AES_BLOCK_SIZE) {
+            int ret = mbedtls_aes_crypt_ecb(&context->ctx.aes_ctx, MBEDTLS_AES_ENCRYPT,
+                                             (const unsigned char*)in + i,
+                                             (unsigned char*)out + i);
+            if (ret != 0) {
+                ERROR("mbedtls_aes_crypt_ecb failed: -0x%04x", -ret);
+                return SA_STATUS_INTERNAL_ERROR;
+            }
+            *out_length += AES_BLOCK_SIZE;
+        }
+    } else {
+        // AES-CBC/CTR uses mbedTLS cipher update
+        int ret = mbedtls_cipher_update(&context->ctx.cipher_ctx, in, in_length, out, out_length);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_update failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
     }
 
-    *out_length = length;
     return SA_STATUS_OK;
 }
 
@@ -1328,19 +1322,83 @@ sa_status symmetric_context_encrypt_last(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    int update_length = (int) in_length;
-    if (EVP_EncryptUpdate(context->evp_cipher, out, &update_length, in, (int) in_length) != 1) {
-        ERROR("EVP_EncryptUpdate failed");
-        return SA_STATUS_INTERNAL_ERROR;
+    if (context->is_chachapoly) {
+        // ChaCha20-Poly1305 uses mbedTLS chachapoly finish to get the tag
+        // First, process any remaining data
+        int ret;
+        if (in_length > 0) {
+            ret = mbedtls_chachapoly_update(&context->ctx.chachapoly_ctx, in_length, in, out);
+            if (ret != 0) {
+                ERROR("mbedtls_chachapoly_update failed: -0x%04x", -ret);
+                return SA_STATUS_INTERNAL_ERROR;
+            }
+        }
+
+        // Finalize and get the authentication tag
+        ret = mbedtls_chachapoly_finish(&context->ctx.chachapoly_ctx, context->chachapoly_tag);
+        if (ret != 0) {
+            ERROR("mbedtls_chachapoly_finish failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+
+        context->chachapoly_tag_length = CHACHA20_TAG_LENGTH;
+        *out_length = in_length;
+    } else if (context->is_chacha) {
+        // ChaCha20 (without Poly1305) - just process the remaining data
+        if (in_length > 0) {
+            int ret = mbedtls_chacha20_update(&context->ctx.chacha20_ctx, in_length, in, out);
+            if (ret != 0) {
+                ERROR("mbedtls_chacha20_update failed: -0x%04x", -ret);
+                return SA_STATUS_INTERNAL_ERROR;
+            }
+        }
+        *out_length = in_length;
+    } else if (context->is_gcm) {
+        // AES-GCM doesn't use "last" - just finish
+        *out_length = 0;
+    } else if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7) {
+        // AES-ECB with PKCS7 padding - manual padding with direct AES API
+        unsigned char padded_block[AES_BLOCK_SIZE];
+
+        // Copy input to padded block
+        if (in_length > 0) {
+            memcpy(padded_block, in, in_length);
+        }
+
+        // Add PKCS7 padding
+        unsigned char padding_value = AES_BLOCK_SIZE - in_length;
+        for (size_t i = in_length; i < AES_BLOCK_SIZE; i++) {
+            padded_block[i] = padding_value;
+        }
+
+        // Encrypt the padded block
+        int ret = mbedtls_aes_crypt_ecb(&context->ctx.aes_ctx, MBEDTLS_AES_ENCRYPT,
+                                         padded_block, (unsigned char*)out);
+        if (ret != 0) {
+            ERROR("mbedtls_aes_crypt_ecb failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+
+        *out_length = AES_BLOCK_SIZE;
+    } else {
+        // AES-CBC with PKCS7 padding - use mbedTLS cipher finish
+        size_t update_length = 0;
+        int ret = mbedtls_cipher_update(&context->ctx.cipher_ctx, in, in_length, out, &update_length);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_update failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+
+        size_t final_length = 0;
+        ret = mbedtls_cipher_finish(&context->ctx.cipher_ctx, out + update_length, &final_length);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_finish failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+
+        *out_length = update_length + final_length;
     }
 
-    int final_length = 0;
-    if (EVP_EncryptFinal(context->evp_cipher, out + update_length, &final_length) != 1) {
-        ERROR("EVP_EncryptFinal failed");
-        return SA_STATUS_INTERNAL_ERROR;
-    }
-
-    *out_length = update_length + final_length;
     return SA_STATUS_OK;
 }
 
@@ -1381,13 +1439,54 @@ sa_status symmetric_context_decrypt(
         }
     }
 
-    int length = (int) *out_length;
-    if (EVP_DecryptUpdate(context->evp_cipher, out, &length, in, (int) in_length) != 1) {
-        ERROR("EVP_DecryptUpdate failed");
-        return SA_STATUS_INTERNAL_ERROR;
+    if (context->is_chachapoly) {
+        // ChaCha20-Poly1305 uses mbedTLS chachapoly update
+        int ret = mbedtls_chachapoly_update(&context->ctx.chachapoly_ctx, in_length, in, out);
+        if (ret != 0) {
+            ERROR("mbedtls_chachapoly_update failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+        *out_length = in_length;  // ChaCha20-Poly1305 is a stream cipher, output size = input size
+    } else if (context->is_chacha) {
+        // ChaCha20 uses mbedTLS chacha20 update
+        int ret = mbedtls_chacha20_update(&context->ctx.chacha20_ctx, in_length, in, out);
+        if (ret != 0) {
+            ERROR("mbedtls_chacha20_update failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+        *out_length = in_length;  // ChaCha20 is a stream cipher, output size = input size
+    } else if (context->is_gcm) {
+        // AES-GCM uses mbedTLS GCM update (mbedTLS 3.x API)
+        size_t olen;
+        int ret = mbedtls_gcm_update(&context->ctx.gcm_ctx, in, in_length, out, in_length, &olen);
+        if (ret != 0) {
+            ERROR("mbedtls_gcm_update failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+        *out_length = olen;  // Use actual output length from mbedTLS
+    } else if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB ||
+               context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7) {
+        // AES-ECB uses direct AES API - process block by block
+        *out_length = 0;
+        for (size_t i = 0; i < in_length; i += AES_BLOCK_SIZE) {
+            int ret = mbedtls_aes_crypt_ecb(&context->ctx.aes_ctx, MBEDTLS_AES_DECRYPT,
+                                             (const unsigned char*)in + i,
+                                             (unsigned char*)out + i);
+            if (ret != 0) {
+                ERROR("mbedtls_aes_crypt_ecb failed: -0x%04x", -ret);
+                return SA_STATUS_INTERNAL_ERROR;
+            }
+            *out_length += AES_BLOCK_SIZE;
+        }
+    } else {
+        // AES-CBC/CTR uses mbedTLS cipher update
+        int ret = mbedtls_cipher_update(&context->ctx.cipher_ctx, in, in_length, out, out_length);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_update failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
     }
 
-    *out_length = length;
     return SA_STATUS_OK;
 }
 
@@ -1434,19 +1533,126 @@ sa_status symmetric_context_decrypt_last(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    int update_length = (int) in_length;
-    if (EVP_DecryptUpdate(context->evp_cipher, out, &update_length, in, (int) in_length) != 1) {
-        ERROR("EVP_DecryptUpdate failed");
-        return SA_STATUS_INTERNAL_ERROR;
+    if (context->is_chachapoly) {
+        // ChaCha20-Poly1305 uses mbedTLS chachapoly finish with tag verification
+        // First, process any remaining data
+        if (in_length > 0) {
+            int ret = mbedtls_chachapoly_update(&context->ctx.chachapoly_ctx, in_length, in, out);
+            if (ret != 0) {
+                ERROR("mbedtls_chachapoly_update failed: -0x%04x", -ret);
+                return SA_STATUS_INTERNAL_ERROR;
+            }
+        }
+
+        // Finalize and verify the authentication tag
+        unsigned char computed_tag[CHACHA20_TAG_LENGTH];
+        int ret = mbedtls_chachapoly_finish(&context->ctx.chachapoly_ctx, computed_tag);
+        if (ret != 0) {
+            ERROR("mbedtls_chachapoly_finish failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+
+        // Verify the tag matches what was set
+        if (memcmp(computed_tag, context->chachapoly_tag, context->chachapoly_tag_length) != 0) {
+            ERROR("ChaCha20-Poly1305 tag verification failed");
+            return SA_STATUS_VERIFICATION_FAILED;
+        }
+
+        *out_length = in_length;
+    } else if (context->is_chacha) {
+        // ChaCha20 (without Poly1305) - just process the remaining data
+        if (in_length > 0) {
+            int ret = mbedtls_chacha20_update(&context->ctx.chacha20_ctx, in_length, in, out);
+            if (ret != 0) {
+                ERROR("mbedtls_chacha20_update failed: -0x%04x", -ret);
+                return SA_STATUS_INTERNAL_ERROR;
+            }
+        }
+        *out_length = in_length;
+    } else if (context->is_gcm) {
+        // AES-GCM - finish decryption with tag verification (mbedTLS 3.x API)
+        // First process any remaining input data
+        size_t olen = 0;
+        if (in != NULL && in_length > 0) {
+            int ret = mbedtls_gcm_update(&context->ctx.gcm_ctx, in, in_length, out, in_length, &olen);
+            if (ret != 0) {
+                ERROR("mbedtls_gcm_update failed: -0x%04x", -ret);
+                return SA_STATUS_INTERNAL_ERROR;
+            }
+            *out_length = olen;
+        } else {
+            *out_length = 0;
+        }
+
+        // Now finish and verify the tag (mbedTLS 3.x API)
+        unsigned char computed_tag[16];  // GCM tag max size
+        size_t olen2;
+        int ret = mbedtls_gcm_finish(&context->ctx.gcm_ctx, NULL, 0, &olen2, computed_tag, context->gcm_tag_length);
+        if (ret != 0) {
+            ERROR("mbedtls_gcm_finish failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+
+        // Verify the tag
+        if (memcmp(computed_tag, context->gcm_tag, context->gcm_tag_length) != 0) {
+            ERROR("GCM tag verification failed");
+            return SA_STATUS_VERIFICATION_FAILED;
+        }
+
+        *out_length = in_length;
+    } else if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7) {
+        // AES-ECB with PKCS7 padding - decrypt and remove padding manually
+        if (in_length != AES_BLOCK_SIZE) {
+            ERROR("Invalid in_length for ECB PKCS7");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        unsigned char decrypted_block[AES_BLOCK_SIZE];
+        int ret = mbedtls_aes_crypt_ecb(&context->ctx.aes_ctx, MBEDTLS_AES_DECRYPT,
+                                         (const unsigned char*)in, decrypted_block);
+        if (ret != 0) {
+            ERROR("mbedtls_aes_crypt_ecb failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+
+        // Verify and remove PKCS7 padding
+        unsigned char padding_value = decrypted_block[AES_BLOCK_SIZE - 1];
+        if (padding_value == 0 || padding_value > AES_BLOCK_SIZE) {
+            ERROR("Invalid PKCS7 padding value");
+            return SA_STATUS_VERIFICATION_FAILED;
+        }
+
+        // Verify all padding bytes are correct
+        for (size_t i = AES_BLOCK_SIZE - padding_value; i < AES_BLOCK_SIZE; i++) {
+            if (decrypted_block[i] != padding_value) {
+                ERROR("Invalid PKCS7 padding");
+                return SA_STATUS_VERIFICATION_FAILED;
+            }
+        }
+
+        // Copy unpadded data to output
+        size_t unpadded_length = AES_BLOCK_SIZE - padding_value;
+        memcpy(out, decrypted_block, unpadded_length);
+        *out_length = unpadded_length;
+    } else {
+        // AES-CBC with PKCS7 padding - use mbedTLS cipher finish
+        size_t update_length = 0;
+        int ret = mbedtls_cipher_update(&context->ctx.cipher_ctx, in, in_length, out, &update_length);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_update failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+
+        size_t final_length = 0;
+        ret = mbedtls_cipher_finish(&context->ctx.cipher_ctx, out + update_length, &final_length);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_finish failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
+
+        *out_length = update_length + final_length;
     }
 
-    int final_length = 0;
-    if (EVP_DecryptFinal(context->evp_cipher, out + update_length, &final_length) != 1) {
-        ERROR("EVP_DecryptFinal failed");
-        return SA_STATUS_INTERNAL_ERROR;
-    }
-
-    *out_length = update_length + final_length;
     return SA_STATUS_OK;
 }
 
@@ -1472,23 +1678,17 @@ sa_status symmetric_context_set_iv(
             ERROR("Invalid iv_length");
             return SA_STATUS_INVALID_PARAMETER;
         }
+
+        // AES-CBC/CTR uses mbedTLS cipher API - set IV
+        // Note: Cast away const since mbedTLS API requires non-const, but operation is logically const from caller perspective
+        symmetric_context_t* mutable_context = (symmetric_context_t*)context;
+        int ret = mbedtls_cipher_set_iv(&mutable_context->ctx.cipher_ctx, iv, iv_length);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_set_iv failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
     } else {
         ERROR("Invalid cipher algorithm");
-        return SA_STATUS_INVALID_PARAMETER;
-    }
-
-    if (context->cipher_mode == SA_CIPHER_MODE_ENCRYPT) {
-        if (EVP_EncryptInit_ex(context->evp_cipher, NULL, NULL, NULL, iv) != 1) {
-            ERROR("EVP_EncryptInit_ex failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-    } else if (context->cipher_mode == SA_CIPHER_MODE_DECRYPT) {
-        if (EVP_DecryptInit_ex(context->evp_cipher, NULL, NULL, NULL, iv) != 1) {
-            ERROR("EVP_EncryptInit_ex failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-    } else {
-        ERROR("Invalid cipher mode");
         return SA_STATUS_INVALID_PARAMETER;
     }
 
@@ -1531,17 +1731,28 @@ sa_status symmetric_context_get_tag(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    uint8_t local_tag[AES_BLOCK_SIZE];
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-    if (EVP_CIPHER_CTX_ctrl(context->evp_cipher, EVP_CTRL_GCM_GET_TAG, sizeof(local_tag), local_tag) != 1) {
-#else
-    if (EVP_CIPHER_CTX_ctrl(context->evp_cipher, EVP_CTRL_AEAD_GET_TAG, sizeof(local_tag), local_tag) != 1) {
-#endif
-        ERROR("EVP_CIPHER_CTX_ctrl failed");
-        return SA_STATUS_INTERNAL_ERROR;
-    }
+    if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM) {
+        // AES-GCM uses mbedTLS - get tag via mbedtls_gcm_finish (mbedTLS 3.x API)
+        // Note: Cast away const since mbedTLS API requires non-const, but operation is logically const from caller perspective
+        uint8_t local_tag[16];  // GCM tag max size
+        symmetric_context_t* mutable_context = (symmetric_context_t*)context;
+        size_t olen;
+        int ret = mbedtls_gcm_finish(&mutable_context->ctx.gcm_ctx, NULL, 0, &olen, local_tag, tag_length);
+        if (ret != 0) {
+            ERROR("mbedtls_gcm_finish failed: -0x%04x", -ret);
+            return SA_STATUS_INTERNAL_ERROR;
+        }
 
-    memcpy(tag, local_tag, tag_length);
+        memcpy(tag, local_tag, tag_length);
+    } else {
+        // ChaCha20-Poly1305 uses mbedTLS - tag was generated in encrypt_last
+        if (context->chachapoly_tag_length != tag_length) {
+            ERROR("Tag length mismatch");
+            return SA_STATUS_INVALID_PARAMETER;
+        }
+
+        memcpy(tag, context->chachapoly_tag, tag_length);
+    }
 
     return SA_STATUS_OK;
 }
@@ -1582,13 +1793,14 @@ sa_status symmetric_context_set_tag(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-    if (EVP_CIPHER_CTX_ctrl(context->evp_cipher, EVP_CTRL_GCM_SET_TAG, (int) tag_length, (void*) tag) != 1) {
-#else
-    if (EVP_CIPHER_CTX_ctrl(context->evp_cipher, EVP_CTRL_AEAD_SET_TAG, (int) tag_length, (void*) tag) != 1) {
-#endif
-        ERROR("EVP_CIPHER_CTX_ctrl failed");
-        return SA_STATUS_INTERNAL_ERROR;
+    if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM) {
+        // AES-GCM uses mbedTLS - store tag for verification in finish()
+        memcpy(context->gcm_tag, tag, tag_length);
+        context->gcm_tag_length = tag_length;
+    } else {
+        // ChaCha20-Poly1305 uses mbedTLS - store tag for verification in decrypt_last
+        memcpy(context->chachapoly_tag, tag, tag_length);
+        context->chachapoly_tag_length = tag_length;
     }
 
     return SA_STATUS_OK;
@@ -1599,8 +1811,23 @@ void symmetric_context_free(symmetric_context_t* context) {
         return;
     }
 
-    if (context->evp_cipher != NULL)
-        EVP_CIPHER_CTX_free(context->evp_cipher);
+    if (context->is_chachapoly) {
+        // ChaCha20-Poly1305 uses mbedTLS chachapoly context
+        mbedtls_chachapoly_free(&context->ctx.chachapoly_ctx);
+    } else if (context->is_chacha) {
+        // ChaCha20 uses mbedTLS chacha20 context
+        mbedtls_chacha20_free(&context->ctx.chacha20_ctx);
+    } else if (context->is_gcm) {
+        // AES-GCM uses mbedTLS GCM context
+        mbedtls_gcm_free(&context->ctx.gcm_ctx);
+    } else if (context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB ||
+               context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7) {
+        // AES-ECB uses direct AES context
+        mbedtls_aes_free(&context->ctx.aes_ctx);
+    } else {
+        // AES-CBC/CTR uses mbedTLS cipher context
+        mbedtls_cipher_free(&context->ctx.cipher_ctx);
+    }
 
     memory_internal_free(context);
 }

@@ -25,10 +25,10 @@ sa_status ta_sa_init(
         ta_client* client_slot,
         const sa_uuid* caller_uuid) {
 
-    static bool openssl_allocator_inited = false;
-    if (!openssl_allocator_inited) {
-        openssl_allocator_inited = true;
-        init_openssl_allocator();
+    static bool mbedtls_allocator_inited = false;
+    if (!mbedtls_allocator_inited) {
+        mbedtls_allocator_inited = true;
+        init_mbedtls_allocator();
     }
 
     if (client_slot == NULL) {

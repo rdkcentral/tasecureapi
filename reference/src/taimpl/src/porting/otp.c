@@ -20,16 +20,11 @@
 #include "common.h"
 #include "hmac_internal.h"
 #include "log.h"
-#include "pkcs12.h"
+#include "pkcs12_mbedtls.h"
 #include "porting/memory.h"
 #include "porting/otp_internal.h"
 #include "stored_key_internal.h"
 #include <ctype.h>
-#include <openssl/evp.h>
-#include <openssl/x509.h>
-#if OPENSSL_VERSION_NUMBER < 0x30000000
-#include <memory.h>
-#endif
 
 #define MAX_DEVICE_NAME_LENGTH 16
 
@@ -64,6 +59,7 @@ static uint64_t convert_str_to_int(
     return value;
 }
 
+// mbedTLS implementation
 static bool get_root_key(
         void* root_key,
         size_t* root_key_length) {
@@ -84,8 +80,24 @@ static bool get_root_key(
         char device_name[MAX_DEVICE_NAME_LENGTH];
         size_t device_name_length = MAX_DEVICE_NAME_LENGTH;
         device_name[0] = '\0';
-        if (load_pkcs12_secret_key(key, &key_length, device_name, &device_name_length) != 1) {
-            ERROR("load_pkcs12_secret_key failed");
+
+        // Get keystore path and password from environment or use defaults
+        const char* keystore_path = getenv("ROOT_KEYSTORE");
+        const char* keystore_password = getenv("ROOT_KEYSTORE_PASSWORD");
+
+        if (keystore_path == NULL) {
+            keystore_path = "root_keystore.p12";
+        }
+
+        if (keystore_password == NULL) {
+            keystore_password = DEFAULT_ROOT_KEYSTORE_PASSWORD;
+        }
+
+        // Call mbedTLS PKCS#12 parser
+        key_length = SYM_128_KEY_SIZE;
+        if (!load_pkcs12_secret_key_mbedtls(key, &key_length,
+                                           device_name, &device_name_length)) {
+            ERROR("load_pkcs12_secret_key_mbedtls failed");
             return false;
         }
 
@@ -106,6 +118,7 @@ static bool get_root_key(
     return true;
 }
 
+// mbedTLS implementation
 static bool get_common_root_key(
         void* common_root_key,
         size_t* common_root_key_length) {
@@ -126,8 +139,24 @@ static bool get_common_root_key(
         char name[MAX_NAME_SIZE];
         size_t name_length = MAX_NAME_SIZE;
         strcpy(name, COMMON_ROOT_NAME);
-        if (load_pkcs12_secret_key(key, &key_length, name, &name_length) != 1) {
-            ERROR("load_pkcs12_secret_key failed");
+
+        // Get keystore path and password from environment or use defaults
+        const char* keystore_path = getenv("ROOT_KEYSTORE");
+        const char* keystore_password = getenv("ROOT_KEYSTORE_PASSWORD");
+
+        if (keystore_path == NULL) {
+            keystore_path = "root_keystore.p12";
+        }
+
+        if (keystore_password == NULL) {
+            keystore_password = "password";
+        }
+
+        // Call mbedTLS PKCS#12 parser with specific key name
+        key_length = SYM_128_KEY_SIZE;
+        if (!load_pkcs12_secret_key_mbedtls(key, &key_length,
+                                           name, &name_length)) {
+            ERROR("load_pkcs12_secret_key_mbedtls failed");
             return false;
         }
     }
@@ -181,46 +210,56 @@ static sa_status wrap_aes_cbc(
     }
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
-    EVP_CIPHER_CTX* context = NULL;
+    mbedtls_cipher_context_t ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    mbedtls_cipher_init(&ctx);
+
     do {
-        context = EVP_CIPHER_CTX_new();
-        if (context == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        // Select cipher type based on key length
+        mbedtls_cipher_type_t cipher_type = (key_length == SYM_128_KEY_SIZE) ?
+            MBEDTLS_CIPHER_AES_128_CBC : MBEDTLS_CIPHER_AES_256_CBC;
+
+        const mbedtls_cipher_info_t* cipher_info = mbedtls_cipher_info_from_type(cipher_type);
+        if (cipher_info == NULL) {
+            ERROR("mbedtls_cipher_info_from_type failed");
             break;
         }
 
-        const EVP_CIPHER* cipher = NULL;
-        if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_cbc();
-        else
-            cipher = EVP_aes_256_cbc();
-
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_cbc failed");
+        int ret = mbedtls_cipher_setup(&ctx, cipher_info);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_setup failed: -0x%04x", -ret);
             break;
         }
 
-        if (EVP_EncryptInit_ex(context, cipher, NULL, key, (const unsigned char*) iv) != 1) {
-            ERROR("EVP_EncryptInit_ex failed");
+        ret = mbedtls_cipher_setkey(&ctx, key, key_length * 8, MBEDTLS_ENCRYPT);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
+        // Turn off padding
+        ret = mbedtls_cipher_set_padding_mode(&ctx, MBEDTLS_PADDING_NONE);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_set_padding_mode failed: -0x%04x", -ret);
             break;
         }
 
-        int out_length = (int) in_length;
-        if (EVP_EncryptUpdate(context, out, &out_length, in, (int) in_length) != 1) {
-            ERROR("EVP_EncryptUpdate failed");
+        size_t out_len = 0;
+        ret = mbedtls_cipher_crypt(&ctx, iv, AES_BLOCK_SIZE, in, in_length, out, &out_len);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_crypt failed: -0x%04x", -ret);
+            break;
+        }
+
+        if (out_len != in_length) {
+            ERROR("Output length mismatch: expected %zu, got %zu", in_length, out_len);
             break;
         }
 
         status = SA_STATUS_OK;
     } while (false);
 
-    EVP_CIPHER_CTX_free(context);
+    mbedtls_cipher_free(&ctx);
 
     return status;
 }
@@ -362,46 +401,35 @@ sa_status unwrap_aes_ecb_internal(
     }
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
-    EVP_CIPHER_CTX* context = NULL;
+    mbedtls_aes_context aes_ctx;
+    mbedtls_aes_init(&aes_ctx);
+
     do {
-        context = EVP_CIPHER_CTX_new();
-        if (context == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        // Set decryption key
+        int ret = mbedtls_aes_setkey_dec(&aes_ctx, key, key_length * 8);
+        if (ret != 0) {
+            ERROR("mbedtls_aes_setkey_dec failed: -0x%04x", -ret);
             break;
         }
 
-        const EVP_CIPHER* cipher = NULL;
-        if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_ecb();
-        else
-            cipher = EVP_aes_256_ecb();
-
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_ebc failed");
-            break;
+        // Process data in 16-byte blocks (ECB mode)
+        for (size_t i = 0; i < in_length; i += AES_BLOCK_SIZE) {
+            ret = mbedtls_aes_crypt_ecb(&aes_ctx, MBEDTLS_AES_DECRYPT,
+                                        in + i, out + i);
+            if (ret != 0) {
+                ERROR("mbedtls_aes_crypt_ecb failed at block %zu: -0x%04x", i / AES_BLOCK_SIZE, -ret);
+                break;
+            }
         }
 
-        if (EVP_DecryptInit_ex(context, cipher, NULL, (const unsigned char*) key, NULL) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
-            break;
-        }
-
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
-            break;
-        }
-
-        int out_length = (int) in_length;
-        if (EVP_DecryptUpdate(context, out, &out_length, in, (int) in_length) != 1) {
-            ERROR("EVP_DecryptUpdate failed");
+        if (ret != 0) {
             break;
         }
 
         status = SA_STATUS_OK;
     } while (false);
 
-    EVP_CIPHER_CTX_free(context);
+    mbedtls_aes_free(&aes_ctx);
 
     return status;
 }
@@ -445,47 +473,56 @@ sa_status unwrap_aes_cbc_internal(
     }
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
-    EVP_CIPHER_CTX* context = NULL;
+    mbedtls_cipher_context_t ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    mbedtls_cipher_init(&ctx);
+
     do {
-        context = EVP_CIPHER_CTX_new();
-        if (context == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        // Select cipher type based on key length
+        mbedtls_cipher_type_t cipher_type = (key_length == SYM_128_KEY_SIZE) ?
+            MBEDTLS_CIPHER_AES_128_CBC : MBEDTLS_CIPHER_AES_256_CBC;
+
+        const mbedtls_cipher_info_t* cipher_info = mbedtls_cipher_info_from_type(cipher_type);
+        if (cipher_info == NULL) {
+            ERROR("mbedtls_cipher_info_from_type failed");
             break;
         }
 
-        const EVP_CIPHER* cipher = NULL;
-        if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_cbc();
-        else // key_length == SYM_256_KEY_SIZE
-            cipher = EVP_aes_256_cbc();
-
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_cbc failed");
+        int ret = mbedtls_cipher_setup(&ctx, cipher_info);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_setup failed: -0x%04x", -ret);
             break;
         }
 
-        if (EVP_DecryptInit_ex(context, cipher, NULL, (const unsigned char*) key,
-                    (const unsigned char*) iv) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
+        ret = mbedtls_cipher_setkey(&ctx, key, key_length * 8, MBEDTLS_DECRYPT);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
+        // Turn off padding
+        ret = mbedtls_cipher_set_padding_mode(&ctx, MBEDTLS_PADDING_NONE);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_set_padding_mode failed: -0x%04x", -ret);
             break;
         }
 
-        int out_length = (int) in_length;
-        if (EVP_DecryptUpdate(context, out, &out_length, in, (int) in_length) != 1) {
-            ERROR("EVP_DecryptUpdate failed");
+        size_t out_len = 0;
+        ret = mbedtls_cipher_crypt(&ctx, iv, AES_BLOCK_SIZE, in, in_length, out, &out_len);
+        if (ret != 0) {
+            ERROR("mbedtls_cipher_crypt failed: -0x%04x", -ret);
+            break;
+        }
+
+        if (out_len != in_length) {
+            ERROR("Output length mismatch: expected %zu, got %zu", in_length, out_len);
             break;
         }
 
         status = SA_STATUS_OK;
     } while (false);
 
-    EVP_CIPHER_CTX_free(context);
+    mbedtls_cipher_free(&ctx);
 
     return status;
 }
@@ -549,80 +586,33 @@ sa_status unwrap_aes_gcm_internal(
     }
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
-    EVP_CIPHER_CTX* context = NULL;
+    mbedtls_gcm_context ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    mbedtls_gcm_init(&ctx);
+
     do {
-        context = EVP_CIPHER_CTX_new();
-        if (context == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        // Select cipher ID based on key length
+        mbedtls_cipher_id_t cipher_id = (key_length == SYM_128_KEY_SIZE) ?
+            MBEDTLS_CIPHER_ID_AES : MBEDTLS_CIPHER_ID_AES;
+
+        int ret = mbedtls_gcm_setkey(&ctx, cipher_id, key, key_length * 8);
+        if (ret != 0) {
+            ERROR("mbedtls_gcm_setkey failed: -0x%04x", -ret);
             break;
         }
 
-        const EVP_CIPHER* cipher = NULL;
-        if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_gcm();
-        else // key_length == SYM_256_KEY_SIZE
-            cipher = EVP_aes_256_gcm();
-
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_gcm failed");
-            break;
-        }
-
-        // init cipher
-        if (EVP_DecryptInit_ex(context, cipher, NULL, NULL, NULL) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
-            break;
-        }
-
-        // set iv length
-        if (EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_GCM_SET_IVLEN, (int) iv_length, NULL) != 1) {
-            ERROR("EVP_CIPHER_CTX_ctrl failed");
-            break;
-        }
-
-        // init key and iv
-        if (EVP_DecryptInit_ex(context, cipher, NULL, key, iv) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
-            break;
-        }
-
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
-            break;
-        }
-
-        // set aad
-        int out_length = (int) in_length;
-        if (EVP_DecryptUpdate(context, NULL, &out_length, aad, (int) aad_length) != 1) {
-            ERROR("EVP_DecryptUpdate failed");
-            break;
-        }
-
-        if (EVP_DecryptUpdate(context, out, &out_length, in, (int) in_length) != 1) {
-            ERROR("EVP_DecryptUpdate failed");
-            break;
-        }
-
-        // check tag
-        if (EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_GCM_SET_TAG, (int) tag_length, (void*) tag) != 1) {
-            ERROR("EVP_CIPHER_CTX_ctrl failed");
-            break;
-        }
-
-        int length = 0;
-        if (EVP_DecryptFinal_ex(context, NULL, &length) != 1) {
-            ERROR("EVP_DecryptFinal_ex failed");
+        ret = mbedtls_gcm_auth_decrypt(&ctx, in_length, iv, iv_length,
+                                       aad, aad_length, tag, tag_length,
+                                       in, out);
+        if (ret != 0) {
+            ERROR("mbedtls_gcm_auth_decrypt failed: -0x%04x", -ret);
             break;
         }
 
         status = SA_STATUS_OK;
     } while (false);
 
-    if (context != NULL) {
-        EVP_CIPHER_CTX_free(context);
-        context = NULL;
-    }
+    mbedtls_gcm_free(&ctx);
 
     return status;
 }
