@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ extern "C" {
  */
 sa_status sa_svp_supported();
 
+#ifdef ENABLE_SVP
 /**
  * Allocate an SVP memory block.
  *
@@ -255,6 +256,7 @@ sa_status sa_svp_buffer_check(
         const void* hash,
         size_t hash_length);
 
+#endif // ENABLE_SVP
 #ifdef __cplusplus
 }
 #endif
