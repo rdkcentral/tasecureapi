@@ -27,6 +27,11 @@
 
 #include <openssl/pkcs12.h>
 
+// Include mbedTLS PKCS#12 header if enabled
+#ifdef USE_MBEDTLS
+#include "pkcs12_mbedtls.h"
+#endif
+
 #ifdef __cplusplus
 #include <cstdint>
 extern "C" {
@@ -45,11 +50,17 @@ extern "C" {
  * @param[in,out] name_length
  * @return true if successful and false if not.
  */
+#ifdef USE_MBEDTLS
+// When USE_MBEDTLS is defined, redirect to mbedTLS implementation
+#define load_pkcs12_secret_key load_pkcs12_secret_key_mbedtls
+#else
+// OpenSSL implementation
 bool load_pkcs12_secret_key(
         void* key,
         size_t* key_length,
         char* name,
         size_t* name_length);
+#endif
 
 #ifdef __cplusplus
 }
