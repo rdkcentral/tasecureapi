@@ -23,6 +23,7 @@
 #include "pkcs12.h"
 #include "porting/memory.h"
 #include "porting/otp_internal.h"
+#include "root_keystore.h"
 #include "stored_key_internal.h"
 #include <ctype.h>
 #include <openssl/evp.h>

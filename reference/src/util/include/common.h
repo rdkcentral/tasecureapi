@@ -67,7 +67,4 @@
 #define RSA_PSS_SALTLEN_MAX (-3)
 #endif
 
-#define DEFAULT_ROOT_KEYSTORE_PASSWORD "password01234567"
-#define COMMON_ROOT_NAME "commonroot"
-
 #endif // COMMON_H

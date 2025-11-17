@@ -17,6 +17,7 @@
  */
 
 #include "common.h"
+#include "root_keystore.h"
 #include <cstring>
 #include <openssl/cmac.h>
 #include <openssl/ec.h>
