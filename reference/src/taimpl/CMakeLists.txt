@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2023 Comcast Cable Communications Management, LLC
+# Copyright 2020-2025 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,25 +49,24 @@ include_directories(AFTER SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 find_package(Threads REQUIRED)
 find_package(YAJL REQUIRED)
 
-add_library(taimpl STATIC
+set(TAIMPL_SOURCES
         include/porting/init.h
         include/porting/memory.h
         include/porting/otp.h
         include/porting/otp_internal.h
         include/porting/overflow.h
         include/porting/rand.h
-        include/porting/svp.h
+	include/porting/svp.h
         include/porting/transport.h
-        include/porting/video_output.h
-
+	include/porting/video_output.h
         src/porting/init.c
         src/porting/memory.c
         src/porting/otp.c
         src/porting/overflow.c
         src/porting/rand.c
-        src/porting/svp.c
-        src/porting/transport.c
-        src/porting/video_output.c
+	src/porting/svp.c
+	src/porting/transport.c
+	src/porting/video_output.c
 
         include/internal/buffer.h
         include/internal/cenc.h
@@ -95,13 +94,13 @@ add_library(taimpl STATIC
         include/internal/soc_key_container.h
         include/internal/stored_key.h
         include/internal/stored_key_internal.h
-        include/internal/svp_store.h
+	include/internal/svp_store.h
         include/internal/symmetric.h
         include/internal/typej.h
         include/internal/unwrap.h
 
-        src/internal/buffer.c
-        src/internal/cenc.c
+	src/internal/buffer.c
+	src/internal/cenc.c
         src/internal/cipher_store.c
         src/internal/client_store.c
         src/internal/cmac_context.c
@@ -123,7 +122,7 @@ add_library(taimpl STATIC
         src/internal/slots.c
         src/internal/soc_key_container.c
         src/internal/stored_key.c
-        src/internal/svp_store.c
+	src/internal/svp_store.c
         src/internal/symmetric.c
         src/internal/ta.c
         src/internal/typej.c
@@ -139,8 +138,8 @@ add_library(taimpl STATIC
 
         src/ta_sa_close.c
         src/ta_sa_crypto_cipher_init.c
-        src/ta_sa_crypto_cipher_process.c
-        src/ta_sa_crypto_cipher_process_last.c
+	src/ta_sa_crypto_cipher_process.c
+	src/ta_sa_crypto_cipher_process_last.c
         src/ta_sa_crypto_cipher_release.c
         src/ta_sa_crypto_cipher_update_iv.c
         src/ta_sa_crypto_mac_compute.c
@@ -166,14 +165,22 @@ add_library(taimpl STATIC
         src/ta_sa_key_provision.c
         src/ta_sa_key_release.c
         src/ta_sa_key_unwrap.c
-        src/ta_sa_process_common_encryption.c
-        src/ta_sa_svp_buffer_check.c
-        src/ta_sa_svp_buffer_copy.c
-        src/ta_sa_svp_buffer_create.c
-        src/ta_sa_svp_buffer_release.c
-        src/ta_sa_svp_buffer_write.c
-        src/ta_sa_svp_key_check.c
-        src/ta_sa_svp_supported.c)
+	src/ta_sa_process_common_encryption.c
+	src/ta_sa_svp_supported.c
+        )
+if(ENABLE_SVP)
+    list(APPEND TAIMPL_SOURCES 
+	src/ta_sa_svp_buffer_check.c
+	src/ta_sa_svp_buffer_copy.c
+	src/ta_sa_svp_buffer_create.c
+	src/ta_sa_svp_buffer_release.c
+	src/ta_sa_svp_buffer_write.c
+	src/ta_sa_svp_key_check.c
+	)
+endif()
+
+
+add_library(taimpl STATIC ${TAIMPL_SOURCES})
 
 target_include_directories(taimpl
         PUBLIC
@@ -209,7 +216,7 @@ target_clangformat_setup(taimpl)
 
 if (BUILD_TESTS)
     # Google test
-    add_executable(taimpltest
+    set(TAIMPLTEST_SOURCES
             test/environment.cpp
             test/ta_test_helpers.cpp
             test/json.cpp
@@ -217,13 +224,19 @@ if (BUILD_TESTS)
             test/rights.cpp
             test/slots.cpp
             test/ta_sa_init.cpp
-            test/ta_sa_svp_buffer_check.cpp
-            test/ta_sa_svp_buffer_copy.cpp
-            test/ta_sa_svp_buffer_write.cpp
-            test/ta_sa_svp_common.cpp
-            test/ta_sa_svp_crypto.cpp
-            test/ta_sa_svp_crypto.h
-            test/ta_sa_svp_key_check.cpp)
+	    test/ta_sa_svp_crypto.cpp
+	    test/ta_sa_svp_crypto.h
+        )
+    if(NOT ENABLE_SVP)
+        list(APPEND TAIMPLTEST_SOURCES
+	    test/ta_sa_svp_key_check.cpp
+	    test/ta_sa_svp_buffer_check.cpp
+	    test/ta_sa_svp_buffer_copy.cpp
+	    test/ta_sa_svp_buffer_write.cpp
+	    test/ta_sa_svp_common.cpp
+    	    )
+    endif()
+    add_executable(taimpltest ${TAIMPLTEST_SOURCES})
 
     target_include_directories(taimpltest
             PRIVATE
