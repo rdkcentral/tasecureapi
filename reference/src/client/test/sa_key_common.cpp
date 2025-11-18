@@ -565,22 +565,41 @@ bool SaKeyBase::hkdf(
     std::shared_ptr<EVP_PKEY_CTX> const pctx(EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr), EVP_PKEY_CTX_free);
 
     if (EVP_PKEY_derive_init(pctx.get()) <= 0) {
+        ERROR("EVP_PKEY_derive_init failed");
         return false;
     }
 
     if (EVP_PKEY_CTX_set_hkdf_md(pctx.get(), digest_mechanism(digest_algorithm)) <= 0) {
+        ERROR("EVP_PKEY_CTX_set_hkdf_md failed");
         return false;
     }
 
-    if (EVP_PKEY_CTX_set1_hkdf_salt(pctx.get(), salt.data(), static_cast<int>(salt.size())) <= 0) {
+    /*
+     * OpenSSL's EVP_PKEY_CTX_set1_hkdf_* callers can behave poorly if passed a
+     * NULL pointer even when the length is zero. Defensively pass the address
+     * of a local zero byte when salt or info are empty so the pointer is
+     * non-NULL while the length remains 0.
+     */
+    uint8_t salt_zero = 0;
+    const unsigned char* salt_ptr = salt.empty() ? &salt_zero : salt.data();
+    int salt_len = static_cast<int>(salt.size());
+
+    uint8_t info_zero = 0;
+    const unsigned char* info_ptr = info.empty() ? &info_zero : info.data();
+    int info_len = static_cast<int>(info.size());
+
+    if (EVP_PKEY_CTX_set1_hkdf_salt(pctx.get(), salt_ptr, salt_len) <= 0) {
+        ERROR("EVP_PKEY_CTX_set1_hkdf_salt failed: salt_len=%d", salt_len);
         return false;
     }
 
     if (EVP_PKEY_CTX_set1_hkdf_key(pctx.get(), key.data(), static_cast<int>(key.size())) <= 0) {
+        ERROR("EVP_PKEY_CTX_set1_hkdf_key failed: key_len=%zu", key.size());
         return false;
     }
 
-    if (EVP_PKEY_CTX_add1_hkdf_info(pctx.get(), info.data(), static_cast<int>(info.size())) <= 0) {
+    if (EVP_PKEY_CTX_add1_hkdf_info(pctx.get(), info_ptr, info_len) <= 0) {
+        ERROR("EVP_PKEY_CTX_add1_hkdf_info failed: info_len=%d", info_len);
         return false;
     }
 
