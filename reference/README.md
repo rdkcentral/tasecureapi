@@ -75,12 +75,12 @@ implementation. This directory contains code to read a secret symmetric root key
 store. This code is only used by the reference implementation and allows the reference implementation to
 be used for testing purposes with a key that is delivered by a keying provider. The reference
 implementation provides a default test root key embedded in include/root_keystore.h that is encrypted
-with a default password. This default password is embedded in include/root_keystore.h to facilitate ease
-of testing. If a test root key is provided by a keying provider, the keying provider should use a
-different password to the PKCS 12 key store. To change the default test PKCS 12 key store and password
-for the reference implementation and for executing the tests, set the ROOT_KEYSTORE environment variable
-with the location of the PKCS 12 key store file and the ROOT_KEYSTORE_PASSWORD environment variable with
-the password.
+with a default password. This default password is also embedded in include/root_keystore.h so the key can
+be easily decrypted in tests. If a test root key is provided by a keying provider, the keying provider
+should use a different password to the PKCS 12 key store. To change the default test PKCS 12 key store
+and password for the reference implementation and for executing the tests, set the ROOT_KEYSTORE
+environment variable with the location of the PKCS 12 key store file and the ROOT_KEYSTORE_PASSWORD
+environment variable with the password.
 
 NOTE - OpenSSL does not support PKCS 12 Secret Bags since there is no industry specification for the
 contents of a Secret Bag. This implementation reads a PKCS 12 key store that is created by Java's
