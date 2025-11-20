@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2023 Comcast Cable Communications Management, LLC
+# Copyright 2020-2025 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ add_library(util STATIC
         include/sa_rights.h
         include/test_helpers.h
         include/test_process_common_encryption.h
+        include/root_keystore.h
 
         src/digest_util.c
         src/log.c
@@ -98,6 +99,7 @@ if (BUILD_TESTS)
 
     add_custom_command(
             TARGET utiltest POST_BUILD
+            BYPRODUCTS root_keystore.p12
             COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_SOURCE_DIR}/test/root_keystore.p12
             ${CMAKE_CURRENT_BINARY_DIR}/root_keystore.p12)

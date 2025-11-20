@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include "pkcs12.h"
 #include "porting/memory.h"
 #include "porting/otp_internal.h"
+#include "root_keystore.h"
 #include "stored_key_internal.h"
 #include <ctype.h>
 #include <openssl/evp.h>

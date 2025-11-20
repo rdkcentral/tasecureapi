@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,8 +66,5 @@
 #define RSA_PSS_SALTLEN_AUTO (-2)
 #define RSA_PSS_SALTLEN_MAX (-3)
 #endif
-
-#define DEFAULT_ROOT_KEYSTORE_PASSWORD "password01234567"
-#define COMMON_ROOT_NAME "commonroot"
 
 #endif // COMMON_H
