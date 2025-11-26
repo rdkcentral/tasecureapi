@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -234,6 +234,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
+#ifdef ENABLE_SVP
     TEST_F(SaCryptoCipherWithoutSvpTest, initAChacha20Poly1305FailsSvpIn) {
         auto clear_key = random(SYM_256_KEY_SIZE);
 
@@ -301,4 +302,5 @@ namespace {
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
+#endif // ENABLE_SVP
 } // namespace
