@@ -1,0 +1,33 @@
+diff --git a/library/rsa.c b/library/rsa.c
+index c8c23dba..7b6bd460 100644
+--- a/library/rsa.c
++++ b/library/rsa.c
+@@ -1831,6 +1831,7 @@ int mbedtls_rsa_rsassa_pss_sign( mbedtls_rsa_context *ctx,
+     size_t olen;
+     unsigned char *p = sig;
+     unsigned char salt[MBEDTLS_MD_MAX_SIZE];
++    unsigned char zeros[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+     size_t slen, min_slen, hlen, offset = 0;
+     int ret;
+     size_t msb;
+@@ -1900,9 +1901,10 @@ int mbedtls_rsa_rsassa_pss_sign( mbedtls_rsa_context *ctx,
+         goto exit;
+ 
+     /* Generate H = Hash( M' ) */
++    /* M' = 0x00 00 00 00 00 00 00 00 || mHash || salt */
+     if( ( ret = mbedtls_md_starts( &md_ctx ) ) != 0 )
+         goto exit;
+-    if( ( ret = mbedtls_md_update( &md_ctx, p, 8 ) ) != 0 )
++    if( ( ret = mbedtls_md_update( &md_ctx, zeros, 8 ) ) != 0 )
+         goto exit;
+     if( ( ret = mbedtls_md_update( &md_ctx, hash, hashlen ) ) != 0 )
+         goto exit;
+@@ -2214,7 +2216,7 @@ int mbedtls_rsa_rsassa_pss_verify_ext( mbedtls_rsa_context *ctx,
+     unsigned char *p;
+     unsigned char *hash_start;
+     unsigned char result[MBEDTLS_MD_MAX_SIZE];
+-    unsigned char zeros[8];
++    unsigned char zeros[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+     unsigned int hlen;
+     size_t observed_salt_len, msb;
+     const mbedtls_md_info_t *md_info;

@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.10)
+
+# curve25519 provider for X25519 ECDH operations
+project(curve25519_provider C)
+
+set(CURVE25519_SOURCES
+    curve25519-donna/curve25519-donna.c
+)
+
+add_library(curve25519_provider STATIC ${CURVE25519_SOURCES})
+
+target_include_directories(curve25519_provider
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/curve25519-donna
+)
+
+# No special compile flags needed for curve25519-donna
+target_compile_options(curve25519_provider PRIVATE -Werror -Wall -Wextra -Wno-unused-parameter -Wno-unused-function)

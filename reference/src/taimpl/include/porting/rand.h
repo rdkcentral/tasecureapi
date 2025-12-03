@@ -50,6 +50,14 @@ bool rand_bytes(
         void* out,
         size_t out_length);
 
+/**
+ * Get the global CTR-DRBG context for mbedTLS operations.
+ * This is needed for mbedTLS functions that require an RNG callback.
+ *
+ * @return Pointer to the global mbedtls_ctr_drbg_context, or NULL if not initialized
+ */
+void* rand_get_drbg_context(void);
+
 #ifdef __cplusplus
 }
 #endif

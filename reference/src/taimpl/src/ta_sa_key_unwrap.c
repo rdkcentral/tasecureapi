@@ -452,7 +452,6 @@ static sa_status ta_sa_key_unwrap_aes_gcm(
     return status;
 }
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
 static sa_status ta_sa_key_unwrap_chacha20(
         sa_key* key,
         const sa_rights* rights,
@@ -684,7 +683,6 @@ static sa_status ta_sa_key_unwrap_chacha20_poly1305(
 
     return status;
 }
-#endif
 
 static sa_status ta_sa_key_unwrap_rsa(
         sa_key* key,
@@ -958,7 +956,6 @@ sa_status ta_sa_key_unwrap(
                 ERROR("ta_sa_key_unwrap_aes_gcm failed");
                 break;
             }
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
         } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20) {
             status = ta_sa_key_unwrap_chacha20(key, rights, key_type, type_parameters,
                     (sa_unwrap_parameters_chacha20*) algorithm_parameters, wrapping_key, in,
@@ -975,7 +972,6 @@ sa_status ta_sa_key_unwrap(
                 ERROR("ta_sa_key_unwrap_chacha20_poly1305 failed");
                 break;
             }
-#endif
         } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15 ||
                    cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
             status = ta_sa_key_unwrap_rsa(key, rights, key_type, cipher_algorithm, algorithm_parameters, wrapping_key,

@@ -75,7 +75,7 @@ sa_status ta_sa_crypto_cipher_update_iv(
                 break;
             }
 
-            status = symmetric_context_set_iv(symmetric_context, iv, iv_length);
+            status = symmetric_context_set_iv((symmetric_context_t*)symmetric_context, iv, iv_length);
             if (status != SA_STATUS_OK) {
                 ERROR("symmetric_context_set_iv failed");
                 break;

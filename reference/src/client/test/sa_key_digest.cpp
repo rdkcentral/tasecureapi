@@ -53,7 +53,7 @@ namespace {
         ASSERT_EQ(out_length, length);
 
         std::vector<uint8_t> result;
-        ASSERT_TRUE(digest_openssl(result, digest_algorithm, clear_key, {}, {}));
+        ASSERT_TRUE(test_helpers_openssl::digest(result, digest_algorithm, clear_key, {}, {}));
         ASSERT_EQ(result, digest);
     }
 

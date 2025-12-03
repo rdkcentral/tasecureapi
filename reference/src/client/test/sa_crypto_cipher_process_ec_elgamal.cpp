@@ -138,8 +138,8 @@ namespace {
     }
 
     TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFailsInvalidBufferType) {
-        if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+        // SVP not supported - skip this test
+        GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
 
         sa_elliptic_curve const curve = std::get<0>(GetParam());
         size_t const key_size = ec_get_key_size(curve);

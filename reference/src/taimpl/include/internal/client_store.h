@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@
 #include "mac_store.h"
 #include "object_store.h"
 #include "sa_types.h"
-#include "svp_store.h"
 #include "ta_sa_types.h"
 
 #ifdef __cplusplus
@@ -65,13 +64,6 @@ cipher_store_t* client_get_cipher_store(const client_t* client);
  */
 mac_store_t* client_get_mac_store(const client_t* client);
 
-/**
- * Get the svp store.
- *
- * @param[in] client client.
- * @return svp store.
- */
-svp_store_t* client_get_svp_store(const client_t* client);
 
 typedef object_store_t client_store_t;
 

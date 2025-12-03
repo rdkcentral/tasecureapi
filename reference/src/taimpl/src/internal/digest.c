@@ -18,9 +18,9 @@
 
 #include "digest.h" // NOLINT
 #include "digest_util.h"
+#include "digest_util_mbedtls.h"
 #include "log.h"
 #include "stored_key_internal.h"
-#include <openssl/evp.h>
 
 sa_status digest_sha(
         void* out,
@@ -67,56 +67,76 @@ sa_status digest_sha(
     }
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
-    EVP_MD_CTX* context = NULL;
+    mbedtls_md_context_t context;
+    mbedtls_md_init(&context);
+    
     do {
-        context = EVP_MD_CTX_create();
-        if (context == NULL) {
-            ERROR("EVP_MD_CTX_create failed");
+        // Get the message digest info for the algorithm
+        mbedtls_md_type_t md_type;
+        switch (digest_algorithm) {
+            case SA_DIGEST_ALGORITHM_SHA1:
+                md_type = MBEDTLS_MD_SHA1;
+                break;
+            case SA_DIGEST_ALGORITHM_SHA256:
+                md_type = MBEDTLS_MD_SHA256;
+                break;
+            case SA_DIGEST_ALGORITHM_SHA384:
+                md_type = MBEDTLS_MD_SHA384;
+                break;
+            case SA_DIGEST_ALGORITHM_SHA512:
+                md_type = MBEDTLS_MD_SHA512;
+                break;
+            default:
+                ERROR("Unknown digest algorithm");
+                break;
+        }
+        
+        const mbedtls_md_info_t* md_info = mbedtls_md_info_from_type(md_type);
+        if (md_info == NULL) {
+            ERROR("mbedtls_md_info_from_type failed");
             break;
         }
 
-        const EVP_MD* md = digest_mechanism(digest_algorithm);
-        if (md == NULL) {
-            ERROR("digest_mechanism failed");
+        if (mbedtls_md_setup(&context, md_info, 0) != 0) {
+            ERROR("mbedtls_md_setup failed");
             break;
         }
 
-        if (EVP_DigestInit_ex(context, md, NULL) != 1) {
-            ERROR("EVP_DigestInit_ex failed");
+        if (mbedtls_md_starts(&context) != 0) {
+            ERROR("mbedtls_md_starts failed");
             break;
         }
 
         if (in1_length > 0) {
-            if (EVP_DigestUpdate(context, in1, in1_length) != 1) {
-                ERROR("EVP_DigestUpdate failed");
+            if (mbedtls_md_update(&context, in1, in1_length) != 0) {
+                ERROR("mbedtls_md_update failed");
                 break;
             }
         }
 
         if (in2_length > 0) {
-            if (EVP_DigestUpdate(context, in2, in2_length) != 1) {
-                ERROR("EVP_DigestUpdate failed");
+            if (mbedtls_md_update(&context, in2, in2_length) != 0) {
+                ERROR("mbedtls_md_update failed");
                 break;
             }
         }
 
         if (in3_length > 0) {
-            if (EVP_DigestUpdate(context, in3, in3_length) != 1) {
-                ERROR("EVP_DigestUpdate failed");
+            if (mbedtls_md_update(&context, in3, in3_length) != 0) {
+                ERROR("mbedtls_md_update failed");
                 break;
             }
         }
 
-        unsigned int length = required_length;
-        if (EVP_DigestFinal_ex(context, (unsigned char*) out, &length) != 1) {
-            ERROR("EVP_DigestFinal_ex failed");
+        if (mbedtls_md_finish(&context, (unsigned char*) out) != 0) {
+            ERROR("mbedtls_md_finish failed");
             break;
         }
 
         status = SA_STATUS_OK;
     } while (false);
 
-    EVP_MD_CTX_destroy(context);
+    mbedtls_md_free(&context);
     return status;
 }
 
@@ -149,7 +169,9 @@ sa_status digest_key(
     }
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
-    EVP_MD_CTX* context = NULL;
+    mbedtls_md_context_t context;
+    mbedtls_md_init(&context);
+    
     do {
         const void* key = stored_key_get_key(stored_key);
         if (key == NULL) {
@@ -159,37 +181,55 @@ sa_status digest_key(
 
         size_t key_length = stored_key_get_length(stored_key);
 
-        context = EVP_MD_CTX_create();
-        if (context == NULL) {
-            ERROR("EVP_MD_CTX_create failed");
+        // Get the message digest info for the algorithm
+        mbedtls_md_type_t md_type;
+        switch (digest_algorithm) {
+            case SA_DIGEST_ALGORITHM_SHA1:
+                md_type = MBEDTLS_MD_SHA1;
+                break;
+            case SA_DIGEST_ALGORITHM_SHA256:
+                md_type = MBEDTLS_MD_SHA256;
+                break;
+            case SA_DIGEST_ALGORITHM_SHA384:
+                md_type = MBEDTLS_MD_SHA384;
+                break;
+            case SA_DIGEST_ALGORITHM_SHA512:
+                md_type = MBEDTLS_MD_SHA512;
+                break;
+            default:
+                ERROR("Unknown digest algorithm");
+                break;
+        }
+        
+        const mbedtls_md_info_t* md_info = mbedtls_md_info_from_type(md_type);
+        if (md_info == NULL) {
+            ERROR("mbedtls_md_info_from_type failed");
             break;
         }
 
-        const EVP_MD* md = digest_mechanism(digest_algorithm);
-        if (md == NULL) {
-            ERROR("digest_mechanism failed");
+        if (mbedtls_md_setup(&context, md_info, 0) != 0) {
+            ERROR("mbedtls_md_setup failed");
             break;
         }
 
-        if (EVP_DigestInit_ex(context, md, NULL) != 1) {
-            ERROR("EVP_DigestInit_ex failed");
+        if (mbedtls_md_starts(&context) != 0) {
+            ERROR("mbedtls_md_starts failed");
             break;
         }
 
-        if (EVP_DigestUpdate(context, key, key_length) != 1) {
-            ERROR("EVP_DigestUpdate failed");
+        if (mbedtls_md_update(&context, key, key_length) != 0) {
+            ERROR("mbedtls_md_update failed");
             break;
         }
 
-        unsigned int length = required_length;
-        if (EVP_DigestFinal_ex(context, (unsigned char*) out, &length) != 1) {
-            ERROR("EVP_DigestFinal_ex failed");
+        if (mbedtls_md_finish(&context, (unsigned char*) out) != 0) {
+            ERROR("mbedtls_md_finish failed");
             break;
         }
 
         status = SA_STATUS_OK;
     } while (false);
 
-    EVP_MD_CTX_destroy(context);
+    mbedtls_md_free(&context);
     return status;
 }

@@ -26,7 +26,6 @@
 #define UNWRAP_H
 
 #include "stored_key.h"
-#include <openssl/opensslv.h>
 
 #ifdef __cplusplus
 
@@ -135,7 +134,6 @@ sa_status unwrap_aes_gcm(
         const sa_unwrap_parameters_aes_gcm* algorithm_parameters,
         const stored_key_t* stored_key_wrapping);
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
 /**
  * Unwrap data using CHACHA20 mode.
  *
@@ -181,7 +179,6 @@ sa_status unwrap_chacha20_poly1305(
         void* type_parameters,
         const sa_unwrap_parameters_chacha20_poly1305* algorithm_parameters,
         const stored_key_t* stored_key_wrapping);
-#endif
 
 /**
  * Unwrap data using RSA.

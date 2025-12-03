@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2023 Comcast Cable Communications Management, LLC
+# Copyright 2020-2025 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,10 +44,13 @@ if (DEFINED DISABLE_CENC_TIMING)
     set(CMAKE_C_FLAGS "-DDISABLE_CENC_TIMING ${CMAKE_C_FLAGS}")
 endif ()
 
+
+add_subdirectory(util)
+add_subdirectory(util_mbedtls)
+add_subdirectory(util_openssl)
 add_subdirectory(client)
 add_subdirectory(clientimpl)
 add_subdirectory(taimpl)
-add_subdirectory(util)
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
 include(GNUInstallDirs)
@@ -60,7 +63,7 @@ install(TARGETS saclient EXPORT sa-client-config
 install(DIRECTORY client/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if (BUILD_TESTS)
-    install(TARGETS saclienttest taimpltest utiltest
+    install(TARGETS saclienttest taimpltest util_mbedtls_test util_openssl_test
             ARCHIVE DESTINATION lib
             LIBRARY DESTINATION lib
             RUNTIME DESTINATION bin

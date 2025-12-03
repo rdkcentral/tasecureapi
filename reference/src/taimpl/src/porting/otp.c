@@ -21,10 +21,14 @@
 #include "hmac_internal.h"
 #include "log.h"
 #include "pkcs12_mbedtls.h"
+#include "root_keystore.h"
+#include "mbedtls_header.h"
 #include "porting/memory.h"
 #include "porting/otp_internal.h"
 #include "stored_key_internal.h"
 #include <ctype.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define MAX_DEVICE_NAME_LENGTH 16
 
@@ -216,7 +220,7 @@ static sa_status wrap_aes_cbc(
 
     do {
         // Select cipher type based on key length
-        mbedtls_cipher_type_t cipher_type = (key_length == SYM_128_KEY_SIZE) ?
+        mbedtls_cipher_type_t cipher_type = (key_length == SYM_128_KEY_SIZE) ? 
             MBEDTLS_CIPHER_AES_128_CBC : MBEDTLS_CIPHER_AES_256_CBC;
 
         const mbedtls_cipher_info_t* cipher_info = mbedtls_cipher_info_from_type(cipher_type);
@@ -479,7 +483,7 @@ sa_status unwrap_aes_cbc_internal(
 
     do {
         // Select cipher type based on key length
-        mbedtls_cipher_type_t cipher_type = (key_length == SYM_128_KEY_SIZE) ?
+        mbedtls_cipher_type_t cipher_type = (key_length == SYM_128_KEY_SIZE) ? 
             MBEDTLS_CIPHER_AES_128_CBC : MBEDTLS_CIPHER_AES_256_CBC;
 
         const mbedtls_cipher_info_t* cipher_info = mbedtls_cipher_info_from_type(cipher_type);
@@ -592,7 +596,7 @@ sa_status unwrap_aes_gcm_internal(
 
     do {
         // Select cipher ID based on key length
-        mbedtls_cipher_id_t cipher_id = (key_length == SYM_128_KEY_SIZE) ?
+        mbedtls_cipher_id_t cipher_id = (key_length == SYM_128_KEY_SIZE) ? 
             MBEDTLS_CIPHER_ID_AES : MBEDTLS_CIPHER_ID_AES;
 
         int ret = mbedtls_gcm_setkey(&ctx, cipher_id, key, key_length * 8);

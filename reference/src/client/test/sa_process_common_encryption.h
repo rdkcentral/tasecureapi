@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 
 #include "sa.h"
 #include "sa_crypto_cipher_common.h"
-#include "test_process_common_encryption.h"
+#include "test_process_common_encryption_mbedtls.h"
 #include "gtest/gtest.h"
 #include <memory>
 #include <vector>
@@ -30,12 +30,9 @@
 typedef std::tuple<std::tuple<size_t, int64_t>, size_t, size_t, size_t, sa_cipher_algorithm,
     std::tuple<sa_buffer_type, sa_buffer_type>> SaProcessCommonEncryptionType;
 
-class SaProcessCommonEncryptionBase : public ProcessCommonEncryptionBase {
+class SaProcessCommonEncryptionBase : public ProcessCommonEncryptionMbedtls {
 protected:
-    sa_status svp_buffer_write(
-        sa_svp_buffer out,
-        const void* in,
-        size_t in_length) override;
+
 
     ~SaProcessCommonEncryptionBase() = default;
 };

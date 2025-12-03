@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +57,23 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OK);
         ASSERT_EQ(bytes_to_process, clear.size());
 
+        // For GCM/ChaCha20-Poly1305, call process_last to generate the authentication tag
+        if (parameters.cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM ||
+                parameters.cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20_POLY1305) {
+            size_t bytes_to_process_last = 0;
+            if (parameters.cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM) {
+                sa_cipher_end_parameters_aes_gcm end_parameters = {parameters.tag.data(), parameters.tag.size()};
+                status = sa_crypto_cipher_process_last(out_buffer.get(), *cipher, in_buffer.get(),
+                        &bytes_to_process_last, &end_parameters);
+            } else {
+                sa_cipher_end_parameters_chacha20_poly1305 end_parameters = {parameters.tag.data(),
+                        parameters.tag.size()};
+                status = sa_crypto_cipher_process_last(out_buffer.get(), *cipher, in_buffer.get(),
+                        &bytes_to_process_last, &end_parameters);
+            }
+            ASSERT_EQ(status, SA_STATUS_OK);
+        }
+
         // Verify the encryption.
         ASSERT_TRUE(verify_encrypt(out_buffer.get(), clear, parameters, false));
     }
@@ -105,13 +122,18 @@ namespace {
         ASSERT_EQ(bytes_to_process, required_length);
 
         // decrypt using SecApi
-        auto out_buffer = buffer_alloc(buffer_type, encrypted.size());
+        auto out_buffer = buffer_alloc(buffer_type, bytes_to_process);
         ASSERT_NE(out_buffer, nullptr);
 
-        bytes_to_process = encrypted.size();
+        bytes_to_process = checked_length;
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OK);
-        ASSERT_EQ(bytes_to_process, clear.size());
+        if (pkcs7) {
+            ASSERT_EQ(bytes_to_process + AES_BLOCK_SIZE, clear.size());
+            clear.resize(bytes_to_process);
+        } else {
+            ASSERT_EQ(bytes_to_process, clear.size());
+        }
 
         // Verify the decryption.
         ASSERT_TRUE(verify_decrypt(out_buffer.get(), clear));
@@ -175,8 +197,6 @@ namespace {
         ASSERT_NE(out_buffer, nullptr);
         if (buffer_type == SA_BUFFER_TYPE_CLEAR)
             out_buffer->context.clear.offset = SIZE_MAX - 4;
-        else
-            out_buffer->context.svp.offset = SIZE_MAX - 4;
 
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
@@ -210,8 +230,6 @@ namespace {
         ASSERT_NE(out_buffer, nullptr);
         if (buffer_type == SA_BUFFER_TYPE_CLEAR)
             in_buffer->context.clear.offset = SIZE_MAX - 4;
-        else
-            in_buffer->context.svp.offset = SIZE_MAX - 4;
 
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);

@@ -17,9 +17,12 @@
  */
 
 #include "common.h"
+#include "digest_mechanism.h"
+#include "root_keystore.h"
 #include <cstring>
 #include <openssl/cmac.h>
 #include <openssl/ec.h>
+#include <openssl/err.h>
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 #include <openssl/hmac.h>
@@ -34,6 +37,9 @@
 #include "client_test_helpers.h"
 #include "digest_util.h"
 #include "pkcs12.h"
+
+#include "pkcs12_mbedtls.h"
+
 #include "sa_key_common.h"
 
 using namespace client_test_helpers;
@@ -50,11 +56,11 @@ bool SaKeyBase::get_root_key(std::vector<uint8_t>& key) {
         name[0] = '\0';
         root_key.resize(SYM_256_KEY_SIZE);
         size_t key_length = SYM_256_KEY_SIZE;
-        if (!load_pkcs12_secret_key(root_key.data(), &key_length, name, &name_length)) {
-            ERROR("load_pkcs12_secret_key failed");
+
+        if (!load_pkcs12_secret_key_mbedtls(root_key.data(), &key_length, name, &name_length)) {
+            ERROR("load_pkcs12_secret_key_mbedtls failed");
             return false;
         }
-
         root_key.resize(key_length);
         status = true;
     } else {
@@ -72,8 +78,9 @@ bool SaKeyBase::get_common_root_key(std::vector<uint8_t>& key) {
         strcpy(name, COMMON_ROOT_NAME);
         common_root_key.resize(SYM_256_KEY_SIZE);
         size_t key_length = SYM_256_KEY_SIZE;
-        if (!load_pkcs12_secret_key(common_root_key.data(), &key_length, name, &name_length)) {
-            ERROR("load_pkcs12_secret_key failed");
+
+        if (!load_pkcs12_secret_key_mbedtls(common_root_key.data(), &key_length, name, &name_length)) {
+            ERROR("load_pkcs12_secret_key_mbedtls failed");
             return false;
         }
 
@@ -565,27 +572,58 @@ bool SaKeyBase::hkdf(
     std::shared_ptr<EVP_PKEY_CTX> const pctx(EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr), EVP_PKEY_CTX_free);
 
     if (EVP_PKEY_derive_init(pctx.get()) <= 0) {
+        unsigned long err = ERR_get_error();
+        char buf[256];
+        ERR_error_string_n(err, buf, sizeof(buf));
+        ERROR("EVP_PKEY_derive_init failed: %s", buf);
         return false;
     }
 
     if (EVP_PKEY_CTX_set_hkdf_md(pctx.get(), digest_mechanism(digest_algorithm)) <= 0) {
+        unsigned long err = ERR_get_error();
+        char buf[256];
+        ERR_error_string_n(err, buf, sizeof(buf));
+        ERROR("EVP_PKEY_CTX_set_hkdf_md failed: %s", buf);
         return false;
     }
 
-    if (EVP_PKEY_CTX_set1_hkdf_salt(pctx.get(), salt.data(), static_cast<int>(salt.size())) <= 0) {
+    const unsigned char default_zero = 0;
+    const unsigned char* salt_ptr = salt.empty() ? &default_zero : salt.data();
+    if (EVP_PKEY_CTX_set1_hkdf_salt(pctx.get(), salt_ptr, static_cast<int>(salt.size())) <= 0) {
+        unsigned long err = ERR_get_error();
+        char buf[256];
+        ERR_error_string_n(err, buf, sizeof(buf));
+        ERROR("EVP_PKEY_CTX_set1_hkdf_salt failed: %s", buf);
         return false;
     }
 
     if (EVP_PKEY_CTX_set1_hkdf_key(pctx.get(), key.data(), static_cast<int>(key.size())) <= 0) {
+        unsigned long err = ERR_get_error();
+        char buf[256];
+        ERR_error_string_n(err, buf, sizeof(buf));
+        ERROR("EVP_PKEY_CTX_set1_hkdf_key failed: %s", buf);
         return false;
     }
 
-    if (EVP_PKEY_CTX_add1_hkdf_info(pctx.get(), info.data(), static_cast<int>(info.size())) <= 0) {
+    const unsigned char* info_ptr = info.empty() ? &default_zero : info.data();
+    if (EVP_PKEY_CTX_add1_hkdf_info(pctx.get(), info_ptr, static_cast<int>(info.size())) <= 0) {
+        unsigned long err = ERR_get_error();
+        char buf[256];
+        ERR_error_string_n(err, buf, sizeof(buf));
+        ERROR("EVP_PKEY_CTX_add1_hkdf_info failed: %s", buf);
         return false;
     }
 
     size_t length = out.size();
-    return EVP_PKEY_derive(pctx.get(), out.data(), &length) > 0;
+    if (EVP_PKEY_derive(pctx.get(), out.data(), &length) <= 0) {
+        unsigned long err = ERR_get_error();
+        char buf[256];
+        ERR_error_string_n(err, buf, sizeof(buf));
+        ERROR("EVP_PKEY_derive failed: %s", buf);
+        return false;
+    }
+
+    return true;
 #endif
 }
 
@@ -605,7 +643,7 @@ bool SaKeyBase::ansi_x963_kdf(
     out.resize(0);
     for (size_t i = 0; i < key_length;) {
         std::vector<uint8_t> temp;
-        if (!digest_openssl(temp, digest_algorithm, key, counter, info))
+        if (!digest(temp, digest_algorithm, key, counter, info))
             return false;
 
         out.insert(out.end(), temp.begin(), temp.end());
@@ -634,7 +672,7 @@ bool SaKeyBase::concat_kdf(
     out.resize(0);
     for (size_t i = 0; i < key_length;) {
         std::vector<uint8_t> temp;
-        if (!digest_openssl(temp, digest_algorithm, counter, key, info))
+        if (!digest(temp, digest_algorithm, counter, key, info))
             return false;
 
         out.insert(out.end(), temp.begin(), temp.end());

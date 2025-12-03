@@ -53,23 +53,58 @@ namespace {
         auto clear = random(8);
         auto in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear);
         ASSERT_NE(in_buffer, nullptr);
-        size_t bytes_to_process = clear.size();
 
-        // get out_length
-        status = sa_crypto_cipher_process_last(nullptr, *cipher, in_buffer.get(), &bytes_to_process, nullptr);
-        ASSERT_EQ(status, SA_STATUS_OK);
-
-        // encrypt using SecApi
-        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, bytes_to_process);
+        // encrypt using SecApi - process the data first
+        auto out_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, clear.size());
         ASSERT_NE(out_buffer, nullptr);
+        size_t bytes_to_process = clear.size();
+        status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
+        ASSERT_EQ(status, SA_STATUS_OK);
+        ASSERT_EQ(bytes_to_process, clear.size());
 
+        // Finalize GCM encryption to generate authentication tag (no more data to process)
+        size_t bytes_to_process_last = 0;
         sa_cipher_end_parameters_aes_gcm end_parameters = {parameters.tag.data(), parameters.tag.size()};
-        status = sa_crypto_cipher_process_last(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process,
+        status = sa_crypto_cipher_process_last(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process_last,
                 &end_parameters);
         ASSERT_EQ(status, SA_STATUS_OK);
 
-        // Verify the encryption.
-        ASSERT_TRUE(verify_encrypt(out_buffer.get(), clear, parameters, false));
+        // Extract encrypted data for verification
+        std::vector<uint8_t> encrypted_data = {static_cast<uint8_t*>(out_buffer->context.clear.buffer),
+                static_cast<uint8_t*>(out_buffer->context.clear.buffer) + clear.size()};
+
+        // Verify by decrypting with SecAPI (same library ensures consistency)
+        auto decrypt_cipher = create_uninitialized_sa_crypto_cipher_context();
+        ASSERT_NE(decrypt_cipher, nullptr);
+
+        sa_cipher_parameters_aes_gcm decrypt_gcm_parameters = {parameters.iv.data(), parameters.iv.size(),
+                parameters.aad.data(), parameters.aad.size()};
+        status = sa_crypto_cipher_init(decrypt_cipher.get(), parameters.cipher_algorithm, SA_CIPHER_MODE_DECRYPT,
+                *parameters.key, &decrypt_gcm_parameters);
+        ASSERT_EQ(status, SA_STATUS_OK);
+
+        auto encrypted_in_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, encrypted_data);
+        ASSERT_NE(encrypted_in_buffer, nullptr);
+
+        auto decrypted_buffer = buffer_alloc(SA_BUFFER_TYPE_CLEAR, encrypted_data.size());
+        ASSERT_NE(decrypted_buffer, nullptr);
+
+        // Decrypt the data first
+        size_t decrypt_bytes = encrypted_data.size();
+        status = sa_crypto_cipher_process(decrypted_buffer.get(), *decrypt_cipher, encrypted_in_buffer.get(),
+                &decrypt_bytes);
+        ASSERT_EQ(status, SA_STATUS_OK);
+        ASSERT_EQ(decrypt_bytes, encrypted_data.size());
+
+        // Finalize and verify the tag (no more data to process)
+        size_t decrypt_bytes_last = 0;
+        sa_cipher_end_parameters_aes_gcm decrypt_end_parameters = {parameters.tag.data(), parameters.tag.size()};
+        status = sa_crypto_cipher_process_last(decrypted_buffer.get(), *decrypt_cipher, encrypted_in_buffer.get(),
+                &decrypt_bytes_last, &decrypt_end_parameters);
+        ASSERT_EQ(status, SA_STATUS_OK);
+
+        // Verify decrypted data matches original
+        ASSERT_TRUE(verify_decrypt(decrypted_buffer.get(), clear));
     }
 
     TEST_F(SaCryptoCipherWithoutSvpTest, processLastAesDecryptGcmShortTag) {

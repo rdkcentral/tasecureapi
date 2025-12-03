@@ -27,7 +27,7 @@
 
 #include "sa_types.h"
 #include "stored_key.h"
-#include <openssl/ossl_typ.h>
+#include "mbedtls_header.h"
 
 #ifdef __cplusplus
 
@@ -45,9 +45,9 @@ extern "C" {
  *
  * @param[in] in input data.
  * @param[in] in_length input data length.
- * @return the RSA key.
+ * @return the RSA key (mbedtls_rsa_context).
  */
-RSA* rsa_import_pkcs8(
+mbedtls_rsa_context* rsa_import_pkcs8(
         const void* in,
         size_t in_length);
 

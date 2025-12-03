@@ -26,7 +26,7 @@
 #include "sa_types.h"
 #include "unwrap.h"
 #include <memory.h>
-#include <openssl/evp.h>
+#include <time.h>
 #include <stored_key_internal.h>
 
 #define AES_ECB_NONE "aesEcbNone"

@@ -26,13 +26,8 @@
 #include "porting/overflow.h"
 #include "rsa.h"
 #include "stored_key_internal.h"
-#include <openssl/evp.h>
-
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-
+#include "mbedtls_header.h"
 #include <memory.h>
-
-#endif
 
 static sa_status import_key(
         stored_key_t** stored_key_unwrapped,
@@ -320,7 +315,8 @@ sa_status unwrap_aes_ctr(
 
     sa_status status;
     size_t key_length = stored_key_get_length(stored_key_wrapping);
-    EVP_CIPHER_CTX* context = NULL;
+    mbedtls_cipher_context_t context;
+    mbedtls_cipher_init(&context);
     uint8_t* unwrapped_key = NULL;
     do {
         unwrapped_key = memory_secure_alloc(in_length);
@@ -330,41 +326,37 @@ sa_status unwrap_aes_ctr(
             break;
         }
 
-        context = EVP_CIPHER_CTX_new();
-        if (context == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
-        const EVP_CIPHER* cipher = NULL;
+        // Set up cipher based on key length
+        const mbedtls_cipher_info_t* cipher_info = NULL;
         if (key_length == SYM_128_KEY_SIZE)
-            cipher = EVP_aes_128_ctr();
+            cipher_info = mbedtls_cipher_info_from_type(MBEDTLS_CIPHER_AES_128_CTR);
         else // key_length == SYM_256_KEY_SIZE
-            cipher = EVP_aes_256_ctr();
+            cipher_info = mbedtls_cipher_info_from_type(MBEDTLS_CIPHER_AES_256_CTR);
 
-        if (cipher == NULL) {
-            ERROR("EVP_aes_???_ctr failed");
+        if (cipher_info == NULL) {
+            ERROR("mbedtls_cipher_info_from_type failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
-        if (EVP_DecryptInit_ex(context, cipher, NULL, key, ctr) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
+        if (mbedtls_cipher_setup(&context, cipher_info) != 0) {
+            ERROR("mbedtls_cipher_setup failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
+        if (mbedtls_cipher_setkey(&context, key, (int) (key_length * 8), MBEDTLS_DECRYPT) != 0) {
+            ERROR("mbedtls_cipher_setkey failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
-        int out_length = (int) in_length;
-        if (EVP_DecryptUpdate(context, unwrapped_key, &out_length, in, (int) in_length) != 1) {
-            ERROR("EVP_DecryptUpdate failed");
+        // NOTE: CTR mode is a stream cipher - padding mode is not applicable and will fail if set
+        // Do not call mbedtls_cipher_set_padding_mode for CTR mode
+
+        size_t out_length = 0;
+        if (mbedtls_cipher_crypt(&context, ctr, 16, in, in_length, unwrapped_key, &out_length) != 0) {
+            ERROR("mbedtls_cipher_crypt failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
@@ -389,7 +381,7 @@ sa_status unwrap_aes_ctr(
         memory_secure_free(unwrapped_key);
     }
 
-    EVP_CIPHER_CTX_free(context);
+    mbedtls_cipher_free(&context);
     return status;
 }
 
@@ -478,8 +470,6 @@ sa_status unwrap_aes_gcm(
     return status;
 }
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-
 sa_status unwrap_chacha20(
         stored_key_t** stored_key_unwrapped,
         const void* in,
@@ -522,7 +512,8 @@ sa_status unwrap_chacha20(
     }
 
     sa_status status;
-    EVP_CIPHER_CTX* context = NULL;
+    mbedtls_chacha20_context context;
+    mbedtls_chacha20_init(&context);
     uint8_t* unwrapped_key = NULL;
     do {
         unwrapped_key = memory_secure_alloc(in_length);
@@ -532,39 +523,25 @@ sa_status unwrap_chacha20(
             break;
         }
 
-        context = EVP_CIPHER_CTX_new();
-        if (context == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        // Set up the key
+        if (mbedtls_chacha20_setkey(&context, key) != 0) {
+            ERROR("mbedtls_chacha20_setkey failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
-        const EVP_CIPHER* cipher = EVP_chacha20();
-        if (cipher == NULL) {
-            ERROR("EVP_chacha20 failed");
+        // Combine counter and nonce as required by ChaCha20
+        uint32_t counter;
+        memcpy(&counter, algorithm_parameters->counter, sizeof(counter));
+        
+        if (mbedtls_chacha20_starts(&context, algorithm_parameters->nonce, counter) != 0) {
+            ERROR("mbedtls_chacha20_starts failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
-        uint8_t iv[CHACHA20_COUNTER_LENGTH + CHACHA20_NONCE_LENGTH];
-        memcpy(iv, algorithm_parameters->counter, algorithm_parameters->counter_length);
-        memcpy(iv + CHACHA20_COUNTER_LENGTH, algorithm_parameters->nonce, algorithm_parameters->nonce_length);
-        if (EVP_DecryptInit_ex(context, cipher, NULL, key, iv) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
-        int out_length = (int) in_length;
-        if (EVP_DecryptUpdate(context, unwrapped_key, &out_length, in, (int) in_length) != 1) {
-            ERROR("EVP_DecryptUpdate failed");
+        if (mbedtls_chacha20_update(&context, in_length, in, unwrapped_key) != 0) {
+            ERROR("mbedtls_chacha20_update failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
@@ -589,7 +566,7 @@ sa_status unwrap_chacha20(
         memory_secure_free(unwrapped_key);
     }
 
-    EVP_CIPHER_CTX_free(context);
+    mbedtls_chacha20_free(&context);
     return status;
 }
 
@@ -635,7 +612,8 @@ sa_status unwrap_chacha20_poly1305(
     }
 
     sa_status status;
-    EVP_CIPHER_CTX* context = NULL;
+    mbedtls_chachapoly_context context;
+    mbedtls_chachapoly_init(&context);
     uint8_t* unwrapped_key = NULL;
     do {
         unwrapped_key = memory_secure_alloc(in_length);
@@ -645,77 +623,23 @@ sa_status unwrap_chacha20_poly1305(
             break;
         }
 
-        context = EVP_CIPHER_CTX_new();
-        if (context == NULL) {
-            ERROR("EVP_CIPHER_CTX_new failed");
+        // Set up the key
+        if (mbedtls_chachapoly_setkey(&context, key) != 0) {
+            ERROR("mbedtls_chachapoly_setkey failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
 
-        const EVP_CIPHER* cipher = EVP_chacha20_poly1305();
-        if (cipher == NULL) {
-            ERROR("EVP_chacha20_poly1305 failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
-        if (EVP_DecryptInit_ex(context, cipher, NULL, NULL, NULL) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
-        // set nonce length
-        if (EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_IVLEN, (int) algorithm_parameters->nonce_length,
-                    NULL) != 1) {
-            ERROR("EVP_CIPHER_CTX_ctrl failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
-        // init key and nonce
-        if (EVP_DecryptInit_ex(context, cipher, NULL, key, algorithm_parameters->nonce) != 1) {
-            ERROR("EVP_DecryptInit_ex failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
-        // turn off padding
-        if (EVP_CIPHER_CTX_set_padding(context, 0) != 1) {
-            ERROR("EVP_CIPHER_CTX_set_padding failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
-        // set aad
-        if (algorithm_parameters->aad != NULL) {
-            int out_length = 0;
-            if (EVP_DecryptUpdate(context, NULL, &out_length, algorithm_parameters->aad,
-                        (int) algorithm_parameters->aad_length) != 1) {
-                ERROR("EVP_DecryptUpdate failed");
-                status = SA_STATUS_INTERNAL_ERROR;
-                break;
-            }
-        }
-
-        int out_length = (int) in_length;
-        if (EVP_DecryptUpdate(context, unwrapped_key, &out_length, in, (int) in_length) != 1) {
-            ERROR("EVP_DecryptUpdate failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
-        // check tag
-        if (EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_TAG, (int) algorithm_parameters->tag_length,
-                    (void*) algorithm_parameters->tag) != 1) {
-            ERROR("EVP_CIPHER_CTX_ctrl failed");
-            status = SA_STATUS_INTERNAL_ERROR;
-            break;
-        }
-
-        int length = 0;
-        if (EVP_DecryptFinal_ex(context, NULL, &length) != 1) {
-            ERROR("EVP_DecryptFinal_ex failed");
+        // Perform AEAD decryption with authentication
+        if (mbedtls_chachapoly_auth_decrypt(&context,
+                    in_length,
+                    algorithm_parameters->nonce,
+                    algorithm_parameters->aad,
+                    algorithm_parameters->aad_length,
+                    algorithm_parameters->tag,
+                    in,
+                    unwrapped_key) != 0) {
+            ERROR("mbedtls_chachapoly_auth_decrypt failed");
             status = SA_STATUS_INTERNAL_ERROR;
             break;
         }
@@ -740,11 +664,9 @@ sa_status unwrap_chacha20_poly1305(
         memory_secure_free(unwrapped_key);
     }
 
-    EVP_CIPHER_CTX_free(context);
+    mbedtls_chachapoly_free(&context);
     return status;
 }
-
-#endif
 
 sa_status unwrap_rsa(
         stored_key_t** stored_key_unwrapped,
@@ -914,8 +836,12 @@ sa_status unwrap_ec(
             break;
         }
 
-        if (in_length != unwrapped_key_length * 4) {
-            ERROR("Invalid in_length");
+        // SEC1 standard format: Two uncompressed EC points (0x04 || X || Y each)
+        // Expected: (1 + 2*key_size) + (1 + 2*key_size) = 2 + 4*key_size bytes
+        size_t expected_length = 2 + unwrapped_key_length * 4;
+        if (in_length != expected_length) {
+            ERROR("Invalid in_length: expected %zu bytes (SEC1 format), received %zu bytes",
+                    expected_length, in_length);
             status = SA_STATUS_INVALID_PARAMETER;
             break;
         }

@@ -120,14 +120,7 @@ static sa_status ta_sa_key_generate_ec(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-    if (parameters->curve == SA_ELLIPTIC_CURVE_ED25519 || parameters->curve == SA_ELLIPTIC_CURVE_ED448 ||
-            parameters->curve == SA_ELLIPTIC_CURVE_X25519 || parameters->curve == SA_ELLIPTIC_CURVE_X448) {
-        ERROR("Unsupported curve");
-        return SA_STATUS_OPERATION_NOT_SUPPORTED;
-    }
-#endif
-
+    // All curves are supported with mbedTLS
     sa_status status;
     stored_key_t* stored_key = NULL;
     do {

@@ -249,7 +249,7 @@ INSTANTIATE_TEST_SUITE_P(
         SaProviderCipherTest,
         ::testing::Values(
                 std::make_tuple(SN_chacha20, true, 32, 16),
-                std::make_tuple(SN_chacha20_poly1305, true, 32, 12),
+                std::make_tuple(SN_chacha20_poly1305, false, 32, 12),  // AEAD: no padding
                 std::make_tuple(SN_aes_128_ecb, true, 16, 0),
                 std::make_tuple(SN_aes_128_ecb, false, 16, 0),
                 std::make_tuple(SN_aes_256_ecb, true, 32, 0),
@@ -260,6 +260,6 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(SN_aes_256_cbc, false, 32, 16),
                 std::make_tuple(SN_aes_128_ctr, true, 16, 16),
                 std::make_tuple(SN_aes_256_ctr, true, 32, 16),
-                std::make_tuple(SN_aes_128_gcm, true, 16, 12),
-                std::make_tuple(SN_aes_256_gcm, true, 32, 12)));
+                std::make_tuple(SN_aes_128_gcm, false, 16, 12),
+                std::make_tuple(SN_aes_256_gcm, false, 32, 12)));
 #endif

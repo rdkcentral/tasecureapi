@@ -19,8 +19,8 @@
 #include "json.h"
 #include "log.h"
 #include "porting/memory.h"
+#include "mbedtls_header.h"
 #include <memory.h>
-#include <openssl/evp.h>
 #include <yajl/yajl_parse.h>
 #include <yajl/yajl_version.h>
 
@@ -1156,10 +1156,8 @@ bool b64_decode(
     bool status = false;
     size_t data_length = (in_length / 4 + (in_length % 4 > 0 ? 1 : 0)) * 4;
     uint8_t* data = NULL;
-    BIO* bio = NULL;
-    BIO* b64 = NULL;
     do {
-        if (*out_length != (data_length * 3) / 4) {
+        if (*out_length < (data_length * 3) / 4) {
             ERROR("Invalid out_length");
             break;
         }
@@ -1183,34 +1181,18 @@ bool b64_decode(
                 memory_memset_unoptimizable(data + in_length, '=', data_length - in_length);
         }
 
-        b64 = BIO_new(BIO_f_base64());
-        if (b64 == NULL) {
-            ERROR("BIO_new failed");
-            break;
-        }
-        BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-
-        bio = BIO_new_mem_buf((void*) data, (int) data_length);
-        if (bio == NULL) {
-            ERROR("BIO_new_mem_buf failed");
+        // Use mbedTLS base64 decode
+        size_t decoded_length = 0;
+        int ret = mbedtls_base64_decode(out, *out_length, &decoded_length, data, data_length);
+        if (ret != 0) {
+            ERROR("mbedtls_base64_decode failed: -0x%04x", -ret);
             break;
         }
 
-        bio = BIO_push(b64, bio);
-        b64 = NULL;
-
-        int written = BIO_read(bio, out, (int) *out_length);
-        if (written < 0) {
-            ERROR("BIO_read failed");
-            break;
-        }
-
-        *out_length = written;
+        *out_length = decoded_length;
         status = true;
     } while (false);
 
-    BIO_free_all(b64);
-    BIO_free_all(bio);
     if (data != NULL) {
         memory_memset_unoptimizable(data, 0, data_length);
         memory_internal_free(data);

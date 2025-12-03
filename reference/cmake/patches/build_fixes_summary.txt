@@ -1,0 +1,169 @@
+BUILD FIXES APPLIED DURING ED/X CURVE AUTOMATION
+================================================
+
+Date: November 22, 2025
+Automation: FetchContent for ed25519-donna, curve25519-donna, libdecaf
+
+
+FIX #1: Include Path Correction
+--------------------------------
+Problem:
+  Custom headers included "porting/rand.h" but compiler couldn't find it.
+  Initial attempt used: ${CMAKE_SOURCE_DIR}/src/taimpl/src/porting
+  
+Discovery:
+  The porting/ directory is under include/, not src/:
+  - Actual location: src/taimpl/include/porting/rand.h
+  - Include statement: #include "porting/rand.h"
+  - Required parent: src/taimpl/include/
+  
+Solution:
+  Changed include path from:
+    PRIVATE ${CMAKE_SOURCE_DIR}/src/taimpl/src/porting
+  To:
+    PRIVATE ${CMAKE_SOURCE_DIR}/src/taimpl/include
+
+  Applied to:
+    - edwards_provider (ed25519-donna)
+    - curve25519_provider (curve25519-donna)
+
+File Modified: reference/src/taimpl/CMakeLists.txt (lines ~250, ~308)
+
+
+FIX #2: mbedTLS Include Directory
+----------------------------------
+Problem:
+  ed25519-hash-custom.h includes "mbedtls/sha512.h" but compiler couldn't find it.
+  Error: fatal error: 'mbedtls/sha512.h' file not found
+
+Solution:
+  Added ${MBEDTLS_INCLUDE_DIR} to edwards_provider include directories:
+  
+    target_include_directories(edwards_provider 
+        PUBLIC ${ed25519_donna_SOURCE_DIR}
+        PRIVATE 
+            ${CMAKE_SOURCE_DIR}/src/taimpl/include
+            ${MBEDTLS_INCLUDE_DIR}
+    )
+
+File Modified: reference/src/taimpl/CMakeLists.txt (line ~251)
+
+
+FIX #3: Typedef Redefinition
+-----------------------------
+Problem:
+  Compilation error with -Werror,-Wtypedef-redefinition:
+  
+    error: redefinition of typedef 'hash_512bits' is a C11 feature
+    ed25519-hash-custom.h:12:23: error: redefinition of typedef 'hash_512bits'
+    typedef unsigned char hash_512bits[64];
+                          ^
+    ed25519-donna.h:61:23: note: previous definition is here
+    typedef unsigned char hash_512bits[64];
+
+Root Cause:
+  Both ed25519-donna.h and ed25519-hash-custom.h defined the same typedef.
+
+Solution:
+  Removed the typedef from ed25519-hash-custom.h:
+  
+    -typedef unsigned char hash_512bits[64];
+    +/* hash_512bits is already defined in ed25519-donna.h */
+
+File Modified: reference/cmake/custom_headers/ed25519-hash-custom.h (line 12)
+Patch Created: reference/cmake/patches/ed25519-hash-custom.h.patch
+
+
+FIX #4: Compile Definitions for Custom Implementations
+-------------------------------------------------------
+Problem:
+  ed25519-donna wasn't using custom hash and random implementations.
+  
+Solution:
+  Added compile definitions to enable custom implementations:
+  
+    target_compile_definitions(edwards_provider PRIVATE 
+        ED25519_CUSTOMHASH
+        ED25519_CUSTOMRANDOM
+    )
+
+File Modified: reference/src/taimpl/CMakeLists.txt (line ~260)
+
+
+FIX #5: Compiler Warning Suppression
+-------------------------------------
+Problem:
+  Macro redefinition warnings when ED25519_CUSTOMHASH/CUSTOMRANDOM defined.
+  
+Solution:
+  Added -Wno-macro-redefined to compiler flags:
+  
+    target_compile_options(edwards_provider PRIVATE
+        -Werror
+        -Wall
+        -Wextra
+        -Wno-unused-parameter
+        -Wno-unused-function
+        -Wno-macro-redefined
+    )
+
+File Modified: reference/src/taimpl/CMakeLists.txt (line ~254)
+
+
+SUMMARY OF CHANGES
+==================
+
+Files Modified:
+1. reference/src/taimpl/CMakeLists.txt
+   - Fixed include paths (2 occurrences)
+   - Added mbedTLS include directory
+   - Added compile definitions
+   - Added compiler warning suppression
+
+2. reference/cmake/custom_headers/ed25519-hash-custom.h
+   - Removed typedef redefinition
+
+Files Created:
+1. reference/cmake/patches/ed25519-hash-custom.h.patch
+   - Patch for typedef removal
+
+2. reference/cmake/patches/README_PATCHES.md
+   - Documentation of all patches and fixes
+
+3. reference/cmake/patches/build_fixes_summary.txt
+   - This file
+
+
+VERIFICATION
+============
+
+Clean build test:
+  cd reference/cmake-build
+  rm -rf _deps/ed25519_donna-* _deps/curve25519_donna-* _deps/libdecaf-*
+  cmake ..
+  make -j8
+
+Result: ✅ All providers build successfully
+
+Functional tests:
+  ./src/client/saclienttest --gtest_filter="SaKeyGetPublicTests*nominal/4:*nominal/5:*nominal/6"
+
+Result: ✅ X25519, ED448, X448 tests PASS
+
+
+INTEGRATION NOTES
+=================
+
+These fixes are now integrated into the automation:
+- Custom headers in cmake/custom_headers/ are pre-patched
+- CMakeLists.txt has correct include paths and definitions
+- No manual intervention needed for clean builds
+
+Future developers can:
+1. Clone repository
+2. Run: cmake .. && make
+3. All provider libraries download and build automatically
+4. All fixes are applied automatically
+
+---
+End of Build Fixes Summary

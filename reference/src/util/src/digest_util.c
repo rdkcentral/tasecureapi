@@ -17,50 +17,14 @@
  */
 
 #include "digest_util.h" // NOLINT
-#include "common.h"
 #include "log.h"
-#include <openssl/evp.h>
 #include <string.h>
 
-sa_digest_algorithm digest_algorithm_from_md(const EVP_MD* evp_md) {
-    if (evp_md != NULL) {
-        switch (EVP_MD_nid(evp_md)) {
-            case NID_sha1:
-                return SA_DIGEST_ALGORITHM_SHA1;
-
-            case NID_sha256:
-                return SA_DIGEST_ALGORITHM_SHA256;
-
-            case NID_sha384:
-                return SA_DIGEST_ALGORITHM_SHA384;
-
-            case NID_sha512:
-                return SA_DIGEST_ALGORITHM_SHA512;
-        }
-    }
-
-    return UINT32_MAX;
-}
-
-const EVP_MD* digest_mechanism(sa_digest_algorithm digest_algorithm) {
-    switch (digest_algorithm) {
-        case SA_DIGEST_ALGORITHM_SHA1:
-            return EVP_sha1();
-
-        case SA_DIGEST_ALGORITHM_SHA256:
-            return EVP_sha256();
-
-        case SA_DIGEST_ALGORITHM_SHA384:
-            return EVP_sha384();
-
-        case SA_DIGEST_ALGORITHM_SHA512:
-            return EVP_sha512();
-
-        default:
-            ERROR("Unknown digest encountered");
-            return NULL;
-    }
-}
+/* Digest length constants - defined locally to avoid dependency on common.h */
+#define SHA1_DIGEST_LENGTH 20
+#define SHA256_DIGEST_LENGTH 32
+#define SHA384_DIGEST_LENGTH 48
+#define SHA512_DIGEST_LENGTH 64
 
 const char* digest_string(sa_digest_algorithm digest_algorithm) {
     switch (digest_algorithm) {

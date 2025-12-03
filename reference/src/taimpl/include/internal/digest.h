@@ -27,6 +27,7 @@
 
 #include "sa_types.h"
 #include "stored_key.h"
+#include "digest_util_mbedtls.h"
 #ifdef __cplusplus
 
 #include <cstdbool>

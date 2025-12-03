@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 /**
- * Initialize the mbedTLS allocator to use the secure memory heap functions memory_secure_*
+ * Initialize the mbedTLS allocator to use the secure memory heap functions memory_secure_* 
  * for all internal allocations and de-allocations.
  */
 void init_mbedtls_allocator();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -127,14 +127,14 @@ sa_status sa_process_common_encryption(
                 CREATE_OUT_PARAM(param2,
                         ((uint8_t*) samples[i].out->context.clear.buffer) + samples[i].out->context.clear.offset,
                         param2_size);
-            } else {
-                process_common_encryption->out_offset = samples[i].out->context.svp.offset;
-                param2_size = sizeof(sa_svp_buffer);
-                param2_type = TA_PARAM_IN;
-                CREATE_PARAM(param2, &samples[i].out->context.svp.buffer, param2_size);
+            }
+            else {
+                ERROR("Invalid out buffer_type");
+                status = SA_STATUS_INVALID_PARAMETER;
+                break;
             }
 
-            size_t param3_size;
+            size_t param3_size = 0;
             uint32_t param3_type = TA_PARAM_IN;
             if (samples[i].in->buffer_type == SA_BUFFER_TYPE_CLEAR) {
                 if (samples[i].in->context.clear.buffer == NULL) {
@@ -154,10 +154,11 @@ sa_status sa_process_common_encryption(
                 CREATE_PARAM(param3,
                         ((uint8_t*) samples[i].in->context.clear.buffer) + samples[i].in->context.clear.offset,
                         param3_size);
-            } else {
-                process_common_encryption->in_offset = samples[i].in->context.svp.offset;
-                param3_size = sizeof(sa_svp_buffer);
-                CREATE_PARAM(param3, &samples[i].in->context.svp.buffer, param3_size);
+            }
+            else {
+                ERROR("Invalid in buffer_type");
+                status = SA_STATUS_INVALID_PARAMETER;
+                break;
             }
 
             // clang-format off
@@ -177,14 +178,10 @@ sa_status sa_process_common_encryption(
                 COPY_OUT_PARAM(((uint8_t*) samples[i].out->context.clear.buffer) + samples[i].out->context.clear.offset,
                         param2, process_common_encryption->out_offset);
                 samples[i].out->context.clear.offset += process_common_encryption->out_offset;
-            } else
-                samples[i].out->context.svp.offset = process_common_encryption->out_offset;
-
-            if (samples[i].in->buffer_type == SA_BUFFER_TYPE_CLEAR)
+            }
+            if (samples[i].in->buffer_type == SA_BUFFER_TYPE_CLEAR) {
                 samples[i].in->context.clear.offset += process_common_encryption->in_offset;
-            else
-                samples[i].in->context.svp.offset = process_common_encryption->in_offset;
-
+            }
             if (subsample_length_s != NULL)
                 free(subsample_length_s);
 

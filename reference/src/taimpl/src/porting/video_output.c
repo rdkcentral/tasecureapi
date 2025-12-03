@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ static struct {
                 .digital_unprotected_count = 0,
                 .digital_hdcp14_count = 0,
                 .digital_hdcp22_count = 1,
-                .svp_enabled = true}};
+                .svp_enabled = false}};
+
 
 bool video_output_poll(video_output_state_t* state) {
 

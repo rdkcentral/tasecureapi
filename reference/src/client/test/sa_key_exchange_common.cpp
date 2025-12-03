@@ -29,8 +29,8 @@ bool SaKeyExchangeNetflixTest::netflix_compute_secret(
         const std::vector<uint8_t>& shared_secret) {
 
     std::vector<uint8_t> temp_key;
-    if (!digest_openssl(temp_key, SA_DIGEST_ALGORITHM_SHA384, kd, {}, {})) {
-        ERROR("digest_openssl");
+    if (!digest(temp_key, SA_DIGEST_ALGORITHM_SHA384, kd, {}, {})) {
+        ERROR("digest");
         return false;
     }
 
@@ -40,7 +40,7 @@ bool SaKeyExchangeNetflixTest::netflix_compute_secret(
 
     std::vector<uint8_t> temp;
     if (!hmac_openssl(temp, temp_key, temp_data, SA_DIGEST_ALGORITHM_SHA384)) {
-        ERROR("digest_openssl");
+        ERROR("digest");
         return false;
     }
 

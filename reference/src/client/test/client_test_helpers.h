@@ -43,7 +43,7 @@ typedef enum {
 #define UNSUPPORTED_OPENSSL_KEY static_cast<uintptr_t>(-1)
 
 namespace client_test_helpers {
-    using namespace test_helpers;
+    using namespace test_helpers_openssl;
 
     /**
      * Obtain a sample DH Prime - 768.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
  */
 
 #include "client_test_helpers.h"
+#include "digest_mechanism.h"
 #include "digest_util.h"
 #include "pkcs8.h"
 #include "sa_public_key.h"
@@ -4335,15 +4336,14 @@ namespace client_test_helpers {
         size_t const coordinate_length = EC_KEY_SIZE(ec_group);
         bool status = false;
         do {
-            std::vector<uint8_t> temp_point(coordinate_length * 2 + 1);
-            if (EC_POINT_point2oct(ec_group, ec_point, POINT_CONVERSION_UNCOMPRESSED, temp_point.data(),
-                        temp_point.size(), nullptr) != coordinate_length * 2 + 1) {
+            // Use SEC1 standard uncompressed point format: 0x04 || X || Y
+            size_t point_size = coordinate_length * 2 + 1;
+            out.resize(point_size);
+            if (EC_POINT_point2oct(ec_group, ec_point, POINT_CONVERSION_UNCOMPRESSED, out.data(),
+                        point_size, nullptr) != point_size) {
                 ERROR("EC_POINT_point2oct failed");
                 break;
             }
-
-            out.insert(out.begin(), temp_point.begin() + 1, temp_point.end());
-            out.resize(coordinate_length * 2);
 
             status = true;
         } while (false);
@@ -4362,9 +4362,6 @@ namespace client_test_helpers {
                         if (buffer_type == SA_BUFFER_TYPE_CLEAR) {
                             if (buffer->context.clear.buffer != nullptr)
                                 free(buffer->context.clear.buffer);
-                        } else {
-                            if (buffer->context.svp.buffer != INVALID_HANDLE)
-                                sa_svp_buffer_free(buffer->context.svp.buffer);
                         }
                     }
 
@@ -4380,18 +4377,7 @@ namespace client_test_helpers {
                 ERROR("malloc failed");
                 return nullptr;
             }
-        } else if (buffer_type == SA_BUFFER_TYPE_SVP) {
-            buffer->buffer_type = SA_BUFFER_TYPE_SVP;
-            buffer->context.svp.buffer = INVALID_HANDLE;
-            sa_svp_buffer svp_buffer;
-            if (sa_svp_buffer_alloc(&svp_buffer, size) != SA_STATUS_OK) {
-                ERROR("sa_svp_buffer_alloc failed");
-                return nullptr;
-            }
-
-            buffer->context.svp.buffer = svp_buffer;
-            buffer->context.svp.offset = 0;
-        }
+        } 
 
         return buffer;
     }
@@ -4406,15 +4392,6 @@ namespace client_test_helpers {
 
         if (buffer_type == SA_BUFFER_TYPE_CLEAR) {
             memcpy(buffer->context.clear.buffer, initial_value.data(), initial_value.size());
-        } else {
-            sa_svp_offset offsets = {0, 0, initial_value.size()};
-            if (sa_svp_buffer_write(buffer->context.svp.buffer, initial_value.data(), initial_value.size(),
-                        &offsets, 1) != SA_STATUS_OK) {
-                ERROR("sa_svp_buffer_write");
-                return nullptr;
-            }
-
-            buffer->context.svp.offset = 0;
         }
 
         return buffer;

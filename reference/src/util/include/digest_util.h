@@ -26,18 +26,10 @@
 #define DIGEST_UTIL_H
 
 #include "sa_types.h"
-#include <openssl/ossl_typ.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * Converts a digest algorithm into an OpenSSL mechanism.
- * @param[in] digest_algorithm the digest algorithm to convert.
- * @return the OpenSSL mechanism.
- */
-const EVP_MD* digest_mechanism(sa_digest_algorithm digest_algorithm);
 
 /**
  * Returns the digest name as a string.
@@ -55,14 +47,6 @@ const char* digest_string(sa_digest_algorithm digest_algorithm);
  * algorithm is specified.
  */
 size_t digest_length(sa_digest_algorithm digest_algorithm);
-
-/**
- * Retrieves the digest algorithm from the OpenSSL message digest.
- *
- * @param[in] evp_md the OpenSSL message digest.
- * @return the digest algorithm.
- */
-sa_digest_algorithm digest_algorithm_from_md(const EVP_MD* evp_md);
 
 /**
  * Returns the digest algorithm based on the algorithm name.

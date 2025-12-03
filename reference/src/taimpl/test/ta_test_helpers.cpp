@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,33 +52,6 @@ namespace ta_test_helpers {
 
         return client;
     }
-
-    // TODO SoC Vendor: replace this call with a call to allocate secure memory.
-    sa_status ta_sa_svp_memory_alloc(
-            void** svp_memory,
-            size_t size) {
-        if (svp_memory == nullptr) {
-            ERROR("svp_memory is NULL");
-            return SA_STATUS_NULL_PARAMETER;
-        }
-
-        *svp_memory = malloc(size);
-        if (*svp_memory == nullptr) {
-            ERROR("malloc failed");
-            return SA_STATUS_INTERNAL_ERROR;
-        }
-
-        return SA_STATUS_OK;
-    }
-
-    // TODO SoC Vendor: replace this call with a call to free secure memory.
-    sa_status ta_sa_svp_memory_free(void* svp_memory) {
-        if (svp_memory != nullptr)
-            free(svp_memory);
-
-        return SA_STATUS_OK;
-    }
-
     std::shared_ptr<sa_key> create_uninitialized_sa_key() {
         return {new sa_key(INVALID_HANDLE),
                 [](const sa_key* p) {
@@ -117,13 +90,6 @@ namespace ta_test_helpers {
                             if (buffer->context.clear.buffer != nullptr)
                                 free(buffer->context.clear.buffer);
                         } else {
-                            if (buffer->context.svp.buffer != INVALID_HANDLE) {
-                                void* svp_memory;
-                                size_t svp_memory_size;
-                                if (ta_sa_svp_buffer_release(&svp_memory, &svp_memory_size,
-                                            buffer->context.svp.buffer, client(), ta_uuid()) == SA_STATUS_OK)
-                                    ta_sa_svp_memory_free(svp_memory);
-                            }
                         }
                     }
 
@@ -140,17 +106,6 @@ namespace ta_test_helpers {
                 return nullptr;
             }
         } else if (buffer_type == SA_BUFFER_TYPE_SVP) {
-            buffer->buffer_type = SA_BUFFER_TYPE_SVP;
-            buffer->context.svp.buffer = INVALID_HANDLE;
-            void* svp_memory;
-            if (ta_sa_svp_memory_alloc(&svp_memory, size) == SA_STATUS_OK)
-                if (ta_sa_svp_buffer_create(&buffer->context.svp.buffer, svp_memory, size, client(),
-                            ta_uuid()) != SA_STATUS_OK) {
-                    ERROR("ta_sa_svp_memory_alloc failed");
-                    return nullptr;
-                }
-
-            buffer->context.svp.offset = 0;
         }
 
         return buffer;
@@ -167,14 +122,6 @@ namespace ta_test_helpers {
         if (buffer_type == SA_BUFFER_TYPE_CLEAR) {
             memcpy(buffer->context.clear.buffer, initial_value.data(), initial_value.size());
         } else {
-            sa_svp_offset offsets = {0, 0, initial_value.size()};
-            if (ta_sa_svp_buffer_write(buffer->context.svp.buffer, initial_value.data(), initial_value.size(),
-                        &offsets, 1, client(), ta_uuid()) != SA_STATUS_OK) {
-                ERROR("ta_sa_svp_buffer_write failed");
-                return nullptr;
-            }
-
-            buffer->context.svp.offset = 0;
         }
 
         return buffer;

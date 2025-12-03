@@ -36,7 +36,6 @@
 #include "sa_cenc.h"
 #include "sa_crypto.h"
 #include "sa_key.h"
-#include "sa_svp.h"
 #include "sa_types.h"
 
 /**

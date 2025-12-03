@@ -17,14 +17,6 @@
  */
 
 #include "gtest/gtest.h"
-#include <openssl/bio.h>
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-
-#include <openssl/err.h>
-#include <openssl/evp.h>
-
-#endif
 
 class Environment : public ::testing::Environment {
 public:
@@ -32,19 +24,12 @@ public:
 
     // Override this to define how to set up the environment.
     void SetUp() override {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-        OpenSSL_add_all_algorithms();
-#endif
+        // No setup required for mbedTLS
     }
 
     // Override this to define how to tear down the environment.
     void TearDown() override {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-        EVP_cleanup();
-        CRYPTO_cleanup_all_ex_data();
-        ERR_free_strings();
-        ERR_remove_state(0);
-#endif
+        // No cleanup required for mbedTLS
     }
 };
 

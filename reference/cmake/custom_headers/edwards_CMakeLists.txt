@@ -1,0 +1,41 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(edwards_provider_internal C)
+
+set(EDWARDS_SOURCES
+        edwards.c
+        ed25519-donna/ed25519.c
+)
+
+add_library(edwards_provider STATIC ${EDWARDS_SOURCES})
+
+# Enable ed25519-donna with custom hash and random functions
+target_compile_definitions(edwards_provider PRIVATE 
+    HAVE_ED25519_DONNA=1
+    ED25519_CUSTOMHASH=1
+    ED25519_CUSTOMRANDOM=1
+)
+
+# Include ed25519-donna directory for ed25519.h and custom adapters
+target_include_directories(edwards_provider PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/ed25519-donna
+)
+
+# Include ed25519-donna directory for ed25519.h and custom adapters
+target_include_directories(edwards_provider PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/ed25519-donna
+)
+
+# Link to mbedTLS for SHA-512 functions used by ed25519-hash-custom.h
+# Also links to parent taimpl target which provides rand_bytes() implementation
+target_link_libraries(edwards_provider PRIVATE mbedcrypto_lib)
+
+## Ensure provider can find taimpl public and internal headers (e.g., porting/rand.h)
+target_include_directories(edwards_provider PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/internal
+    # Add mbedTLS include directory for SHA-512 headers
+    ${MBEDTLS_INCLUDE_DIR}
+    )
+
+install(TARGETS edwards_provider ARCHIVE DESTINATION lib)

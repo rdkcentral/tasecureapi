@@ -329,6 +329,23 @@ sa_status symmetric_context_set_iv(
         size_t iv_length);
 
 /**
+ * Reinitializes the symmetric cipher context for a new sample. This performs a full reset
+ * including reset+setkey+set_iv to allow processing multiple samples with the same IV.
+ * Only applicable for AES-CTR mode.
+ *
+ * @param[in] context symmetric context.
+ * @param[in] stored_key the stored key to use for reinitialization.
+ * @param[in] iv initialization vector.
+ * @param[in] iv_length initialization vector length.
+ * @return status of the operation.
+ */
+sa_status symmetric_context_reinit_for_sample(
+        const symmetric_context_t* context,
+        const stored_key_t* stored_key,
+        const void* iv,
+        size_t iv_length);
+
+/**
  * Gets the authentication tag after the process_last call. Can only be called on AES GCM & ChaCha20-Poly1305 context.
  *
  * @param[in] context AES context.

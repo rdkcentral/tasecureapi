@@ -34,6 +34,8 @@
 #include <openssl/evp.h>
 #include <openssl/params.h>
 
+#define MAX_AEAD_BUFFER_SIZE 65536  // 64KB buffer for AEAD data
+
 typedef struct {
     sa_provider_context* provider_context;
     sa_cipher_algorithm cipher_algorithm;
@@ -47,9 +49,13 @@ typedef struct {
     bool padded;
     bool aead;
     uint8_t tag[AES_BLOCK_SIZE];
+    size_t tag_length;
     bool delete_key;
     uint8_t remaining_block[AES_BLOCK_SIZE];
     size_t remaining_block_length;
+    uint8_t* aead_buffer;  // Buffer for AEAD data (dynamically allocated)
+    size_t aead_buffer_length;  // Current amount of data in AEAD buffer
+    size_t aead_processed_length;  // Amount of AEAD data already processed by TA
 } sa_provider_cipher_context;
 
 ossl_unused static OSSL_FUNC_cipher_newctx_fn cipher_aes_ecb_128_newctx;
@@ -116,6 +122,21 @@ static void* cipher_newctx(
     cipher_context->padded =
             cipher_context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 ||
             cipher_context->cipher_algorithm == SA_CIPHER_ALGORITHM_AES_ECB_PKCS7;
+    cipher_context->tag_length = 0;
+    cipher_context->aead_buffer = NULL;
+    cipher_context->aead_buffer_length = 0;
+    cipher_context->aead_processed_length = 0;
+    
+    // Allocate AEAD buffer if this is an AEAD cipher
+    if (aead) {
+        cipher_context->aead_buffer = OPENSSL_malloc(MAX_AEAD_BUFFER_SIZE);
+        if (cipher_context->aead_buffer == NULL) {
+            ERROR("OPENSSL_malloc failed for AEAD buffer");
+            OPENSSL_free(cipher_context);
+            return NULL;
+        }
+    }
+    
     return cipher_context;
 }
 
@@ -129,6 +150,9 @@ static void cipher_freectx(void* cctx) {
 
     if (cipher_context->delete_key && cipher_context->key != INVALID_HANDLE)
         sa_key_release(cipher_context->key);
+    
+    if (cipher_context->aead_buffer != NULL)
+        OPENSSL_free(cipher_context->aead_buffer);
 
     cipher_context->key = INVALID_HANDLE;
     cipher_context->cipher_context = INVALID_HANDLE;
@@ -271,12 +295,20 @@ static int cipher_cipher(
         }
 
         if (cipher_context->cipher_context == INVALID_HANDLE) {
+            /*
+             * AEAD cipher initialization can behave poorly if passed a NULL pointer
+             * for AAD even when the length is zero. Defensively use the address of
+             * a local zero byte when AAD is empty (out != NULL) so the pointer is
+             * non-NULL while the length remains 0.
+             */
+            uint8_t aad_zero = 0;
             void* aad = NULL;
             size_t aad_length;
             if (out == NULL) {
                 aad = (void*) in;
                 aad_length = inl;
             } else {
+                aad = &aad_zero;
                 aad_length = 0;
             }
 
@@ -352,8 +384,27 @@ static int cipher_cipher(
                 sa_buffer in_buffer;
                 in_buffer.buffer_type = SA_BUFFER_TYPE_CLEAR;
 
-                size_t total_length = cipher_context->remaining_block_length + inl;
-                size_t position = 0;
+                // mbedTLS 2.16.10 GCM multi-part fix applied: directly pass data through
+                // The fix in mbedTLS gcm.c now properly handles partial blocks across multiple update calls
+                in_buffer.context.clear.buffer = (void*) in;
+                in_buffer.context.clear.length = inl;
+                in_buffer.context.clear.offset = 0;
+                bytes_to_process = inl;
+
+                if (cipher_context->aead) {
+                    // For AEAD modes, pass data directly to mbedTLS (now supports multi-part with partial blocks)
+                    status = sa_crypto_cipher_process(&out_buffer, cipher_context->cipher_context,
+                            &in_buffer, &bytes_to_process);
+                    if (status != SA_STATUS_OK) {
+                        ERROR("sa_crypto_cipher_process returned %d", status);
+                        break;
+                    }
+                    *outl = bytes_to_process;
+                    total_processed = bytes_to_process;
+                } else {
+                    // For block cipher modes (ECB, CBC), buffer partial blocks
+                    size_t total_length = cipher_context->remaining_block_length + inl;
+                    size_t position = 0;
                 // If inl is not a multiple of block size, store the leftover data in remaining_block. Then, the
                 // next time this function is called, start with the remaining data and add data from in to it. Then
                 // process the remainder of in.
@@ -386,32 +437,60 @@ static int cipher_cipher(
                     }
                 }
 
-                // Store any leftover data in remaining_block for processing on the next call to update.
-                if (position < inl) {
-                    cipher_context->remaining_block_length = inl - position;
-                    memcpy(cipher_context->remaining_block, in + position,
-                            cipher_context->remaining_block_length);
-                }
+                    // Store any leftover data in remaining_block for processing on the next call to update.
+                    if (position < inl) {
+                        cipher_context->remaining_block_length = inl - position;
+                        memcpy(cipher_context->remaining_block, in + position,
+                                cipher_context->remaining_block_length);
+                    }
+                } // end of else (block cipher modes)
             } else if (cipher_context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CBC &&
                        cipher_context->cipher_algorithm != SA_CIPHER_ALGORITHM_AES_ECB) {
                 // Process a final call.
                 sa_buffer out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {out, outsize, 0}}};
-                sa_buffer in_buffer = {SA_BUFFER_TYPE_CLEAR,
-                        {.clear = {cipher_context->remaining_block,
-                                 cipher_context->remaining_block_length, 0}}};
-                bytes_to_process = cipher_context->remaining_block_length;
-
-                void* parameters = NULL;
-                sa_cipher_end_parameters_aes_gcm end_parameters;
+                sa_buffer in_buffer;
+                
+                // For AEAD modes, finalize and get the tag
+                // mbedTLS multi-part fix handles all partial blocks internally, so no buffered data here
                 if (cipher_context->aead) {
+                    // Now finalize and get the tag
+                    sa_cipher_end_parameters_aes_gcm end_parameters;
                     end_parameters.tag = cipher_context->tag;
-                    end_parameters.tag_length = MAX_GCM_TAG_LENGTH;
-                    parameters = &end_parameters;
-                }
+                    end_parameters.tag_length = cipher_context->tag_length > 0 ? cipher_context->tag_length : MAX_GCM_TAG_LENGTH;
+                    
+                    // Call process_last with empty buffer just to finalize
+                    uint8_t dummy_in = 0;
+                    uint8_t dummy_out[16];
+                    sa_buffer empty_out_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {dummy_out, sizeof(dummy_out), 0}}};
+                    sa_buffer empty_in_buffer = {SA_BUFFER_TYPE_CLEAR, {.clear = {&dummy_in, 0, 0}}};
+                    size_t last_bytes = 0;
+                    
+                    status = sa_crypto_cipher_process_last(&empty_out_buffer, cipher_context->cipher_context, &empty_in_buffer,
+                            &last_bytes, &end_parameters);
+                    if (status != SA_STATUS_OK) {
+                        ERROR("sa_crypto_cipher_process_last returned %d", status);
+                        break;
+                    }
+                    
+                    if (status == SA_STATUS_OK) {
+                        fprintf(stderr, "sa_provider: GCM tag (len=%zu): ", end_parameters.tag_length);
+                        for (size_t dbg_i = 0; dbg_i < end_parameters.tag_length; dbg_i++) 
+                            fprintf(stderr, "%02x", cipher_context->tag[dbg_i]);
+                        fprintf(stderr, "\n");
+                    }
+                } else {
+                    // For non-AEAD modes, process remaining block
+                    in_buffer.buffer_type = SA_BUFFER_TYPE_CLEAR;
+                    in_buffer.context.clear.buffer = cipher_context->remaining_block;
+                    in_buffer.context.clear.length = cipher_context->remaining_block_length;
+                    in_buffer.context.clear.offset = 0;
+                    bytes_to_process = cipher_context->remaining_block_length;
 
-                status = sa_crypto_cipher_process_last(&out_buffer, cipher_context->cipher_context, &in_buffer,
-                        &bytes_to_process, parameters);
-                total_processed += bytes_to_process;
+                    void* parameters = NULL;
+                    status = sa_crypto_cipher_process_last(&out_buffer, cipher_context->cipher_context, &in_buffer,
+                            &bytes_to_process, parameters);
+                    total_processed += bytes_to_process;
+                }
             } else if (cipher_context->remaining_block_length > 0) {
                 // This is a SA_CIPHER_ALGORITHM_AES_CBC or SA_CIPHER_ALGORITHM_AES_ECB cipher, and it didn't end on a
                 // block_size boundary. This is an error.
@@ -628,6 +707,8 @@ static int cipher_set_ctx_params(void* cctx,
             ERROR("OSSL_PARAM_get_octet_string failed");
             return 0;
         }
+        /* record actual tag length provided by caller */
+        cipher_context->tag_length = length;
     }
 
     param = OSSL_PARAM_locate_const(params, OSSL_PARAM_SA_KEY);

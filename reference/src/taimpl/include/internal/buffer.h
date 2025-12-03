@@ -27,7 +27,6 @@
 
 #include "client_store.h"
 #include "sa_types.h"
-#include "svp_store.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,16 +36,14 @@ extern "C" {
  * Converts a sa_buffer into byte and checks the parameters for validity.
  *
  * @param[out] bytes the array of bytes.
- * @param[out] svp the svp object.
  * @param[in] buffer the buffer to convert.
  * @param[in] bytes_to_process the number of bytes that will be written to or read from the buffer.
- * @param[in] client the client from which to retrieve the SVP store.
+ * @param[in] client the client.
  * @param[in] caller_uuid the UUID of the caller.
  * @return the status of the validity check.
  */
 sa_status convert_buffer(
         uint8_t** bytes,
-        svp_t** svp,
         const sa_buffer* buffer,
         size_t bytes_to_process,
         const client_t* client,

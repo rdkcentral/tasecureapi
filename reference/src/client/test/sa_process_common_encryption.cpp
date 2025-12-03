@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,23 +25,16 @@
 
 using namespace client_test_helpers;
 
-sa_status SaProcessCommonEncryptionBase::svp_buffer_write(
-        sa_svp_buffer out,
-        const void* in,
-        size_t in_length) {
-    sa_svp_offset offsets = {0, 0, in_length};
-    return sa_svp_buffer_write(out, in, in_length, &offsets, 1);
-}
 
 void SaProcessCommonEncryptionTest::SetUp() {
-    if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED) {
-        auto buffer_types = std::get<5>(GetParam());
-        sa_buffer_type const out_buffer_type = std::get<0>(buffer_types);
-        sa_buffer_type const in_buffer_type = std::get<1>(buffer_types);
-        if (in_buffer_type == SA_BUFFER_TYPE_SVP || out_buffer_type == SA_BUFFER_TYPE_SVP)
-            GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
-    }
+    // SVP not supported - skip all SVP tests
+    auto buffer_types = std::get<5>(GetParam());
+    sa_buffer_type const out_buffer_type = std::get<0>(buffer_types);
+    sa_buffer_type const in_buffer_type = std::get<1>(buffer_types);
+    if (in_buffer_type == SA_BUFFER_TYPE_SVP || out_buffer_type == SA_BUFFER_TYPE_SVP)
+        GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
 }
+
 
 TEST_P(SaProcessCommonEncryptionTest, nominal) {
     auto sample_size_and_time = std::get<0>(GetParam());
@@ -76,7 +69,7 @@ TEST_P(SaProcessCommonEncryptionTest, nominal) {
     std::vector<sa_sample> samples(1);
     ASSERT_TRUE(build_samples(sample_size, crypt_byte_block, skip_byte_block, subsample_count, bytes_of_clear_data,
             parameters.iv, parameters.cipher_algorithm, parameters.clear_key, cipher, sample_data, samples));
-
+    
     auto start_time = std::chrono::high_resolution_clock::now();
     sa_status const status = sa_process_common_encryption(samples.size(), samples.data());
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -110,8 +103,7 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, multipleSamples) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
     parameters.svp_required = false;
-    sa_buffer_type const out_buffer_type =
-            sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED ? SA_BUFFER_TYPE_CLEAR : SA_BUFFER_TYPE_SVP;
+    sa_buffer_type const out_buffer_type = SA_BUFFER_TYPE_CLEAR;
     sa_buffer_type const in_buffer_type = SA_BUFFER_TYPE_CLEAR;
 
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
@@ -119,7 +111,9 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, multipleSamples) {
     if (*cipher == UNSUPPORTED_CIPHER)
         GTEST_SKIP() << "Cipher algorithm not supported";
 
-    // Set lower 8 bytes of IV to FFFFFFFFFFFFFFFF to test rollover condition.
+    // Set entire IV to a known value: upper 8 bytes = 0, lower 8 bytes = 0xFFFFFFFFFFFFFFFF
+    // This tests the counter rollover condition
+    memset(&parameters.iv[0], 0, 8);
     memset(&parameters.iv[8], 0xff, 8);
 
     sample_data sample_data;
@@ -147,8 +141,7 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
     parameters.svp_required = false;
-    sa_buffer_type const out_buffer_type =
-            sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED ? SA_BUFFER_TYPE_CLEAR : SA_BUFFER_TYPE_SVP;
+    sa_buffer_type const out_buffer_type = SA_BUFFER_TYPE_CLEAR;
     sa_buffer_type const in_buffer_type = SA_BUFFER_TYPE_CLEAR;
 
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
@@ -185,8 +178,7 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest2) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
     parameters.svp_required = false;
-    sa_buffer_type const out_buffer_type =
-            sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED ? SA_BUFFER_TYPE_CLEAR : SA_BUFFER_TYPE_SVP;
+    sa_buffer_type const out_buffer_type = SA_BUFFER_TYPE_CLEAR;
     sa_buffer_type const in_buffer_type = SA_BUFFER_TYPE_CLEAR;
 
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
@@ -223,8 +215,7 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest3) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
     parameters.svp_required = false;
-    sa_buffer_type const out_buffer_type =
-            sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED ? SA_BUFFER_TYPE_CLEAR : SA_BUFFER_TYPE_SVP;
+    sa_buffer_type const out_buffer_type = SA_BUFFER_TYPE_CLEAR;
     sa_buffer_type const in_buffer_type = SA_BUFFER_TYPE_CLEAR;
 
     auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
@@ -467,45 +458,6 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullOutBuffer) {
     ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
 }
 
-TEST_F(SaProcessCommonEncryptionNegativeTest, invalidOutSvpBuffer) {
-    if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
-        GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
-
-    cipher_parameters parameters;
-    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
-    parameters.svp_required = false;
-    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
-    ASSERT_NE(cipher, nullptr);
-    if (*cipher == UNSUPPORTED_CIPHER)
-        GTEST_SKIP() << "Cipher algorithm not supported";
-
-    sa_sample sample;
-    sample_data sample_data;
-    sample.iv = parameters.iv.data();
-    sample.iv_length = parameters.iv.size();
-    sample.crypt_byte_block = 0;
-    sample.skip_byte_block = 0;
-    sample.subsample_count = 1;
-
-    sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = sample_data.subsample_lengths.data();
-    sample.subsample_lengths[0].bytes_of_clear_data = 0;
-    sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
-
-    sample.context = *cipher;
-    sample_data.clear = random(SUBSAMPLE_SIZE);
-    sample_data.in = buffer_alloc(SA_BUFFER_TYPE_CLEAR, sample_data.clear);
-    ASSERT_NE(sample_data.in, nullptr);
-    sample.in = sample_data.in.get();
-
-    sa_buffer out;
-    out.buffer_type = SA_BUFFER_TYPE_SVP;
-    out.context.svp.buffer = INVALID_HANDLE;
-    out.context.svp.offset = 0;
-    sample.out = &out;
-    sa_status const status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
-}
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullIn) {
     cipher_parameters parameters;
@@ -576,43 +528,6 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, nullInBuffer) {
     ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
 }
 
-TEST_F(SaProcessCommonEncryptionNegativeTest, nullInSvpBuffer) {
-    if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
-        GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
-
-    cipher_parameters parameters;
-    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
-    parameters.svp_required = false;
-    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
-    ASSERT_NE(cipher, nullptr);
-    if (*cipher == UNSUPPORTED_CIPHER)
-        GTEST_SKIP() << "Cipher algorithm not supported";
-
-    sa_sample sample;
-    sample_data sample_data;
-    sample.iv = parameters.iv.data();
-    sample.iv_length = parameters.iv.size();
-    sample.crypt_byte_block = 0;
-    sample.skip_byte_block = 0;
-    sample.subsample_count = 1;
-
-    sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = sample_data.subsample_lengths.data();
-    sample.subsample_lengths[0].bytes_of_clear_data = 0;
-    sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
-
-    sample.context = *cipher;
-    sample_data.clear = random(SUBSAMPLE_SIZE);
-
-    sa_buffer in = {SA_BUFFER_TYPE_SVP, {.svp = {INVALID_HANDLE, 0}}};
-    sample.in = &in;
-
-    sample_data.out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, SUBSAMPLE_SIZE);
-    ASSERT_NE(sample_data.out, nullptr);
-    sample.out = sample_data.out.get();
-    sa_status const status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
-}
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, invalidSkipByteBlock) {
     cipher_parameters parameters;
@@ -824,94 +739,6 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, invalidCipherAlgorithm) {
     ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
 }
 
-TEST_F(SaProcessCommonEncryptionNegativeTest, invalidBufferTypeCombo) {
-    if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
-        GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
-
-    cipher_parameters parameters;
-    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
-    parameters.svp_required = false;
-    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
-    ASSERT_NE(cipher, nullptr);
-    if (*cipher == UNSUPPORTED_CIPHER)
-        GTEST_SKIP() << "Cipher algorithm not supported";
-
-    sa_sample sample;
-    sample_data sample_data;
-    sample.iv = parameters.iv.data();
-    sample.iv_length = parameters.iv.size();
-    sample.crypt_byte_block = 0;
-    sample.skip_byte_block = 0;
-    sample.subsample_count = 1;
-
-    sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = sample_data.subsample_lengths.data();
-    sample.subsample_lengths[0].bytes_of_clear_data = 0;
-    sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
-
-    sample.context = *cipher;
-    sample_data.clear = random(SUBSAMPLE_SIZE);
-    sample_data.in = buffer_alloc(SA_BUFFER_TYPE_SVP, sample_data.clear);
-    ASSERT_NE(sample_data.in, nullptr);
-    sample.in = sample_data.in.get();
-
-    sample_data.out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, SUBSAMPLE_SIZE);
-    ASSERT_NE(sample_data.out, nullptr);
-    sample.out = sample_data.out.get();
-    sa_status const status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
-}
-
-TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTypeDisallowed) {
-    cipher_parameters parameters;
-    parameters.clear_key = random(SYM_128_KEY_SIZE);
-
-    sa_rights rights;
-    sa_rights_set_allow_all(&rights);
-    SA_USAGE_BIT_CLEAR(rights.usage_flags, SA_USAGE_FLAG_SVP_OPTIONAL);
-
-    parameters.key = create_sa_key_symmetric(&rights, parameters.clear_key);
-    ASSERT_NE(parameters.key, nullptr);
-
-    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
-
-    auto cipher = create_uninitialized_sa_crypto_cipher_context();
-    ASSERT_NE(cipher, nullptr);
-
-    get_cipher_parameters(parameters);
-    sa_status status = sa_crypto_cipher_init(cipher.get(), parameters.cipher_algorithm, SA_CIPHER_MODE_DECRYPT,
-            *parameters.key, parameters.parameters.get());
-    if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-        GTEST_SKIP() << "Cipher algorithm not supported";
-    ASSERT_EQ(status, SA_STATUS_OK);
-    ASSERT_NE(cipher, nullptr);
-
-    sa_sample sample;
-    sample_data sample_data;
-    sample.iv = parameters.iv.data();
-    sample.iv_length = parameters.iv.size();
-    sample.crypt_byte_block = 0;
-    sample.skip_byte_block = 0;
-    sample.subsample_count = 1;
-
-    sample_data.subsample_lengths.resize(1);
-    sample.subsample_lengths = sample_data.subsample_lengths.data();
-    sample.subsample_lengths[0].bytes_of_clear_data = 0;
-    sample.subsample_lengths[0].bytes_of_protected_data = SUBSAMPLE_SIZE;
-
-    sample.context = *cipher;
-    sample_data.clear = random(SUBSAMPLE_SIZE);
-    sample_data.in = buffer_alloc(SA_BUFFER_TYPE_CLEAR, sample_data.clear);
-    ASSERT_NE(sample_data.in, nullptr);
-    sample.in = sample_data.in.get();
-
-    sample_data.out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, SUBSAMPLE_SIZE);
-    ASSERT_NE(sample_data.out, nullptr);
-    sample.out = sample_data.out.get();
-    status = sa_process_common_encryption(1, &sample);
-    ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
-}
-
 TEST_F(SaProcessCommonEncryptionNegativeTest, outBufferTooShort) {
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;
@@ -1091,8 +918,8 @@ TEST_F(SaProcessCommonEncryptionNegativeTest, failClearBufferOverlap) {
 }
 
 TEST_F(SaProcessCommonEncryptionNegativeTest, failSvpBufferOverlap) {
-    if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
-        GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+    // SVP not supported - skip this test
+    GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
 
     cipher_parameters parameters;
     parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CBC;

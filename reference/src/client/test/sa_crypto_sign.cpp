@@ -104,7 +104,7 @@ namespace {
         auto in = random(25);
         std::vector<uint8_t> digested;
         if (precomputed_digest) {
-            digest_openssl(digested, digest_algorithm, in, {}, {});
+            digest(digested, digest_algorithm, in, {}, {});
         }
 
         auto out = std::vector<uint8_t>(out_length);

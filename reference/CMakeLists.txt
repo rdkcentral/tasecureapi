@@ -62,8 +62,16 @@ if(USE_MBEDTLS)
         GIT_SHALLOW TRUE
         PREFIX ${CMAKE_BINARY_DIR}/mbedtls
         PATCH_COMMAND ${CMAKE_COMMAND} -E echo "Patching mbedTLS CMakeLists.txt to require CMake 3.10...3.28"
-            COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/patch_mbedtls.cmake <SOURCE_DIR>
-        CMAKE_ARGS -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_SHARED_MBEDTLS_LIBRARY=OFF -DUSE_STATIC_MBEDTLS_LIBRARY=ON
+            COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_mbedtls.cmake <SOURCE_DIR>
+            COMMAND ${CMAKE_COMMAND} -E echo "Enabling mbedTLS threading support for concurrent operations"
+            COMMAND sed -i.bak "s|//#define MBEDTLS_THREADING_PTHREAD|#define MBEDTLS_THREADING_PTHREAD|g" <SOURCE_DIR>/include/mbedtls/config.h
+            COMMAND sed -i.bak "s|//#define MBEDTLS_THREADING_C|#define MBEDTLS_THREADING_C|g" <SOURCE_DIR>/include/mbedtls/config.h
+        CMAKE_ARGS 
+            -DENABLE_PROGRAMS=OFF 
+            -DENABLE_TESTING=OFF 
+            -DUSE_SHARED_MBEDTLS_LIBRARY=OFF 
+            -DUSE_STATIC_MBEDTLS_LIBRARY=ON
+            -DENABLE_ZLIB_SUPPORT=OFF
         INSTALL_COMMAND ""
     )
 

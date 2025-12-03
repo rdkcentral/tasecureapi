@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
 #include "cenc.h" // NOLINT
 #include "buffer.h"
 #include "common.h"
@@ -43,7 +42,7 @@ static sa_status decrypt(
         sa_cipher_algorithm cipher_algorithm,
         symmetric_context_t* symmetric_context) {
 
-    // For AES-CTR mode, IV is an 8 byte nonce followed by an 8 byte counter. Openssl as well as other implementations
+    // For AES-CTR mode, IV is an 8 byte nonce followed by an 8 byte counter. Other implementations
     // treat all 16 bytes as a counter. This code accounts for the rollover condition.
 
     // Determine if the iv will rollover. If not, decrypt the whole block.
@@ -70,6 +69,7 @@ static sa_status decrypt(
 
                 // Increment the IV by the number of full blocks just decrypted.
                 (*counter_buffer) = htobe64(be64toh(*counter_buffer) + 1);
+
                 status = symmetric_context_set_iv(symmetric_context, iv, AES_BLOCK_SIZE);
                 if (status != SA_STATUS_OK) {
                     ERROR("symmetric_context_set_iv failed");
@@ -105,9 +105,10 @@ static sa_status decrypt(
                 num_blocks_before_rollover = 0;
             }
 
+            // After handling the rollover block, clear the flag so remaining blocks use normal path
             counter_rollover = false;
         } else {
-            // The IV counter is not going to rollover or this is an AES-CBC CIPHER. Openssl and other implementations
+            // The IV counter is not going to rollover or this is an AES-CBC CIPHER. Other implementations
             // handle this automatically.
             size_t length = bytes_to_process - bytes_encrypted;
             sa_status status = symmetric_context_decrypt(symmetric_context, out_bytes + bytes_encrypted,
@@ -159,8 +160,6 @@ sa_status cenc_process_sample(
 
     sa_status status;
     cipher_t* cipher = NULL;
-    svp_t* out_svp = NULL;
-    svp_t* in_svp = NULL;
     do {
         status = cipher_store_acquire_exclusive(&cipher, cipher_store, sample->context, caller_uuid);
         if (status != SA_STATUS_OK) {
@@ -177,14 +176,14 @@ sa_status cenc_process_sample(
         }
 
         uint8_t* out_bytes = NULL;
-        status = convert_buffer(&out_bytes, &out_svp, sample->out, required_length, client, caller_uuid);
+        status = convert_buffer(&out_bytes, sample->out, required_length, client, caller_uuid);
         if (status != SA_STATUS_OK) {
             ERROR("convert_buffer failed");
             break;
         }
 
         uint8_t* in_bytes = NULL;
-        status = convert_buffer(&in_bytes, &in_svp, sample->in, required_length, client, caller_uuid);
+        status = convert_buffer(&in_bytes, sample->in, required_length, client, caller_uuid);
         if (status != SA_STATUS_OK) {
             ERROR("convert_buffer failed");
             break;
@@ -200,9 +199,23 @@ sa_status cenc_process_sample(
 
         uint8_t iv[AES_BLOCK_SIZE];
         memcpy(iv, sample->iv, sample->iv_length);
-        status = symmetric_context_set_iv(symmetric_context, iv, AES_BLOCK_SIZE);
+        
+        // For CTR mode with multiple samples, we need to fully reinitialize the cipher context
+        // to clear any residual state from previous operations (including previous test runs).
+        // This is critical because mbedTLS cipher contexts can have internal state that persists
+        // and causes incorrect decryption if not properly reset between samples.
+        const stored_key_t* stored_key = cipher_get_stored_key(cipher);
+        if (stored_key == NULL) {
+            ERROR("cipher_get_stored_key failed");
+            status = SA_STATUS_NULL_PARAMETER;
+            break;
+        }
+        
+        // Use reinit_for_sample which properly resets CTR mode contexts (free+init+setup+setkey+set_iv)
+        // For other modes, it just calls symmetric_context_set_iv
+        status = symmetric_context_reinit_for_sample(symmetric_context, stored_key, iv, AES_BLOCK_SIZE);
         if (status != SA_STATUS_OK) {
-            ERROR("symmetric_context_set_iv failed");
+            ERROR("symmetric_context_reinit_for_sample failed");
             break;
         }
 
@@ -301,25 +314,15 @@ sa_status cenc_process_sample(
         }
 
         if (status == SA_STATUS_OK) {
-            if (sample->in->buffer_type == SA_BUFFER_TYPE_SVP)
-                sample->in->context.svp.offset += offset;
-            else
-                sample->in->context.clear.offset += offset;
+            if (sample->in->buffer_type == SA_BUFFER_TYPE_CLEAR) {
+		sample->in->context.clear.offset += offset;
+	    } 
 
-            if (sample->out->buffer_type == SA_BUFFER_TYPE_SVP)
-                sample->out->context.svp.offset += offset;
-            else
+            if (sample->out->buffer_type == SA_BUFFER_TYPE_CLEAR) {
                 sample->out->context.clear.offset += offset;
+	    }
         }
     } while (false);
-
-    if (in_svp != NULL)
-        svp_store_release_exclusive(client_get_svp_store(client), sample->in->context.svp.buffer, in_svp, caller_uuid);
-
-    if (out_svp != NULL)
-        svp_store_release_exclusive(client_get_svp_store(client), sample->out->context.svp.buffer, out_svp,
-                caller_uuid);
-
     if (cipher != NULL)
         cipher_store_release_exclusive(cipher_store, sample->context, cipher, caller_uuid);
 

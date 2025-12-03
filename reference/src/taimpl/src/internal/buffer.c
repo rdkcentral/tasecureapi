@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@
 
 sa_status convert_buffer(
         uint8_t** bytes,
-        svp_t** svp,
         const sa_buffer* buffer,
         size_t bytes_to_process,
         const client_t* client,
@@ -32,11 +31,6 @@ sa_status convert_buffer(
 
     if (bytes == NULL) {
         ERROR("NULL bytes");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (svp == NULL) {
-        ERROR("NULL svp");
         return SA_STATUS_NULL_PARAMETER;
     }
 
@@ -55,40 +49,7 @@ sa_status convert_buffer(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (buffer->buffer_type == SA_BUFFER_TYPE_SVP) {
-        svp_store_t* svp_store = client_get_svp_store(client);
-        sa_status status = svp_store_acquire_exclusive(svp, svp_store, buffer->context.svp.buffer, caller_uuid);
-        if (status != SA_STATUS_OK) {
-            ERROR("svp_store_acquire_exclusive failed");
-            return status;
-        }
-
-        size_t memory_range;
-        if (add_overflow(buffer->context.svp.offset, bytes_to_process, &memory_range)) {
-            ERROR("Integer overflow");
-            return SA_STATUS_INVALID_PARAMETER;
-        }
-
-        svp_buffer_t* svp_buffer = svp_get_buffer(*svp);
-
-        // This call validates that SVP buffer is contained entirely within SVP memory.
-        void* memory_location = svp_get_svp_memory(svp_buffer);
-        if (memory_location == NULL) {
-            ERROR("memory range is not within SVP memory");
-            return SA_STATUS_INVALID_PARAMETER;
-        }
-
-        size_t memory_size = svp_get_size(svp_buffer);
-        if (memory_range > memory_size) {
-            ERROR("buffer not large enough");
-            return SA_STATUS_INVALID_PARAMETER;
-        }
-
-        if (add_overflow((unsigned long) memory_location, buffer->context.svp.offset, (unsigned long*) bytes)) {
-            ERROR("Integer overflow");
-            return SA_STATUS_INVALID_PARAMETER;
-        }
-    } else {
+    if (buffer->buffer_type == SA_BUFFER_TYPE_CLEAR) {
         if (buffer->context.clear.buffer == NULL) {
             ERROR("NULL buffer");
             return SA_STATUS_NULL_PARAMETER;

@@ -27,6 +27,7 @@
 #include "common.h"
 #include "digest_util.h"
 #include "log.h"
+#include "digest_mechanism.h"
 #include "sa_public_key.h"
 #include <memory.h>
 #include <openssl/core_names.h>
@@ -301,8 +302,8 @@ static int asym_cipher_decrypt(void* ctx,
             oaep_md = EVP_MD_fetch(asym_cipher_context->provider_context->lib_ctx, DEFAULT_OAEP_DIGEST, NULL);
 
         EVP_MD* oaep_mgf1_md = asym_cipher_context->oaep_mgf1_md != NULL ? oaep_md : asym_cipher_context->oaep_md;
-        parameters_rsa_oaep.digest_algorithm = digest_algorithm_from_md(oaep_md);
-        parameters_rsa_oaep.mgf1_digest_algorithm = digest_algorithm_from_md(oaep_mgf1_md);
+        parameters_rsa_oaep.digest_algorithm = digest_algorithm_from_evp_md(oaep_md);
+        parameters_rsa_oaep.mgf1_digest_algorithm = digest_algorithm_from_evp_md(oaep_mgf1_md);
         parameters_rsa_oaep.label = asym_cipher_context->oaep_label;
         parameters_rsa_oaep.label_length = asym_cipher_context->oaep_label_length;
         parameters = &parameters_rsa_oaep;

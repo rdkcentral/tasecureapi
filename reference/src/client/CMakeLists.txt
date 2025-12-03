@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2023 Comcast Cable Communications Management, LLC
+# Copyright 2020-2025 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,10 +55,8 @@ add_library(saclient SHARED
         include/sa_engine.h
         include/sa_key.h
         include/sa_provider.h
-        include/sa_svp.h
         include/sa_ta_types.h
         include/sa_types.h
-
         src/sa_engine.c
         src/sa_engine_cipher.c
         src/sa_engine_digest.c
@@ -93,7 +91,7 @@ target_include_directories(saclient
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util_openssl/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
         ${OPENSSL_INCLUDE_DIR}
         )
@@ -109,7 +107,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
             PRIVATE
             -Wl,-all_load
             saclientimpl
-            util
+            util_openssl
             ${OPENSSL_CRYPTO_LIBRARY}
             )
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -119,7 +117,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
             -Wl,--whole-archive
             saclientimpl
             -Wl,--no-whole-archive
-            util
+            util_openssl
             ${OPENSSL_CRYPTO_LIBRARY}
             )
 endif ()
@@ -128,11 +126,10 @@ target_clangformat_setup(saclient)
 
 if (BUILD_TESTS)
     # Google test
-    add_executable(saclienttest
+    set(SACLIENT_TEST_SOURCES
             test/client_test_helpers.cpp
             test/client_test_helpers.h
             test/environment.cpp
-            test/sa_client_thread_test.cpp
             test/sa_crypto_cipher_common.h
             test/sa_crypto_cipher_common.cpp
             test/sa_crypto_cipher_init.cpp
@@ -277,15 +274,9 @@ if (BUILD_TESTS)
             test/sa_provider_mac.cpp
             test/sa_provider_pkcs7.cpp
             test/sa_provider_signature.cpp
-            test/sa_svp_buffer_alloc.cpp
-            test/sa_svp_buffer_check.cpp
-            test/sa_svp_buffer_copy.cpp
-            test/sa_svp_buffer_create.cpp
-            test/sa_svp_buffer_release.cpp
-            test/sa_svp_buffer_write.cpp
-            test/sa_svp_key_check.cpp
-            test/sa_svp_common.cpp
-            test/sa_svp_common.h)
+            )
+   
+    add_executable(saclienttest ${SACLIENT_TEST_SOURCES})
 
     target_compile_options(saclienttest PRIVATE -Werror -Wall -Wextra -Wno-type-limits -Wno-unused-parameter
             -Wno-deprecated-declarations)
@@ -293,9 +284,11 @@ if (BUILD_TESTS)
     target_include_directories(saclienttest
             PRIVATE
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util/include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util_openssl/include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../util_mbedtls/include>
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
             ${OPENSSL_INCLUDE_DIR}
+            ${MBEDTLS_INCLUDE_DIR}
             )
 
     if (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
@@ -307,13 +300,13 @@ if (BUILD_TESTS)
     endif ()
 
     target_link_libraries(saclienttest
-            PRIVATE
-            gtest_main
-            gmock_main
-            saclient
-            util
-            ${OPENSSL_CRYPTO_LIBRARY}
-            )
+        PRIVATE
+        gmock_main
+        saclient
+        util_openssl
+        util_mbedtls
+        ${OPENSSL_CRYPTO_LIBRARY}
+        )
 
     if (COVERAGE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_link_libraries(saclienttest
@@ -326,6 +319,7 @@ if (BUILD_TESTS)
 
     add_custom_command(
             TARGET saclienttest POST_BUILD
+            BYPRODUCTS root_keystore.p12
             COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_SOURCE_DIR}/test/root_keystore.p12
             ${CMAKE_CURRENT_BINARY_DIR}/root_keystore.p12)

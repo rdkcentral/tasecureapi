@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,10 +107,6 @@ typedef uint64_t sa_handle; // NOLINT
  */
 typedef sa_handle sa_key;
 
-/**
- * SVP buffer opaque data structure.
- */
-typedef sa_handle sa_svp_buffer;
 
 /**
  * Cipher context handle.
@@ -559,13 +555,6 @@ typedef struct {
             size_t offset;
         } clear;
 
-        /** SVP buffer information */
-        struct {
-            /** SVP buffer handle */
-            sa_svp_buffer buffer;
-            /** Current offset into the buffer */
-            size_t offset;
-        } svp;
     } context;
 } sa_buffer;
 
@@ -1023,14 +1012,6 @@ typedef struct {
 /**
  * Structure to use in sa_svp_buffer_copy_blocks
  */
-typedef struct {
-    /** offset into the output buffer. */
-    size_t out_offset;
-    /** offset into the input buffer. */
-    size_t in_offset;
-    /** numbers of bytes to copy or write. */
-    size_t length;
-} sa_svp_offset;
 
 /** TA Key Type Definition */
 

@@ -19,11 +19,11 @@
 #include "cmac_context.h"
 #include "common.h"
 #include "key_type.h"
-#include "internal/cmac_constants.h"
 #include "log.h"
 #include "porting/memory.h"
 #include "stored_key_internal.h"
 #include "pkcs12_mbedtls.h"
+#include "mbedtls_header.h"
 
 struct cmac_context_s {
     mbedtls_cipher_context_t cipher_ctx;

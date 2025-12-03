@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,23 +55,10 @@ sa_status client_thread_verify(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (sa_svp_supported() == SA_STATUS_OK) {
-        sa_svp_offset offsets = {0, 0, in_buffer.size()};
-        status = sa_svp_buffer_write(svp_buffer, in_buffer.data(), in_buffer.size(), &offsets, 1);
-        if (status != SA_STATUS_OK) {
-            ERROR("svp %d was not found in a thread different from the one it was created in", svp_buffer);
-            return SA_STATUS_INVALID_PARAMETER;
-        }
+    // SVP not supported - skip SVP verification
 
-        auto new_svp_buffer = std::shared_ptr<sa_svp_buffer>(
-                new sa_svp_buffer(INVALID_HANDLE),
-                [](const sa_svp_buffer* p) {
-                    if (p != nullptr) {
-                        if (*p != INVALID_HANDLE) {
-                            void* svp_memory;
-                            size_t svp_memory_size;
-                            sa_svp_buffer_release(&svp_memory, &svp_memory_size, *p);
-                        }
+    return SA_STATUS_OK;
+}
 
                         delete p;
                     }
@@ -116,18 +103,7 @@ namespace {
                     }
                 });
 
-        if (sa_svp_supported() == SA_STATUS_OK) {
-            status = sa_svp_memory_alloc(&svp_memory, AES_BLOCK_SIZE);
-            ASSERT_EQ(status, SA_STATUS_OK);
-            status = sa_svp_buffer_create(svp_buffer.get(), svp_memory, AES_BLOCK_SIZE);
-            ASSERT_EQ(status, SA_STATUS_OK);
-
-            std::vector<uint8_t> in(AES_BLOCK_SIZE);
-            std::fill(in.begin(), in.end(), 0xff);
-            sa_svp_offset offset = {0, 0, in.size()};
-            status = sa_svp_buffer_write(*svp_buffer, in.data(), in.size(), &offset, 1);
-            ASSERT_EQ(status, SA_STATUS_OK);
-        }
+        // SVP not supported - skip SVP buffer creation
 
         std::future<sa_status> future = std::async(client_thread_verify, *key, *cipher_context, *mac_context,
                 *svp_buffer, svp_memory, AES_BLOCK_SIZE);

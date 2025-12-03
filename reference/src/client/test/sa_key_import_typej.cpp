@@ -79,9 +79,8 @@ namespace {
         auto algorithm = std::get<1>(GetParam());
         auto usage_flags_mask = std::get<2>(GetParam());
 
-        if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED) {
-            SA_USAGE_BIT_CLEAR(usage_flags_mask, SA_USAGE_FLAG_SVP_OPTIONAL);
-        }
+        // SVP not supported - always clear SVP_OPTIONAL flag
+        SA_USAGE_BIT_CLEAR(usage_flags_mask, SA_USAGE_FLAG_SVP_OPTIONAL);
 
         auto clear_key = random(key_size);
 
@@ -166,9 +165,8 @@ namespace {
         auto algorithm = std::get<1>(GetParam());
         auto usage_flags_mask = std::get<2>(GetParam());
 
-        if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED) {
-            SA_USAGE_BIT_CLEAR(usage_flags_mask, SA_USAGE_FLAG_SVP_OPTIONAL);
-        }
+        // SVP not supported - always clear SVP_OPTIONAL flag
+        SA_USAGE_BIT_CLEAR(usage_flags_mask, SA_USAGE_FLAG_SVP_OPTIONAL);
 
         auto clear_key = random(key_size);
 
@@ -255,9 +253,8 @@ namespace {
         auto algorithm = SA_CIPHER_ALGORITHM_AES_ECB;
         auto usage_flags_mask = DATA_AND_KEY_MASK;
 
-        if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED) {
-            SA_USAGE_BIT_CLEAR(usage_flags_mask, SA_USAGE_FLAG_SVP_OPTIONAL);
-        }
+        // SVP not supported - always clear SVP_OPTIONAL flag
+        SA_USAGE_BIT_CLEAR(usage_flags_mask, SA_USAGE_FLAG_SVP_OPTIONAL);
 
         auto clear_key = random(key_size);
 

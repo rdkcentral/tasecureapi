@@ -16,11 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef UTIL_COMMON_H
+#define UTIL_COMMON_H
 
-#include <openssl/opensslv.h>
-
+// Shared cryptographic constants
 #define AES_BLOCK_SIZE 16
 #define SYM_128_KEY_SIZE 16
 #define SYM_160_KEY_SIZE 20
@@ -61,13 +60,7 @@
 #define MAX_PROPQUERY_SIZE 256
 #define MAX_CMAC_SIZE 64
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-#define RSA_PSS_SALTLEN_DIGEST (-1)
-#define RSA_PSS_SALTLEN_AUTO (-2)
-#define RSA_PSS_SALTLEN_MAX (-3)
-#endif
-
 #define DEFAULT_ROOT_KEYSTORE_PASSWORD "password01234567"
 #define COMMON_ROOT_NAME "commonroot"
 
-#endif // COMMON_H
+#endif // UTIL_COMMON_H

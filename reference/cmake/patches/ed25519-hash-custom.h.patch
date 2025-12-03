@@ -1,0 +1,12 @@
+--- a/ed25519-hash-custom.h
++++ b/ed25519-hash-custom.h
+@@ -8,7 +8,7 @@
+ typedef struct {
+     mbedtls_sha512_context ctx;
+ } ed25519_hash_context;
+ 
+-typedef unsigned char hash_512bits[64];
++/* hash_512bits is already defined in ed25519-donna.h */
+ 
+ static void ed25519_hash_init(ed25519_hash_context *ctx) {
+     mbedtls_sha512_init(&ctx->ctx);

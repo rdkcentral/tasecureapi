@@ -139,14 +139,7 @@ static sa_status ta_sa_key_import_ec_private_bytes(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-    if (parameters->curve == SA_ELLIPTIC_CURVE_ED25519 || parameters->curve == SA_ELLIPTIC_CURVE_ED448 ||
-            parameters->curve == SA_ELLIPTIC_CURVE_X25519 || parameters->curve == SA_ELLIPTIC_CURVE_X448) {
-        ERROR("Unsupported curve");
-        return SA_STATUS_OPERATION_NOT_SUPPORTED;
-    }
-#endif
-
+    // All curves are supported with mbedTLS
     sa_status status;
     stored_key_t* stored_key = NULL;
     do {
@@ -354,6 +347,7 @@ static sa_status ta_sa_key_import_soc(
     return status;
 }
 
+
 static sa_status ta_sa_key_import_typej(
         sa_key* key,
         const void* in,
@@ -485,7 +479,8 @@ sa_status ta_sa_key_import(
 
     if (key_format != SA_KEY_FORMAT_SYMMETRIC_BYTES && key_format != SA_KEY_FORMAT_EC_PRIVATE_BYTES &&
         key_format != SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO && key_format != SA_KEY_FORMAT_EXPORTED &&
-        key_format != SA_KEY_FORMAT_SOC && key_format != SA_KEY_FORMAT_TYPEJ) {
+        key_format != SA_KEY_FORMAT_SOC && key_format != SA_KEY_FORMAT_TYPEJ &&
+        key_format != SA_KEY_FORMAT_PROVISION_TA) {
         ERROR("Invalid format");
         return SA_STATUS_INVALID_PARAMETER;
     }
@@ -534,17 +529,17 @@ sa_status ta_sa_key_import(
                 ERROR("ta_sa_key_import_exported failed");
                 break;
             }
-        } else if (key_format == SA_KEY_FORMAT_SOC) {
+        } else if (key_format == SA_KEY_FORMAT_SOC || key_format == SA_KEY_FORMAT_PROVISION_TA) {
             status = ta_sa_key_import_soc(key, in, in_length, parameters, client, caller_uuid);
             if (status != SA_STATUS_OK) {
                 ERROR("ta_sa_key_import_soc failed");
                 break;
             }
-        } else { // format == SA_KEY_FORMAT_TYPEJ
+        }  else { // format == SA_KEY_FORMAT_TYPEJ
             status = ta_sa_key_import_typej(key, in, in_length, (sa_import_parameters_typej*) parameters, client,
                     caller_uuid);
             if (status != SA_STATUS_OK) {
-                ERROR("ta_sa_key_import_exported failed");
+                ERROR("ta_sa_key_import_typej failed");
                 break;
             }
         }

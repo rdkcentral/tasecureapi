@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -329,8 +329,11 @@ static sa_status ta_sa_crypto_cipher_process_ec_elgamal(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (*bytes_to_process != key_size * 4) {
-        ERROR("Invalid bytes_to_process");
+    // SEC1 standard uncompressed point format: (0x04 || X || Y) per point
+    // ElGamal ciphertext: C1 || C2 = 2 points
+    // Expected size: 2 * (1 + key_size + key_size) = 2 + key_size * 4
+    if (*bytes_to_process != 2 + key_size * 4) {
+        ERROR("Invalid bytes_to_process: expected %zu, got %zu", 2 + key_size * 4, *bytes_to_process);
         return SA_STATUS_INVALID_PARAMETER;
     }
 
@@ -400,8 +403,6 @@ sa_status ta_sa_crypto_cipher_process(
     client_t* client = NULL;
     cipher_store_t* cipher_store = NULL;
     cipher_t* cipher = NULL;
-    svp_t* out_svp = NULL;
-    svp_t* in_svp = NULL;
     do {
         status = client_store_acquire(&client, client_store, client_slot, caller_uuid);
         if (status != SA_STATUS_OK) {
@@ -468,14 +469,14 @@ sa_status ta_sa_crypto_cipher_process(
         }
 
         uint8_t* out_bytes = NULL;
-        status = convert_buffer(&out_bytes, &out_svp, out, required_length, client, caller_uuid);
+        status = convert_buffer(&out_bytes, out, required_length, client, caller_uuid);
         if (status != SA_STATUS_OK) {
             ERROR("convert_buffer failed");
             break;
         }
 
         uint8_t* in_bytes = NULL;
-        status = convert_buffer(&in_bytes, &in_svp, in, *bytes_to_process, client, caller_uuid);
+        status = convert_buffer(&in_bytes, in, *bytes_to_process, client, caller_uuid);
         if (status != SA_STATUS_OK) {
             ERROR("convert_buffer failed");
             break;
@@ -522,23 +523,15 @@ sa_status ta_sa_crypto_cipher_process(
         }
 
         if (out != NULL) {
-            if (in->buffer_type == SA_BUFFER_TYPE_SVP)
-                in->context.svp.offset += in_length;
-            else
+            if (in->buffer_type == SA_BUFFER_TYPE_CLEAR) {
                 in->context.clear.offset += in_length;
+	        }
 
-            if (out->buffer_type == SA_BUFFER_TYPE_SVP)
-                out->context.svp.offset += *bytes_to_process;
-            else
+        if (out->buffer_type == SA_BUFFER_TYPE_CLEAR) {
                 out->context.clear.offset += *bytes_to_process;
+	    }
         }
     } while (false);
-
-    if (in_svp != NULL)
-        svp_store_release_exclusive(client_get_svp_store(client), in->context.svp.buffer, in_svp, caller_uuid);
-
-    if (out_svp != NULL)
-        svp_store_release_exclusive(client_get_svp_store(client), out->context.svp.buffer, out_svp, caller_uuid);
 
     if (cipher != NULL)
         cipher_store_release_exclusive(cipher_store, context, cipher, caller_uuid);
