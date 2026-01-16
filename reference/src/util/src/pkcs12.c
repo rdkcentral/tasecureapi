@@ -213,7 +213,7 @@ bool load_pkcs12_secret_key(
             }
         } else {
             const uint8_t *keystore = default_root_keystore;
-            pkcs12 = d2i_PKCS12(NULL, &keystore, sizeof default_root_keystore);
+            pkcs12 = d2i_PKCS12(NULL, &keystore, sizeof(default_root_keystore));
             if (pkcs12 == NULL) {
                 ERROR("NULL pkcs12");
                 break;
