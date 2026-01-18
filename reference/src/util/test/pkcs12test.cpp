@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2025 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2026 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include "root_keystore.h"
 #include "gtest/gtest.h"
 #include <cstdlib>
+#include <stdlib.h>
 
 namespace {
     TEST(Pkcs12Test, parsePkcs12) {
@@ -39,6 +40,11 @@ namespace {
     }
 
     TEST(Pkcs12Test, parseEmbeddedPkcs12) {
+        // This code tests whether the embedded keystore is loaded and therefore
+        // requires these environment variables to be unset.
+        unsetenv("ROOT_KEYSTORE_PASSWORD");
+        unsetenv("ROOT_KEYSTORE");
+
         uint8_t key[SYM_256_KEY_SIZE];
         size_t key_length = SYM_256_KEY_SIZE;
         char name[MAX_NAME_SIZE];
@@ -66,6 +72,11 @@ namespace {
     }
 
     TEST(Pkcs12Test, parseEmbeddedPkcs12Common) {
+        // This code tests whether the embedded keystore is loaded and therefore
+        // requires these environment variables to be unset.
+        unsetenv("ROOT_KEYSTORE_PASSWORD");
+        unsetenv("ROOT_KEYSTORE");
+
         uint8_t key[SYM_256_KEY_SIZE];
         size_t key_length = SYM_256_KEY_SIZE;
         char name[MAX_NAME_SIZE];
