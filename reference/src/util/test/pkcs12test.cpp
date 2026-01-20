@@ -21,7 +21,6 @@
 #include "root_keystore.h"
 #include "gtest/gtest.h"
 #include <cstdlib>
-#include <stdlib.h>
 
 namespace {
     TEST(Pkcs12Test, parsePkcs12) {
