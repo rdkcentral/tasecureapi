@@ -335,6 +335,7 @@ if (BUILD_TESTS)
 
     add_custom_command(
             TARGET saclienttest POST_BUILD
+            BYPRODUCTS root_keystore.p12
             COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_SOURCE_DIR}/test/root_keystore.p12
             ${CMAKE_CURRENT_BINARY_DIR}/root_keystore.p12)
