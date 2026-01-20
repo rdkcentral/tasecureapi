@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2025 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2026 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "common.h"
 #include "log.h"
 #include "root_keystore.h"
 #include <openssl/pkcs12.h>
@@ -213,7 +212,7 @@ bool load_pkcs12_secret_key(
             }
         } else {
             const uint8_t *keystore = default_root_keystore;
-            pkcs12 = d2i_PKCS12(NULL, &keystore, sizeof(default_root_keystore));
+            pkcs12 = d2i_PKCS12(NULL, &keystore, default_root_keystore_size);
             if (pkcs12 == NULL) {
                 ERROR("NULL pkcs12");
                 break;
