@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #ifndef SA_SVP_COMMON_H
 #define SA_SVP_COMMON_H
+#ifdef ENABLE_SVP
 
 #include "sa.h"
 #include <cstddef> // NOLINT
@@ -46,4 +47,5 @@ class SaSvpBufferWriteTest : public ::testing::WithParamInterface<SaSvpBufferTes
 
 class SaSvpKeyCheckTest : public SaSvpBase {};
 
+#endif // ENABLE_SVP
 #endif // SA_SVP_COMMON_H
