@@ -81,6 +81,20 @@ sa_status sa_process_common_encryption(
                 break;
             }
 
+            if (samples[i].out->buffer_type != SA_BUFFER_TYPE_CLEAR &&
+                    samples[i].out->buffer_type != SA_BUFFER_TYPE_SVP) {
+                ERROR("Invalid out buffer_type");
+                status = SA_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            if (samples[i].in->buffer_type != SA_BUFFER_TYPE_CLEAR &&
+                    samples[i].in->buffer_type != SA_BUFFER_TYPE_SVP) {
+                ERROR("Invalid in buffer_type");
+                status = SA_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
             process_common_encryption->api_version = API_VERSION;
             memcpy(process_common_encryption->iv, samples[i].iv, samples[i].iv_length);
             process_common_encryption->crypt_byte_block = samples[i].crypt_byte_block;
