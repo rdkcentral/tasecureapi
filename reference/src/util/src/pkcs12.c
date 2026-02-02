@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2026 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "common.h"
 #include "log.h"
+#include "root_keystore.h"
 #include <openssl/pkcs12.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -186,10 +186,6 @@ bool load_pkcs12_secret_key(
         char* name,
         size_t* name_length) {
 
-    const char* filename = getenv("ROOT_KEYSTORE");
-    if (filename == NULL)
-        filename = "root_keystore.p12";
-
     const char* password = getenv("ROOT_KEYSTORE_PASSWORD");
     if (password == NULL)
         password = DEFAULT_ROOT_KEYSTORE_PASSWORD;
@@ -201,16 +197,26 @@ bool load_pkcs12_secret_key(
     PKCS12* pkcs12 = NULL;
     STACK_OF(PKCS7)* auth_safes = NULL;
     do {
-        file = fopen(filename, "re");
-        if (file == NULL) {
-            ERROR("NULL file");
-            break;
-        }
+        const char* filename = getenv("ROOT_KEYSTORE");
+        if (filename != NULL) {
+            file = fopen(filename, "re");
+            if (file == NULL) {
+                ERROR("NULL file");
+                break;
+            }
 
-        pkcs12 = d2i_PKCS12_fp(file, NULL);
-        if (pkcs12 == NULL) {
-            ERROR("NULL pkcs12");
-            break;
+            pkcs12 = d2i_PKCS12_fp(file, NULL);
+            if (pkcs12 == NULL) {
+                ERROR("NULL pkcs12");
+                break;
+            }
+        } else {
+            const uint8_t *keystore = default_root_keystore;
+            pkcs12 = d2i_PKCS12(NULL, &keystore, default_root_keystore_size);
+            if (pkcs12 == NULL) {
+                ERROR("NULL pkcs12");
+                break;
+            }
         }
 
         if (PKCS12_verify_mac(pkcs12, password, -1) != 1) {
