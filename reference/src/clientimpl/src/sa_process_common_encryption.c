@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2025 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2026 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,6 +78,20 @@ sa_status sa_process_common_encryption(
             if (samples[i].in == NULL) {
                 ERROR("NULL in");
                 status = SA_STATUS_NULL_PARAMETER;
+                break;
+            }
+
+            if (samples[i].out->buffer_type != SA_BUFFER_TYPE_CLEAR &&
+                    samples[i].out->buffer_type != SA_BUFFER_TYPE_SVP) {
+                ERROR("Invalid out buffer_type");
+                status = SA_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            if (samples[i].in->buffer_type != SA_BUFFER_TYPE_CLEAR &&
+                    samples[i].in->buffer_type != SA_BUFFER_TYPE_SVP) {
+                ERROR("Invalid in buffer_type");
+                status = SA_STATUS_INVALID_PARAMETER;
                 break;
             }
 
