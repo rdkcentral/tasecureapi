@@ -483,6 +483,7 @@ static sa_status ta_invoke_key_unwrap(
     sa_unwrap_parameters_chacha20_s parameters_chacha_20_s;
     sa_unwrap_parameters_chacha20_poly1305_s parameters_chacha_20_poly_1305_s;
     sa_unwrap_parameters_rsa_oaep_s parameters_rsa_oaep_s;
+    sa_unwrap_parameters_ec_elgamal_s parameters_ec_elgamal_s;
     sa_unwrap_parameters_aes_cbc parameters_aes_cbc;
     sa_unwrap_parameters_aes_ctr parameters_aes_ctr;
     sa_unwrap_parameters_aes_gcm parameters_aes_gcm;
@@ -608,8 +609,10 @@ static sa_status ta_invoke_key_unwrap(
                 return SA_STATUS_INVALID_PARAMETER;
             }
 
-            memcpy(&parameters_ec_elgamal, params[2].mem_ref, params[2].mem_ref_size);
-            algorithm_parameters = params[2].mem_ref;
+            memcpy(&parameters_ec_elgamal_s, params[2].mem_ref, params[2].mem_ref_size);
+            parameters_ec_elgamal.offset = parameters_ec_elgamal_s.offset;
+            parameters_ec_elgamal.key_length = parameters_ec_elgamal_s.key_length;
+            algorithm_parameters = &parameters_ec_elgamal;
             break;
 
         case SA_CIPHER_ALGORITHM_RSA_OAEP:
@@ -1826,7 +1829,7 @@ static sa_status ta_invoke_process_common_encryption(
     sa_sample sample;
     do {
         sample.subsample_count = process_common_encryption->subsample_count;
-        if (params[1].mem_ref_size != sizeof(sa_subsample_length) * sample.subsample_count) {
+        if (params[1].mem_ref_size != sizeof(sa_subsample_length_s) * sample.subsample_count) {
             ERROR("params[1].mem_ref_size is invalid");
             return SA_STATUS_INVALID_PARAMETER;
         }
