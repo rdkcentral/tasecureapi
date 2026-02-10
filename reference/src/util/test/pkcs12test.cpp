@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2026 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include "pkcs12.h" // NOLINT
 #include "common.h"
+#include "root_keystore.h"
 #include "gtest/gtest.h"
 #include <cstdlib>
 
@@ -37,9 +38,43 @@ namespace {
         ASSERT_EQ(memcmp(name, "fffffffffffffffe", 16), 0);
     }
 
+    TEST(Pkcs12Test, parseEmbeddedPkcs12) {
+        // This code tests whether the embedded keystore is loaded and therefore
+        // requires these environment variables to be unset.
+        unsetenv("ROOT_KEYSTORE_PASSWORD");
+        unsetenv("ROOT_KEYSTORE");
+
+        uint8_t key[SYM_256_KEY_SIZE];
+        size_t key_length = SYM_256_KEY_SIZE;
+        char name[MAX_NAME_SIZE];
+        size_t name_length = MAX_NAME_SIZE;
+        name[0] = '\0';
+        ASSERT_EQ(load_pkcs12_secret_key(key, &key_length, name, &name_length), true);
+        ASSERT_EQ(key_length, SYM_128_KEY_SIZE);
+        ASSERT_EQ(name_length, 16);
+        ASSERT_EQ(memcmp(name, "fffffffffffffffe", 16), 0);
+    }
+
     TEST(Pkcs12Test, parsePkcs12Common) {
         setenv("ROOT_KEYSTORE_PASSWORD", DEFAULT_ROOT_KEYSTORE_PASSWORD, 1);
         setenv("ROOT_KEYSTORE", "root_keystore.p12", 1);
+
+        uint8_t key[SYM_256_KEY_SIZE];
+        size_t key_length = SYM_256_KEY_SIZE;
+        char name[MAX_NAME_SIZE];
+        size_t name_length = MAX_NAME_SIZE;
+        strcpy(name, COMMON_ROOT_NAME);
+        ASSERT_EQ(load_pkcs12_secret_key(key, &key_length, name, &name_length), true);
+        ASSERT_EQ(key_length, SYM_128_KEY_SIZE);
+        ASSERT_EQ(name_length, 10);
+        ASSERT_EQ(memcmp(name, "commonroot", 10), 0);
+    }
+
+    TEST(Pkcs12Test, parseEmbeddedPkcs12Common) {
+        // This code tests whether the embedded keystore is loaded and therefore
+        // requires these environment variables to be unset.
+        unsetenv("ROOT_KEYSTORE_PASSWORD");
+        unsetenv("ROOT_KEYSTORE");
 
         uint8_t key[SYM_256_KEY_SIZE];
         size_t key_length = SYM_256_KEY_SIZE;

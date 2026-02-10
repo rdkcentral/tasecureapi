@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2022-2025 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ extern "C" {
 
 /**
  * Loads a secret key from a PKCS12 file identified at the ROOT_KEYSTORE environment variable. The password to the
- * keystore is in the ROOT_KEYSTORE_PASSWORD environment variable. If neither is defined, it looks for the file
- * root_keystore.p12 in the working directory with a default password.
+ * keystore is in the ROOT_KEYSTORE_PASSWORD environment variable. If neither is defined, a default
+ * keystore and password are used.
  *
  * @param[out] key the key to load.
  * @param[in,out] key_length the length of the loaded key.
