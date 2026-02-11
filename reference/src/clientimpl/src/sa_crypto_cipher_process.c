@@ -159,7 +159,6 @@ sa_status sa_crypto_cipher_process(
 #endif // ENABLE_SVP
 
         *bytes_to_process = cipher_process->bytes_to_process;
-	ERROR("bytes_to_process = %d\n", cipher_process->bytes_to_process);
     } while (false);
 
     RELEASE_COMMAND(cipher_process);

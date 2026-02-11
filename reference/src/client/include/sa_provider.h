@@ -182,6 +182,7 @@ extern "C" {
 #include <openssl/opensslconf.h>
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
 #include <openssl/types.h>
+#include <openssl/core_dispatch.h>
 
 /**
  * The provider ID used to register the SecApi 3 provider.
@@ -214,6 +215,40 @@ extern "C" {
  * @return NULL if not successful.
  */
 OSSL_LIB_CTX* sa_get_provider();
+
+/**
+ * Enable or disable RSA-only mode for the SecAPI3 provider.
+ *
+ * When enabled (enable=1), the provider only exposes RSA keymgmt and RSA signature
+ * operations. All other operations (EC, DH, ECDH, ciphers, digests, MACs, KDFs)
+ * are not provided, allowing them to be handled by the default provider.
+ *
+ * This mode is essential for TLS mTLS where:
+ * - RSA client certificate signing needs SecAPI3 (for secure key access)
+ * - ECDH key exchange needs the default provider (ephemeral keys)
+ *
+ * MUST be called BEFORE OSSL_PROVIDER_load() to take effect.
+ *
+ * @param enable 1 to enable RSA-only mode, 0 for full SecAPI3 mode
+ */
+void sa_provider_set_rsa_only_mode(int enable);
+
+/**
+ * Provider init function for direct registration with OSSL_PROVIDER_add_builtin.
+ * Use this to register SecAPI3 provider in the default lib_ctx for SSL/TLS operations.
+ *
+ * Example:
+ * --------
+ * ```
+ * sa_provider_set_rsa_only_mode(1);  // Enable RSA-only for TLS mTLS
+ * OSSL_PROVIDER_add_builtin(NULL, "secapi3", sa_provider_init);
+ * OSSL_PROVIDER_load(NULL, "default");  // for EC/DH/ciphers/digests
+ * OSSL_PROVIDER_load(NULL, "secapi3");  // for RSA signing only
+ * SSL_CTX* ssl_ctx = SSL_CTX_new(TLS_client_method());  // uses default lib_ctx
+ * ```
+ */
+int sa_provider_init(const OSSL_CORE_HANDLE* handle, const OSSL_DISPATCH* in,
+                     const OSSL_DISPATCH** out, void** provctx);
 
 #endif
 

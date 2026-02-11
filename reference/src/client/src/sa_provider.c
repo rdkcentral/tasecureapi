@@ -39,11 +39,19 @@ static OSSL_LIB_CTX* lib_ctx = NULL;
 static OSSL_PROVIDER* sa_provider = NULL;
 static OSSL_PROVIDER* base_provider = NULL;
 
+// Flag to enable RSA-only mode (excludes EC/DH keymgmt and keyexch)
+// This is needed for TLS mTLS where ECDH should use the default provider
+static int sa_provider_rsa_only_mode = 0;
+
+void sa_provider_set_rsa_only_mode(int enable) {
+    sa_provider_rsa_only_mode = enable;
+}
+
 static OSSL_FUNC_provider_teardown_fn sa_provider_teardown;
 static OSSL_FUNC_provider_get_params_fn sa_provider_get_params;
 static OSSL_FUNC_provider_gettable_params_fn sa_provider_gettable_params;
 static OSSL_FUNC_provider_query_operation_fn sa_provider_query_operation;
-static OSSL_provider_init_fn sa_provider_init;
+OSSL_provider_init_fn sa_provider_init;
 
 extern const OSSL_ALGORITHM sa_provider_asym_ciphers[];
 extern const OSSL_ALGORITHM sa_provider_ciphers[];
@@ -118,27 +126,65 @@ static const OSSL_ALGORITHM* sa_provider_query_operation(
     *no_store = 0;
     switch (operation_id) {
         case OSSL_OP_ASYM_CIPHER:
+            // In RSA-only mode, don't provide asymmetric ciphers (not needed for TLS signing)
+            if (sa_provider_rsa_only_mode)
+                return NULL;
             return sa_provider_asym_ciphers;
 
         case OSSL_OP_CIPHER:
+            // In RSA-only mode, let default provider handle symmetric ciphers
+            if (sa_provider_rsa_only_mode)
+                return NULL;
             return sa_provider_ciphers;
 
         case OSSL_OP_DIGEST:
+            // In RSA-only mode, let default provider handle digests
+            if (sa_provider_rsa_only_mode)
+                return NULL;
             return sa_provider_digests;
 
         case OSSL_OP_KDF:
+            // In RSA-only mode, let default provider handle KDFs
+            if (sa_provider_rsa_only_mode)
+                return NULL;
             return sa_provider_kdfs;
 
         case OSSL_OP_KEYEXCH:
+            // In RSA-only mode, don't provide keyexch (ECDH/DH) - let default provider handle
+            if (sa_provider_rsa_only_mode)
+                return NULL;
             return sa_provider_keyexchs;
 
         case OSSL_OP_KEYMGMT:
+            // In RSA-only mode, only provide RSA keymgmt (first entry in array)
+            if (sa_provider_rsa_only_mode) {
+                // Create a filtered array with only RSA (first entry) + NULL terminator
+                static OSSL_ALGORITHM keymgmt_rsa_only[2] = {{0}};
+                if (keymgmt_rsa_only[0].algorithm_names == NULL) {
+                    keymgmt_rsa_only[0] = sa_provider_keymgmt[0]; // RSA entry
+                    keymgmt_rsa_only[1].algorithm_names = NULL;   // terminator
+                }
+                return keymgmt_rsa_only;
+            }
             return sa_provider_keymgmt;
 
         case OSSL_OP_MAC:
+            // In RSA-only mode, let default provider handle MACs
+            if (sa_provider_rsa_only_mode)
+                return NULL;
             return sa_provider_macs;
 
         case OSSL_OP_SIGNATURE:
+            // In RSA-only mode, only provide RSA signature (first entry in array)
+            if (sa_provider_rsa_only_mode) {
+                // Create a filtered array with only RSA (first entry) + NULL terminator
+                static OSSL_ALGORITHM sig_rsa_only[2] = {{0}};
+                if (sig_rsa_only[0].algorithm_names == NULL) {
+                    sig_rsa_only[0] = sa_provider_signatures[0]; // RSA entry
+                    sig_rsa_only[1].algorithm_names = NULL;      // terminator
+                }
+                return sig_rsa_only;
+            }
             return sa_provider_signatures;
 
         default:
@@ -154,7 +200,7 @@ static const OSSL_DISPATCH sa_provider_dispatch_table[] = {
         {OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void)) sa_provider_query_operation},
         {0, NULL}};
 
-static int sa_provider_init(
+int sa_provider_init(
         const OSSL_CORE_HANDLE* handle,
         const OSSL_DISPATCH* in,
         const OSSL_DISPATCH** out,

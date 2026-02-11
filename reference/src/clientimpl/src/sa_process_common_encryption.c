@@ -117,7 +117,7 @@ sa_status sa_process_common_encryption(
                 subsample_length_s[j].bytes_of_protected_data = samples[i].subsample_lengths[j].bytes_of_protected_data;
             }
 
-            CREATE_PARAM(param1, samples[i].subsample_lengths, param1_size);
+            CREATE_PARAM(param1, subsample_length_s, param1_size);
             uint32_t param1_type = TA_PARAM_IN;
             size_t param2_size;
             uint32_t param2_type;
