@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #ifdef ENABLE_SVP
 #include "sa_svp_common.h" // NOLINT
 #include "client_test_helpers.h"
@@ -59,3 +61,5 @@ INSTANTIATE_TEST_SUITE_P(
         SaSvpBufferWriteTest,
         ::testing::Values(1, 3, 10));
 #endif //ENABLE_SVP
+
+#endif  // _RDKB_LITE_

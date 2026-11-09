@@ -45,6 +45,7 @@ namespace {
 
                 break;
             }
+#ifndef _RDKB_LITE_
             case SA_KEY_TYPE_DH: {
                 auto dh_parameters = get_dh_parameters(base_key_length);
                 base_key = create_uninitialized_sa_key();
@@ -64,6 +65,11 @@ namespace {
                 ASSERT_EQ(status, SA_STATUS_OK);
                 break;
             }
+#else
+            case SA_KEY_TYPE_DH:
+            case SA_KEY_TYPE_EC:
+                GTEST_SKIP() << "DH and EC base keys are not supported in lite";
+#endif  // _RDKB_LITE_
             default:
                 FAIL();
         }
@@ -87,6 +93,7 @@ namespace {
         ASSERT_TRUE(key_check_sym(*key, clear_key));
     }
 
+#ifndef _RDKB_LITE_
     TEST_F(SaKeyDeriveAnsiX963Test, failsNullKey) {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -132,6 +139,7 @@ namespace {
         status = sa_key_derive(key.get(), nullptr, SA_KDF_ALGORITHM_ANSI_X963, &kdf_parameters_ansi_x963);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 
     TEST_F(SaKeyDeriveAnsiX963Test, failsNullParameters) {
         sa_rights rights;

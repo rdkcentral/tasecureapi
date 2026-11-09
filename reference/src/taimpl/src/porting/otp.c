@@ -678,10 +678,7 @@ sa_status otp_root_key_ladder(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    if (c4 == NULL) {
-        ERROR("NULL c4");
-        return SA_STATUS_NULL_PARAMETER;
-    }
+    // c4 is optional: without it the derived key is the output of the 3-stage key ladder.
 
     sa_status status = SA_STATUS_INTERNAL_ERROR;
     uint8_t* k3 = NULL;
@@ -707,10 +704,14 @@ sa_status otp_root_key_ladder(
             break;
         }
 
-        status = unwrap_aes_ecb_internal(derived, c4, AES_BLOCK_SIZE, k3, k3_length);
-        if (status != SA_STATUS_OK) {
-            ERROR("unwrap_aes_ecb_internal failed");
-            break;
+        if (c4 != NULL) {
+            status = unwrap_aes_ecb_internal(derived, c4, AES_BLOCK_SIZE, k3, k3_length);
+            if (status != SA_STATUS_OK) {
+                ERROR("unwrap_aes_ecb_internal failed");
+                break;
+            }
+        } else {
+            memcpy(derived, k3, derived_length);
         }
 
         sa_type_parameters type_parameters;

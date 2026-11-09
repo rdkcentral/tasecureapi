@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #include "sa_engine_common.h"
 #if OPENSSL_VERSION_NUMBER < 0x30000000
 #include "client_test_helpers.h"
@@ -231,3 +233,5 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(NID_aes_128_gcm, false, 16, 12),
                 std::make_tuple(NID_aes_256_gcm, false, 32, 12)));
 #endif
+
+#endif  // _RDKB_LITE_

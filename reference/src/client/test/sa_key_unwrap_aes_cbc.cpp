@@ -294,6 +294,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
+#ifndef _RDKB_LITE_
     TEST_P(SaKeyUnwrapAesCbcTest, failsWrappingKeyNotAes) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         auto cipher_algorithm = GetParam();
@@ -319,6 +320,7 @@ namespace {
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
+#endif  // _RDKB_LITE_
 
     TEST_P(SaKeyUnwrapAesCbcTest, failsWrappingKeyNotValidAesSize) {
         auto cipher_algorithm = GetParam();

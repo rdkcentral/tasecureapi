@@ -117,12 +117,14 @@ sa_status rsa_verify_cipher(
 
     DEBUG("rsa_verify_cipher: algorithm %d, mode %d, stored_key %p", cipher_algorithm, cipher_mode, stored_key);
 
+#ifndef _RDKB_LITE_
     if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
         if (parameters == NULL) {
             ERROR("NULL parameters");
             return SA_STATUS_NULL_PARAMETER;
         }
     }
+#endif  // _RDKB_LITE_
 
     return SA_STATUS_OK;
 }
@@ -212,6 +214,7 @@ sa_status rsa_decrypt_pkcs1v15(
     return status;
 }
 
+#ifndef _RDKB_LITE_
 sa_status rsa_decrypt_oaep(
         void* out,
         size_t* out_length,
@@ -325,6 +328,7 @@ sa_status rsa_decrypt_oaep(
     EVP_PKEY_CTX_free(evp_pkey_ctx);
     return status;
 }
+#endif  // _RDKB_LITE_
 
 sa_status rsa_sign_pkcs1v15(
         void* out,
@@ -441,6 +445,7 @@ sa_status rsa_sign_pkcs1v15(
     return status;
 }
 
+#ifndef _RDKB_LITE_
 sa_status rsa_sign_pss(
         void* out,
         size_t* out_length,
@@ -577,6 +582,7 @@ sa_status rsa_sign_pss(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
 sa_status rsa_generate_key(
         stored_key_t** stored_key,

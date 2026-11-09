@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #ifndef SA_PROVIDER_COMMON_H
 #define SA_PROVIDER_COMMON_H
 
@@ -114,3 +116,5 @@ class SaProviderKdfTest : public ::testing::TestWithParam<SaProviderKdfTestType>
 
 #endif
 #endif //SA_PROVIDER_COMMON_H
+
+#endif  // _RDKB_LITE_

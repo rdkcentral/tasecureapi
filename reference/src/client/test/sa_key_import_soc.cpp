@@ -28,6 +28,7 @@ using namespace client_test_helpers;
 #define SOC_CONTAINER_VERSION 5
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST_P(SaKeyImportSocAllKeyCombosTest, nominal) {
         auto param0 = std::get<0>(GetParam());
         auto key_type_string = std::get<0>(param0);
@@ -104,6 +105,7 @@ namespace {
 
         ASSERT_TRUE(key_check(key_type, *exported_key, clear_key));
     }
+#endif  // _RDKB_LITE_
 
     TEST_F(SaKeyImportSocTest, invalidKeyUsage1) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);

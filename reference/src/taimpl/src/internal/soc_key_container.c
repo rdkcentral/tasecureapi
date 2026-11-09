@@ -787,6 +787,13 @@ static sa_status decrypt_key_and_verify_mac(
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
+#ifdef _RDKB_LITE_
+    if (key_type == SA_KEY_TYPE_EC) {
+        ERROR("EC SOC key import is not supported in lite");
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+    }
+#endif
+
     void* key = NULL;
     sa_status status;
     do {
@@ -828,6 +835,7 @@ static sa_status decrypt_key_and_verify_mac(
                 status = SA_STATUS_INVALID_KEY_FORMAT;
                 break;
             }
+#ifndef _RDKB_LITE_
         } else if (key_type == SA_KEY_TYPE_EC) {
             size_t ec_key_size = ec_validate_private(curve, key, payload->encrypted_key_length);
             if (ec_key_size == 0) {
@@ -842,6 +850,7 @@ static sa_status decrypt_key_and_verify_mac(
             }
 
             type_parameters.curve = curve;
+#endif  // _RDKB_LITE_
         } else if (key_type == SA_KEY_TYPE_SYMMETRIC) {
             if (payload->encrypted_key_length != key_size) {
                 ERROR("Invalid key size");

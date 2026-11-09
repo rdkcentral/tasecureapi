@@ -24,6 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST_P(SaCryptoCipherElGamalTest, initEcElgamalFailsInvalidMode) {
         sa_elliptic_curve const curve = std::get<0>(GetParam());
         auto clear_key = ec_generate_key_bytes(curve);
@@ -90,4 +91,5 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
+#endif  // _RDKB_LITE_
 } // namespace

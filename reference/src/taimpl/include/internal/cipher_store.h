@@ -98,6 +98,7 @@ const sa_rights* cipher_get_key_rights(const cipher_t* cipher);
  * @param[in] label_length the length of the label. Must be0 if label is NULL.
  * @return SA_STATUS_OK if success.
  */
+#ifndef _RDKB_LITE_
 sa_status cipher_set_oaep_parameters(
         cipher_t* cipher,
         sa_digest_algorithm digest_algorithm,
@@ -121,6 +122,7 @@ sa_status cipher_get_oaep_parameters(
         sa_digest_algorithm* mgf1_digest_algorithm,
         const void** label,
         size_t* label_length);
+#endif  // _RDKB_LITE_
 
 /**
  * Create and initialize a new cipher store.

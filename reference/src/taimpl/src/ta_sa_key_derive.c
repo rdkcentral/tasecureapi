@@ -92,12 +92,8 @@ static sa_status ta_sa_key_derive_root_key_ladder(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
-    if (parameters->c4 == NULL) {
-        ERROR("NULL c4");
-        return SA_STATUS_NULL_PARAMETER;
-    }
-
-    if (parameters->c4_length != SYM_128_KEY_SIZE) {
+    // c4 is optional (3-stage key ladder); if present it must be a full block.
+    if (parameters->c4 != NULL && parameters->c4_length != SYM_128_KEY_SIZE) {
         ERROR("Invalid c4_length");
         return SA_STATUS_INVALID_PARAMETER;
     }
@@ -557,6 +553,7 @@ static sa_status ta_sa_key_derive_hkdf(
     return status;
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_sa_key_derive_netflix(
         sa_key* key,
         const sa_rights* rights,
@@ -666,6 +663,7 @@ static sa_status ta_sa_key_derive_netflix(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
 sa_status ta_sa_key_derive(
         sa_key* key,
@@ -756,12 +754,17 @@ sa_status ta_sa_key_derive(
                 break;
 
             case SA_KDF_ALGORITHM_NETFLIX:
+#ifndef _RDKB_LITE_
                 status = ta_sa_key_derive_netflix(key, rights, (sa_kdf_parameters_netflix*) parameters, client,
                         caller_uuid);
                 if (status != SA_STATUS_OK) {
                     ERROR("ta_sa_key_derive_netflix failed");
                     break;
                 }
+#else
+                ERROR("Netflix KDF is not supported in lite");
+                status = SA_STATUS_OPERATION_NOT_SUPPORTED;
+#endif  // _RDKB_LITE_
 
                 break;
 

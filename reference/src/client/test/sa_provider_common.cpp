@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #include "sa_provider_common.h"
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
 #include <openssl/core_names.h>
@@ -322,3 +324,5 @@ std::shared_ptr<EVP_PKEY> SaProviderTest::generate_sa_key(
 }
 
 #endif
+
+#endif  // _RDKB_LITE_

@@ -66,6 +66,7 @@ namespace {
         ASSERT_EQ(result, 0);
     }
 
+#ifndef _RDKB_LITE_
     TEST_P(SaCryptoMacComputeMatchesOpenssl, nominalKey) {
         sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
         void* parameters = std::get<1>(GetParam());
@@ -108,6 +109,7 @@ namespace {
         int const result = memcmp(tag.data(), tag_test.data(), tag_test.size());
         ASSERT_EQ(result, 0);
     }
+#endif  // _RDKB_LITE_
 
     TEST_P(SaCryptoMacComputeOutLength, nominal) {
         sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());

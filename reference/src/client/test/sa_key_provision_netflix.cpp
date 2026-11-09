@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #include "client_test_helpers.h"
 #include "digest_util.h"
 #include "sa.h"
@@ -708,3 +710,5 @@ static bool readNetflixData(NetflixProvisioning **nflxProvision) {
    return true;
 }
 #endif // FILE_BASED_FETCH_KEY
+
+#endif  // _RDKB_LITE_

@@ -204,6 +204,7 @@ sa_status unwrap_rsa(
         void* algorithm_parameters,
         const stored_key_t* stored_key_wrapping);
 
+#ifndef _RDKB_LITE_
 /**
  * Unwrap data using EC.
  *
@@ -222,6 +223,7 @@ sa_status unwrap_ec(
         const sa_rights* rights,
         sa_unwrap_parameters_ec_elgamal* algorithm_parameters,
         const stored_key_t* stored_key_wrapping);
+#endif  // _RDKB_LITE_
 
 #ifdef __cplusplus
 }

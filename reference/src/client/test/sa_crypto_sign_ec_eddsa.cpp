@@ -23,6 +23,7 @@
 using namespace client_test_helpers;
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST(SaCryptoSign, failsEcEddsaInvalidOutLengthEd25519) {
         auto curve = SA_ELLIPTIC_CURVE_ED25519;
         auto key_size = ec_get_key_size(curve);
@@ -203,4 +204,5 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 } // namespace

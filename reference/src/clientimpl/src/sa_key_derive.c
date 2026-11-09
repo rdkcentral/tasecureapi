@@ -109,13 +109,14 @@ sa_status sa_key_derive(
                     continue; // NOLINT
                 }
 
+                // c4 is optional (3-stage key ladder).
                 if (parameters_root_key_ladder->c4 == NULL) {
-                    ERROR("NULL c4");
-                    status = SA_STATUS_NULL_PARAMETER;
-                    continue; // NOLINT
-                }
-
-                if (parameters_root_key_ladder->c4_length != AES_BLOCK_SIZE) {
+                    if (parameters_root_key_ladder->c4_length != 0) {
+                        ERROR("c4 invalid length");
+                        status = SA_STATUS_INVALID_PARAMETER;
+                        continue; // NOLINT
+                    }
+                } else if (parameters_root_key_ladder->c4_length != AES_BLOCK_SIZE) {
                     ERROR("c4 invalid length");
                     status = SA_STATUS_INVALID_PARAMETER;
                     continue; // NOLINT
@@ -127,8 +128,13 @@ sa_status sa_key_derive(
                 memcpy(parameters_root_key_ladder_s->c1, parameters_root_key_ladder->c1, AES_BLOCK_SIZE);
                 memcpy(parameters_root_key_ladder_s->c2, parameters_root_key_ladder->c2, AES_BLOCK_SIZE);
                 memcpy(parameters_root_key_ladder_s->c3, parameters_root_key_ladder->c3, AES_BLOCK_SIZE);
-                memcpy(parameters_root_key_ladder_s->c4, parameters_root_key_ladder->c4, AES_BLOCK_SIZE);
-                param1_size = sizeof(sa_kdf_parameters_root_key_ladder_s);
+                if (parameters_root_key_ladder->c4 != NULL) {
+                    memcpy(parameters_root_key_ladder_s->c4, parameters_root_key_ladder->c4, AES_BLOCK_SIZE);
+                    param1_size = sizeof(sa_kdf_parameters_root_key_ladder_s);
+                } else {
+                    param1_size = offsetof(sa_kdf_parameters_root_key_ladder_s, c4);
+                }
+
                 param1_type = TA_PARAM_IN;
                 param2_size = 0;
                 param2_type = TA_PARAM_NULL;

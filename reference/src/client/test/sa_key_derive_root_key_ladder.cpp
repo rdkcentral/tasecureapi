@@ -73,6 +73,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
+#ifndef _RDKB_LITE_
     TEST_F(SaKeyDeriveRootKeyLadderTest, failsNullRights) {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -108,6 +109,7 @@ namespace {
         status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_ROOT_KEY_LADDER, nullptr);
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 
     TEST_F(SaKeyDeriveRootKeyLadderTest, failsNullC1) {
         sa_kdf_algorithm const kdf_algorithm = SA_KDF_ALGORITHM_ROOT_KEY_LADDER;

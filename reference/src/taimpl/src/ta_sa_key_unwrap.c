@@ -786,6 +786,7 @@ static sa_status ta_sa_key_unwrap_rsa(
     return status;
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_sa_key_unwrap_ec(
         sa_key* key,
         const sa_rights* rights,
@@ -882,6 +883,7 @@ static sa_status ta_sa_key_unwrap_ec(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
 sa_status ta_sa_key_unwrap(
         sa_key* key,
@@ -915,6 +917,15 @@ sa_status ta_sa_key_unwrap(
         ERROR("NULL in");
         return SA_STATUS_NULL_PARAMETER;
     }
+
+#ifdef _RDKB_LITE_
+    if (key_type == SA_KEY_TYPE_EC || cipher_algorithm == SA_CIPHER_ALGORITHM_EC_ELGAMAL ||
+            cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
+        *key = INVALID_HANDLE;
+        ERROR("EC or RSA-OAEP key unwrap is not supported in lite");
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+    }
+#endif
 
     sa_status status;
     client_store_t* client_store = client_store_global();
@@ -976,14 +987,18 @@ sa_status ta_sa_key_unwrap(
                 break;
             }
 #endif
-        } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15 ||
-                   cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
+        } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15
+#ifndef _RDKB_LITE_
+                || cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP
+#endif  // _RDKB_LITE_
+                ) {
             status = ta_sa_key_unwrap_rsa(key, rights, key_type, cipher_algorithm, algorithm_parameters, wrapping_key,
                     in, in_length, client, caller_uuid);
             if (status != SA_STATUS_OK) {
                 ERROR("ta_sa_key_unwrap_rsa failed");
                 break;
             }
+#ifndef _RDKB_LITE_
         } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_EC_ELGAMAL) {
             status = ta_sa_key_unwrap_ec(key, rights, key_type, (sa_unwrap_parameters_ec_elgamal*) algorithm_parameters,
                     wrapping_key, in, in_length, client, caller_uuid);
@@ -991,6 +1006,7 @@ sa_status ta_sa_key_unwrap(
                 ERROR("ta_sa_key_unwrap_ec failed");
                 break;
             }
+#endif  // _RDKB_LITE_
         } else {
             ERROR("Unknown algorithm encountered");
             status = SA_STATUS_INVALID_PARAMETER;

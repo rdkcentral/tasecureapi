@@ -24,6 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST_F(SaKeyImportTest, nominalEcNoAvailableResourceSlot) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         auto clear_key = ec_generate_key_bytes(curve);
@@ -103,4 +104,5 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 } // namespace

@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #include "sa_key_exchange_common.h" // NOLINT
 #include "client_test_helpers.h"
 
@@ -142,3 +144,5 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(sample_dh_p_2048(), sample_dh_g_2048()),
                 std::make_tuple(sample_dh_p_3072(), sample_dh_g_3072()),
                 std::make_tuple(sample_dh_p_4096(), sample_dh_g_4096())));
+
+#endif  // _RDKB_LITE_

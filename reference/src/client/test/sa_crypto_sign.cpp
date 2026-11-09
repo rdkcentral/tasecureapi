@@ -40,12 +40,17 @@ namespace {
 
         std::vector<uint8_t> clear_key;
         size_t signature_length;
+#ifndef _RDKB_LITE_
         sa_elliptic_curve curve;
+#endif  // _RDKB_LITE_
         void* sign_parameters;
         sa_sign_parameters_rsa_pss parameters_rsa_pss;
         sa_sign_parameters_rsa_pkcs1v15 parameters_rsa_pkcs1v15;
+#ifndef _RDKB_LITE_
         sa_sign_parameters_ecdsa parameters_ecdsa;
+#endif  // _RDKB_LITE_
         switch (signature_algorithm) {
+#ifndef _RDKB_LITE_
             case SA_SIGNATURE_ALGORITHM_ECDSA: {
                 curve = static_cast<sa_elliptic_curve>(key_length);
                 key_length = ec_get_key_size(curve);
@@ -67,6 +72,11 @@ namespace {
                 key = create_sa_key_ec(&rights, curve, clear_key);
                 break;
             }
+#else
+            case SA_SIGNATURE_ALGORITHM_ECDSA:
+            case SA_SIGNATURE_ALGORITHM_EDDSA:
+                GTEST_SKIP() << "EC signing not supported in lite";
+#endif  // _RDKB_LITE_
             case SA_SIGNATURE_ALGORITHM_RSA_PSS: {
                 signature_length = key_length;
                 parameters_rsa_pss = {digest_algorithm, mgf1_digest_algorithm, precomputed_digest, salt};
@@ -119,6 +129,7 @@ namespace {
 
         // verify signature using OpenSSL
         switch (signature_algorithm) {
+#ifndef _RDKB_LITE_
             case SA_SIGNATURE_ALGORITHM_ECDSA: {
                 auto ec_key = ec_import_private(curve, clear_key);
                 if (reinterpret_cast<uintptr_t>(ec_key.get()) == UNSUPPORTED_OPENSSL_KEY)
@@ -137,6 +148,11 @@ namespace {
                 ASSERT_TRUE(verify_ec_eddsa_openssl(ec_key.get(), curve, in, out));
                 break;
             }
+#else
+            case SA_SIGNATURE_ALGORITHM_ECDSA:
+            case SA_SIGNATURE_ALGORITHM_EDDSA:
+                break;
+#endif  // _RDKB_LITE_
             case SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15: {
                 auto rsa_key = rsa_import_pkcs8(clear_key);
                 ASSERT_NE(rsa_key, nullptr);
@@ -152,6 +168,7 @@ namespace {
         }
     }
 
+#ifndef _RDKB_LITE_
     TEST(SaCryptoSign, failsNullOutLength) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
@@ -174,31 +191,20 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 
     TEST(SaCryptoSign, failsInvalidSignatureAlgorithm) {
-        auto clear_key = sample_rsa_2048_pkcs8();
-
-        sa_rights rights;
-        sa_rights_set_allow_all(&rights);
-
-        auto key = create_sa_key_rsa(&rights, clear_key);
-        ASSERT_NE(key, nullptr);
-        if (*key == UNSUPPORTED_KEY)
-            GTEST_SKIP() << "key type, key size, or curve not supported";
-
         auto out = std::vector<uint8_t>(4096);
         size_t out_length = out.size();
         auto in = random(25);
 
-        sa_sign_parameters_rsa_pss parameters = {SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA1, false, 20};
         sa_status const status = sa_crypto_sign(out.data(), &out_length, static_cast<sa_signature_algorithm>(UINT8_MAX),
-                *key, in.data(), in.size(), &parameters);
-        if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
-            GTEST_SKIP() << "Unsupported signature algorithm";
+                INVALID_HANDLE, in.data(), in.size(), nullptr);
 
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
+#ifndef _RDKB_LITE_
     TEST(SaCryptoSign, failsInvalidDigestAlgorithm) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
@@ -223,7 +229,6 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
-
     TEST(SaCryptoSign, failsInvalidMgf1DigestAlgorithm) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
@@ -262,7 +267,9 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 
+#ifndef _RDKB_LITE_
     TEST(SaCryptoSign, failsNotUsageFlagEcEcdsaSha256Ecp256) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         auto clear_key = ec_generate_key_bytes(curve);
@@ -340,7 +347,9 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
+#endif  // _RDKB_LITE_
 
+#ifndef _RDKB_LITE_
     TEST(SaCryptoSign, failsNullIn) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
@@ -362,4 +371,5 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 } // namespace

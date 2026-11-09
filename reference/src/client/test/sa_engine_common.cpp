@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #include "sa_engine_common.h"
 #if OPENSSL_VERSION_NUMBER < 0x30000000
 #include <openssl/evp.h>
@@ -135,3 +137,5 @@ bool SaEngineTest::doEncrypt(
 }
 
 #endif
+
+#endif  // _RDKB_LITE_

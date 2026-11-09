@@ -18,6 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #include "sa_provider_common.h"
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
 #include "client_test_helpers.h"
@@ -128,3 +130,5 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values("HMAC")));
 // clang-format on
 #endif
+
+#endif  // _RDKB_LITE_

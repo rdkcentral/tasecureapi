@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #include "sa_process_common_encryption.h" // NOLINT
 #include "client_test_helpers.h"
 #include "sa_crypto_cipher_common.h"
@@ -1189,3 +1191,5 @@ INSTANTIATE_TEST_SUITE_P(
                         std::make_tuple(SA_BUFFER_TYPE_SVP, SA_BUFFER_TYPE_SVP))));
 #endif
 // clang-format on
+
+#endif  // _RDKB_LITE_

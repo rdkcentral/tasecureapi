@@ -53,7 +53,9 @@ bool SaCipherCryptoBase::import_key(
             ERROR("Invalid key");
             return false;
         }
-    } else if (key_type == SA_KEY_TYPE_EC) {
+    }
+#ifndef _RDKB_LITE_
+    else if (key_type == SA_KEY_TYPE_EC) {
         auto curve = static_cast<sa_elliptic_curve>(key_size);
         parameters.clear_key = ec_generate_key_bytes(curve);
         parameters.curve = curve;
@@ -66,7 +68,9 @@ bool SaCipherCryptoBase::import_key(
             ERROR("Invalid key");
             return false;
         }
-    } else {
+    }
+#endif  // _RDKB_LITE_
+    else {
         return false;
     }
 
@@ -304,6 +308,7 @@ std::vector<uint8_t> SaCipherCryptoBase::encrypt_openssl(
                     parameters.oaep_mgf1_digest_algorithm, parameters.iv);
             break;
         }
+#ifndef _RDKB_LITE_
         case SA_CIPHER_ALGORITHM_EC_ELGAMAL: {
             auto evp_pkey = ec_import_private(parameters.curve, parameters.clear_key);
             if (evp_pkey == nullptr) {
@@ -315,6 +320,7 @@ std::vector<uint8_t> SaCipherCryptoBase::encrypt_openssl(
             status = encrypt_ec_elgamal_openssl(encrypted, clear, parameters.curve, evp_pkey);
             break;
         }
+#endif  // _RDKB_LITE_
         default:
             status = false;
     }
@@ -451,28 +457,52 @@ bool SaCipherCryptoBase::ec_is_valid_x_coordinate(
 }
 
 void SaCryptoCipherDecryptTest::SetUp() {
+#ifndef _RDKB_LITE_
     if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED && std::get<3>(GetParam()) == SA_BUFFER_TYPE_SVP)
         GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+#else
+    if (std::get<3>(GetParam()) == SA_BUFFER_TYPE_SVP)
+        GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+#endif  // _RDKB_LITE_
 }
 
 void SaCryptoCipherEncryptTest::SetUp() {
+#ifndef _RDKB_LITE_
     if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED && std::get<3>(GetParam()) == SA_BUFFER_TYPE_SVP)
         GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+#else
+    if (std::get<3>(GetParam()) == SA_BUFFER_TYPE_SVP)
+        GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+#endif  // _RDKB_LITE_
 }
 
 void SaCryptoCipherProcessLastTest::SetUp() {
+#ifndef _RDKB_LITE_
     if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED && std::get<3>(GetParam()) == SA_BUFFER_TYPE_SVP)
         GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+#else
+    if (std::get<3>(GetParam()) == SA_BUFFER_TYPE_SVP)
+        GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+#endif  // _RDKB_LITE_
 }
 
 void SaCryptoCipherWithSvpTest::SetUp() {
+#ifndef _RDKB_LITE_
     if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED && std::get<0>(GetParam()) == SA_BUFFER_TYPE_SVP)
         GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+#else
+    if (std::get<0>(GetParam()) == SA_BUFFER_TYPE_SVP)
+        GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+#endif  // _RDKB_LITE_
 }
 
 void SaCryptoCipherSvpOnlyTest::SetUp() {
+#ifndef _RDKB_LITE_
     if (sa_svp_supported() == SA_STATUS_OPERATION_NOT_SUPPORTED)
         GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+#else
+    GTEST_SKIP() << "SVP not supported. Skipping all SVP tests";
+#endif  // _RDKB_LITE_
 }
 
 // clang-format off
@@ -657,6 +687,7 @@ INSTANTIATE_TEST_SUITE_P(
             ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
             ::testing::Values(0)));
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         RsaOaep1024Tests,
         SaCryptoCipherDecryptTest,
@@ -711,6 +742,7 @@ INSTANTIATE_TEST_SUITE_P(
             ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
                 SA_DIGEST_ALGORITHM_SHA512),
             ::testing::Values(0, 16)));
+#endif  // _RDKB_LITE_
 
 INSTANTIATE_TEST_SUITE_P(
         EcElgamalTests,
@@ -726,6 +758,7 @@ INSTANTIATE_TEST_SUITE_P(
             ::testing::Values(0)));
 
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         AesCbcPkcs7Tests,
         SaCryptoCipherProcessLastTest,
@@ -770,6 +803,7 @@ INSTANTIATE_TEST_SUITE_P(
             ::testing::Values(SA_KEY_TYPE_SYMMETRIC),
             ::testing::Values(SYM_256_KEY_SIZE),
             ::testing::Values(SA_BUFFER_TYPE_CLEAR)));
+#endif  // _RDKB_LITE_
 
 INSTANTIATE_TEST_SUITE_P(
         SaCryptoCipherWithSvpTests,
@@ -785,6 +819,7 @@ INSTANTIATE_TEST_SUITE_P(
         SaCryptoCipherWithoutSvpTest,
         ::testing::Values(SA_CIPHER_MODE_ENCRYPT, SA_CIPHER_MODE_DECRYPT));
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         SaCryptoCipherElGamalTests,
         SaCryptoCipherElGamalTest,
@@ -803,4 +838,5 @@ INSTANTIATE_TEST_SUITE_P(
             SA_ELLIPTIC_CURVE_X25519,
             SA_ELLIPTIC_CURVE_ED448,
             SA_ELLIPTIC_CURVE_X448));
+#endif  // _RDKB_LITE_
 // clang-format on

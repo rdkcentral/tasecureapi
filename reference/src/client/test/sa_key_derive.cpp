@@ -24,6 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST_F(SaKeyDeriveTest, invalidAlgorithm) {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -48,4 +49,5 @@ namespace {
         status = sa_key_derive(key.get(), &rights, static_cast<sa_kdf_algorithm>(UINT8_MAX), &parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 } // namespace

@@ -40,12 +40,17 @@ namespace {
                 clear_key = random(key_size);
                 break;
 
+#ifndef _RDKB_LITE_
             case SA_KEY_TYPE_EC:
                 curve = static_cast<sa_elliptic_curve>(key_size);
                 clear_key = ec_generate_key_bytes(curve);
                 if (clear_key.empty())
                     GTEST_SKIP() << "key type, key size, or curve not supported";
                 break;
+#else
+            case SA_KEY_TYPE_EC:
+                GTEST_SKIP() << "EC keys are not supported in lite";
+#endif  // _RDKB_LITE_
 
             case SA_KEY_TYPE_RSA:
                 clear_key = get_rsa_private_key(key_size);

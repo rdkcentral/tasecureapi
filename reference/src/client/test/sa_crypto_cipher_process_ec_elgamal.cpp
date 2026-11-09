@@ -24,6 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST_P(SaCryptoCipherElGamalTest, processEcElgamalFailsInvalidInLength) {
         sa_elliptic_curve const curve = std::get<0>(GetParam());
         size_t const key_size = ec_get_key_size(curve);
@@ -194,4 +195,5 @@ namespace {
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
+#endif  // _RDKB_LITE_
 } // namespace

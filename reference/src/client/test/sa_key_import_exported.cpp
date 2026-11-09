@@ -57,6 +57,7 @@ namespace {
         ASSERT_EQ(SA_KEY_TYPE_SYMMETRIC, header->type);
     }
 
+#ifndef _RDKB_LITE_
     TEST_F(SaKeyImportTest, nominalExportedRsaE3) {
         auto clear_key = sample_rsa_1024_pkcs8_e3();
 
@@ -111,4 +112,5 @@ namespace {
         // compare public from OpenSSL and SecApi
         ASSERT_EQ(out, public_openssl);
     }
+#endif  // _RDKB_LITE_
 } // namespace

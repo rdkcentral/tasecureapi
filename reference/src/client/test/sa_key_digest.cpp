@@ -67,6 +67,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
+#ifndef _RDKB_LITE_
     TEST(SaKeyDigestTest, failDh) {
         auto key = create_uninitialized_sa_key();
         ASSERT_NE(key, nullptr);
@@ -100,6 +101,7 @@ namespace {
         status = sa_key_digest(nullptr, &out_length, *key, SA_DIGEST_ALGORITHM_SHA256);
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 
     TEST(SaKeyDigestTest, failRsa) {
         sa_rights rights;

@@ -48,6 +48,16 @@ endif ()
 
 find_package(OpenSSL REQUIRED)
 
+if (DEFINED _RDKB_LITE_)
+    # Lite mode (FKPS/AUTHN only): the library is just saclientimpl. The OpenSSL engine and provider need
+    # calls that lite does not build (sa_key_get_public, sa_key_generate, ...), so they are left out.
+    add_library(saclient SHARED
+            include/sa.h
+            include/sa_crypto.h
+            include/sa_key.h
+            include/sa_types.h
+            )
+else ()
 add_library(saclient SHARED
         include/sa.h
         include/sa_cenc.h
@@ -79,6 +89,7 @@ add_library(saclient SHARED
         src/sa_public_key.h
         src/sa_public_key.c
         )
+endif ()
 
 target_compile_options(saclient PRIVATE -Werror -Wall -Wextra -Wno-type-limits -Wno-unused-parameter
         -Wno-deprecated-declarations)
@@ -329,6 +340,10 @@ if (BUILD_TESTS)
                 PRIVATE
                 gcov
                 )
+    endif ()
+
+    if (DEFINED _RDKB_LITE_)
+        target_compile_definitions(saclienttest PRIVATE _RDKB_LITE_)
     endif ()
 
     target_clangformat_setup(saclienttest)

@@ -58,21 +58,31 @@ static sa_status import_key(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
+#ifndef _RDKB_LITE_
     if (key_type == SA_KEY_TYPE_EC && algorithm_parameters == NULL) {
         ERROR("NULL algorithm_parameters");
         return SA_STATUS_NULL_PARAMETER;
     }
+#endif
 
     if (in == NULL) {
         ERROR("NULL in");
         return SA_STATUS_NULL_PARAMETER;
     }
 
+#ifdef _RDKB_LITE_
+    if (key_type == SA_KEY_TYPE_EC) {
+        ERROR("EC key unwrap is not supported in lite");
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+    }
+#endif
+
     sa_status status = SA_STATUS_INTERNAL_ERROR;
     do {
         sa_type_parameters type_parameters;
         memory_memset_unoptimizable(&type_parameters, 0, sizeof(sa_type_parameters));
         size_t key_size = in_length;
+#ifndef _RDKB_LITE_
         if (key_type == SA_KEY_TYPE_EC) {
             sa_unwrap_type_parameters_ec* ec_parameters = (sa_unwrap_type_parameters_ec*) algorithm_parameters;
             key_size = ec_validate_private(ec_parameters->curve, in, in_length);
@@ -83,6 +93,9 @@ static sa_status import_key(
 
             type_parameters.curve = ec_parameters->curve;
         } else if (key_type == SA_KEY_TYPE_RSA) { // key_type == SA_KEY_TYPE_RSA
+#else
+        if (key_type == SA_KEY_TYPE_RSA) {
+#endif
             key_size = rsa_validate_private(in, in_length);
             if (key_size == 0) {
                 ERROR("rsa_validate_private failed");
@@ -792,6 +805,7 @@ sa_status unwrap_rsa(
         }
 
         size_t unwrapped_key_length = in_length;
+#ifndef _RDKB_LITE_
         if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
             if (algorithm_parameters == NULL) {
                 ERROR("NULL algorithm_parameters");
@@ -812,7 +826,9 @@ sa_status unwrap_rsa(
                 ERROR("rsa_decrypt_oaep failed");
                 break;
             }
-        } else { // algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15
+        } else
+#endif
+        {
             status = rsa_decrypt_pkcs1v15(unwrapped_key, &unwrapped_key_length, stored_key_wrapping, in, in_length);
             if (status != SA_STATUS_OK) {
                 ERROR("rsa_decrypt_pkcs1v15 failed");
@@ -843,6 +859,7 @@ sa_status unwrap_rsa(
     return status;
 }
 
+#ifndef _RDKB_LITE_
 sa_status unwrap_ec(
         stored_key_t** stored_key_unwrapped,
         const void* in,
@@ -955,3 +972,4 @@ sa_status unwrap_ec(
 
     return status;
 }
+#endif  // _RDKB_LITE_

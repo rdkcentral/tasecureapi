@@ -24,6 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST_F(SaKeyImportTest, nominalRsaPrivateKeyInfo1024E3) {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -44,6 +45,7 @@ namespace {
 
         ASSERT_TRUE(key_check_rsa(*key, clear_key));
     }
+
     TEST_F(SaKeyImportTest, nominalRsaNoAvailableResourceSlot) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
@@ -138,4 +140,5 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 } // namespace

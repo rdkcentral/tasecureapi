@@ -41,7 +41,9 @@ typedef std::tuple<size_t, size_t, uint8_t> SaKeyDeriveCmacTestType;
 
 class SaKeyDeriveCmacTest : public ::testing::TestWithParam<SaKeyDeriveCmacTestType>, public SaKeyBase {};
 
+#ifndef _RDKB_LITE_
 class SaKeyDeriveNetflixTest : public ::testing::Test, public SaKeyBase {};
+#endif  // _RDKB_LITE_
 
 class SaKeyDeriveRootKeyLadderTest : public ::testing::Test, public SaKeyBase {};
 

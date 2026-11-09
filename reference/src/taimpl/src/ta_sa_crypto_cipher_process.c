@@ -47,7 +47,9 @@ static size_t get_required_length(
             return bytes_to_process + (apply_padding ? AES_BLOCK_SIZE : 0);
 
         case SA_CIPHER_ALGORITHM_RSA_PKCS1V15:
+#ifndef _RDKB_LITE_
         case SA_CIPHER_ALGORITHM_RSA_OAEP:
+#endif  // _RDKB_LITE_
         case SA_CIPHER_ALGORITHM_EC_ELGAMAL:
             return cipher_get_key_size(cipher);
 
@@ -217,6 +219,7 @@ static sa_status ta_sa_crypto_cipher_process_rsa_pkcs1v15(
     *bytes_to_process = out_length;
     return status;
 }
+#ifndef _RDKB_LITE_
 static sa_status ta_sa_crypto_cipher_process_rsa_oaep(
         void* out,
         size_t out_length,
@@ -299,7 +302,9 @@ static sa_status ta_sa_crypto_cipher_process_rsa_oaep(
     *bytes_to_process = out_length;
     return status;
 }
+#endif  // _RDKB_LITE_
 
+#ifndef _RDKB_LITE_
 static sa_status ta_sa_crypto_cipher_process_ec_elgamal(
         void* out,
         cipher_t* cipher,
@@ -370,6 +375,7 @@ static sa_status ta_sa_crypto_cipher_process_ec_elgamal(
     *bytes_to_process = out_length;
     return SA_STATUS_OK;
 }
+#endif  // _RDKB_LITE_
 
 sa_status ta_sa_crypto_cipher_process(
         sa_buffer* out,
@@ -439,7 +445,9 @@ sa_status ta_sa_crypto_cipher_process(
         if ((out->buffer_type == SA_BUFFER_TYPE_SVP || in->buffer_type == SA_BUFFER_TYPE_SVP) &&
                 (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_GCM ||
                         cipher_algorithm == SA_CIPHER_ALGORITHM_CHACHA20_POLY1305 ||
+#ifndef _RDKB_LITE_
                         cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP ||
+#endif  // _RDKB_LITE_
                         cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_PKCS1V15 ||
                         cipher_algorithm == SA_CIPHER_ALGORITHM_EC_ELGAMAL)) {
             ERROR("Invalid algorithm");
@@ -501,6 +509,7 @@ sa_status ta_sa_crypto_cipher_process(
                 ERROR("ta_sa_crypto_cipher_process_rsa_pkcs1v15 failed");
                 break;
             }
+#ifndef _RDKB_LITE_
         } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
             status = ta_sa_crypto_cipher_process_rsa_oaep(out_bytes, required_length, cipher, in_bytes,
                     bytes_to_process, caller_uuid);
@@ -514,6 +523,7 @@ sa_status ta_sa_crypto_cipher_process(
                 ERROR("ta_sa_crypto_cipher_process_ec_elgamal failed");
                 break;
             }
+#endif  // _RDKB_LITE_
         } else {
             ERROR("Unknown algorithm encountered");
             status = SA_STATUS_INVALID_PARAMETER;

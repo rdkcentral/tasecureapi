@@ -26,6 +26,7 @@
 #include "rsa.h"
 #include "ta_sa.h"
 
+#ifndef _RDKB_LITE_
 static sa_status ta_sa_crypto_sign_ecdsa(
         void* out,
         size_t* out_length,
@@ -186,7 +187,9 @@ static sa_status ta_sa_crypto_sign_eddsa(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
+#ifndef _RDKB_LITE_
 static sa_status ta_sa_crypto_sign_rsa_pss(
         void* out,
         size_t* out_length,
@@ -283,6 +286,7 @@ static sa_status ta_sa_crypto_sign_rsa_pss(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
 static sa_status ta_sa_crypto_sign_rsa_pkcs1v15(
         void* out,
@@ -374,6 +378,15 @@ sa_status ta_sa_crypto_sign(
         return SA_STATUS_NULL_PARAMETER;
     }
 
+#ifdef _RDKB_LITE_
+    if (signature_algorithm == SA_SIGNATURE_ALGORITHM_ECDSA ||
+            signature_algorithm == SA_SIGNATURE_ALGORITHM_EDDSA ||
+            signature_algorithm == SA_SIGNATURE_ALGORITHM_RSA_PSS) {
+        ERROR("Signature algorithm is not supported in lite");
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+    }
+#endif
+
     if (signature_algorithm != SA_SIGNATURE_ALGORITHM_ECDSA &&
             signature_algorithm != SA_SIGNATURE_ALGORITHM_EDDSA &&
             signature_algorithm != SA_SIGNATURE_ALGORITHM_RSA_PSS &&
@@ -423,6 +436,7 @@ sa_status ta_sa_crypto_sign(
             break;
         }
 
+#ifndef _RDKB_LITE_
         if (signature_algorithm == SA_SIGNATURE_ALGORITHM_ECDSA) {
             status = ta_sa_crypto_sign_ecdsa(out, out_length, stored_key, in, in_length,
                     (const sa_sign_parameters_ecdsa*) parameters);
@@ -443,14 +457,17 @@ sa_status ta_sa_crypto_sign(
                 ERROR("ta_sa_crypto_sign_rsa_pss failed");
                 break;
             }
-        } else { // algorithm == SA_SIGNATURE_ALGORITHM_RSA_PKCS1V15
+        } else {
+#endif
             status = ta_sa_crypto_sign_rsa_pkcs1v15(out, out_length, stored_key, in, in_length,
                     (const sa_sign_parameters_rsa_pkcs1v15*) parameters);
             if (status != SA_STATUS_OK) {
                 ERROR("ta_sa_crypto_sign_rsa_pkcs1v15 failed");
                 break;
             }
+#ifndef _RDKB_LITE_
         }
+#endif
     } while (false);
 
     stored_key_free(stored_key);

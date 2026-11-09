@@ -31,6 +31,10 @@ namespace {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
+#ifdef _RDKB_LITE_
+        if (key_type == SA_KEY_TYPE_EC || key_type == SA_KEY_TYPE_DH)
+            GTEST_SKIP() << "EC and DH keys are not supported in lite";
+#endif  // _RDKB_LITE_
         sa_status status;
         std::vector<uint8_t> clear_key;
         sa_elliptic_curve curve;
@@ -85,6 +89,10 @@ namespace {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
 
+#ifdef _RDKB_LITE_
+        if (key_type == SA_KEY_TYPE_EC || key_type == SA_KEY_TYPE_DH)
+            GTEST_SKIP() << "EC and DH keys are not supported in lite";
+#endif  // _RDKB_LITE_
         sa_status status;
         std::vector<uint8_t> clear_key;
         sa_elliptic_curve curve;

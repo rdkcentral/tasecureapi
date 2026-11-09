@@ -262,6 +262,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
 
+#ifndef _RDKB_LITE_
     TEST_F(SaKeyUnwrapAesCtrTest, failsWrappingKeyNotAes) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
@@ -287,6 +288,7 @@ namespace {
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
+#endif  // _RDKB_LITE_
 
     TEST_F(SaKeyUnwrapAesCtrTest, failsWrappingKeyNotValidAesSize) {
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);

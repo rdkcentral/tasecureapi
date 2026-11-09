@@ -71,6 +71,7 @@ protected:
 
 class SaKeyImportTest : public ::testing::TestWithParam<SaKeyType>, public SaKeyImportBase {};
 
+#ifndef _RDKB_LITE_
 class SaKeyImportTypejBase : public SaKeyImportBase {
 protected:
     static std::string generate_header();
@@ -137,6 +138,7 @@ typedef std::tuple<size_t, sa_cipher_algorithm, uint64_t> SaKeyImportTypejType;
 class SaKeyImportTypejTest : public ::testing::TestWithParam<SaKeyImportTypejType>, public SaKeyImportTypejBase {};
 
 class SaKeyImportTypejTaIdRangeTest : public ::testing::TestWithParam<int>, public SaKeyImportTypejBase {};
+#endif  // _RDKB_LITE_
 
 class SaKeyImportSocBase : public SaKeyImportBase {
 protected:
@@ -210,8 +212,10 @@ protected:
 };
 
 class SaKeyImportSocTest : public ::testing::Test, public SaKeyImportSocBase {};
+#ifndef _RDKB_LITE_
 class SaKeyProvisionNetflixTest : public ::testing::TestWithParam<SaKeyProvisionTestType>,
        public SaKeyImportSocBase {};
+#endif  // _RDKB_LITE_
 class SaKeyProvisionWidevineTest : public ::testing::TestWithParam<SaKeyProvisionTestType>,
        public SaKeyImportSocBase {};
 class SaKeyProvisionPlayreadyTest : public ::testing::TestWithParam<SaKeyProvisionTestType>,

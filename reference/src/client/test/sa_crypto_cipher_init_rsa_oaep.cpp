@@ -24,6 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST_F(SaCryptoCipherWithoutSvpTest, initRsaOaepFailsInvalidMode) {
         auto clear_key = sample_rsa_1024_pkcs8();
 
@@ -65,4 +66,5 @@ namespace {
             GTEST_SKIP() << "Cipher algorithm not supported";
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
+#endif  // _RDKB_LITE_
 } // namespace

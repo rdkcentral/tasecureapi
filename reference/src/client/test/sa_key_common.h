@@ -98,10 +98,12 @@ protected:
             std::vector<uint8_t>& other_data,
             uint8_t counter);
 
+#ifndef _RDKB_LITE_
     static bool netflix_wrapping_key_kdf(
             std::vector<uint8_t>& out,
             const std::vector<uint8_t>& encryption_key,
             const std::vector<uint8_t>& hmac_key);
+#endif  // _RDKB_LITE_
 
     static std::string b64_encode(
             const void* in,

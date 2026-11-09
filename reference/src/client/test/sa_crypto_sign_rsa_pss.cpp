@@ -23,6 +23,7 @@
 using namespace client_test_helpers;
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST(SaCryptoSign, nominal2048RsaPssSha256Salt32EmptyIn) {
         auto clear_key = sample_rsa_2048_pkcs8();
         sa_digest_algorithm const digest_algorithm = SA_DIGEST_ALGORITHM_SHA256;
@@ -145,4 +146,5 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 } // namespace

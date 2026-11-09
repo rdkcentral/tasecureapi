@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #ifndef SA_PROCESS_COMMON_ENCRYPTION_H
 #define SA_PROCESS_COMMON_ENCRYPTION_H
 
@@ -57,3 +59,5 @@ class SaProcessCommonEncryptionAlternativeTest : public ::testing::Test, public 
 // clang-format on
 
 #endif // SA_PROCESS_COMMON_ENCRYPTION_H
+
+#endif  // _RDKB_LITE_

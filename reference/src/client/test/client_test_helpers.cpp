@@ -1804,6 +1804,7 @@ namespace client_test_helpers {
             return true;
         }
 
+#ifndef _RDKB_LITE_
         bool key_check_rsa_decrypt(sa_key key) {
             auto clear = random(65);
             std::vector<uint8_t> in(4096);
@@ -2044,6 +2045,7 @@ namespace client_test_helpers {
 
             return true;
         }
+#endif  // _RDKB_LITE_
     } // namespace
 
     std::vector<uint8_t> sample_dh_p_768() {
@@ -2281,6 +2283,7 @@ namespace client_test_helpers {
         return key;
     }
 
+#ifndef _RDKB_LITE_
     std::shared_ptr<sa_key> create_sa_key_dh(
             const sa_rights* rights,
             std::tuple<std::vector<uint8_t>, std::vector<uint8_t>>& dh_parameters) {
@@ -2299,6 +2302,7 @@ namespace client_test_helpers {
 
         return key;
     }
+#endif  // _RDKB_LITE_
 
     std::shared_ptr<sa_key> create_sa_key(
             sa_key_type key_type,
@@ -2310,6 +2314,7 @@ namespace client_test_helpers {
         sa_rights_set_allow_all(&rights);
 
         switch (key_type) {
+#ifndef _RDKB_LITE_
             case SA_KEY_TYPE_EC: {
                 curve = static_cast<sa_elliptic_curve>(key_length);
                 key_length = ec_get_key_size(curve);
@@ -2317,6 +2322,7 @@ namespace client_test_helpers {
                 return create_sa_key_ec(&rights, curve, clear_key);
                 break;
             }
+#endif  // _RDKB_LITE_
             case SA_KEY_TYPE_SYMMETRIC: {
                 curve = static_cast<sa_elliptic_curve>(0);
                 clear_key = random(key_length);
@@ -2329,12 +2335,14 @@ namespace client_test_helpers {
                 return create_sa_key_rsa(&rights, clear_key);
                 break;
             }
+#ifndef _RDKB_LITE_
             case SA_KEY_TYPE_DH: {
                 curve = static_cast<sa_elliptic_curve>(0);
                 std::tuple<std::vector<uint8_t>, std::vector<uint8_t>> dh_parameters = get_dh_parameters(key_length);
                 return create_sa_key_dh(&rights, dh_parameters);
                 break;
             }
+#endif  // _RDKB_LITE_
             default:
                 return nullptr;
         }
@@ -2424,6 +2432,7 @@ namespace client_test_helpers {
         return true;
     }
 
+#ifndef _RDKB_LITE_
     bool key_check_rsa(
             sa_key key,
             const std::vector<uint8_t>& clear_key) {
@@ -2670,6 +2679,7 @@ namespace client_test_helpers {
 
         return true;
     }
+#endif  // _RDKB_LITE_
 
     bool export_public_key(
             std::vector<uint8_t>& out,
@@ -2895,6 +2905,7 @@ namespace client_test_helpers {
         return true;
     }
 
+#ifndef _RDKB_LITE_
     std::shared_ptr<EVP_PKEY> ec_import_private(
             sa_elliptic_curve curve,
             const std::vector<uint8_t>& in) {
@@ -3127,7 +3138,9 @@ namespace client_test_helpers {
         return status;
 #endif
     }
+#endif  // _RDKB_LITE_
 
+#ifndef _RDKB_LITE_
     bool encrypt_ec_elgamal_openssl(
             std::vector<uint8_t>& out,
             std::vector<uint8_t>& in,
@@ -3264,6 +3277,7 @@ namespace client_test_helpers {
         out.insert(out.end(), out2.begin(), out2.end());
         return true;
     }
+#endif  // _RDKB_LITE_
 
     bool encrypt_aes_cbc_openssl(
             std::vector<uint8_t>& out,

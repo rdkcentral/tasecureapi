@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #include "client_test_helpers.h"
 #include "sa.h"
 #include "sa_key_common.h"
@@ -43,3 +45,5 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 } // namespace
+
+#endif  // _RDKB_LITE_

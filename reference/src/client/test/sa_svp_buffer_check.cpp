@@ -15,6 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
+#ifndef _RDKB_LITE_
+
 #ifdef ENABLE_SVP 
 #include "client_test_helpers.h"
 #include "sa.h"
@@ -34,3 +37,5 @@ namespace {
     }
 } // namespace
 #endif
+
+#endif  // _RDKB_LITE_

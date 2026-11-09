@@ -99,6 +99,7 @@ static sa_status ta_sa_key_import_symmetric_bytes(
     return status;
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_sa_key_import_ec_private_bytes(
         sa_key* key,
         const void* in,
@@ -179,7 +180,9 @@ static sa_status ta_sa_key_import_ec_private_bytes(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
+#ifndef _RDKB_LITE_
 static sa_status ta_sa_key_import_rsa_private_key_info(
         sa_key* key,
         const void* in,
@@ -256,6 +259,7 @@ static sa_status ta_sa_key_import_rsa_private_key_info(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
 static sa_status ta_sa_key_import_exported(
         sa_key* key,
@@ -354,6 +358,7 @@ static sa_status ta_sa_key_import_soc(
     return status;
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_sa_key_import_typej(
         sa_key* key,
         const void* in,
@@ -463,6 +468,7 @@ static sa_status ta_sa_key_import_typej(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
 sa_status ta_sa_key_import(
         sa_key* key,
@@ -495,6 +501,19 @@ sa_status ta_sa_key_import(
         return SA_STATUS_NULL_PARAMETER;
     }
 
+#ifdef _RDKB_LITE_
+    if (key_format == SA_KEY_FORMAT_EC_PRIVATE_BYTES) {
+        *key = INVALID_HANDLE;
+        ERROR("EC private key import is not supported in lite");
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+    }
+    if (key_format == SA_KEY_FORMAT_RSA_PRIVATE_KEY_INFO) {
+        *key = INVALID_HANDLE;
+        ERROR("RSA private key info import is not supported in lite");
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+    }
+#endif
+
     sa_status status;
     client_store_t* client_store = client_store_global();
     client_t* client = NULL;
@@ -512,6 +531,7 @@ sa_status ta_sa_key_import(
                 ERROR("ta_sa_key_import_symmetric_bytes failed");
                 break;
             }
+#ifndef _RDKB_LITE_
         } else if (key_format == SA_KEY_FORMAT_EC_PRIVATE_BYTES) {
             status = ta_sa_key_import_ec_private_bytes(key, in, in_length,
                     (sa_import_parameters_ec_private_bytes*) parameters, client,
@@ -528,6 +548,7 @@ sa_status ta_sa_key_import(
                 ERROR("ta_sa_key_import_rsa_private_key_info failed");
                 break;
             }
+#endif  // _RDKB_LITE_
         } else if (key_format == SA_KEY_FORMAT_EXPORTED) {
             status = ta_sa_key_import_exported(key, in, in_length, client, caller_uuid);
             if (status != SA_STATUS_OK) {
@@ -541,12 +562,17 @@ sa_status ta_sa_key_import(
                 break;
             }
         } else { // format == SA_KEY_FORMAT_TYPEJ
+#ifndef _RDKB_LITE_
             status = ta_sa_key_import_typej(key, in, in_length, (sa_import_parameters_typej*) parameters, client,
                     caller_uuid);
             if (status != SA_STATUS_OK) {
                 ERROR("ta_sa_key_import_exported failed");
                 break;
             }
+#else
+            ERROR("Type-J key import is not supported in lite");
+            status = SA_STATUS_OPERATION_NOT_SUPPORTED;
+#endif  // _RDKB_LITE_
         }
     } while (false);
 

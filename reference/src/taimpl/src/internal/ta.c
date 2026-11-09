@@ -25,6 +25,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+// Note: _RDKB_LITE_ macro is defined at compile time to enable lite mode
+// In lite mode, only FKPS/AUTHN operations are compiled
+
 #define CHECK_NOT_TA_PARAM_NULL(param_type, param) ((param_type) != TEEC_NONE || (param).mem_ref != NULL || \
                                                     (param).mem_ref_size != 0)
 #define CHECK_TA_PARAM_NULL(param_type, param) ((param_type) == TEEC_NONE || (param).mem_ref == NULL || \
@@ -67,6 +70,7 @@ static sa_status ta_invoke_get_version(
     return ta_sa_get_version(&get_version->version, context->client, uuid);
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_invoke_get_name(
         sa_get_name_s* get_name,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -99,6 +103,7 @@ static sa_status ta_invoke_get_name(
     get_name->name_length = name_length;
     return status;
 }
+#endif  // _RDKB_LITE_
 
 static sa_status ta_invoke_get_device_id(
         sa_get_device_id_s* get_device_id,
@@ -123,6 +128,7 @@ static sa_status ta_invoke_get_device_id(
     return ta_sa_get_device_id(&get_device_id->id, context->client, uuid);
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_invoke_get_ta_uuid(
         sa_get_ta_uuid_s* get_ta_uuid,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -208,7 +214,9 @@ static sa_status ta_invoke_key_generate(
     return ta_sa_key_generate(&key_generate->key, &key_generate->rights, key_generate->key_type, parameters,
             context->client, uuid);
 }
+#endif  // _RDKB_LITE_
 
+/* key_export is part of the lite feature set (store key container processing). */
 static sa_status ta_invoke_key_export(
         sa_key_export_s* key_export,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -244,6 +252,7 @@ static sa_status ta_invoke_key_export(
     return status;
 }
 
+/* key_import is part of the lite feature set (store key container import). */
 static sa_status ta_invoke_key_import(
         sa_key_import_s* key_import,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -377,6 +386,7 @@ static sa_status ta_invoke_key_import(
             parameters, context->client, uuid);
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_invoke_key_provision(
         sa_key_provision_ta_s* key_provision_ta,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -448,7 +458,9 @@ static sa_status ta_invoke_key_provision(
 
      return status;
 }
+#endif  // _RDKB_LITE_
 
+/* key_unwrap is part of the lite feature set (AUTHN unwraps the keys received from the broker). */
 static sa_status ta_invoke_key_unwrap(
         sa_key_unwrap_s* key_unwrap,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -641,6 +653,7 @@ static sa_status ta_invoke_key_unwrap(
             params[1].mem_ref_size, context->client, uuid);
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_invoke_key_get_public(
         sa_key_get_public_s* key_get_public,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -674,7 +687,9 @@ static sa_status ta_invoke_key_get_public(
     key_get_public->out_length = out_length;
     return status;
 }
+#endif  // _RDKB_LITE_
 
+/* key_derive is part of the lite feature set (root key ladder / Concat KDF for FKPS and AUTHN). */
 static sa_status ta_invoke_key_derive(
         sa_key_derive_s* key_derive,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -720,6 +735,14 @@ static sa_status ta_invoke_key_derive(
                 return SA_STATUS_INVALID_PARAMETER;
             }
 
+            // A 3-stage key ladder sends only c1..c3; c4 is then omitted.
+            bool has_c4 = params[1].mem_ref_size == sizeof(parameters_root_key_ladder_s);
+            if (!has_c4 && params[1].mem_ref_size != offsetof(sa_kdf_parameters_root_key_ladder_s, c4)) {
+                ERROR("Invalid params[1].mem_ref_size");
+                return SA_STATUS_INVALID_PARAMETER;
+            }
+
+            memset(&parameters_root_key_ladder_s, 0, sizeof(parameters_root_key_ladder_s));
             memcpy(&parameters_root_key_ladder_s, params[1].mem_ref, params[1].mem_ref_size);
             parameters_root_key_ladder.c1 = parameters_root_key_ladder_s.c1;
             parameters_root_key_ladder.c1_length = AES_BLOCK_SIZE;
@@ -727,8 +750,8 @@ static sa_status ta_invoke_key_derive(
             parameters_root_key_ladder.c2_length = AES_BLOCK_SIZE;
             parameters_root_key_ladder.c3 = parameters_root_key_ladder_s.c3;
             parameters_root_key_ladder.c3_length = AES_BLOCK_SIZE;
-            parameters_root_key_ladder.c4 = parameters_root_key_ladder_s.c4;
-            parameters_root_key_ladder.c4_length = AES_BLOCK_SIZE;
+            parameters_root_key_ladder.c4 = has_c4 ? parameters_root_key_ladder_s.c4 : NULL;
+            parameters_root_key_ladder.c4_length = has_c4 ? AES_BLOCK_SIZE : 0;
             algorithm_parameters = &parameters_root_key_ladder;
             break;
         }
@@ -841,6 +864,7 @@ static sa_status ta_invoke_key_derive(
             context->client, uuid);
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_invoke_key_exchange(
         sa_key_exchange_s* key_exchange,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -898,6 +922,7 @@ static sa_status ta_invoke_key_exchange(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
 static sa_status ta_invoke_key_release(
         sa_key_release_s* key_release,
@@ -922,6 +947,7 @@ static sa_status ta_invoke_key_release(
     return ta_sa_key_release(key_release->key, context->client, uuid);
 }
 
+/* key_header is part of the lite feature set. */
 static sa_status ta_invoke_key_header(
         sa_key_header_s* key_header,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -1029,6 +1055,7 @@ static sa_status ta_invoke_crypto_random(
     return ta_sa_crypto_random(params[1].mem_ref, params[1].mem_ref_size, context->client, uuid);
 }
 
+/* cipher init / process / release are part of the lite feature set (AUTHN decrypts with AES-ECB). */
 static sa_status ta_invoke_crypto_cipher_init(
         sa_crypto_cipher_init_s* crypto_cipher_init,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -1157,6 +1184,7 @@ static sa_status ta_invoke_crypto_cipher_init(
             crypto_cipher_init->cipher_mode, crypto_cipher_init->key, parameters, context->client, uuid);
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_invoke_crypto_cipher_update_iv(
         sa_crypto_cipher_update_iv_s* cipher_update_iv,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -1191,6 +1219,8 @@ static sa_status ta_invoke_crypto_cipher_update_iv(
     return ta_sa_crypto_cipher_update_iv(cipher_update_iv->context, params[1].mem_ref, params[1].mem_ref_size,
             context->client, uuid);
 }
+#endif  // _RDKB_LITE_
+
 static sa_status ta_invoke_crypto_cipher_process(
         bool last,
         sa_crypto_cipher_process_s* crypto_cipher_process,
@@ -1250,6 +1280,7 @@ static sa_status ta_invoke_crypto_cipher_process(
 #endif // ENABLE_SVP
 
     sa_status status;
+#ifndef _RDKB_LITE_
     if (last) {
         void* parameters;
         sa_cipher_end_parameters_aes_gcm parameters_aes_gcm;
@@ -1265,7 +1296,9 @@ static sa_status ta_invoke_crypto_cipher_process(
         status = ta_sa_crypto_cipher_process_last(params[1].mem_ref == NULL ? NULL : &out,
                 crypto_cipher_process->context, &in, &bytes_to_process, parameters, context->client, uuid);
         crypto_cipher_process->bytes_to_process = bytes_to_process;
-    } else {
+    } else
+#endif  // _RDKB_LITE_
+    {
         size_t bytes_to_process = crypto_cipher_process->bytes_to_process;
         status = ta_sa_crypto_cipher_process(params[1].mem_ref == NULL ? NULL : &out, crypto_cipher_process->context,
                 &in, &bytes_to_process, context->client, uuid);
@@ -1375,6 +1408,7 @@ static sa_status ta_invoke_crypto_mac_process(
             context->client, uuid);
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_invoke_crypto_mac_process_key(
         sa_crypto_mac_process_key_s* crypto_mac_process_key,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -1399,6 +1433,7 @@ static sa_status ta_invoke_crypto_mac_process_key(
     return ta_sa_crypto_mac_process_key(crypto_mac_process_key->mac_context, crypto_mac_process_key->key,
             context->client, uuid);
 }
+#endif  // _RDKB_LITE_
 
 static sa_status ta_invoke_crypto_mac_compute(
         sa_crypto_mac_compute_s* crypto_mac_compute,
@@ -1459,6 +1494,7 @@ static sa_status ta_invoke_crypto_mac_release(
     return ta_sa_crypto_mac_release(crypto_mac_release->context, context->client, uuid);
 }
 
+/* crypto_sign is part of the lite feature set (AUTHN signs with RSA PKCS#1 v1.5). */
 static sa_status ta_invoke_crypto_sign(
         sa_crypto_sign_s* crypto_sign,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -1522,6 +1558,8 @@ static sa_status ta_invoke_crypto_sign(
     crypto_sign->out_length = out_length;
     return status;
 }
+
+#ifndef _RDKB_LITE_
 static sa_status ta_invoke_svp_supported(
         sa_svp_supported_s* svp_supported,
         const uint32_t param_types[NUM_TA_PARAMS],
@@ -1910,6 +1948,7 @@ static sa_status ta_invoke_process_common_encryption(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
 sa_status ta_invoke_command_handler(
         void* session_context,
@@ -1971,24 +2010,30 @@ sa_status ta_invoke_command_handler(
                         &uuid);
                 break;
 
+#ifndef _RDKB_LITE_
             case SA_GET_NAME:
                 status = ta_invoke_get_name((sa_get_name_s*) command_parameter, param_types, params, context, &uuid);
                 break;
+#endif  // _RDKB_LITE_
 
             case SA_GET_DEVICE_ID:
                 status = ta_invoke_get_device_id((sa_get_device_id_s*) command_parameter, param_types, params, context,
                         &uuid);
                 break;
 
+#ifndef _RDKB_LITE_
             case SA_GET_TA_UUID:
                 status = ta_invoke_get_ta_uuid((sa_get_ta_uuid_s*) command_parameter, param_types, params, context,
                         &uuid);
                 break;
+#endif  // _RDKB_LITE_
 
+#ifndef _RDKB_LITE_
             case SA_KEY_GENERATE:
                 status = ta_invoke_key_generate((sa_key_generate_s*) command_parameter, param_types, params, context,
                         &uuid);
                 break;
+#endif  // _RDKB_LITE_
 
             case SA_KEY_EXPORT:
                 status = ta_invoke_key_export((sa_key_export_s*) command_parameter, param_types, params, context,
@@ -2000,29 +2045,36 @@ sa_status ta_invoke_command_handler(
                         &uuid);
                 break;
 
+#ifndef _RDKB_LITE_
             case SA_KEY_PROVISION_TA:
                 status = ta_invoke_key_provision((sa_key_provision_ta_s*) command_parameter, param_types, params, context,
                         &uuid);
                 break;
+#endif  // _RDKB_LITE_
+
             case SA_KEY_UNWRAP:
                 status = ta_invoke_key_unwrap((sa_key_unwrap_s*) command_parameter, param_types, params, context,
                         &uuid);
                 break;
 
+#ifndef _RDKB_LITE_
             case SA_KEY_GET_PUBLIC:
                 status = ta_invoke_key_get_public((sa_key_get_public_s*) command_parameter, param_types, params,
                         context, &uuid);
                 break;
+#endif  // _RDKB_LITE_
 
             case SA_KEY_DERIVE:
                 status = ta_invoke_key_derive((sa_key_derive_s*) command_parameter, param_types, params, context,
                         &uuid);
                 break;
 
+#ifndef _RDKB_LITE_
             case SA_KEY_EXCHANGE:
                 status = ta_invoke_key_exchange((sa_key_exchange_s*) command_parameter, param_types, params, context,
                         &uuid);
                 break;
+#endif  // _RDKB_LITE_
 
             case SA_KEY_RELEASE:
                 status = ta_invoke_key_release((sa_key_release_s*) command_parameter, param_types, params, context,
@@ -2049,20 +2101,25 @@ sa_status ta_invoke_command_handler(
                         context, &uuid);
                 break;
 
+#ifndef _RDKB_LITE_
             case SA_CRYPTO_CIPHER_UPDATE_IV:
                 status = ta_invoke_crypto_cipher_update_iv((sa_crypto_cipher_update_iv_s*) command_parameter,
                         param_types, params, context, &uuid);
                 break;
+#endif  // _RDKB_LITE_
 
             case SA_CRYPTO_CIPHER_PROCESS:
                 status = ta_invoke_crypto_cipher_process(false, (sa_crypto_cipher_process_s*) command_parameter,
                         param_types, params, context, &uuid);
                 break;
 
+#ifndef _RDKB_LITE_
             case SA_CRYPTO_CIPHER_PROCESS_LAST:
                 status = ta_invoke_crypto_cipher_process(true, (sa_crypto_cipher_process_s*) command_parameter,
                         param_types, params, context, &uuid);
                 break;
+#endif  // _RDKB_LITE_
+
             case SA_CRYPTO_CIPHER_RELEASE:
                 status = ta_invoke_crypto_cipher_release((sa_crypto_cipher_release_s*) command_parameter, param_types,
                         params, context, &uuid);
@@ -2078,10 +2135,12 @@ sa_status ta_invoke_command_handler(
                         context, &uuid);
                 break;
 
+#ifndef _RDKB_LITE_
             case SA_CRYPTO_MAC_PROCESS_KEY:
                 status = ta_invoke_crypto_mac_process_key((sa_crypto_mac_process_key_s*) command_parameter, param_types,
                         params, context, &uuid);
                 break;
+#endif  // _RDKB_LITE_
 
             case SA_CRYPTO_MAC_COMPUTE:
                 status = ta_invoke_crypto_mac_compute((sa_crypto_mac_compute_s*) command_parameter, param_types, params,
@@ -2097,16 +2156,22 @@ sa_status ta_invoke_command_handler(
                 status = ta_invoke_crypto_sign((sa_crypto_sign_s*) command_parameter, param_types, params, context,
                         &uuid);
                 break;
+
+#ifndef _RDKB_LITE_
             case SA_SVP_SUPPORTED:
                 status = ta_invoke_svp_supported((sa_svp_supported_s*) command_parameter, param_types, params, context,
                         &uuid);
                 break;
+#endif  // _RDKB_LITE_
 
-	    case SA_PROCESS_COMMON_ENCRYPTION:
+#ifndef _RDKB_LITE_
+            case SA_PROCESS_COMMON_ENCRYPTION:
                 status = ta_invoke_process_common_encryption((sa_process_common_encryption_s*) command_parameter,
                         param_types, params, context, &uuid);
                 break;
-            
+#endif  // _RDKB_LITE_
+
+#ifndef _RDKB_LITE_
 #ifdef ENABLE_SVP
             case SA_SVP_KEY_CHECK:
                 status = ta_invoke_svp_key_check((sa_svp_key_check_s*) command_parameter, param_types, params, context,
@@ -2139,6 +2204,8 @@ sa_status ta_invoke_command_handler(
                 break;
 
 #endif // ENABLE_SVP
+#endif  // _RDKB_LITE_
+
             default:
                 status = SA_STATUS_OPERATION_NOT_SUPPORTED;
         }

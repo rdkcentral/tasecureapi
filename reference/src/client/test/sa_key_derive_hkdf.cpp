@@ -46,6 +46,7 @@ namespace {
 
                 break;
             }
+#ifndef _RDKB_LITE_
             case SA_KEY_TYPE_DH: {
                 auto dh_parameters = get_dh_parameters(base_key_length);
                 base_key = create_uninitialized_sa_key();
@@ -65,6 +66,11 @@ namespace {
                 ASSERT_EQ(status, SA_STATUS_OK);
                 break;
             }
+#else
+            case SA_KEY_TYPE_DH:
+            case SA_KEY_TYPE_EC:
+                GTEST_SKIP() << "DH and EC base keys are not supported in lite";
+#endif  // _RDKB_LITE_
             default:
                 FAIL();
         }

@@ -715,6 +715,7 @@ static sa_status ta_sa_crypto_cipher_init_rsa_pkcs1v15(
     return status;
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_sa_crypto_cipher_init_rsa_oaep(
         sa_crypto_cipher_context* context,
         sa_cipher_mode cipher_mode,
@@ -806,7 +807,9 @@ static sa_status ta_sa_crypto_cipher_init_rsa_oaep(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
+#ifndef _RDKB_LITE_
 static sa_status ta_sa_crypto_cipher_init_ec(
         sa_crypto_cipher_context* context,
         sa_cipher_mode cipher_mode,
@@ -870,6 +873,7 @@ static sa_status ta_sa_crypto_cipher_init_ec(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
 sa_status ta_sa_crypto_cipher_init(
         sa_crypto_cipher_context* context,
@@ -890,6 +894,17 @@ sa_status ta_sa_crypto_cipher_init(
         return SA_STATUS_NULL_PARAMETER;
     }
     *context = INVALID_HANDLE;
+
+#ifdef _RDKB_LITE_
+    if (cipher_algorithm == SA_CIPHER_ALGORITHM_EC_ELGAMAL) {
+        ERROR("EC ElGamal is not supported in lite");
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+    }
+    if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
+        ERROR("RSA-OAEP is not supported in lite");
+        return SA_STATUS_OPERATION_NOT_SUPPORTED;
+    }
+#endif
 
     if (cipher_algorithm != SA_CIPHER_ALGORITHM_AES_ECB && cipher_algorithm != SA_CIPHER_ALGORITHM_AES_ECB_PKCS7 &&
             cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CBC && cipher_algorithm != SA_CIPHER_ALGORITHM_AES_CBC_PKCS7 &&
@@ -999,6 +1014,7 @@ sa_status ta_sa_crypto_cipher_init(
                 ERROR("ta_sa_crypto_cipher_init_rsa failed");
                 break;
             }
+#ifndef _RDKB_LITE_
         } else if (cipher_algorithm == SA_CIPHER_ALGORITHM_RSA_OAEP) {
             status = ta_sa_crypto_cipher_init_rsa_oaep(context, cipher_mode, stored_key,
                     (sa_cipher_parameters_rsa_oaep*) parameters, client,
@@ -1013,6 +1029,7 @@ sa_status ta_sa_crypto_cipher_init(
                 ERROR("ta_sa_crypto_cipher_init_ec failed");
                 break;
             }
+#endif  // _RDKB_LITE_
         }
 
         // stored key is now owned by cipher store

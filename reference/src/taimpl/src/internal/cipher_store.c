@@ -28,10 +28,12 @@ struct cipher_s {
     sa_cipher_mode cipher_mode;
     symmetric_context_t* symmetric_context;
     stored_key_t* stored_key;
+#ifndef _RDKB_LITE_
     sa_digest_algorithm oaep_digest_algorithm;
     sa_digest_algorithm oaep_mgf1_digest_algorithm;
     void* oaep_label;
     size_t oaep_label_length;
+#endif  // _RDKB_LITE_
     mtx_t mutex;
 };
 
@@ -101,6 +103,7 @@ const sa_rights* cipher_get_key_rights(const cipher_t* cipher) {
     return &header->rights;
 }
 
+#ifndef _RDKB_LITE_
 sa_status cipher_set_oaep_parameters(
         cipher_t* cipher,
         sa_digest_algorithm digest_algorithm,
@@ -170,6 +173,7 @@ sa_status cipher_get_oaep_parameters(
     *label_length = cipher->oaep_label_length;
     return SA_STATUS_OK;
 }
+#endif  // _RDKB_LITE_
 
 static cipher_t* cipher_alloc() {
     bool status = false;
@@ -208,8 +212,10 @@ static void cipher_free(void* object) {
 
     symmetric_context_free(cipher->symmetric_context);
     stored_key_free(cipher->stored_key);
+#ifndef _RDKB_LITE_
     if (cipher->oaep_label != NULL)
         memory_secure_free(cipher->oaep_label);
+#endif  // _RDKB_LITE_
 
     mtx_destroy(&cipher->mutex);
 

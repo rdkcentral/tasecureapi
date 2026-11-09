@@ -24,6 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST_F(SaKeyUnwrapEcTest, failsNullKey) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         auto key_size = ec_get_key_size(curve);
@@ -286,7 +287,9 @@ namespace {
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
+#endif  // _RDKB_LITE_
 
+#ifndef _RDKB_LITE_
     TEST_F(SaKeyUnwrapEcTest, failInvalidKeyLength) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         std::vector<uint8_t> wrapped_key = random(AES_BLOCK_SIZE);
@@ -358,4 +361,5 @@ namespace {
                 wrapped_key.data(), wrapped_key.size());
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 } // namespace

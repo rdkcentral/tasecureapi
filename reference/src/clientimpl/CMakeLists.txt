@@ -49,50 +49,63 @@ set(SACLIENTIMPL_SOURCES
         src/internal/client.h
         src/porting/ta_client.c
         src/porting/ta_client.h
-        src/porting/sa_key_provision_impl.c
+        )
+
+# The calls FKPS/AUTHN need, built in every configuration
+set(SACLIENTIMPL_FKPS_AUTHN_SOURCES
         src/sa_crypto_cipher_init.c
         src/sa_crypto_cipher_process.c
-        src/sa_crypto_cipher_process_last.c
         src/sa_crypto_cipher_release.c
-        src/sa_crypto_cipher_update_iv.c
         src/sa_crypto_mac_compute.c
         src/sa_crypto_mac_init.c
         src/sa_crypto_mac_process.c
-        src/sa_crypto_mac_process_key.c
         src/sa_crypto_mac_release.c
         src/sa_crypto_random.c
         src/sa_crypto_sign.c
         src/sa_get_device_id.c
-        src/sa_get_name.c
-        src/sa_get_ta_uuid.c
         src/sa_get_version.c
         src/sa_key_derive.c
-        src/sa_key_provision.c
         src/sa_key_digest.c
-        src/sa_key_exchange.c
         src/sa_key_export.c
-        src/sa_key_generate.c
-        src/sa_key_get_public.c
         src/sa_key_header.c
         src/sa_key_import.c
         src/sa_key_release.c
         src/sa_key_unwrap.c
-        src/sa_process_common_encryption.c
-	src/sa_svp_supported.c
-	)
-if(ENABLE_SVP)
-    list(APPEND SACLIENTIMPL_SOURCES 
-	src/porting/sa_svp_memory_alloc.c
-	src/porting/sa_svp_memory_free.c
-	src/sa_svp_buffer_check.c
-	src/sa_svp_buffer_alloc.c
-	src/sa_svp_buffer_copy.c
-	src/sa_svp_buffer_free.c
-	src/sa_svp_buffer_release.c
-	src/sa_svp_buffer_write.c
-	src/sa_svp_key_check.c
-	src/sa_svp_buffer_create.c
         )
+
+if(DEFINED _RDKB_LITE_)
+    # Lite mode: only the calls above
+    list(APPEND SACLIENTIMPL_SOURCES ${SACLIENTIMPL_FKPS_AUTHN_SOURCES})
+else()
+    # Full build: the calls above plus the rest
+    list(APPEND SACLIENTIMPL_SOURCES ${SACLIENTIMPL_FKPS_AUTHN_SOURCES}
+        src/porting/sa_key_provision_impl.c
+        src/sa_crypto_cipher_process_last.c
+        src/sa_crypto_cipher_update_iv.c
+        src/sa_crypto_mac_process_key.c
+        src/sa_get_name.c
+        src/sa_get_ta_uuid.c
+        src/sa_key_provision.c
+        src/sa_key_exchange.c
+        src/sa_key_generate.c
+        src/sa_key_get_public.c
+        src/sa_process_common_encryption.c
+        src/sa_svp_supported.c
+        )
+    if(ENABLE_SVP)
+        list(APPEND SACLIENTIMPL_SOURCES
+            src/porting/sa_svp_memory_alloc.c
+            src/porting/sa_svp_memory_free.c
+            src/sa_svp_buffer_check.c
+            src/sa_svp_buffer_alloc.c
+            src/sa_svp_buffer_copy.c
+            src/sa_svp_buffer_free.c
+            src/sa_svp_buffer_release.c
+            src/sa_svp_buffer_write.c
+            src/sa_svp_key_check.c
+            src/sa_svp_buffer_create.c
+            )
+    endif()
 endif()
 
 add_library(saclientimpl STATIC ${SACLIENTIMPL_SOURCES})

@@ -34,6 +34,11 @@ static bool valid_rsa_size(size_t size) {
 }
 
 static bool valid_ec_size(sa_elliptic_curve curve, size_t size) {
+#ifdef _RDKB_LITE_
+    (void) curve;
+    (void) size;
+    return false;
+#else
     return (curve == SA_ELLIPTIC_CURVE_NIST_P192 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_NIST_P192)) ||
            (curve == SA_ELLIPTIC_CURVE_NIST_P224 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_NIST_P224)) ||
            (curve == SA_ELLIPTIC_CURVE_NIST_P256 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_NIST_P256)) ||
@@ -43,6 +48,7 @@ static bool valid_ec_size(sa_elliptic_curve curve, size_t size) {
            (curve == SA_ELLIPTIC_CURVE_X25519 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_X25519)) ||
            (curve == SA_ELLIPTIC_CURVE_ED448 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_ED448)) ||
            (curve == SA_ELLIPTIC_CURVE_X448 && size == ec_key_size_from_curve(SA_ELLIPTIC_CURVE_X448));
+#endif  // _RDKB_LITE_
 }
 
 static bool valid_dh_size(size_t size) {

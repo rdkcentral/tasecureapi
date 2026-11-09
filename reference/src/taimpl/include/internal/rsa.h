@@ -109,6 +109,7 @@ sa_status rsa_decrypt_pkcs1v15(
  * @param[in] in_length input data length.
  * @return status of the operation.
  */
+#ifndef _RDKB_LITE_
 sa_status rsa_decrypt_oaep(
         void* out,
         size_t* out_length,
@@ -119,6 +120,7 @@ sa_status rsa_decrypt_oaep(
         size_t label_length,
         const void* in,
         size_t in_length);
+#endif  // _RDKB_LITE_
 
 /**
  * Sign a message using RSA PKCS1v15 padding.
@@ -155,6 +157,7 @@ sa_status rsa_sign_pkcs1v15(
  * @param[in] precomputed_digest indicates if in contains the digest.
  * @return status of the operation.
  */
+#ifndef _RDKB_LITE_
 sa_status rsa_sign_pss(
         void* out,
         size_t* out_length,
@@ -165,6 +168,7 @@ sa_status rsa_sign_pss(
         const void* in,
         size_t in_length,
         bool precomputed_digest);
+#endif  // _RDKB_LITE_
 
 /**
  * Generate an RSA key. This is an optional feature and this function can return SA_STATUS_OPERATION_NOT_SUPPORTED.

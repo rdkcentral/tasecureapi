@@ -258,6 +258,7 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(nullptr),
                 ::testing::ValuesIn(cmac_key_lengths)));
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         Cmac,
         SaCryptoMacProcessKey,
@@ -265,6 +266,7 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_MAC_ALGORITHM_CMAC),
                 ::testing::Values(nullptr),
                 ::testing::ValuesIn(cmac_key_lengths)));
+#endif  // _RDKB_LITE_
 
 INSTANTIATE_TEST_SUITE_P(
         Cmac,
@@ -274,6 +276,7 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(nullptr),
                 ::testing::ValuesIn(cmac_key_lengths)));
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         Cmac,
         SaCryptoMacProcessKeyArgChecks,
@@ -281,6 +284,7 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_MAC_ALGORITHM_CMAC),
                 ::testing::Values(nullptr),
                 ::testing::ValuesIn(cmac_key_lengths)));
+#endif  // _RDKB_LITE_
 
 INSTANTIATE_TEST_SUITE_P(
         Hmac,
@@ -290,6 +294,7 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::ValuesIn(hmac_params_list),
                 ::testing::ValuesIn(hmac_key_lengths)));
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         Hmac,
         SaCryptoMacProcessKey,
@@ -297,6 +302,7 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_MAC_ALGORITHM_HMAC),
                 ::testing::ValuesIn(hmac_params_list),
                 ::testing::ValuesIn(hmac_key_lengths)));
+#endif  // _RDKB_LITE_
 
 INSTANTIATE_TEST_SUITE_P(
         Hmac,
@@ -306,6 +312,7 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::ValuesIn(hmac_params_list),
                 ::testing::ValuesIn(hmac_key_lengths)));
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         Hmac,
         SaCryptoMacProcessKeyArgChecks,
@@ -313,6 +320,7 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_MAC_ALGORITHM_HMAC),
                 ::testing::ValuesIn(hmac_params_list),
                 ::testing::ValuesIn(hmac_key_lengths)));
+#endif  // _RDKB_LITE_
 
 INSTANTIATE_TEST_SUITE_P(
         Cmac,

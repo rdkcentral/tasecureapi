@@ -43,6 +43,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
 
+#ifndef _RDKB_LITE_
     TEST_F(SaCryptoCipherWithoutSvpTest, initAesEcbPkcs7FailsInvalidKeyType) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         auto clear_key = ec_generate_key_bytes(curve);
@@ -64,4 +65,5 @@ namespace {
             GTEST_SKIP() << "Cipher algorithm not supported";
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
+#endif  // _RDKB_LITE_
 } // namespace

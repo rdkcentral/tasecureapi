@@ -18,6 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #include "sa_engine_common.h"
 // These tests fail on OpenSSL 1.1.1f, so disable them.
 #if OPENSSL_VERSION_NUMBER > 0x1010106f && OPENSSL_VERSION_NUMBER < 0x30000000
@@ -141,3 +143,5 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_MAC_ALGORITHM_HMAC)));
 // clang-format on
 #endif
+
+#endif  // _RDKB_LITE_

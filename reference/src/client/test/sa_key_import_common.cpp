@@ -83,6 +83,7 @@ bool SaKeyImportBase::convert_uuid(
     return true;
 }
 
+#ifndef _RDKB_LITE_
 std::string SaKeyImportTypejBase::generate_header() {
     std::string const hdr = R"({"alg":"HS256","kid":"sessionid"})";
     return b64_encode(hdr.data(), hdr.size(), true);
@@ -475,6 +476,7 @@ void SaKeyImportTypejBase::typej_rights_set_allow_all(sa_rights* rights) {
     SA_USAGE_BIT_CLEAR(rights->usage_flags, SA_USAGE_FLAG_KEY_EXCHANGE);
     SA_USAGE_BIT_CLEAR(rights->usage_flags, SA_USAGE_FLAG_ALLOWED_DIGITAL_UNPROTECTED);
 }
+#endif  // _RDKB_LITE_
 
 std::vector<std::string> SaKeyImportSocBase::ENTITLED_TA_IDS = {
         "157f768f-bad0-470b-929d-0d7dec29d220",
@@ -841,6 +843,7 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_4096_BYTE_LENGTH)));
 
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         SaKeyProvisionNetflixTests,
         SaKeyProvisionNetflixTest,
@@ -936,6 +939,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 INSTANTIATE_TEST_SUITE_P(SaKeyImportTypejTest, SaKeyImportTypejTaIdRangeTest,
     ::testing::Range(0, MAX_NUM_ALLOWED_TA_IDS + 1));
+#endif  // _RDKB_LITE_
 
 #ifdef ENABLE_SOC_KEY_TESTS
 

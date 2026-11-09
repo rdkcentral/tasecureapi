@@ -61,6 +61,7 @@ namespace {
         ASSERT_TRUE(verify_encrypt(out_buffer.get(), clear, parameters, false));
     }
 
+#ifndef _RDKB_LITE_
     TEST_P(SaCryptoCipherDecryptTest, processNominal) {
         cipher_parameters parameters;
         parameters.cipher_algorithm = std::get<0>(GetParam());
@@ -116,6 +117,7 @@ namespace {
         // Verify the decryption.
         ASSERT_TRUE(verify_decrypt(out_buffer.get(), clear));
     }
+#endif  // _RDKB_LITE_
 
     TEST_P(SaCryptoCipherWithSvpTest, processFailsInvalidOutLength) {
         sa_buffer_type const buffer_type = std::get<0>(GetParam());

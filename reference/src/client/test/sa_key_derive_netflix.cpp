@@ -24,6 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST_F(SaKeyDeriveNetflixTest, nominal) {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -248,4 +249,5 @@ namespace {
         sa_status const status = sa_key_derive(key.get(), &rights, SA_KDF_ALGORITHM_NETFLIX, &kdf_parameters_netflix);
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
+#endif  // _RDKB_LITE_
 } // namespace

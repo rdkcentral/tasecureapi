@@ -56,6 +56,7 @@ sa_status client_thread_verify(
         return SA_STATUS_INVALID_PARAMETER;
     }
 
+#ifndef _RDKB_LITE_
     if (sa_svp_supported() == SA_STATUS_OK) {
         sa_svp_offset offsets = {0, 0, in_buffer.size()};
         status = sa_svp_buffer_write(svp_buffer, in_buffer.data(), in_buffer.size(), &offsets, 1);
@@ -83,6 +84,7 @@ sa_status client_thread_verify(
     } else {
         status = SA_STATUS_OK;
     }
+#endif  // _RDKB_LITE_
 
     return status;
 }
@@ -117,6 +119,7 @@ namespace {
                     }
                 });
 
+#ifndef _RDKB_LITE_
         if (sa_svp_supported() == SA_STATUS_OK) {
             status = sa_svp_memory_alloc(&svp_memory, AES_BLOCK_SIZE);
             ASSERT_EQ(status, SA_STATUS_OK);
@@ -129,6 +132,7 @@ namespace {
             status = sa_svp_buffer_write(*svp_buffer, in.data(), in.size(), &offset, 1);
             ASSERT_EQ(status, SA_STATUS_OK);
         }
+#endif  // _RDKB_LITE_
 
         std::future<sa_status> future = std::async(client_thread_verify, *key, *cipher_context, *mac_context,
                 *svp_buffer, svp_memory, AES_BLOCK_SIZE);

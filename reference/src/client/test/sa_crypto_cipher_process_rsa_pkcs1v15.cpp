@@ -147,6 +147,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_VERIFICATION_FAILED);
     }
 
+#ifndef _RDKB_LITE_
     TEST_F(SaCryptoCipherSvpOnlyTest, processRsaPkcs1v15FailsInvalidBufferType) {
         auto clear_key = sample_rsa_2048_pkcs8();
 
@@ -188,4 +189,5 @@ namespace {
         status = sa_crypto_cipher_process(out_buffer.get(), *cipher, in_buffer.get(), &bytes_to_process);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
+#endif  // _RDKB_LITE_
 } // namespace

@@ -24,6 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST_F(SaKeyImportTypejTest, nominalTypejV1) {
         auto clear_key = random(SYM_128_KEY_SIZE);
 
@@ -615,4 +616,5 @@ namespace {
                 &parameters);
         ASSERT_EQ(status, SA_STATUS_OPERATION_NOT_ALLOWED);
     }
+#endif  // _RDKB_LITE_
 } // namespace

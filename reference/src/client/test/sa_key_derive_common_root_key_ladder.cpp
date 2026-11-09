@@ -79,6 +79,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
 
+#ifndef _RDKB_LITE_
     TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsNullRights) {
         sa_rights rights;
         sa_rights_set_allow_all(&rights);
@@ -120,6 +121,7 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
     }
+#endif  // _RDKB_LITE_
 
     TEST_F(SaKeyDeriveCommonRootKeyLadderTest, failsNullC1) {
         sa_kdf_algorithm const kdf_algorithm = SA_KDF_ALGORITHM_COMMON_ROOT_KEY_LADDER;

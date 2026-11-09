@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #include "client_test_helpers.h"
 #include "sa.h"
 #include "sa_key.h"
@@ -434,3 +436,5 @@ static bool readWidevineData(WidevineOemProvisioning **wvProvision) {
    return true;
 }
 #endif // FILE_BASED_FETCH_KEY
+
+#endif  // _RDKB_LITE_

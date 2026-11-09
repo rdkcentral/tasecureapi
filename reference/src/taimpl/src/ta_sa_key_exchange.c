@@ -198,6 +198,7 @@ static sa_status ta_sa_key_exchange_ecdh(
     return status;
 }
 
+#ifndef _RDKB_LITE_
 static sa_status ta_sa_key_exchange_netflix_dh(
         sa_key* key,
         const sa_rights* rights,
@@ -383,6 +384,7 @@ static sa_status ta_sa_key_exchange_netflix_dh(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
 sa_status ta_sa_key_exchange(
         sa_key* key,
@@ -440,6 +442,7 @@ sa_status ta_sa_key_exchange(
                 break;
             }
         } else if (key_exchange_algorithm == SA_KEY_EXCHANGE_ALGORITHM_NETFLIX_AUTHENTICATED_DH) {
+#ifndef _RDKB_LITE_
             if (parameters == NULL) {
                 ERROR("NULL parameters");
                 status = SA_STATUS_NULL_PARAMETER;
@@ -453,6 +456,10 @@ sa_status ta_sa_key_exchange(
                 ERROR("ta_sa_key_exchange_netflix_dh failed");
                 break;
             }
+#else
+            ERROR("Netflix key exchange is not supported in lite");
+            status = SA_STATUS_OPERATION_NOT_SUPPORTED;
+#endif  // _RDKB_LITE_
         } else {
             ERROR("Unknown algorithm encountered");
             status = SA_STATUS_INVALID_PARAMETER;

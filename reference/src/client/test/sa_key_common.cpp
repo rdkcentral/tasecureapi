@@ -283,6 +283,7 @@ bool SaKeyBase::dh_compute_secret(
     return true;
 }
 
+#ifndef _RDKB_LITE_
 sa_status SaKeyBase::ec_generate_key(
         sa_elliptic_curve curve,
         std::shared_ptr<EVP_PKEY>& private_key,
@@ -316,6 +317,7 @@ sa_status SaKeyBase::ec_generate_key(
 
     return SA_STATUS_OK;
 }
+#endif  // _RDKB_LITE_
 
 bool SaKeyBase::ecdh_compute_secret(
         std::vector<uint8_t>& shared_secret,
@@ -361,6 +363,7 @@ bool SaKeyBase::ecdh_compute_secret(
     return true;
 }
 
+#ifndef _RDKB_LITE_
 bool SaKeyBase::execute_dh(
         std::shared_ptr<sa_key>& shared_secret,
         std::vector<uint8_t>& clear_shared_secret,
@@ -452,6 +455,7 @@ sa_status SaKeyBase::execute_ecdh(
 
     return status;
 }
+#endif  // _RDKB_LITE_
 
 std::shared_ptr<std::vector<uint8_t>> SaKeyBase::derive_test_key_ladder(
         std::vector<uint8_t>& key,
@@ -748,6 +752,7 @@ bool SaKeyBase::cmac_kdf(
     return true;
 }
 
+#ifndef _RDKB_LITE_
 bool SaKeyBase::netflix_wrapping_key_kdf(
         std::vector<uint8_t>& out,
         const std::vector<uint8_t>& encryption_key,
@@ -770,6 +775,7 @@ bool SaKeyBase::netflix_wrapping_key_kdf(
     out.resize(AES_BLOCK_SIZE);
     return true;
 }
+#endif  // _RDKB_LITE_
 
 std::string SaKeyBase::b64_encode(
         const void* in,
@@ -829,11 +835,13 @@ bool SaKeyBase::key_check(
     if (key_type == SA_KEY_TYPE_SYMMETRIC)
         return key_check_sym(key, clear_key);
 
+#ifndef _RDKB_LITE_
     if (key_type == SA_KEY_TYPE_RSA)
         return key_check_rsa(key, clear_key);
 
     if (key_type == SA_KEY_TYPE_EC)
         return key_check_ec(key, clear_key);
+#endif  // _RDKB_LITE_
 
     return true;
 }
@@ -876,6 +884,7 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
                     SA_DIGEST_ALGORITHM_SHA512)));
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         SaKeyGenerateTests,
         SaKeyGenerateTest,
@@ -903,7 +912,9 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_2048_BYTE_LENGTH),
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_3072_BYTE_LENGTH),
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_4096_BYTE_LENGTH)));
+#endif  // _RDKB_LITE_
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         SaKeyGetPublicTests,
         SaKeyGetPublicTest,
@@ -927,5 +938,6 @@ INSTANTIATE_TEST_SUITE_P(
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_2048_BYTE_LENGTH),
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_3072_BYTE_LENGTH),
                 std::make_tuple(SA_KEY_TYPE_RSA, RSA_4096_BYTE_LENGTH)));
+#endif  // _RDKB_LITE_
 
 // clang-format on

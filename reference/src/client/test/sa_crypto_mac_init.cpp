@@ -138,6 +138,7 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_PARAMETER);
     }
 
+#ifndef _RDKB_LITE_
     TEST_P(SaCryptoMacInitArgChecks, failsInvalidKeyType) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());
@@ -158,6 +159,7 @@ namespace {
         sa_status const status = sa_crypto_mac_init(mac.get(), mac_algorithm, *key, parameters);
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
+#endif  // _RDKB_LITE_
 
     TEST_P(SaCryptoMacInitKeyRights, failsSignNotSet) {
         sa_mac_algorithm const mac_algorithm = std::get<0>(GetParam());

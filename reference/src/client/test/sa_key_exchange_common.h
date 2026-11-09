@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #ifndef SA_KEY_EXCHANGE_COMMON_H
 #define SA_KEY_EXCHANGE_COMMON_H
 
@@ -60,3 +62,5 @@ protected:
 };
 
 #endif // SA_KEY_EXCHANGE_COMMON_H
+
+#endif  // _RDKB_LITE_

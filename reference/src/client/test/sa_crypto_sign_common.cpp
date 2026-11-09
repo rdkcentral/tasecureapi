@@ -57,6 +57,7 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(0),
                 ::testing::Values(true, false)));
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         SaCryptoSignRsaPss,
         SaCryptoSign,
@@ -139,4 +140,5 @@ INSTANTIATE_TEST_SUITE_P(
                     SA_DIGEST_ALGORITHM_SHA384, 462, false),
                 std::make_tuple(SA_SIGNATURE_ALGORITHM_RSA_PSS, RSA_4096_BYTE_LENGTH, SA_DIGEST_ALGORITHM_SHA512,
                     SA_DIGEST_ALGORITHM_SHA512, 446, false)));
+#endif  // _RDKB_LITE_
 // clang-format on

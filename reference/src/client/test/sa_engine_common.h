@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #ifndef SA_ENGINE_COMMON_H
 #define SA_ENGINE_COMMON_H
 
@@ -93,3 +95,5 @@ class SaEnginePkeyMacTest : public ::testing::TestWithParam<SaEnginePkeyMacTestT
 
 #endif
 #endif //SA_ENGINE_COMMON_H
+
+#endif  // _RDKB_LITE_

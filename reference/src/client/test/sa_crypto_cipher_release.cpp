@@ -48,6 +48,11 @@ namespace {
         parameters.oaep_mgf1_digest_algorithm = std::get<5>(GetParam());
         parameters.oaep_label_length = std::get<6>(GetParam());
 
+#ifdef _RDKB_LITE_
+        if (key_type == SA_KEY_TYPE_EC)
+            GTEST_SKIP() << "EC keys are not supported in lite";
+#endif  // _RDKB_LITE_
+
         auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, key_type, key_size, parameters);
         ASSERT_NE(cipher, nullptr);
         if (*cipher == UNSUPPORTED_CIPHER)

@@ -67,6 +67,7 @@ sa_status SaKeyUnwrapBase::wrap_key(
                     wrapping_key_size, clear_key, wrapping_algorithm, oaep_digest_algorithm,
                     oaep_mgf1_digest_algorithm, oaep_label_length);
 
+#ifndef _RDKB_LITE_
         case SA_CIPHER_ALGORITHM_EC_ELGAMAL:
             sa_elliptic_curve curve;
             if (wrapping_key_size == ec_get_key_size(SA_ELLIPTIC_CURVE_NIST_P192))
@@ -84,6 +85,8 @@ sa_status SaKeyUnwrapBase::wrap_key(
 
             return wrap_key_el_gamal(wrapping_key, clear_wrapping_key, wrapped_key, wrapping_parameters,
                     wrapping_key_size, clear_key, curve);
+
+#endif  // _RDKB_LITE_
 
         default:
             return SA_STATUS_INVALID_PARAMETER;
@@ -389,6 +392,7 @@ sa_status SaKeyUnwrapBase::wrap_key_rsa(
     return SA_STATUS_OK;
 }
 
+#ifndef _RDKB_LITE_
 sa_status SaKeyUnwrapBase::wrap_key_el_gamal(
         std::shared_ptr<sa_key>& wrapping_key,
         std::vector<uint8_t>& clear_wrapping_key,
@@ -445,6 +449,7 @@ sa_status SaKeyUnwrapBase::wrap_key_el_gamal(
 
     return SA_STATUS_OK;
 }
+#endif  // _RDKB_LITE_
 
 // clang-format off
 INSTANTIATE_TEST_SUITE_P(
@@ -740,6 +745,7 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
                 ::testing::Values(0))));
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         SaKeyUnwrapAesRsaOaep1024Tests,
         SaKeyUnwrapTest,
@@ -802,7 +808,9 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_DIGEST_ALGORITHM_SHA1, SA_DIGEST_ALGORITHM_SHA256, SA_DIGEST_ALGORITHM_SHA384,
                     SA_DIGEST_ALGORITHM_SHA512),
                 ::testing::Values(0, 16))));
+#endif  // _RDKB_LITE_
 
+#ifndef _RDKB_LITE_
 INSTANTIATE_TEST_SUITE_P(
         SaKeyUnwrapEcTests,
         SaKeyUnwrapTest,
@@ -820,6 +828,7 @@ INSTANTIATE_TEST_SUITE_P(
                 ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
                 ::testing::Values(SA_DIGEST_ALGORITHM_SHA1),
                 ::testing::Values(0))));
+#endif  // _RDKB_LITE_
 
 INSTANTIATE_TEST_SUITE_P(
         SaKeyUnwrapAesCbcTests,
@@ -832,6 +841,8 @@ INSTANTIATE_TEST_SUITE_P(
         SaKeyUnwrapRsaTests,
         SaKeyUnwrapRsaTest,
         ::testing::Values(
+#ifndef _RDKB_LITE_
             SA_CIPHER_ALGORITHM_RSA_OAEP,
+#endif  // _RDKB_LITE_
             SA_CIPHER_ALGORITHM_RSA_PKCS1V15));
 // clang-format on

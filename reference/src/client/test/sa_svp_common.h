@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef _RDKB_LITE_
+
 #ifndef SA_SVP_COMMON_H
 #define SA_SVP_COMMON_H
 #ifdef ENABLE_SVP
@@ -49,3 +51,5 @@ class SaSvpKeyCheckTest : public SaSvpBase {};
 
 #endif // ENABLE_SVP
 #endif // SA_SVP_COMMON_H
+
+#endif  // _RDKB_LITE_

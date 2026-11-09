@@ -24,6 +24,7 @@
 using namespace client_test_helpers;
 
 namespace {
+#ifndef _RDKB_LITE_
     TEST_F(SaCryptoCipherWithoutSvpTest, initAesCtrFailsInvalidKeyType) {
         auto curve = SA_ELLIPTIC_CURVE_NIST_P256;
         auto clear_key = ec_generate_key_bytes(curve);
@@ -48,6 +49,7 @@ namespace {
 
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_TYPE);
     }
+#endif  // _RDKB_LITE_
 
     TEST_F(SaCryptoCipherWithoutSvpTest, initAesCtrFailsNullParameters) {
         auto clear_key = random(SYM_128_KEY_SIZE);
