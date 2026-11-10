@@ -396,7 +396,12 @@ static sa_status parse_payload(
     size_t b64_iv_length;
     const char* iv = json_value_as_string(&b64_iv_length, iv_field->value);
     size_t iv_length = b64_decoded_length(b64_iv_length);
-    if (!b64_decode(payload->iv, &iv_length, iv, b64_iv_length, false) && iv_length != GCM_IV_LENGTH) {
+    if (iv_length > GCM_IV_LENGTH) {
+        ERROR("Invalid iv length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
+    if (!b64_decode(payload->iv, &iv_length, iv, b64_iv_length, false) || iv_length != GCM_IV_LENGTH) {
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
