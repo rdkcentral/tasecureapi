@@ -451,6 +451,9 @@ static sa_status parse_payload(
         memory_internal_free(entitled_ta_ids);
     }
 
+    // A 16-byte value encodes to 22/24 chars, for which b64_decode requires 18 bytes of output space.
+    uint8_t c_decoded[AES_BLOCK_SIZE + 2];
+
     // read c1
     const json_key_value_t* c1_field = json_key_value_find("c1", fields, fields_count);
     if (c1_field == NULL) {
@@ -461,11 +464,17 @@ static sa_status parse_payload(
     size_t b64_c1_length;
     const char* c1 = json_value_as_string(&b64_c1_length, c1_field->value);
     size_t c1_length = b64_decoded_length(b64_c1_length);
-    if (!b64_decode(payload->key_ladder_inputs.c1, &c1_length, c1, b64_c1_length, false) &&
-            c1_length != AES_BLOCK_SIZE) {
+    if (c1_length > sizeof(c_decoded)) {
+        ERROR("Invalid c1 length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
+    if (!b64_decode(c_decoded, &c1_length, c1, b64_c1_length, false) || c1_length != AES_BLOCK_SIZE) {
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
+
+    memcpy(payload->key_ladder_inputs.c1, c_decoded, AES_BLOCK_SIZE);
 
     // read c2
     const json_key_value_t* c2_field = json_key_value_find("c2", fields, fields_count);
@@ -477,11 +486,17 @@ static sa_status parse_payload(
     size_t b64_c2_length;
     const char* c2 = json_value_as_string(&b64_c2_length, c2_field->value);
     size_t c2_length = b64_decoded_length(b64_c2_length);
-    if (!b64_decode(payload->key_ladder_inputs.c2, &c2_length, c2, b64_c2_length, true) &&
-            c2_length != AES_BLOCK_SIZE) {
+    if (c2_length > sizeof(c_decoded)) {
+        ERROR("Invalid c2 length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
+    if (!b64_decode(c_decoded, &c2_length, c2, b64_c2_length, true) || c2_length != AES_BLOCK_SIZE) {
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
+
+    memcpy(payload->key_ladder_inputs.c2, c_decoded, AES_BLOCK_SIZE);
 
     // read c3
     const json_key_value_t* c3_field = json_key_value_find("c3", fields, fields_count);
@@ -493,11 +508,17 @@ static sa_status parse_payload(
     size_t b64_c3_length;
     const char* c3 = json_value_as_string(&b64_c3_length, c3_field->value);
     size_t c3_length = b64_decoded_length(b64_c3_length);
-    if (!b64_decode(payload->key_ladder_inputs.c3, &c3_length, c3, b64_c3_length, false) &&
-            c3_length != AES_BLOCK_SIZE) {
+    if (c3_length > sizeof(c_decoded)) {
+        ERROR("Invalid c3 length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
+    if (!b64_decode(c_decoded, &c3_length, c3, b64_c3_length, false) || c3_length != AES_BLOCK_SIZE) {
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
+
+    memcpy(payload->key_ladder_inputs.c3, c_decoded, AES_BLOCK_SIZE);
 
     return SA_STATUS_OK;
 }
