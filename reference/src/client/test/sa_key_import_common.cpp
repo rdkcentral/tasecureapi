@@ -614,6 +614,26 @@ std::string SaKeyImportSocBase::generate_payload(
     return b64_encode(oss.str().data(), oss.str().size(), true);
 }
 
+std::string SaKeyImportSocBase::generate_raw_container(
+        const std::string& iv_b64,
+        const std::string& c1_b64,
+        const std::string& c2_b64,
+        const std::string& c3_b64) {
+
+    auto encrypted_key = random(SYM_128_KEY_SIZE);
+    auto tag = random(MAX_GCM_TAG_LENGTH);
+
+    std::ostringstream oss;
+    oss << R"({"containerVersion": 5, "keyType": "AES-128", "encryptedKey": ")"
+        << b64_encode(encrypted_key.data(), encrypted_key.size(), false) << R"(", "iv": ")" << iv_b64
+        << R"(", "keyUsage": 3, "c1": ")" << c1_b64 << R"(", "c2": ")" << c2_b64 << R"(", "c3": ")" << c3_b64
+        << "\"}";
+
+    std::string const payload = oss.str();
+    return generate_header() + "." + b64_encode(payload.data(), payload.size(), true) + "." +
+           b64_encode(tag.data(), tag.size(), true);
+}
+
 void SaKeyImportSocBase::set_key_usage_flags(
         uint8_t key_usage,
         uint8_t decrypted_key_usage,
