@@ -31,6 +31,9 @@
 
 #define AES_128_GCM "A128GCM"
 #define MAX_AAD_SIZE 1300
+// Upper bound on the keyType JSON string. Longest supported name is CHACHA20-256 (12 chars); 16 leaves headroom for
+// longer names. Exact matching is done in get_key_type_and_size.
+#define MAX_KEY_TYPE_STRING_LENGTH 16
 #define SOC_CONTAINER_VERSION 4
 #define UNIQUE_STR "unique"
 #define COMMON_STR "common"
@@ -363,6 +366,11 @@ static sa_status parse_payload(
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
+    if (payload->key_type_string_length > MAX_KEY_TYPE_STRING_LENGTH) {
+        ERROR("Invalid keyType length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
     // read encrypted key
     const json_key_value_t* encrypted_key_field = json_key_value_find("encryptedKey", fields, fields_count);
     if (encrypted_key_field == NULL) {
@@ -523,8 +531,26 @@ static sa_status parse_payload(
     return SA_STATUS_OK;
 }
 
+static bool aad_append(
+        uint8_t* aad,
+        size_t aad_size,
+        size_t* length,
+        const void* data,
+        size_t data_length) {
+
+    if (data_length > aad_size - *length) {
+        ERROR("AAD exceeds buffer size");
+        return false;
+    }
+
+    memcpy(aad + *length, data, data_length);
+    *length += data_length;
+    return true;
+}
+
 static size_t build_aad(
         uint8_t* aad,
+        size_t aad_size,
         soc_kc_header_t* header,
         soc_kc_payload_t* payload) {
     size_t length = 0;
@@ -551,8 +577,8 @@ static size_t build_aad(
         return 0;
     }
 
-    memcpy(aad, header->alg, header->alg_size);
-    length += header->alg_size;
+    if (!aad_append(aad, aad_size, &length, header->alg, header->alg_size))
+        return 0;
 
     // container version
     if (payload->container_version < SOC_CONTAINER_VERSION) {
@@ -560,17 +586,17 @@ static size_t build_aad(
         return 0;
     }
 
-    *(aad + length) = payload->container_version;
-    length++;
+    if (!aad_append(aad, aad_size, &length, &payload->container_version, 1))
+        return 0;
 
     // root key type
     if (payload->container_version >= 5) {
         if (payload->root_key_type == UNIQUE) {
-            memcpy(aad + length, UNIQUE_STR, strlen(UNIQUE_STR)); // NOLINT
-            length += strlen(UNIQUE_STR);
+            if (!aad_append(aad, aad_size, &length, UNIQUE_STR, strlen(UNIQUE_STR)))
+                return 0;
         } else if (payload->root_key_type == COMMON) {
-            memcpy(aad + length, COMMON_STR, strlen(COMMON_STR)); // NOLINT
-            length += strlen(COMMON_STR);
+            if (!aad_append(aad, aad_size, &length, COMMON_STR, strlen(COMMON_STR)))
+                return 0;
         }
     }
 
@@ -580,8 +606,8 @@ static size_t build_aad(
         return 0;
     }
 
-    memcpy(aad + length, payload->key_type_string, payload->key_type_string_length);
-    length += payload->key_type_string_length;
+    if (!aad_append(aad, aad_size, &length, payload->key_type_string, payload->key_type_string_length))
+        return 0;
 
     // key usage value
     if (payload->key_usage == 0 || payload->key_usage > SOC_DATA_AND_KEY) {
@@ -600,8 +626,8 @@ static size_t build_aad(
         return 0;
     }
 
-    *(aad + length) = payload->key_usage;
-    length++;
+    if (!aad_append(aad, aad_size, &length, &payload->key_usage, 1))
+        return 0;
 
     if (payload->key_usage == KEY_ONLY) {
         if (payload->decrypted_key_usage == 0 || payload->decrypted_key_usage > SOC_DATA_AND_KEY) {
@@ -609,25 +635,25 @@ static size_t build_aad(
             return 0;
         }
 
-        *(aad + length) = payload->decrypted_key_usage;
-        length++;
+        if (!aad_append(aad, aad_size, &length, &payload->decrypted_key_usage, 1))
+            return 0;
     }
 
     // iv
-    memcpy(aad + length, payload->iv, GCM_IV_LENGTH);
-    length += GCM_IV_LENGTH;
+    if (!aad_append(aad, aad_size, &length, payload->iv, GCM_IV_LENGTH))
+        return 0;
 
     // c1
-    memcpy(aad + length, payload->key_ladder_inputs.c1, AES_BLOCK_SIZE);
-    length += AES_BLOCK_SIZE;
+    if (!aad_append(aad, aad_size, &length, payload->key_ladder_inputs.c1, AES_BLOCK_SIZE))
+        return 0;
 
     // c2
-    memcpy(aad + length, payload->key_ladder_inputs.c2, AES_BLOCK_SIZE);
-    length += AES_BLOCK_SIZE;
+    if (!aad_append(aad, aad_size, &length, payload->key_ladder_inputs.c2, AES_BLOCK_SIZE))
+        return 0;
 
     // c3
-    memcpy(aad + length, payload->key_ladder_inputs.c3, AES_BLOCK_SIZE);
-    length += AES_BLOCK_SIZE;
+    if (!aad_append(aad, aad_size, &length, payload->key_ladder_inputs.c3, AES_BLOCK_SIZE))
+        return 0;
 
     // entitled ta ids
     if (payload->entitled_ta_ids_length > MAX_NUM_ALLOWED_TA_IDS) {
@@ -636,9 +662,10 @@ static size_t build_aad(
     }
 
     for (size_t i = 0; i < payload->entitled_ta_ids_length; i++) {
-        memcpy(aad + length, payload->entitled_ta_ids[i].ta_id, UUID_LENGTH);
-        string_to_lowercase(aad + length, UUID_LENGTH);
-        length += UUID_LENGTH;
+        if (!aad_append(aad, aad_size, &length, payload->entitled_ta_ids[i].ta_id, UUID_LENGTH))
+            return 0;
+
+        string_to_lowercase(aad + length - UUID_LENGTH, UUID_LENGTH);
     }
 
     return length;
@@ -796,13 +823,6 @@ static sa_status decrypt_key_and_verify_mac(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    uint8_t aad[MAX_AAD_SIZE];
-    size_t aad_length = build_aad(aad, header, payload);
-    if (aad_length == 0) {
-        ERROR("build_aad failed");
-        return SA_STATUS_INVALID_KEY_FORMAT;
-    }
-
     sa_key_type key_type;
     size_t key_size;
     key_subtype subtype;
@@ -810,6 +830,13 @@ static sa_status decrypt_key_and_verify_mac(
     if (!get_key_type_and_size(payload->key_type_string, payload->key_type_string_length, &key_type, &key_size,
                 &subtype, &curve)) {
         ERROR("get_key_type_and_size failed");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
+    uint8_t aad[MAX_AAD_SIZE];
+    size_t aad_length = build_aad(aad, sizeof(aad), header, payload);
+    if (aad_length == 0) {
+        ERROR("build_aad failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
