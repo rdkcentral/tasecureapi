@@ -618,13 +618,14 @@ std::string SaKeyImportSocBase::generate_raw_container(
         const std::string& iv_b64,
         const std::string& c1_b64,
         const std::string& c2_b64,
-        const std::string& c3_b64) {
+        const std::string& c3_b64,
+        const std::string& key_type) {
 
     auto encrypted_key = random(SYM_128_KEY_SIZE);
     auto tag = random(MAX_GCM_TAG_LENGTH);
 
     std::ostringstream oss;
-    oss << R"({"containerVersion": 5, "keyType": "AES-128", "encryptedKey": ")"
+    oss << R"({"containerVersion": 5, "keyType": ")" << key_type << R"(", "encryptedKey": ")"
         << b64_encode(encrypted_key.data(), encrypted_key.size(), false) << R"(", "iv": ")" << iv_b64
         << R"(", "keyUsage": 3, "c1": ")" << c1_b64 << R"(", "c2": ")" << c2_b64 << R"(", "c3": ")" << c3_b64
         << "\"}";

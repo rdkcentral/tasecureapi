@@ -184,7 +184,8 @@ protected:
             const std::string& iv_b64,
             const std::string& c1_b64,
             const std::string& c2_b64,
-            const std::string& c3_b64);
+            const std::string& c3_b64,
+            const std::string& key_type = "AES-128");
 
     static sa_status import_key(
             sa_key* key,
