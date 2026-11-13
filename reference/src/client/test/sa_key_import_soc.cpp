@@ -265,6 +265,105 @@ namespace {
         ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
     }
 
+    // The container fields below are decoded before the MAC is verified, so no valid MAC is needed.
+    TEST_F(SaKeyImportSocTest, oversizedIv) {
+        auto c1 = random(AES_BLOCK_SIZE);
+        auto c2 = random(AES_BLOCK_SIZE);
+        auto c3 = random(AES_BLOCK_SIZE);
+
+        for (size_t const iv_size : std::vector<size_t>{GCM_IV_LENGTH + 1, GCM_IV_LENGTH + 3, 48, 1000}) {
+            SCOPED_TRACE(iv_size);
+            auto iv = random(iv_size);
+            std::string const container = generate_raw_container(b64_encode(iv.data(), iv.size(), false),
+                    b64_encode(c1.data(), c1.size(), false), b64_encode(c2.data(), c2.size(), false),
+                    b64_encode(c3.data(), c3.size(), false));
+
+            auto key = create_uninitialized_sa_key();
+            sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_SOC, container.data(), container.size(),
+                    nullptr);
+            ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+        }
+    }
+
+    // 18 bytes is 24 base64 chars without padding: the largest value b64_decode accepts for a 16 byte field.
+    TEST_F(SaKeyImportSocTest, oversizedC1) {
+        auto iv = random(GCM_IV_LENGTH);
+        auto c2 = random(AES_BLOCK_SIZE);
+        auto c3 = random(AES_BLOCK_SIZE);
+
+        for (size_t const c1_size : std::vector<size_t>{AES_BLOCK_SIZE + 1, AES_BLOCK_SIZE + 2, 48, 1000}) {
+            SCOPED_TRACE(c1_size);
+            auto c1 = random(c1_size);
+            std::string const container = generate_raw_container(b64_encode(iv.data(), iv.size(), false),
+                    b64_encode(c1.data(), c1.size(), false), b64_encode(c2.data(), c2.size(), false),
+                    b64_encode(c3.data(), c3.size(), false));
+
+            auto key = create_uninitialized_sa_key();
+            sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_SOC, container.data(), container.size(),
+                    nullptr);
+            ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+        }
+    }
+
+    TEST_F(SaKeyImportSocTest, oversizedC2) {
+        auto iv = random(GCM_IV_LENGTH);
+        auto c1 = random(AES_BLOCK_SIZE);
+        auto c3 = random(AES_BLOCK_SIZE);
+
+        for (size_t const c2_size : std::vector<size_t>{AES_BLOCK_SIZE + 1, AES_BLOCK_SIZE + 2, 48, 1000}) {
+            SCOPED_TRACE(c2_size);
+            auto c2 = random(c2_size);
+            std::string const container = generate_raw_container(b64_encode(iv.data(), iv.size(), false),
+                    b64_encode(c1.data(), c1.size(), false), b64_encode(c2.data(), c2.size(), false),
+                    b64_encode(c3.data(), c3.size(), false));
+
+            auto key = create_uninitialized_sa_key();
+            sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_SOC, container.data(), container.size(),
+                    nullptr);
+            ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+        }
+    }
+
+    // c3 is the last member of the TA's stack payload struct, so an overflow here leaves the struct.
+    TEST_F(SaKeyImportSocTest, oversizedC3) {
+        auto iv = random(GCM_IV_LENGTH);
+        auto c1 = random(AES_BLOCK_SIZE);
+        auto c2 = random(AES_BLOCK_SIZE);
+
+        for (size_t const c3_size : std::vector<size_t>{AES_BLOCK_SIZE + 1, AES_BLOCK_SIZE + 2, 48, 1000}) {
+            SCOPED_TRACE(c3_size);
+            auto c3 = random(c3_size);
+            std::string const container = generate_raw_container(b64_encode(iv.data(), iv.size(), false),
+                    b64_encode(c1.data(), c1.size(), false), b64_encode(c2.data(), c2.size(), false),
+                    b64_encode(c3.data(), c3.size(), false));
+
+            auto key = create_uninitialized_sa_key();
+            sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_SOC, container.data(), container.size(),
+                    nullptr);
+            ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+        }
+    }
+
+    // keyType is copied into a fixed size stack buffer before the MAC is verified.
+    TEST_F(SaKeyImportSocTest, oversizedKeyType) {
+        auto iv = random(GCM_IV_LENGTH);
+        auto c1 = random(AES_BLOCK_SIZE);
+        auto c2 = random(AES_BLOCK_SIZE);
+        auto c3 = random(AES_BLOCK_SIZE);
+
+        for (size_t const key_type_size : std::vector<size_t>{17, 100, 1300, 5000}) {
+            SCOPED_TRACE(key_type_size);
+            std::string const container = generate_raw_container(b64_encode(iv.data(), iv.size(), false),
+                    b64_encode(c1.data(), c1.size(), false), b64_encode(c2.data(), c2.size(), false),
+                    b64_encode(c3.data(), c3.size(), false), std::string(key_type_size, 'A'));
+
+            auto key = create_uninitialized_sa_key();
+            sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_SOC, container.data(), container.size(),
+                    nullptr);
+            ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+        }
+    }
+
     TEST_F(SaKeyImportSocTest, unknownKeyType) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-64";
