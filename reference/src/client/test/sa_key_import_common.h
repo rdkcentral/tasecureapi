@@ -179,6 +179,14 @@ protected:
             sa_key_type key_type,
             bool hmac);
 
+    // Container with the given base64 field values and a random MAC, for malformed field tests.
+    static std::string generate_raw_container(
+            const std::string& iv_b64,
+            const std::string& c1_b64,
+            const std::string& c2_b64,
+            const std::string& c3_b64,
+            const std::string& key_type = "AES-128");
+
     static sa_status import_key(
             sa_key* key,
             uint8_t container_version,

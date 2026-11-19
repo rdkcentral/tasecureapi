@@ -31,6 +31,9 @@
 
 #define AES_128_GCM "A128GCM"
 #define MAX_AAD_SIZE 1300
+// Upper bound on the keyType JSON string. Longest supported name is CHACHA20-256 (12 chars); 16 leaves headroom for
+// longer names. Exact matching is done in get_key_type_and_size.
+#define MAX_KEY_TYPE_STRING_LENGTH 16
 #define SOC_CONTAINER_VERSION 4
 #define UNIQUE_STR "unique"
 #define COMMON_STR "common"
@@ -75,6 +78,15 @@ typedef struct {
     entitled_ta_id entitled_ta_ids[MAX_NUM_ALLOWED_TA_IDS];
     key_ladder_inputs_t key_ladder_inputs;
 } soc_kc_payload_t;
+
+static bool string_equals_literal(
+        const char* string,
+        size_t string_length,
+        const char* literal) {
+
+    return string != NULL && string_length == strlen(literal) &&
+           memory_memcmp_constant(string, literal, string_length) == 0;
+}
 
 static soc_kc_unpacked_t* soc_kc_unpacked_create() {
     soc_kc_unpacked_t* unpacked = memory_internal_alloc(sizeof(soc_kc_unpacked_t));
@@ -363,6 +375,11 @@ static sa_status parse_payload(
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
+    if (payload->key_type_string_length > MAX_KEY_TYPE_STRING_LENGTH) {
+        ERROR("Invalid keyType length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
     // read encrypted key
     const json_key_value_t* encrypted_key_field = json_key_value_find("encryptedKey", fields, fields_count);
     if (encrypted_key_field == NULL) {
@@ -396,7 +413,12 @@ static sa_status parse_payload(
     size_t b64_iv_length;
     const char* iv = json_value_as_string(&b64_iv_length, iv_field->value);
     size_t iv_length = b64_decoded_length(b64_iv_length);
-    if (!b64_decode(payload->iv, &iv_length, iv, b64_iv_length, false) && iv_length != GCM_IV_LENGTH) {
+    if (iv_length > GCM_IV_LENGTH) {
+        ERROR("Invalid iv length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
+    if (!b64_decode(payload->iv, &iv_length, iv, b64_iv_length, false) || iv_length != GCM_IV_LENGTH) {
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
@@ -446,6 +468,9 @@ static sa_status parse_payload(
         memory_internal_free(entitled_ta_ids);
     }
 
+    // A 16-byte value encodes to 22/24 chars, for which b64_decode requires 18 bytes of output space.
+    uint8_t c_decoded[AES_BLOCK_SIZE + 2];
+
     // read c1
     const json_key_value_t* c1_field = json_key_value_find("c1", fields, fields_count);
     if (c1_field == NULL) {
@@ -456,11 +481,17 @@ static sa_status parse_payload(
     size_t b64_c1_length;
     const char* c1 = json_value_as_string(&b64_c1_length, c1_field->value);
     size_t c1_length = b64_decoded_length(b64_c1_length);
-    if (!b64_decode(payload->key_ladder_inputs.c1, &c1_length, c1, b64_c1_length, false) &&
-            c1_length != AES_BLOCK_SIZE) {
+    if (c1_length > sizeof(c_decoded)) {
+        ERROR("Invalid c1 length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
+    if (!b64_decode(c_decoded, &c1_length, c1, b64_c1_length, false) || c1_length != AES_BLOCK_SIZE) {
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
+
+    memcpy(payload->key_ladder_inputs.c1, c_decoded, AES_BLOCK_SIZE);
 
     // read c2
     const json_key_value_t* c2_field = json_key_value_find("c2", fields, fields_count);
@@ -472,11 +503,17 @@ static sa_status parse_payload(
     size_t b64_c2_length;
     const char* c2 = json_value_as_string(&b64_c2_length, c2_field->value);
     size_t c2_length = b64_decoded_length(b64_c2_length);
-    if (!b64_decode(payload->key_ladder_inputs.c2, &c2_length, c2, b64_c2_length, true) &&
-            c2_length != AES_BLOCK_SIZE) {
+    if (c2_length > sizeof(c_decoded)) {
+        ERROR("Invalid c2 length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
+    if (!b64_decode(c_decoded, &c2_length, c2, b64_c2_length, true) || c2_length != AES_BLOCK_SIZE) {
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
+
+    memcpy(payload->key_ladder_inputs.c2, c_decoded, AES_BLOCK_SIZE);
 
     // read c3
     const json_key_value_t* c3_field = json_key_value_find("c3", fields, fields_count);
@@ -488,17 +525,41 @@ static sa_status parse_payload(
     size_t b64_c3_length;
     const char* c3 = json_value_as_string(&b64_c3_length, c3_field->value);
     size_t c3_length = b64_decoded_length(b64_c3_length);
-    if (!b64_decode(payload->key_ladder_inputs.c3, &c3_length, c3, b64_c3_length, false) &&
-            c3_length != AES_BLOCK_SIZE) {
+    if (c3_length > sizeof(c_decoded)) {
+        ERROR("Invalid c3 length");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
+    if (!b64_decode(c_decoded, &c3_length, c3, b64_c3_length, false) || c3_length != AES_BLOCK_SIZE) {
         ERROR("b64_decode failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
+    memcpy(payload->key_ladder_inputs.c3, c_decoded, AES_BLOCK_SIZE);
+
     return SA_STATUS_OK;
+}
+
+static bool aad_append(
+        uint8_t* aad,
+        size_t aad_size,
+        size_t* length,
+        const void* data,
+        size_t data_length) {
+
+    if (data_length > aad_size - *length) {
+        ERROR("AAD exceeds buffer size");
+        return false;
+    }
+
+    memcpy(aad + *length, data, data_length);
+    *length += data_length;
+    return true;
 }
 
 static size_t build_aad(
         uint8_t* aad,
+        size_t aad_size,
         soc_kc_header_t* header,
         soc_kc_payload_t* payload) {
     size_t length = 0;
@@ -525,8 +586,8 @@ static size_t build_aad(
         return 0;
     }
 
-    memcpy(aad, header->alg, header->alg_size);
-    length += header->alg_size;
+    if (!aad_append(aad, aad_size, &length, header->alg, header->alg_size))
+        return 0;
 
     // container version
     if (payload->container_version < SOC_CONTAINER_VERSION) {
@@ -534,17 +595,17 @@ static size_t build_aad(
         return 0;
     }
 
-    *(aad + length) = payload->container_version;
-    length++;
+    if (!aad_append(aad, aad_size, &length, &payload->container_version, 1))
+        return 0;
 
     // root key type
     if (payload->container_version >= 5) {
         if (payload->root_key_type == UNIQUE) {
-            memcpy(aad + length, UNIQUE_STR, strlen(UNIQUE_STR)); // NOLINT
-            length += strlen(UNIQUE_STR);
+            if (!aad_append(aad, aad_size, &length, UNIQUE_STR, strlen(UNIQUE_STR)))
+                return 0;
         } else if (payload->root_key_type == COMMON) {
-            memcpy(aad + length, COMMON_STR, strlen(COMMON_STR)); // NOLINT
-            length += strlen(COMMON_STR);
+            if (!aad_append(aad, aad_size, &length, COMMON_STR, strlen(COMMON_STR)))
+                return 0;
         }
     }
 
@@ -554,8 +615,8 @@ static size_t build_aad(
         return 0;
     }
 
-    memcpy(aad + length, payload->key_type_string, payload->key_type_string_length);
-    length += payload->key_type_string_length;
+    if (!aad_append(aad, aad_size, &length, payload->key_type_string, payload->key_type_string_length))
+        return 0;
 
     // key usage value
     if (payload->key_usage == 0 || payload->key_usage > SOC_DATA_AND_KEY) {
@@ -564,18 +625,15 @@ static size_t build_aad(
     }
 
     if (payload->key_usage == KEY_ONLY &&
-            (memory_memcmp_constant(payload->key_type_string, "HMAC-128",
-                     payload->key_type_string_length) == 0 ||
-                    memory_memcmp_constant(payload->key_type_string, "HMAC-160",
-                            payload->key_type_string_length) == 0 ||
-                    memory_memcmp_constant(payload->key_type_string, "HMAC-256",
-                            payload->key_type_string_length) == 0)) {
+            (string_equals_literal(payload->key_type_string, payload->key_type_string_length, "HMAC-128") ||
+                    string_equals_literal(payload->key_type_string, payload->key_type_string_length, "HMAC-160") ||
+                    string_equals_literal(payload->key_type_string, payload->key_type_string_length, "HMAC-256"))) {
         ERROR("Invalid key_usage for HMAC key");
         return 0;
     }
 
-    *(aad + length) = payload->key_usage;
-    length++;
+    if (!aad_append(aad, aad_size, &length, &payload->key_usage, 1))
+        return 0;
 
     if (payload->key_usage == KEY_ONLY) {
         if (payload->decrypted_key_usage == 0 || payload->decrypted_key_usage > SOC_DATA_AND_KEY) {
@@ -583,25 +641,25 @@ static size_t build_aad(
             return 0;
         }
 
-        *(aad + length) = payload->decrypted_key_usage;
-        length++;
+        if (!aad_append(aad, aad_size, &length, &payload->decrypted_key_usage, 1))
+            return 0;
     }
 
     // iv
-    memcpy(aad + length, payload->iv, GCM_IV_LENGTH);
-    length += GCM_IV_LENGTH;
+    if (!aad_append(aad, aad_size, &length, payload->iv, GCM_IV_LENGTH))
+        return 0;
 
     // c1
-    memcpy(aad + length, payload->key_ladder_inputs.c1, AES_BLOCK_SIZE);
-    length += AES_BLOCK_SIZE;
+    if (!aad_append(aad, aad_size, &length, payload->key_ladder_inputs.c1, AES_BLOCK_SIZE))
+        return 0;
 
     // c2
-    memcpy(aad + length, payload->key_ladder_inputs.c2, AES_BLOCK_SIZE);
-    length += AES_BLOCK_SIZE;
+    if (!aad_append(aad, aad_size, &length, payload->key_ladder_inputs.c2, AES_BLOCK_SIZE))
+        return 0;
 
     // c3
-    memcpy(aad + length, payload->key_ladder_inputs.c3, AES_BLOCK_SIZE);
-    length += AES_BLOCK_SIZE;
+    if (!aad_append(aad, aad_size, &length, payload->key_ladder_inputs.c3, AES_BLOCK_SIZE))
+        return 0;
 
     // entitled ta ids
     if (payload->entitled_ta_ids_length > MAX_NUM_ALLOWED_TA_IDS) {
@@ -610,9 +668,10 @@ static size_t build_aad(
     }
 
     for (size_t i = 0; i < payload->entitled_ta_ids_length; i++) {
-        memcpy(aad + length, payload->entitled_ta_ids[i].ta_id, UUID_LENGTH);
-        string_to_lowercase(aad + length, UUID_LENGTH);
-        length += UUID_LENGTH;
+        if (!aad_append(aad, aad_size, &length, payload->entitled_ta_ids[i].ta_id, UUID_LENGTH))
+            return 0;
+
+        string_to_lowercase(aad + length - UUID_LENGTH, UUID_LENGTH);
     }
 
     return length;
@@ -641,97 +700,97 @@ static bool get_key_type_and_size(
         return false;
     }
 
-    if (memory_memcmp_constant(key_type_string, "AES-128", key_type_string_length) == 0) {
+    if (string_equals_literal(key_type_string, key_type_string_length, "AES-128")) {
         *key_type = SA_KEY_TYPE_SYMMETRIC;
         *key_size = SYM_128_KEY_SIZE;
         *subtype = AES_SUBTYPE;
         *curve = UINT32_MAX;
-    } else if (memory_memcmp_constant(key_type_string, "HMAC-128", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "HMAC-128")) {
         *key_type = SA_KEY_TYPE_SYMMETRIC;
         *key_size = SYM_128_KEY_SIZE;
         *subtype = HMAC_SUBTYPE;
         *curve = UINT32_MAX;
-    } else if (memory_memcmp_constant(key_type_string, "AES-256", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "AES-256")) {
         *key_type = SA_KEY_TYPE_SYMMETRIC;
         *key_size = SYM_256_KEY_SIZE;
         *subtype = AES_SUBTYPE;
         *curve = UINT32_MAX;
-    } else if (memory_memcmp_constant(key_type_string, "CHACHA20-256", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "CHACHA20-256")) {
         *key_type = SA_KEY_TYPE_SYMMETRIC;
         *key_size = SYM_256_KEY_SIZE;
         *subtype = CHACHA20_SUBTYPE;
         *curve = UINT32_MAX;
-    } else if (memory_memcmp_constant(key_type_string, "HMAC-256", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "HMAC-256")) {
         *key_type = SA_KEY_TYPE_SYMMETRIC;
         *key_size = SYM_256_KEY_SIZE;
         *subtype = HMAC_SUBTYPE;
         *curve = UINT32_MAX;
-    } else if (memory_memcmp_constant(key_type_string, "HMAC-160", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "HMAC-160")) {
         *key_type = SA_KEY_TYPE_SYMMETRIC;
         *key_size = SYM_160_KEY_SIZE;
         *subtype = HMAC_SUBTYPE;
         *curve = UINT32_MAX;
-    } else if (memory_memcmp_constant(key_type_string, "RSA-1024", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "RSA-1024")) {
         *key_type = SA_KEY_TYPE_RSA;
         *key_size = RSA_1024_BYTE_LENGTH;
         *subtype = PRIVATE_SUBTYPE;
         *curve = UINT32_MAX;
-    } else if (memory_memcmp_constant(key_type_string, "RSA-2048", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "RSA-2048")) {
         *key_type = SA_KEY_TYPE_RSA;
         *key_size = RSA_2048_BYTE_LENGTH;
         *subtype = PRIVATE_SUBTYPE;
         *curve = UINT32_MAX;
-    } else if (memory_memcmp_constant(key_type_string, "RSA-3072", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "RSA-3072")) {
         *key_type = SA_KEY_TYPE_RSA;
         *key_size = RSA_3072_BYTE_LENGTH;
         *subtype = PRIVATE_SUBTYPE;
         *curve = UINT32_MAX;
-    } else if (memory_memcmp_constant(key_type_string, "RSA-4096", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "RSA-4096")) {
         *key_type = SA_KEY_TYPE_RSA;
         *key_size = RSA_4096_BYTE_LENGTH;
         *subtype = PRIVATE_SUBTYPE;
         *curve = UINT32_MAX;
-    } else if (memory_memcmp_constant(key_type_string, "ECC-P192", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "ECC-P192")) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_P192_KEY_SIZE;
         *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_NIST_P192;
-    } else if (memory_memcmp_constant(key_type_string, "ECC-P224", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "ECC-P224")) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_P224_KEY_SIZE;
         *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_NIST_P224;
-    } else if (memory_memcmp_constant(key_type_string, "ECC-P256", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "ECC-P256")) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_P256_KEY_SIZE;
         *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_NIST_P256;
-    } else if (memory_memcmp_constant(key_type_string, "ECC-P384", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "ECC-P384")) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_P384_KEY_SIZE;
         *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_NIST_P384;
-    } else if (memory_memcmp_constant(key_type_string, "ECC-P521", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "ECC-P521")) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_P521_KEY_SIZE;
         *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_NIST_P521;
-    } else if (memory_memcmp_constant(key_type_string, "ECC-ED25519", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "ECC-ED25519")) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_25519_KEY_SIZE;
         *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_ED25519;
-    } else if (memory_memcmp_constant(key_type_string, "ECC-ED448", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "ECC-ED448")) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_ED448_KEY_SIZE;
         *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_ED448;
-    } else if (memory_memcmp_constant(key_type_string, "ECC-X25519", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "ECC-X25519")) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_25519_KEY_SIZE;
         *subtype = PRIVATE_SUBTYPE;
         *curve = SA_ELLIPTIC_CURVE_X25519;
-    } else if (memory_memcmp_constant(key_type_string, "ECC-X448", key_type_string_length) == 0) {
+    } else if (string_equals_literal(key_type_string, key_type_string_length, "ECC-X448")) {
         *key_type = SA_KEY_TYPE_EC;
         *key_size = EC_X448_KEY_SIZE;
         *subtype = PRIVATE_SUBTYPE;
@@ -770,13 +829,6 @@ static sa_status decrypt_key_and_verify_mac(
         return SA_STATUS_NULL_PARAMETER;
     }
 
-    uint8_t aad[MAX_AAD_SIZE];
-    size_t aad_length = build_aad(aad, header, payload);
-    if (aad_length == 0) {
-        ERROR("build_aad failed");
-        return SA_STATUS_INVALID_KEY_FORMAT;
-    }
-
     sa_key_type key_type;
     size_t key_size;
     key_subtype subtype;
@@ -784,6 +836,13 @@ static sa_status decrypt_key_and_verify_mac(
     if (!get_key_type_and_size(payload->key_type_string, payload->key_type_string_length, &key_type, &key_size,
                 &subtype, &curve)) {
         ERROR("get_key_type_and_size failed");
+        return SA_STATUS_INVALID_KEY_FORMAT;
+    }
+
+    uint8_t aad[MAX_AAD_SIZE];
+    size_t aad_length = build_aad(aad, sizeof(aad), header, payload);
+    if (aad_length == 0) {
+        ERROR("build_aad failed");
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
