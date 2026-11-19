@@ -364,6 +364,101 @@ namespace {
         }
     }
 
+    TEST_F(SaKeyImportSocTest, undersizedIv) {
+        auto iv = random(8);
+        auto c1 = random(AES_BLOCK_SIZE);
+        auto c2 = random(AES_BLOCK_SIZE);
+        auto c3 = random(AES_BLOCK_SIZE);
+        std::string const container = generate_raw_container(b64_encode(iv.data(), iv.size(), false),
+                b64_encode(c1.data(), c1.size(), false), b64_encode(c2.data(), c2.size(), false),
+                b64_encode(c3.data(), c3.size(), false));
+
+        auto key = create_uninitialized_sa_key();
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_SOC, container.data(), container.size(),
+                nullptr);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+    }
+
+    TEST_F(SaKeyImportSocTest, undersizedC1) {
+        auto iv = random(GCM_IV_LENGTH);
+        auto c1 = random(8);
+        auto c2 = random(AES_BLOCK_SIZE);
+        auto c3 = random(AES_BLOCK_SIZE);
+        std::string const container = generate_raw_container(b64_encode(iv.data(), iv.size(), false),
+                b64_encode(c1.data(), c1.size(), false), b64_encode(c2.data(), c2.size(), false),
+                b64_encode(c3.data(), c3.size(), false));
+
+        auto key = create_uninitialized_sa_key();
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_SOC, container.data(), container.size(),
+                nullptr);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+    }
+
+    TEST_F(SaKeyImportSocTest, undersizedC2) {
+        auto iv = random(GCM_IV_LENGTH);
+        auto c1 = random(AES_BLOCK_SIZE);
+        auto c2 = random(8);
+        auto c3 = random(AES_BLOCK_SIZE);
+        std::string const container = generate_raw_container(b64_encode(iv.data(), iv.size(), false),
+                b64_encode(c1.data(), c1.size(), false), b64_encode(c2.data(), c2.size(), false),
+                b64_encode(c3.data(), c3.size(), false));
+
+        auto key = create_uninitialized_sa_key();
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_SOC, container.data(), container.size(),
+                nullptr);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+    }
+
+    TEST_F(SaKeyImportSocTest, undersizedC3) {
+        auto iv = random(GCM_IV_LENGTH);
+        auto c1 = random(AES_BLOCK_SIZE);
+        auto c2 = random(AES_BLOCK_SIZE);
+        auto c3 = random(8);
+        std::string const container = generate_raw_container(b64_encode(iv.data(), iv.size(), false),
+                b64_encode(c1.data(), c1.size(), false), b64_encode(c2.data(), c2.size(), false),
+                b64_encode(c3.data(), c3.size(), false));
+
+        auto key = create_uninitialized_sa_key();
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_SOC, container.data(), container.size(),
+                nullptr);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+    }
+
+    // 16 characters is the longest keyType accepted by the length check; it is then rejected as an unknown type.
+    TEST_F(SaKeyImportSocTest, maxLengthKeyType) {
+        auto iv = random(GCM_IV_LENGTH);
+        auto c1 = random(AES_BLOCK_SIZE);
+        auto c2 = random(AES_BLOCK_SIZE);
+        auto c3 = random(AES_BLOCK_SIZE);
+        std::string const container = generate_raw_container(b64_encode(iv.data(), iv.size(), false),
+                b64_encode(c1.data(), c1.size(), false), b64_encode(c2.data(), c2.size(), false),
+                b64_encode(c3.data(), c3.size(), false), std::string(16, 'A'));
+
+        auto key = create_uninitialized_sa_key();
+        sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_SOC, container.data(), container.size(),
+                nullptr);
+        ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+    }
+
+    TEST_F(SaKeyImportSocTest, undersizedKeyType) {
+        auto iv = random(GCM_IV_LENGTH);
+        auto c1 = random(AES_BLOCK_SIZE);
+        auto c2 = random(AES_BLOCK_SIZE);
+        auto c3 = random(AES_BLOCK_SIZE);
+
+        for (size_t const key_type_size : std::vector<size_t>{0, 1, 7}) {
+            SCOPED_TRACE(key_type_size);
+            std::string const container = generate_raw_container(b64_encode(iv.data(), iv.size(), false),
+                    b64_encode(c1.data(), c1.size(), false), b64_encode(c2.data(), c2.size(), false),
+                    b64_encode(c3.data(), c3.size(), false), std::string(key_type_size, 'A'));
+
+            auto key = create_uninitialized_sa_key();
+            sa_status const status = sa_key_import(key.get(), SA_KEY_FORMAT_SOC, container.data(), container.size(),
+                    nullptr);
+            ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+        }
+    }
+
     TEST_F(SaKeyImportSocTest, unknownKeyType) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-64";
