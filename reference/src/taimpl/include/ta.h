@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2026 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,10 @@
 #include "sa_ta_types.h"
 
 #define NUM_TA_PARAMS 4
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Implements open session on the TA.

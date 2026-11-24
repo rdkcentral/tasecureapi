@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2025 Comcast Cable Communications Management, LLC
+# Copyright 2020-2026 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -223,6 +223,7 @@ if (BUILD_TESTS)
             test/object_store.cpp
             test/rights.cpp
             test/slots.cpp
+            test/ta_invoke_cipher.cpp
             test/ta_sa_init.cpp
 	    test/ta_sa_svp_crypto.cpp
 	    test/ta_sa_svp_crypto.h
