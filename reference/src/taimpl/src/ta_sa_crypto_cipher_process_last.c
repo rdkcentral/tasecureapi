@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2025 Comcast Cable Communications Management, LLC
+ * Copyright 2020-2026 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -525,6 +525,16 @@ sa_status ta_sa_crypto_cipher_process_last(
         return SA_STATUS_NULL_PARAMETER;
     }
 
+    if (out != NULL && out->buffer_type != SA_BUFFER_TYPE_CLEAR && out->buffer_type != SA_BUFFER_TYPE_SVP) {
+        ERROR("Invalid out buffer type");
+        return SA_STATUS_INVALID_PARAMETER;
+    }
+
+    if (in->buffer_type != SA_BUFFER_TYPE_CLEAR && in->buffer_type != SA_BUFFER_TYPE_SVP) {
+        ERROR("Invalid in buffer type");
+        return SA_STATUS_INVALID_PARAMETER;
+    }
+
     sa_status status;
     client_store_t* client_store = client_store_global();
     client_t* client = NULL;
@@ -551,16 +561,6 @@ sa_status ta_sa_crypto_cipher_process_last(
             *bytes_to_process = required_length;
             status = SA_STATUS_OK;
             break;
-        }
-
-        if (out->buffer_type != SA_BUFFER_TYPE_CLEAR && out->buffer_type != SA_BUFFER_TYPE_SVP) {
-            ERROR("Invalid out buffer type");
-            return SA_STATUS_INVALID_PARAMETER;
-        }
-
-        if (in->buffer_type != SA_BUFFER_TYPE_CLEAR && in->buffer_type != SA_BUFFER_TYPE_SVP) {
-            ERROR("Invalid in buffer type");
-            return SA_STATUS_INVALID_PARAMETER;
         }
 
         sa_cipher_algorithm cipher_algorithm = cipher_get_algorithm(cipher);
