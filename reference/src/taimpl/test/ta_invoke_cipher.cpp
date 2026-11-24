@@ -63,6 +63,11 @@ namespace {
 
         fflush(nullptr);
         pid_t const pid = fork();
+        if (pid < 0) {
+            close(fds[0]);
+            close(fds[1]);
+            return result;
+        }
         if (pid == 0) {
             close(fds[0]);
             int const rc = body(fds[1]);
