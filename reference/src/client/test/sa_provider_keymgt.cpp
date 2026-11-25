@@ -95,6 +95,63 @@ namespace {
             SaProviderKeymgmtDhImportTest,
             ::testing::Values(2048, 3072, DH_MAX_MOD_SIZE * 8));
 
+    class SaProviderKeymgmtDhImportOversizeTest : public ::testing::TestWithParam<int> {};
+
+    TEST_P(SaProviderKeymgmtDhImportOversizeTest, importDhParametersFailsOversizeP) {
+        auto p = odd_bn(GetParam());
+        auto g = word_bn(2);
+        ASSERT_NE(p, nullptr);
+        ASSERT_NE(g, nullptr);
+        ASSERT_EQ(import_dh(p.get(), g.get(), nullptr, EVP_PKEY_KEY_PARAMETERS), 0);
+    }
+
+    // One byte over DH_MAX_MOD_SIZE, and 8192 bits.
+    INSTANTIATE_TEST_SUITE_P(
+            SaProviderKeymgmtDhImportOversizeTests,
+            SaProviderKeymgmtDhImportOversizeTest,
+            ::testing::Values(DH_MAX_MOD_SIZE * 8 + 8, 8192));
+
+    TEST(SaProviderKeymgmtDhImportFailTest, importDhParametersFailsHugeP) {
+        auto p = odd_bn(65536 * 8);
+        auto g = word_bn(2);
+        ASSERT_NE(p, nullptr);
+        ASSERT_NE(g, nullptr);
+        ASSERT_EQ(import_dh(p.get(), g.get(), nullptr, EVP_PKEY_KEY_PARAMETERS), 0);
+    }
+
+    TEST(SaProviderKeymgmtDhImportFailTest, importDhParametersFailsOversizeG) {
+        auto p = odd_bn(2048);
+        auto g = odd_bn(8192);
+        ASSERT_NE(p, nullptr);
+        ASSERT_NE(g, nullptr);
+        ASSERT_EQ(import_dh(p.get(), g.get(), nullptr, EVP_PKEY_KEY_PARAMETERS), 0);
+    }
+
+    TEST(SaProviderKeymgmtDhImportFailTest, importDhParametersFailsGLongerThanP) {
+        // g fits in the header but is longer than p.
+        auto p = odd_bn(2048);
+        auto g = odd_bn(3072);
+        ASSERT_NE(p, nullptr);
+        ASSERT_NE(g, nullptr);
+        ASSERT_EQ(import_dh(p.get(), g.get(), nullptr, EVP_PKEY_KEY_PARAMETERS), 0);
+    }
+
+    TEST(SaProviderKeymgmtDhImportFailTest, importDhParametersFailsZeroP) {
+        auto p = word_bn(0);
+        auto g = word_bn(2);
+        ASSERT_NE(p, nullptr);
+        ASSERT_NE(g, nullptr);
+        ASSERT_EQ(import_dh(p.get(), g.get(), nullptr, EVP_PKEY_KEY_PARAMETERS), 0);
+    }
+
+    TEST(SaProviderKeymgmtDhImportFailTest, importDhParametersFailsZeroG) {
+        auto p = odd_bn(2048);
+        auto g = word_bn(0);
+        ASSERT_NE(p, nullptr);
+        ASSERT_NE(g, nullptr);
+        ASSERT_EQ(import_dh(p.get(), g.get(), nullptr, EVP_PKEY_KEY_PARAMETERS), 0);
+    }
+
     TEST(SaProviderKeymgmtDhImportFailTest, importDhParametersFailsNonIntegerG) {
         OSSL_LIB_CTX* lib_ctx = sa_get_provider();
         ASSERT_NE(lib_ctx, nullptr);
@@ -124,6 +181,17 @@ namespace {
         ASSERT_NE(g, nullptr);
         ASSERT_NE(pub, nullptr);
         ASSERT_EQ(import_dh(p.get(), g.get(), pub.get(), EVP_PKEY_PUBLIC_KEY), 1);
+    }
+
+    TEST(SaProviderKeymgmtDhPublicKeyTest, importDhPublicKeyFailsOversizeP) {
+        // A public key import also copies p and g into the key header.
+        auto p = odd_bn(8192);
+        auto g = word_bn(2);
+        auto pub = word_bn(3);
+        ASSERT_NE(p, nullptr);
+        ASSERT_NE(g, nullptr);
+        ASSERT_NE(pub, nullptr);
+        ASSERT_EQ(import_dh(p.get(), g.get(), pub.get(), EVP_PKEY_PUBLIC_KEY), 0);
     }
 } // namespace
 #endif
