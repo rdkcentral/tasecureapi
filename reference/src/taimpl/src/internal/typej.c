@@ -384,7 +384,7 @@ static sa_status fields_to_rights(
     uint8_t* rights_bytes = memory_internal_alloc(rights_count);
     if (!b64_decode(rights_bytes, &rights_count, rights_field_string, rights_field_size, false)) {
         ERROR("Invalid contentKeyRights");
-        memory_secure_free(rights_bytes);
+        memory_internal_free(rights_bytes);
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
