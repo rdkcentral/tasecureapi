@@ -430,11 +430,18 @@ static sa_status parse_payload(
     if (entitled_ta_ids_field == NULL) {
         payload->entitled_ta_ids_length = 0;
     } else {
+        payload->entitled_ta_ids_length = 0;
         entitled_ta_ids = json_value_as_array(&payload->entitled_ta_ids_length, entitled_ta_ids_field->value);
+        if (payload->entitled_ta_ids_length > MAX_NUM_ALLOWED_TA_IDS) {
+            memory_internal_free(entitled_ta_ids);
+            ERROR("Too many entitled_ta_ids");
+            return SA_STATUS_INVALID_KEY_FORMAT;
+        }
+
         for (size_t i = 0; i < payload->entitled_ta_ids_length; i++) {
-            size_t ta_id_length;
+            size_t ta_id_length = 0;
             const char* ta_id = json_value_as_string(&ta_id_length, entitled_ta_ids[i]);
-            if (ta_id_length != UUID_LENGTH) {
+            if (ta_id == NULL || ta_id_length != UUID_LENGTH) {
                 memory_internal_free(entitled_ta_ids);
                 ERROR("Invalid ta_id");
                 return SA_STATUS_INVALID_KEY_FORMAT;
@@ -894,7 +901,7 @@ sa_status soc_kc_unwrap(
     soc_kc_header_t header;
     soc_kc_payload_t payload;
 
-    memory_memset_unoptimizable(&payload, 0, sizeof(soc_kc_unpacked_t));
+    memory_memset_unoptimizable(&payload, 0, sizeof(payload));
     sa_status status = SA_STATUS_INVALID_KEY_FORMAT;
     do {
         unpacked = unpack_soc_kc(in, in_length);

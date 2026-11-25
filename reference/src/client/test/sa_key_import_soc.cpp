@@ -447,6 +447,38 @@ namespace {
         }
     }
 
+    TEST_F(SaKeyImportSocTest, failsTooManyEntitledTaIds) {
+        std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
+        std::string key_type = "AES-128";
+        uint8_t const key_usage = 3;
+        uint8_t const decrypted_key_usage = 0;
+        auto iv = random(GCM_IV_LENGTH);
+        auto c1 = random(AES_BLOCK_SIZE);
+        auto c2 = random(AES_BLOCK_SIZE);
+        auto c3 = random(AES_BLOCK_SIZE);
+
+        const std::vector<size_t> counts = {MAX_NUM_ALLOWED_TA_IDS + 1, MAX_NUM_ALLOWED_TA_IDS * 2, 4096};
+        for (size_t const count : counts) {
+            SCOPED_TRACE("entitledTaIds count: " + std::to_string(count));
+            std::vector<std::string> entitled_ta_ids;
+            for (size_t i = 0; i < count; i++) {
+                char ta_id[37];
+                snprintf(ta_id, sizeof(ta_id), "157f768f-bad0-470b-929d-%012zx", i);
+                entitled_ta_ids.emplace_back(ta_id);
+            }
+
+            sa_rights key_rights;
+            auto key = create_uninitialized_sa_key();
+            sa_status const status = import_key(key.get(), SOC_CONTAINER_VERSION, UNIQUE_STR, key_type,
+                    SA_KEY_TYPE_SYMMETRIC, 0, clear_key, iv, key_usage, decrypted_key_usage, entitled_ta_ids,
+                    key_rights, c1, c2, c3);
+            if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+                GTEST_SKIP() << "key type, key size, or curve not supported";
+
+            ASSERT_EQ(status, SA_STATUS_INVALID_KEY_FORMAT);
+        }
+    }
+
     TEST_F(SaKeyImportSocTest, invalidRootKeyType) {
         std::vector<uint8_t> clear_key = random(SYM_128_KEY_SIZE);
         std::string key_type = "AES-128";
