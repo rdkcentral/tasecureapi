@@ -260,6 +260,121 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest3) {
     // SVP buffer verified in taimpltest.
 }
 
+namespace {
+    std::vector<uint8_t> ctr_key_stream(
+            const std::vector<uint8_t>& key,
+            const std::vector<uint8_t>& iv,
+            size_t length) {
+
+        std::vector<uint8_t> key_stream;
+        std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)> context(EVP_CIPHER_CTX_new(),
+                EVP_CIPHER_CTX_free);
+        if (context == nullptr ||
+                EVP_EncryptInit_ex(context.get(), EVP_aes_128_ecb(), nullptr, key.data(), nullptr) != 1 ||
+                EVP_CIPHER_CTX_set_padding(context.get(), 0) != 1)
+            return key_stream;
+
+        uint64_t counter = 0;
+        for (size_t i = 8; i < AES_BLOCK_SIZE; i++)
+            counter = (counter << 8) | iv[i];
+
+        uint8_t block[AES_BLOCK_SIZE];
+        memcpy(block, iv.data(), AES_BLOCK_SIZE);
+        for (size_t position = 0; position < length; position += AES_BLOCK_SIZE, counter++) {
+            for (size_t i = 0; i < 8; i++)
+                block[8 + i] = static_cast<uint8_t>(counter >> (56 - 8 * i));
+
+            uint8_t out[AES_BLOCK_SIZE];
+            int out_length = 0;
+            if (EVP_EncryptUpdate(context.get(), out, &out_length, block, AES_BLOCK_SIZE) != 1) {
+                key_stream.clear();
+                return key_stream;
+            }
+
+            key_stream.insert(key_stream.end(), out, out + AES_BLOCK_SIZE);
+        }
+
+        return key_stream;
+    }
+} // namespace
+
+TEST_F(SaProcessCommonEncryptionAlternativeTest, ctrPartialBlockSubsamplesStayInBounds) {
+    cipher_parameters parameters;
+    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
+    parameters.svp_required = false;
+    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
+    ASSERT_NE(cipher, nullptr);
+    if (*cipher == UNSUPPORTED_CIPHER)
+        GTEST_SKIP() << "Cipher algorithm not supported";
+
+    // {bytes_of_clear_data, bytes_of_protected_data}
+    const std::vector<std::vector<std::pair<size_t, size_t>>> subsample_cases = {
+            {{0, 1}, {0, 1}},
+            {{0, 10}, {0, 5}},
+            {{3, 1}, {2, 1}}};
+    const std::vector<uint64_t> counters = {0, 1, UINT64_MAX - 1, UINT64_MAX, 0xF000000000000000ULL,
+            0xFFFFFFFFFFFFFFF0ULL};
+    const size_t guard_size = 64;
+    const uint8_t guard_value = 0xa5;
+
+    for (const auto& subsamples : subsample_cases) {
+        for (uint64_t const counter : counters) {
+            SCOPED_TRACE("subsample count: " + std::to_string(subsamples.size()) +
+                         ", counter: " + std::to_string(counter));
+            for (size_t i = 0; i < 8; i++)
+                parameters.iv[8 + i] = static_cast<uint8_t>(counter >> (56 - 8 * i));
+
+            std::vector<sa_subsample_length> subsample_lengths;
+            size_t total_length = 0;
+            size_t protected_length = 0;
+            for (const auto& subsample : subsamples) {
+                subsample_lengths.push_back({subsample.first, subsample.second});
+                total_length += subsample.first + subsample.second;
+                protected_length += subsample.second;
+            }
+
+            std::vector<uint8_t> clear = random(total_length);
+            auto key_stream = ctr_key_stream(parameters.clear_key, parameters.iv, protected_length);
+            ASSERT_FALSE(key_stream.empty());
+            std::vector<uint8_t> encrypted = clear;
+            size_t offset = 0;
+            size_t key_stream_position = 0;
+            for (const auto& subsample : subsamples) {
+                offset += subsample.first;
+                for (size_t i = 0; i < subsample.second; i++)
+                    encrypted[offset++] ^= key_stream[key_stream_position++];
+            }
+
+            std::vector<uint8_t> in_bytes = encrypted;
+            in_bytes.resize(total_length + guard_size, guard_value);
+            std::vector<uint8_t> out_bytes(total_length + guard_size, guard_value);
+            auto in = buffer_alloc(SA_BUFFER_TYPE_CLEAR, in_bytes);
+            ASSERT_NE(in, nullptr);
+            auto out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, out_bytes);
+            ASSERT_NE(out, nullptr);
+
+            sa_sample sample;
+            sample.iv = parameters.iv.data();
+            sample.iv_length = parameters.iv.size();
+            sample.crypt_byte_block = 0;
+            sample.skip_byte_block = 0;
+            sample.subsample_count = subsample_lengths.size();
+            sample.subsample_lengths = subsample_lengths.data();
+            sample.context = *cipher;
+            sample.in = in.get();
+            sample.out = out.get();
+
+            sa_status const status = sa_process_common_encryption(1, &sample);
+            ASSERT_EQ(status, SA_STATUS_OK);
+
+            auto* result = static_cast<uint8_t*>(out->context.clear.buffer);
+            ASSERT_EQ(memcmp(result, clear.data(), total_length), 0);
+            for (size_t i = total_length; i < total_length + guard_size; i++)
+                ASSERT_EQ(result[i], guard_value) << "write past the end of the sample at " << i;
+        }
+    }
+}
+
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullSamples) {
     sa_status const status = sa_process_common_encryption(0, nullptr);
     ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
