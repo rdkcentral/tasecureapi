@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2025 Comcast Cable Communications Management, LLC
+# Copyright 2020-2026 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -273,6 +273,7 @@ if (BUILD_TESTS)
             test/sa_provider_common.h
             test/sa_provider_kdf.cpp
             test/sa_provider_keyexch.cpp
+            test/sa_provider_keymgt.cpp
             test/sa_provider_mac.cpp
             test/sa_provider_pkcs7.cpp
             test/sa_provider_signature.cpp

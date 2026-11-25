@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Comcast Cable Communications Management, LLC
+ * Copyright 2023-2026 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -427,23 +427,30 @@ static int keymgmt_import(
                 const OSSL_PARAM* p_param = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_FFC_P);
                 const OSSL_PARAM* g_param = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_FFC_G);
                 if (p_param != NULL && g_param != NULL) {
-                    if (OSSL_PARAM_get_BN(p_param, &p) != 1) {
+                    if (OSSL_PARAM_get_BN(p_param, &p) != 1 || OSSL_PARAM_get_BN(g_param, &g) != 1) {
                         ERROR("OSSL_PARAM_get_BN failed");
                         break;
                     }
 
-                    if (OSSL_PARAM_get_BN(g_param, &g) != 1) {
-                        ERROR("OSSL_PARAM_get_BN failed");
-                        BN_free(p);
+                    // The same limits as the TA: the header has DH_MAX_MOD_SIZE bytes for each of p and g.
+                    int p_length = BN_num_bytes(p);
+                    if (p_length < 1 || p_length > DH_MAX_MOD_SIZE) {
+                        ERROR("Invalid p length: %d", p_length);
+                        break;
+                    }
+
+                    int g_length = BN_num_bytes(g);
+                    if (g_length < 1 || g_length > p_length) {
+                        ERROR("Invalid g length: %d", g_length);
                         break;
                     }
 
                     private_key_header.type = SA_KEY_TYPE_DH;
-                    private_key_header.size = BN_num_bytes(p);
-                    BN_bn2nativepad(p, private_key_header.type_parameters.dh_parameters.p, BN_num_bytes(p));
-                    private_key_header.type_parameters.dh_parameters.p_length = BN_num_bytes(p);
-                    BN_bn2nativepad(g, private_key_header.type_parameters.dh_parameters.g, BN_num_bytes(g));
-                    private_key_header.type_parameters.dh_parameters.g_length = BN_num_bytes(g);
+                    private_key_header.size = p_length;
+                    BN_bn2nativepad(p, private_key_header.type_parameters.dh_parameters.p, p_length);
+                    private_key_header.type_parameters.dh_parameters.p_length = p_length;
+                    BN_bn2nativepad(g, private_key_header.type_parameters.dh_parameters.g, g_length);
+                    private_key_header.type_parameters.dh_parameters.g_length = g_length;
                 }
             } else if (key_data->type == EVP_PKEY_EC) {
                 const OSSL_PARAM* param = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_GROUP_NAME);
