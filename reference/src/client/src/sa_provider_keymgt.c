@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Comcast Cable Communications Management, LLC
+ * Copyright 2023-2026 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -427,14 +427,8 @@ static int keymgmt_import(
                 const OSSL_PARAM* p_param = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_FFC_P);
                 const OSSL_PARAM* g_param = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_FFC_G);
                 if (p_param != NULL && g_param != NULL) {
-                    if (OSSL_PARAM_get_BN(p_param, &p) != 1) {
+                    if (OSSL_PARAM_get_BN(p_param, &p) != 1 || OSSL_PARAM_get_BN(g_param, &g) != 1) {
                         ERROR("OSSL_PARAM_get_BN failed");
-                        break;
-                    }
-
-                    if (OSSL_PARAM_get_BN(g_param, &g) != 1) {
-                        ERROR("OSSL_PARAM_get_BN failed");
-                        BN_free(p);
                         break;
                     }
 
