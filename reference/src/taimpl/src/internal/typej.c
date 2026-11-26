@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2026 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -176,7 +176,6 @@ static typej_unpacked_t* unpack_typej(
         if (!b64_decode(unpacked->header, &unpacked->header_length, unpacked->header_b64,
                     unpacked->header_b64_length, true)) {
             ERROR("b64_decode failed");
-            memory_secure_free(unpacked->header);
             break;
         }
 
@@ -185,7 +184,6 @@ static typej_unpacked_t* unpack_typej(
         if (!b64_decode(unpacked->payload, &unpacked->payload_length, unpacked->payload_b64,
                     unpacked->payload_b64_length, true)) {
             ERROR("b64_decode failed");
-            memory_secure_free(unpacked->payload);
             break;
         }
 
@@ -193,7 +191,6 @@ static typej_unpacked_t* unpack_typej(
         unpacked->mac = memory_internal_alloc(unpacked->mac_length);
         if (!b64_decode(unpacked->mac, &unpacked->mac_length, unpacked->mac_b64, unpacked->mac_b64_length, true)) {
             ERROR("b64_decode failed");
-            memory_secure_free(unpacked->mac);
             break;
         }
 
@@ -387,7 +384,7 @@ static sa_status fields_to_rights(
     uint8_t* rights_bytes = memory_internal_alloc(rights_count);
     if (!b64_decode(rights_bytes, &rights_count, rights_field_string, rights_field_size, false)) {
         ERROR("Invalid contentKeyRights");
-        memory_secure_free(rights_bytes);
+        memory_internal_free(rights_bytes);
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
@@ -542,7 +539,6 @@ static sa_status unwrap_key_v1(
         content_key = memory_internal_alloc(content_key_size);
         if (!b64_decode(content_key, &content_key_size, content_key_b64, content_key_b64_size, false)) {
             ERROR("Invalid contentKey");
-            memory_secure_free(content_key);
             status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
@@ -654,8 +650,7 @@ static sa_status unwrap_key_v2(
         size_t content_key_size = b64_decoded_length(content_key_b64_size);
         content_key = memory_internal_alloc(content_key_size);
         if (!b64_decode(content_key, &content_key_size, content_key_b64, content_key_b64_size, false)) {
-            ERROR("json_key_value_find failed");
-            memory_secure_free(content_key);
+            ERROR("Invalid contentKey");
             status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
@@ -699,7 +694,6 @@ static sa_status unwrap_key_v2(
             iv = memory_internal_alloc(iv_size);
             if (!b64_decode(iv, &iv_size, iv_b64, iv_b64_size, false) || iv_size != SYM_128_KEY_SIZE) {
                 ERROR("Invalid contentKeyTransportIv");
-                memory_secure_free(iv);
                 status = SA_STATUS_INVALID_KEY_FORMAT;
                 break;
             }

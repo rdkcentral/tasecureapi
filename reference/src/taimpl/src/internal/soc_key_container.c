@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 Comcast Cable Communications Management, LLC
+ * Copyright 2019-2026 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -382,7 +382,6 @@ static sa_status parse_payload(
     if (!b64_decode(payload->encrypted_key, &payload->encrypted_key_length, encrypted_key, b64_encrypted_key_length,
                 false)) {
         ERROR("b64_decode failed");
-        memory_internal_free(payload->encrypted_key);
         return SA_STATUS_INVALID_KEY_FORMAT;
     }
 
