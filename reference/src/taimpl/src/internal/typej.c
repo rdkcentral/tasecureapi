@@ -650,7 +650,7 @@ static sa_status unwrap_key_v2(
         size_t content_key_size = b64_decoded_length(content_key_b64_size);
         content_key = memory_internal_alloc(content_key_size);
         if (!b64_decode(content_key, &content_key_size, content_key_b64, content_key_b64_size, false)) {
-            ERROR("json_key_value_find failed");
+            ERROR("Invalid contentKey");
             status = SA_STATUS_INVALID_KEY_FORMAT;
             break;
         }
