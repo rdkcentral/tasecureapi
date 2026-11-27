@@ -282,3 +282,125 @@ bool ProcessCommonEncryptionBase::build_samples(
 
     return true;
 }
+
+namespace ctr_partial_block_test {
+    namespace {
+        std::vector<uint8_t> ctr_key_stream(
+                const std::vector<uint8_t>& key,
+                const std::vector<uint8_t>& iv,
+                size_t length) {
+
+            std::vector<uint8_t> key_stream;
+            std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)> context(EVP_CIPHER_CTX_new(),
+                    EVP_CIPHER_CTX_free);
+            if (context == nullptr ||
+                    EVP_EncryptInit_ex(context.get(), EVP_aes_128_ecb(), nullptr, key.data(), nullptr) != 1 ||
+                    EVP_CIPHER_CTX_set_padding(context.get(), 0) != 1)
+                return key_stream;
+
+            // Only the lower 8 bytes of the IV are the counter. It rolls over without carrying into the nonce.
+            uint64_t counter = 0;
+            for (size_t i = 8; i < AES_BLOCK_SIZE; i++)
+                counter = (counter << 8) | iv[i];
+
+            uint8_t block[AES_BLOCK_SIZE];
+            memcpy(block, iv.data(), AES_BLOCK_SIZE);
+            for (size_t position = 0; position < length; position += AES_BLOCK_SIZE, counter++) {
+                for (size_t i = 0; i < 8; i++)
+                    block[8 + i] = static_cast<uint8_t>(counter >> (56 - 8 * i));
+
+                uint8_t out[AES_BLOCK_SIZE];
+                int out_length = 0;
+                if (EVP_EncryptUpdate(context.get(), out, &out_length, block, AES_BLOCK_SIZE) != 1) {
+                    key_stream.clear();
+                    return key_stream;
+                }
+
+                key_stream.insert(key_stream.end(), out, out + AES_BLOCK_SIZE);
+            }
+
+            return key_stream;
+        }
+    } // namespace
+
+    const std::vector<std::vector<sa_subsample_length>>& subsample_cases() {
+        // {bytes_of_clear_data, bytes_of_protected_data}
+        static const std::vector<std::vector<sa_subsample_length>> cases = {
+                {{0, 1}, {0, 1}},
+                {{0, 1}, {0, 1}, {0, 1}},
+                {{0, 1}, {0, 1}, {0, 14}, {0, 1}},
+                {{0, 10}, {0, 5}},
+                {{3, 1}, {2, 1}}};
+        return cases;
+    }
+
+    const std::vector<uint64_t>& counters() {
+        static const std::vector<uint64_t> values = {0, 1, UINT64_MAX - 1, UINT64_MAX, 0xF000000000000000ULL,
+                0xFFFFFFFFFFFFFFF0ULL};
+        return values;
+    }
+
+    void set_counter(
+            std::vector<uint8_t>& iv,
+            uint64_t counter) {
+
+        for (size_t i = 0; i < 8; i++)
+            iv[8 + i] = static_cast<uint8_t>(counter >> (56 - 8 * i));
+    }
+
+    bool build_sample(
+            sample_case& sample_case,
+            const std::vector<sa_subsample_length>& subsample_lengths,
+            const std::vector<uint8_t>& key,
+            const std::vector<uint8_t>& iv) {
+
+        sample_case.subsample_lengths = subsample_lengths;
+        sample_case.total_length = 0;
+        size_t protected_length = 0;
+        for (const auto& subsample : subsample_lengths) {
+            sample_case.total_length += subsample.bytes_of_clear_data + subsample.bytes_of_protected_data;
+            protected_length += subsample.bytes_of_protected_data;
+        }
+
+        sample_case.clear = random(sample_case.total_length);
+        auto key_stream = ctr_key_stream(key, iv, protected_length);
+        if (key_stream.empty()) {
+            ERROR("ctr_key_stream failed");
+            return false;
+        }
+
+        // The key stream continues across subsamples and is used only for the protected bytes.
+        sample_case.in_bytes = sample_case.clear;
+        size_t offset = 0;
+        size_t key_stream_position = 0;
+        for (const auto& subsample : subsample_lengths) {
+            offset += subsample.bytes_of_clear_data;
+            for (size_t i = 0; i < subsample.bytes_of_protected_data; i++)
+                sample_case.in_bytes[offset++] ^= key_stream[key_stream_position++];
+        }
+
+        sample_case.in_bytes.resize(sample_case.total_length + GUARD_SIZE, GUARD_VALUE);
+        sample_case.out_bytes.assign(sample_case.total_length + GUARD_SIZE, GUARD_VALUE);
+        return true;
+    }
+
+    bool verify_output(
+            const sample_case& sample_case,
+            const uint8_t* result,
+            std::string& error) {
+
+        if (memcmp(result, sample_case.clear.data(), sample_case.total_length) != 0) {
+            error = "decrypted data is wrong";
+            return false;
+        }
+
+        for (size_t i = sample_case.total_length; i < sample_case.total_length + GUARD_SIZE; i++) {
+            if (result[i] != GUARD_VALUE) {
+                error = "write past the end of the sample at " + std::to_string(i);
+                return false;
+            }
+        }
+
+        return true;
+    }
+} // namespace ctr_partial_block_test

@@ -260,6 +260,51 @@ TEST_F(SaProcessCommonEncryptionAlternativeTest, boundaryCtrRolloverTest3) {
     // SVP buffer verified in taimpltest.
 }
 
+TEST_F(SaProcessCommonEncryptionAlternativeTest, ctrPartialBlockSubsamplesStayInBounds) {
+    cipher_parameters parameters;
+    parameters.cipher_algorithm = SA_CIPHER_ALGORITHM_AES_CTR;
+    parameters.svp_required = false;
+    auto cipher = initialize_cipher(SA_CIPHER_MODE_DECRYPT, SA_KEY_TYPE_SYMMETRIC, SYM_128_KEY_SIZE, parameters);
+    ASSERT_NE(cipher, nullptr);
+    if (*cipher == UNSUPPORTED_CIPHER)
+        GTEST_SKIP() << "Cipher algorithm not supported";
+
+    for (const auto& subsample_lengths : ctr_partial_block_test::subsample_cases()) {
+        for (uint64_t const counter : ctr_partial_block_test::counters()) {
+            SCOPED_TRACE("subsample count: " + std::to_string(subsample_lengths.size()) +
+                         ", counter: " + std::to_string(counter));
+            ctr_partial_block_test::set_counter(parameters.iv, counter);
+
+            ctr_partial_block_test::sample_case sample_case;
+            ASSERT_TRUE(ctr_partial_block_test::build_sample(sample_case, subsample_lengths, parameters.clear_key,
+                    parameters.iv));
+            auto in = buffer_alloc(SA_BUFFER_TYPE_CLEAR, sample_case.in_bytes);
+            ASSERT_NE(in, nullptr);
+            auto out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, sample_case.out_bytes);
+            ASSERT_NE(out, nullptr);
+
+            sa_sample sample;
+            sample.iv = parameters.iv.data();
+            sample.iv_length = parameters.iv.size();
+            sample.crypt_byte_block = 0;
+            sample.skip_byte_block = 0;
+            sample.subsample_count = sample_case.subsample_lengths.size();
+            sample.subsample_lengths = sample_case.subsample_lengths.data();
+            sample.context = *cipher;
+            sample.in = in.get();
+            sample.out = out.get();
+
+            sa_status const status = sa_process_common_encryption(1, &sample);
+            ASSERT_EQ(status, SA_STATUS_OK);
+
+            std::string error;
+            ASSERT_TRUE(ctr_partial_block_test::verify_output(sample_case,
+                    static_cast<uint8_t*>(out->context.clear.buffer), error))
+                    << error;
+        }
+    }
+}
+
 TEST_F(SaProcessCommonEncryptionNegativeTest, nullSamples) {
     sa_status const status = sa_process_common_encryption(0, nullptr);
     ASSERT_EQ(status, SA_STATUS_NULL_PARAMETER);
