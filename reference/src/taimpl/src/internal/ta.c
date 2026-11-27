@@ -373,8 +373,19 @@ static sa_status ta_invoke_key_import(
             parameters = NULL;
     }
 
-    return ta_sa_key_import(&key_import->key, key_import->key_format, params[1].mem_ref, params[1].mem_ref_size,
+    // Cache params[1] to prevent Time-of-check Time-of-use errors on shared memory.
+    void* in = memory_secure_alloc(params[1].mem_ref_size);
+    if (in == NULL) {
+        ERROR("memory_secure_alloc failed");
+        return SA_STATUS_INTERNAL_ERROR;
+    }
+
+    memcpy(in, params[1].mem_ref, params[1].mem_ref_size);
+    sa_status status = ta_sa_key_import(&key_import->key, key_import->key_format, in, params[1].mem_ref_size,
             parameters, context->client, uuid);
+    memory_memset_unoptimizable(in, 0, params[1].mem_ref_size);
+    memory_secure_free(in);
+    return status;
 }
 
 static sa_status ta_invoke_key_provision(
