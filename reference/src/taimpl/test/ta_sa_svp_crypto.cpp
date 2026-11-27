@@ -609,6 +609,61 @@ namespace {
     }
 #endif // ENABLE_SVP
 
+    // Calls the TA directly so that the TA writes into the caller's buffer, which makes the guard bytes after the
+    // sample observable even when the client layer uses shared memory.
+    TEST_F(TaProcessCommonEncryptionClearTest, ctrPartialBlockSubsamplesStayInBounds) {
+        auto clear_key = random(SYM_128_KEY_SIZE);
+        auto key = import_key(clear_key, false);
+        ASSERT_NE(key, nullptr);
+        if (*key == UNSUPPORTED_KEY)
+            GTEST_SKIP() << "Key type not supported";
+
+        for (const auto& subsample_lengths : ctr_partial_block_test::subsample_cases()) {
+            for (uint64_t const counter : ctr_partial_block_test::counters()) {
+                SCOPED_TRACE("subsample count: " + std::to_string(subsample_lengths.size()) +
+                             ", counter: " + std::to_string(counter));
+                auto iv = random(AES_BLOCK_SIZE);
+                ctr_partial_block_test::set_counter(iv, counter);
+
+                sa_cipher_parameters_aes_ctr parameters = {iv.data(), iv.size()};
+                auto cipher = create_uninitialized_sa_crypto_cipher_context();
+                ASSERT_NE(cipher, nullptr);
+                sa_status status = ta_sa_crypto_cipher_init(cipher.get(), SA_CIPHER_ALGORITHM_AES_CTR,
+                        SA_CIPHER_MODE_DECRYPT, *key, &parameters, client(), ta_uuid());
+                if (status == SA_STATUS_OPERATION_NOT_SUPPORTED)
+                    GTEST_SKIP() << "Cipher algorithm not supported";
+
+                ASSERT_EQ(status, SA_STATUS_OK);
+
+                ctr_partial_block_test::sample_case sample_case;
+                ASSERT_TRUE(ctr_partial_block_test::build_sample(sample_case, subsample_lengths, clear_key, iv));
+                auto in = buffer_alloc(SA_BUFFER_TYPE_CLEAR, sample_case.in_bytes);
+                ASSERT_NE(in, nullptr);
+                auto out = buffer_alloc(SA_BUFFER_TYPE_CLEAR, sample_case.out_bytes);
+                ASSERT_NE(out, nullptr);
+
+                sa_sample sample;
+                sample.iv = iv.data();
+                sample.iv_length = iv.size();
+                sample.crypt_byte_block = 0;
+                sample.skip_byte_block = 0;
+                sample.subsample_count = sample_case.subsample_lengths.size();
+                sample.subsample_lengths = sample_case.subsample_lengths.data();
+                sample.context = *cipher;
+                sample.in = in.get();
+                sample.out = out.get();
+
+                status = ta_sa_process_common_encryption(1, &sample, client(), ta_uuid());
+                ASSERT_EQ(status, SA_STATUS_OK);
+
+                std::string error;
+                ASSERT_TRUE(ctr_partial_block_test::verify_output(sample_case,
+                        static_cast<uint8_t*>(out->context.clear.buffer), error))
+                        << error;
+            }
+        }
+    }
+
 } // namespace
 
 // clang-format off

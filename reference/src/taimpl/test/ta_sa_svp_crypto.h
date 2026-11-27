@@ -59,4 +59,6 @@ protected:
 #endif
 };
 
+class TaProcessCommonEncryptionClearTest : public ::testing::Test, public TaCryptoCipherBase {};
+
 #endif //TA_SA_SVP_CRYPTO_H

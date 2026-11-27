@@ -22,6 +22,7 @@
 #include "sa_cenc.h"
 #include <memory>
 #include <openssl/evp.h>
+#include <string>
 #include <vector>
 
 typedef struct {
@@ -75,5 +76,52 @@ private:
             std::vector<uint8_t>& clear_key,
             sa_cipher_algorithm cipher_algorithm);
 };
+
+// Shared data for the AES-CTR tests
+namespace ctr_partial_block_test {
+    constexpr size_t GUARD_SIZE = 64;
+    constexpr uint8_t GUARD_VALUE = 0xa5;
+
+    struct sample_case {
+        std::vector<sa_subsample_length> subsample_lengths;
+        std::vector<uint8_t> clear;     // Expected decrypted sample.
+        std::vector<uint8_t> in_bytes;  // Encrypted sample followed by guard bytes.
+        std::vector<uint8_t> out_bytes; // Guard bytes only. Same size as in_bytes.
+        size_t total_length = 0;
+    };
+
+    const std::vector<std::vector<sa_subsample_length>>& subsample_cases();
+
+    const std::vector<uint64_t>& counters();
+
+    /**
+     * Sets the counter (last 8 bytes) of a 16 byte AES-CTR IV.
+     */
+    void set_counter(
+            std::vector<uint8_t>& iv,
+            uint64_t counter);
+
+    /**
+     * Builds a random sample, encrypts its protected bytes with AES-CTR using the key and IV, and fills the input and
+     * output vectors with guard bytes after the sample.
+     */
+    bool build_sample(
+            sample_case& sample_case,
+            const std::vector<sa_subsample_length>& subsample_lengths,
+            const std::vector<uint8_t>& key,
+            const std::vector<uint8_t>& iv);
+
+    /**
+     * Checks the decrypted data and that the guard bytes after the sample are unchanged.
+     *
+     * @param[in] result the output buffer, which is at least sample_case.out_bytes.size() bytes.
+     * @param[out] error a description of the first failure.
+     * @return true if the output is correct.
+     */
+    bool verify_output(
+            const sample_case& sample_case,
+            const uint8_t* result,
+            std::string& error);
+} // namespace ctr_partial_block_test
 
 #endif // TEST_PROCESS_COMMON_ENCRYPTION_H

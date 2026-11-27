@@ -49,6 +49,21 @@ static sa_status decrypt(
     size_t leading_partial_block_size =
             *enc_byte_count % AES_BLOCK_SIZE == 0 ? 0 : AES_BLOCK_SIZE - *enc_byte_count % AES_BLOCK_SIZE;
 
+    // Preserve the cipher state and tracked IV when this fragment does not finish the CTR block.
+    if (cipher_algorithm == SA_CIPHER_ALGORITHM_AES_CTR && bytes_to_process > 0 &&
+            bytes_to_process < leading_partial_block_size) {
+        size_t length = bytes_to_process;
+        sa_status status = symmetric_context_decrypt(symmetric_context, out_bytes, &length, in_bytes,
+                bytes_to_process);
+        if (status != SA_STATUS_OK) {
+            ERROR("symmetric_context_decrypt failed");
+            return status;
+        }
+
+        *enc_byte_count += length;
+        return SA_STATUS_OK;
+    }
+
     leading_partial_block_size = MIN(leading_partial_block_size, bytes_to_process);
     size_t number_of_full_blocks = (bytes_to_process - leading_partial_block_size) / AES_BLOCK_SIZE;
     uint64_t* counter_buffer = (uint64_t*) (iv + 8);
